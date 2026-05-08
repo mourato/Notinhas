@@ -41,6 +41,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.13.0] - 2026-05-08
+
+### Features
+-  open images from Finder's "Open With" menu in the annotate editor (#165) (2210c86)
+
+### Chore
+- refactor: Enhance diacritic normalization in OCR tests for improved accuracy (6d3a2b5)
+- refactor: Enhance microphone audio capturing and testing framework with session management and integration tests (89147e2)
+- refactor: Improve database directory handling for test environments in DatabaseManager (b1dae8d)
+- refactor: Simplify QuickAccessDraggableView by using AnyView and enhance OCRService with single visual row detection (66a251b)
+- chore: update appcast, cask, and readme for v1.12.7 (e073e20)
+
+### Contributors
+- @Jiawen Geng
+- @Phoenix
+- @duongductrong
+- @github-actions[bot]
+
 ## [1.12.7] - 2026-05-06
 
 ### Bug Fixes
