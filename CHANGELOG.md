@@ -42,6 +42,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.13.1] - 2026-05-09
+
+### Features
+-  Enhance text annotation handling and layout adjustments (#168) (09fd7b8)
+-  add scripts for collecting crash logs and running tests (b76944b)
+
+### Bug Fixes
+-  Improve Chinese translations for General and Restart Onboarding (#158) (#169) (fee7786)
+-  Improve undo/redo functionality for text editing and annotation properties (#168) (89a909c)
+
+### Chore
+- refactor: Enhance changelog generation with GitHub usernames support in CI (38b784c)
+- chore: update contributor names in CHANGELOG.md (6747c00)
+- chore: update appcast, cask, and readme for v1.13.0 (64f6dc1)
+
+### Contributors
+- @duongductrong
+- @github-actions[bot]
+
 ## [1.13.0] - 2026-05-08
 
 ### Features
