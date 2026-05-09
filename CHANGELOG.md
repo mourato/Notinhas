@@ -43,6 +43,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.13.2] - 2026-05-09
+
+### Features
+-  Enhance audio handling in video editor with multitrack support (3d25ecf)
+
+### Bug Fixes
+-  Add audio encoding settings and compatibility exporter for mixed audio tracks (#171) (db0f2ee)
+
+### Chore
+- chore: Add localized strings for additional audio tracks and system audio in video editor (b264027)
+- chore: update appcast, cask, and readme for v1.13.1 (7adf178)
+
+### Contributors
+- @duongductrong
+- @github-actions[bot]
+
 ## [1.13.1] - 2026-05-09
 
 ### Features
