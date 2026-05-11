@@ -45,6 +45,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.14.1] - 2026-05-11
+
+### Bug Fixes
+-  Improve Capture Markup inline doesn't work in macOS 15 and Add inline area control geometry tests for placement and insets (#40) (3e9ff1c)
+
+### Chore
+- docs: Update README and documentation to include inline area annotate feature details (eac5205)
+- chore: update appcast, cask, and readme for v1.14.0 (d74c7cf)
+
+### Contributors
+- @duongductrong
+- @github-actions[bot]
+
 ## [1.14.0] - 2026-05-10
 
 ### Features
