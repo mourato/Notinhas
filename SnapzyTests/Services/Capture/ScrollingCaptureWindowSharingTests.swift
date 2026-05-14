@@ -34,6 +34,14 @@ final class ScrollingCaptureWindowSharingTests: XCTestCase {
     XCTAssertEqual(window.sharingType, NSWindow.SharingType.none)
   }
 
+  func testAreaSelectionWindow_isExcludedFromScreenCapture() throws {
+    let screen = try XCTUnwrap(NSScreen.main ?? NSScreen.screens.first)
+    let window = AreaSelectionWindow(screen: screen, pooled: true)
+    defer { window.close() }
+
+    XCTAssertEqual(window.sharingType, NSWindow.SharingType.none)
+  }
+
   private var sampleAnchorRect: CGRect {
     CGRect(x: 120, y: 120, width: 360, height: 480)
   }

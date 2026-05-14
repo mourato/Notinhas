@@ -126,6 +126,37 @@ final class PostCaptureActionHandlerTests: XCTestCase {
     XCTAssertEqual(fakeQuickAccess.addedVideos.count, 0)
   }
 
+  func testHandleScreenshotCaptures_multipleFiles_addsAllToQuickAccess() async throws {
+    preferences.setAction(.copyFile, for: .screenshot, enabled: false)
+    let secondURL = tempDirectory.appendingPathComponent("test_capture_2.png")
+    try FileManager.default.copyItem(at: tempFileURL, to: secondURL)
+    let fakeQuickAccess = FakeQuickAccessManager()
+    let handler = PostCaptureActionHandler(
+      preferences: preferences,
+      quickAccess: fakeQuickAccess,
+      fileAccess: SandboxFileAccessManager.shared
+    )
+
+    await handler.handleScreenshotCaptures(urls: [tempFileURL, secondURL])
+
+    XCTAssertEqual(fakeQuickAccess.addedScreenshots, [tempFileURL, secondURL])
+  }
+
+  func testHandleScreenshotCaptures_filtersMissingFiles() async throws {
+    preferences.setAction(.copyFile, for: .screenshot, enabled: false)
+    let missingURL = tempDirectory.appendingPathComponent("missing.png")
+    let fakeQuickAccess = FakeQuickAccessManager()
+    let handler = PostCaptureActionHandler(
+      preferences: preferences,
+      quickAccess: fakeQuickAccess,
+      fileAccess: SandboxFileAccessManager.shared
+    )
+
+    await handler.handleScreenshotCaptures(urls: [missingURL, tempFileURL])
+
+    XCTAssertEqual(fakeQuickAccess.addedScreenshots, [tempFileURL])
+  }
+
   // MARK: - AfterCaptureAction Properties
 
   func testAfterCaptureAction_allCases() {

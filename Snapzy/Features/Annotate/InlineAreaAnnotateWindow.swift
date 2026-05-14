@@ -112,12 +112,14 @@ private struct InlineAreaAnnotateRootView: View {
   @State private var resizingStartRect: CGRect?
   @State private var resizePreviewRect: CGRect?
   @State private var activeResizeHandle: InlineAreaResizeHandle?
+  @State private var cursorIndicatorPoint: CGPoint?
   @State private var propertiesContentWidth: CGFloat = 0
 
   var body: some View {
     GeometryReader { geometry in
       let displayRect = resizePreviewRect ?? movingPreviewRect ?? session.selectionRect
       let isSelectionPreviewing = resizePreviewRect != nil || movingPreviewRect != nil
+      let showsCursorIndicator = session.phase == .selecting || movingPreviewRect != nil
 
       ZStack(alignment: .topLeading) {
         Image(nsImage: session.backdropImage)
@@ -138,6 +140,21 @@ private struct InlineAreaAnnotateRootView: View {
             selectionBorder(rect: rect)
           }
         }
+
+        if showsCursorIndicator, let cursorIndicatorPoint {
+          InlineAreaCursorIndicator(point: cursorIndicatorPoint)
+        }
+      }
+      .coordinateSpace(name: InlineAreaCoordinateSpace.root)
+      .onContinuousHover(coordinateSpace: .named(InlineAreaCoordinateSpace.root)) { phase in
+        switch phase {
+        case .active(let location):
+          cursorIndicatorPoint = location
+          updateNativeCursorForIndicator(showsCursorIndicator)
+        case .ended:
+          cursorIndicatorPoint = nil
+          InlineAreaNativeCursor.restoreArrow()
+        }
       }
       .inlineAreaSelectionGesture(selectionGesture, isEnabled: session.phase == .selecting)
     }
@@ -145,11 +162,13 @@ private struct InlineAreaAnnotateRootView: View {
   }
 
   private var selectionGesture: some Gesture {
-    DragGesture(minimumDistance: 0, coordinateSpace: .local)
+    DragGesture(minimumDistance: 0, coordinateSpace: .named(InlineAreaCoordinateSpace.root))
       .onChanged { value in
         guard session.phase == .selecting else { return }
         let start = selectionStart ?? value.startLocation
         selectionStart = start
+        cursorIndicatorPoint = value.location
+        updateNativeCursorForIndicator(true)
         session.selectionRect = CGRect(
           x: min(start.x, value.location.x),
           y: min(start.y, value.location.y),
@@ -162,8 +181,11 @@ private struct InlineAreaAnnotateRootView: View {
         selectionStart = nil
         if rect.width > 5, rect.height > 5 {
           session.beginAnnotating(with: rect)
+          cursorIndicatorPoint = nil
+          InlineAreaNativeCursor.restoreArrow()
         } else {
           session.selectionRect = nil
+          updateNativeCursorForIndicator(true)
         }
       }
   }
@@ -278,7 +300,7 @@ private struct InlineAreaAnnotateRootView: View {
   }
 
   private func moveGesture(for rect: CGRect) -> some Gesture {
-    DragGesture(minimumDistance: 2, coordinateSpace: .global)
+    DragGesture(minimumDistance: 2, coordinateSpace: .named(InlineAreaCoordinateSpace.root))
       .onChanged { value in
         guard activeResizeHandle == nil else { return }
         if movingStartRect == nil {
@@ -291,8 +313,10 @@ private struct InlineAreaAnnotateRootView: View {
         var transaction = Transaction()
         transaction.animation = nil
         withTransaction(transaction) {
+          cursorIndicatorPoint = value.location
           movingPreviewRect = previewRect
         }
+        updateNativeCursorForIndicator(true)
       }
       .onEnded { value in
         let start = movingStartRect ?? rect
@@ -306,6 +330,8 @@ private struct InlineAreaAnnotateRootView: View {
           movingPreviewRect = nil
           movingStartRect = nil
         }
+        cursorIndicatorPoint = nil
+        InlineAreaNativeCursor.restoreOpenHand()
       }
   }
 
@@ -423,6 +449,81 @@ private struct InlineAreaAnnotateRootView: View {
   private func clamped(_ value: CGFloat, min minValue: CGFloat, max maxValue: CGFloat) -> CGFloat {
     guard minValue <= maxValue else { return value }
     return min(max(value, minValue), maxValue)
+  }
+
+  private func updateNativeCursorForIndicator(_ isIndicatorVisible: Bool) {
+    if isIndicatorVisible {
+      InlineAreaNativeCursor.hide()
+    } else {
+      InlineAreaNativeCursor.restoreArrow()
+    }
+  }
+}
+
+private enum InlineAreaCoordinateSpace {
+  static let root = "inline-area-annotate-root"
+}
+
+private struct InlineAreaCursorIndicator: View {
+  let point: CGPoint
+
+  private let frameSize: CGFloat = 28
+  private let lineLength: CGFloat = 10
+
+  var body: some View {
+    Canvas { context, size in
+      let center = CGPoint(x: size.width / 2, y: size.height / 2)
+      var path = Path()
+      path.move(to: CGPoint(x: center.x, y: center.y - lineLength))
+      path.addLine(to: CGPoint(x: center.x, y: center.y + lineLength))
+      path.move(to: CGPoint(x: center.x - lineLength, y: center.y))
+      path.addLine(to: CGPoint(x: center.x + lineLength, y: center.y))
+
+      context.stroke(path, with: .color(.black.opacity(0.5)), lineWidth: 4)
+      context.stroke(path, with: .color(.white), lineWidth: 1.5)
+    }
+    .frame(width: frameSize, height: frameSize)
+    .position(point)
+    .allowsHitTesting(false)
+  }
+}
+
+private enum InlineAreaNativeCursor {
+  private static let hiddenCursor: NSCursor = {
+    let image = NSImage(size: NSSize(width: 1, height: 1))
+    let rep = NSBitmapImageRep(
+      bitmapDataPlanes: nil,
+      pixelsWide: 1,
+      pixelsHigh: 1,
+      bitsPerSample: 8,
+      samplesPerPixel: 4,
+      hasAlpha: true,
+      isPlanar: false,
+      colorSpaceName: .deviceRGB,
+      bytesPerRow: 4,
+      bitsPerPixel: 32
+    )
+    if let rep {
+      if let bitmapData = rep.bitmapData {
+        for offset in 0..<(rep.bytesPerRow * rep.pixelsHigh) {
+          bitmapData[offset] = 0
+        }
+      }
+      image.addRepresentation(rep)
+    }
+    return NSCursor(image: image, hotSpot: .zero)
+  }()
+
+  static func hide() {
+    hiddenCursor.set()
+  }
+
+  static func restoreArrow() {
+    NSCursor.arrow.set()
+  }
+
+  static func restoreOpenHand() {
+    NSCursor.openHand.set()
   }
 }
 

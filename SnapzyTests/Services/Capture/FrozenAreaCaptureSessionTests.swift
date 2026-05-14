@@ -59,6 +59,105 @@ final class FrozenAreaCaptureSessionTests: XCTestCase {
     )
   }
 
+  private func makeSnapshot(
+    displayID: CGDirectDisplayID,
+    width: Int = 200,
+    height: Int = 200,
+    scaleFactor: CGFloat = 2.0,
+    screenOriginX: CGFloat = 0,
+    screenOriginY: CGFloat = 0,
+    red: UInt8 = 80,
+    green: UInt8 = 120,
+    blue: UInt8 = 180
+  ) -> FrozenDisplaySnapshot? {
+    guard let image = TestImageFactory.solidColor(
+      width: Int(CGFloat(width) * scaleFactor),
+      height: Int(CGFloat(height) * scaleFactor),
+      red: red,
+      green: green,
+      blue: blue
+    ) else {
+      return nil
+    }
+
+    return FrozenDisplaySnapshot(
+      displayID: displayID,
+      screenFrame: CGRect(
+        x: screenOriginX,
+        y: screenOriginY,
+        width: CGFloat(width),
+        height: CGFloat(height)
+      ),
+      scaleFactor: scaleFactor,
+      colorSpaceName: nil,
+      image: image
+    )
+  }
+
+  private func makeGradientSnapshot(
+    displayID: CGDirectDisplayID,
+    width: Int = 100,
+    height: Int = 100,
+    scaleFactor: CGFloat = 1.0,
+    screenOriginX: CGFloat = 0,
+    screenOriginY: CGFloat = 0,
+    topGray: UInt8 = 20,
+    bottomGray: UInt8 = 220
+  ) -> FrozenDisplaySnapshot? {
+    guard let image = TestImageFactory.verticalGradient(
+      width: Int(CGFloat(width) * scaleFactor),
+      height: Int(CGFloat(height) * scaleFactor),
+      topGray: topGray,
+      bottomGray: bottomGray
+    ) else {
+      return nil
+    }
+
+    return FrozenDisplaySnapshot(
+      displayID: displayID,
+      screenFrame: CGRect(
+        x: screenOriginX,
+        y: screenOriginY,
+        width: CGFloat(width),
+        height: CGFloat(height)
+      ),
+      scaleFactor: scaleFactor,
+      colorSpaceName: nil,
+      image: image
+    )
+  }
+
+  private func redValue(in image: CGImage, x: Int, y: Int) throws -> UInt8 {
+    let bytes = try rgbaBytes(from: image)
+    return bytes[rgbaIndex(x: x, y: y, width: image.width)]
+  }
+
+  private func rgbaBytes(from image: CGImage) throws -> [UInt8] {
+    var bytes = [UInt8](repeating: 0, count: image.width * image.height * 4)
+    try bytes.withUnsafeMutableBytes { buffer in
+      let context = try XCTUnwrap(CGContext(
+        data: buffer.baseAddress,
+        width: image.width,
+        height: image.height,
+        bitsPerComponent: 8,
+        bytesPerRow: image.width * 4,
+        space: CGColorSpaceCreateDeviceRGB(),
+        bitmapInfo: rgbaBitmapInfo.rawValue
+      ))
+      context.interpolationQuality = .none
+      context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+    }
+    return bytes
+  }
+
+  private var rgbaBitmapInfo: CGBitmapInfo {
+    CGBitmapInfo.byteOrder32Big.union(CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue))
+  }
+
+  private func rgbaIndex(x: Int, y: Int, width: Int) -> Int {
+    (y * width + x) * 4
+  }
+
   // MARK: - Valid Crop
 
   func testCropImage_validSelectionInsideBounds_returnsCroppedImage() throws {
@@ -202,6 +301,169 @@ final class FrozenAreaCaptureSessionTests: XCTestCase {
     XCTAssertNotNil(backdrops[42])
     XCTAssertEqual(backdrops[42]?.displayID, 42)
     XCTAssertEqual(backdrops[42]?.scaleFactor, 2.0)
+  }
+
+  func testAddSnapshot_addsBackdropAndDisplayID() {
+    guard let session = makeSession(displayID: 1),
+          let secondSnapshot = makeSnapshot(displayID: 2, screenOriginX: 300) else {
+      XCTFail("Failed to create test session")
+      return
+    }
+
+    session.addSnapshot(secondSnapshot)
+
+    XCTAssertTrue(session.containsSnapshot(for: 1))
+    XCTAssertTrue(session.containsSnapshot(for: 2))
+    XCTAssertEqual(session.displayIDs, Set([1, 2]))
+    XCTAssertNotNil(session.backdrop(for: 2))
+    XCTAssertEqual(session.backdrops.count, 2)
+  }
+
+  func testCropImage_afterAddingSecondDisplay_usesSecondDisplayOrigin() throws {
+    guard let session = makeSession(displayID: 1),
+          let secondSnapshot = makeSnapshot(
+            displayID: 2,
+            width: 120,
+            height: 90,
+            scaleFactor: 2.0,
+            screenOriginX: 300,
+            screenOriginY: -100
+          ) else {
+      XCTFail("Failed to create test session")
+      return
+    }
+
+    session.addSnapshot(secondSnapshot)
+    let selection = makeSelection(
+      rect: CGRect(x: 310, y: -90, width: 40, height: 30),
+      displayID: 2
+    )
+
+    let result = try session.cropImage(for: selection)
+
+    XCTAssertEqual(result.scaleFactor, 2.0)
+    XCTAssertEqual(result.image.width, 80)
+    XCTAssertEqual(result.image.height, 60)
+  }
+
+  func testCropCompositeImage_spanningTwoDisplays_returnsUnionSize() throws {
+    guard let session = makeSession(displayID: 1),
+          let secondSnapshot = makeSnapshot(
+            displayID: 2,
+            width: 200,
+            height: 200,
+            scaleFactor: 2.0,
+            screenOriginX: 200,
+            screenOriginY: 0
+          ) else {
+      XCTFail("Failed to create test session")
+      return
+    }
+
+    session.addSnapshot(secondSnapshot)
+    let selection = AreaSelectionResult(
+      target: .rect(CGRect(x: 150, y: 50, width: 100, height: 60)),
+      displayID: 1,
+      mode: .screenshot,
+      displayIDs: [1, 2]
+    )
+
+    let result = try session.cropCompositeImage(for: selection)
+
+    XCTAssertEqual(result.scaleFactor, 2.0)
+    XCTAssertEqual(result.image.width, 200)
+    XCTAssertEqual(result.image.height, 120)
+  }
+
+  func testCropCompositeImage_preservesVerticalScreenOrientation() throws {
+    guard let firstSnapshot = makeGradientSnapshot(displayID: 1),
+          let secondSnapshot = makeGradientSnapshot(displayID: 2, screenOriginX: 100) else {
+      XCTFail("Failed to create gradient snapshots")
+      return
+    }
+
+    let session = FrozenAreaCaptureSession.fromSnapshot(firstSnapshot)
+    session.addSnapshot(secondSnapshot)
+    let selection = AreaSelectionResult(
+      target: .rect(CGRect(x: 75, y: 25, width: 50, height: 50)),
+      displayID: 1,
+      mode: .screenshot,
+      displayIDs: [1, 2]
+    )
+
+    let result = try session.cropCompositeImage(for: selection)
+    let topRed = try redValue(in: result.image, x: result.image.width / 2, y: 0)
+    let bottomRed = try redValue(in: result.image, x: result.image.width / 2, y: result.image.height - 1)
+
+    XCTAssertLessThan(topRed, bottomRed)
+  }
+
+  func testCropCompositeImage_stackedDisplaysKeepsTopDisplayOnTop() throws {
+    guard let bottomSnapshot = makeSnapshot(
+      displayID: 1,
+      width: 100,
+      height: 100,
+      scaleFactor: 1.0,
+      screenOriginY: 0,
+      red: 10,
+      green: 20,
+      blue: 220
+    ),
+    let topSnapshot = makeSnapshot(
+      displayID: 2,
+      width: 100,
+      height: 100,
+      scaleFactor: 1.0,
+      screenOriginY: 100,
+      red: 240,
+      green: 40,
+      blue: 40
+    ) else {
+      XCTFail("Failed to create stacked display snapshots")
+      return
+    }
+
+    let session = FrozenAreaCaptureSession.fromSnapshot(bottomSnapshot)
+    session.addSnapshot(topSnapshot)
+    let selection = AreaSelectionResult(
+      target: .rect(CGRect(x: 0, y: 50, width: 100, height: 100)),
+      displayID: 2,
+      mode: .screenshot,
+      displayIDs: [1, 2]
+    )
+
+    let result = try session.cropCompositeImage(for: selection)
+    let topRed = try redValue(in: result.image, x: 50, y: 0)
+    let bottomRed = try redValue(in: result.image, x: 50, y: result.image.height - 1)
+
+    XCTAssertGreaterThan(topRed, bottomRed)
+  }
+
+  func testMissingSnapshotDisplayIDs_returnsOnlyMissingDisplays() {
+    guard let session = makeSession(displayID: 1),
+          let secondSnapshot = makeSnapshot(displayID: 2, screenOriginX: 200) else {
+      XCTFail("Failed to create test session")
+      return
+    }
+
+    session.addSnapshot(secondSnapshot)
+
+    XCTAssertEqual(session.missingSnapshotDisplayIDs(for: [1, 2, 3]), [3])
+  }
+
+  func testInvalidate_afterAddingSnapshot_clearsAllSnapshots() {
+    guard let session = makeSession(displayID: 1),
+          let secondSnapshot = makeSnapshot(displayID: 2, screenOriginX: 300) else {
+      XCTFail("Failed to create test session")
+      return
+    }
+
+    session.addSnapshot(secondSnapshot)
+    session.invalidate()
+
+    XCTAssertFalse(session.containsSnapshot(for: 1))
+    XCTAssertFalse(session.containsSnapshot(for: 2))
+    XCTAssertTrue(session.displayIDs.isEmpty)
   }
 
   // MARK: - Non-zero Screen Origin

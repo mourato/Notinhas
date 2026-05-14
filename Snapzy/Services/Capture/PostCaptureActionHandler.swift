@@ -43,6 +43,66 @@ final class PostCaptureActionHandler {
     await addScreenshotToHistory(url: url)
   }
 
+  /// Execute post-capture actions for a batch of screenshots, such as
+  /// fullscreen capture across multiple displays.
+  func handleScreenshotCaptures(urls: [URL]) async {
+    let validURLs = urls.filter { FileManager.default.fileExists(atPath: $0.path) }
+    guard !validURLs.isEmpty else {
+      DiagnosticLogger.shared.log(
+        .warning,
+        .action,
+        "Screenshot batch post-capture skipped; no files",
+        context: ["requestedCount": "\(urls.count)"]
+      )
+      return
+    }
+
+    guard validURLs.count > 1 else {
+      await handleScreenshotCapture(url: validURLs[0])
+      return
+    }
+
+    DiagnosticLogger.shared.log(
+      .info,
+      .action,
+      "Screenshot batch post-capture started",
+      context: ["count": "\(validURLs.count)"]
+    )
+
+    if preferences.isActionEnabled(.showQuickAccess, for: .screenshot) {
+      for url in validURLs {
+        await quickAccess.addScreenshot(url: url)
+      }
+    }
+
+    if preferences.isActionEnabled(.copyFile, for: .screenshot) {
+      ClipboardHelper.copyFileURLs(validURLs)
+      DiagnosticLogger.shared.log(
+        .info,
+        .clipboard,
+        "Screenshot batch file URLs copied to clipboard",
+        context: ["count": "\(validURLs.count)"]
+      )
+    }
+
+    if preferences.isActionEnabled(.openAnnotate, for: .screenshot), let firstURL = validURLs.first {
+      AnnotateManager.shared.openAnnotation(url: firstURL)
+      DiagnosticLogger.shared.log(
+        .info,
+        .annotate,
+        "Screenshot batch opened first capture in Annotate",
+        context: [
+          "fileName": firstURL.lastPathComponent,
+          "skippedCount": "\(max(0, validURLs.count - 1))",
+        ]
+      )
+    }
+
+    for url in validURLs {
+      await addScreenshotToHistory(url: url)
+    }
+  }
+
   /// Add a screenshot to capture history
   private func addScreenshotToHistory(url: URL) async {
     guard FileManager.default.fileExists(atPath: url.path) else {

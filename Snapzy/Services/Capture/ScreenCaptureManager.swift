@@ -38,6 +38,25 @@ enum CaptureResult {
   case failure(CaptureError)
 }
 
+struct MultiDisplayScreenshotResult {
+  let savedURLs: [URL]
+  let failures: [CGDirectDisplayID: CaptureError]
+  let acquisitionDurationMs: Int
+  let saveDurationMs: Int
+
+  var primaryCaptureResult: CaptureResult {
+    if let firstURL = savedURLs.first {
+      return .success(firstURL)
+    }
+
+    if let firstFailure = failures.values.first {
+      return .failure(firstFailure)
+    }
+
+    return .failure(.noDisplayFound)
+  }
+}
+
 /// Errors that can occur during capture
 enum CaptureError: Error, LocalizedError {
   case permissionDenied
@@ -83,6 +102,26 @@ final class ScreenCaptureManager: ObservableObject {
     let outputWidth: Int
     let outputHeight: Int
     let scaleFactor: CGFloat
+  }
+
+  private struct DisplayCaptureTarget {
+    let displayID: CGDirectDisplayID
+    let order: Int
+    let screen: NSScreen
+    let display: SCDisplay?
+    let scaleFactor: CGFloat
+  }
+
+  private struct DisplayCapturePayload {
+    let displayID: CGDirectDisplayID
+    let order: Int
+    let image: CGImage
+    let scaleFactor: CGFloat
+  }
+
+  private enum DisplayPayloadResult {
+    case success(DisplayCapturePayload)
+    case failure(CGDirectDisplayID, CaptureError)
   }
 
   static let shared = ScreenCaptureManager()
@@ -269,7 +308,7 @@ final class ScreenCaptureManager: ObservableObject {
         scaleFactor: scaleFactor,
         showsCursor: showCursor
       )
-      let image = try await captureImageCompat(
+      let image = try await Self.captureImageCompat(
         contentFilter: filter,
         configuration: configuration
       )
@@ -367,7 +406,7 @@ final class ScreenCaptureManager: ObservableObject {
       }
 
       // Capture the image (compat: SCScreenshotManager requires macOS 14+)
-      let image = try await captureImageCompat(
+      let image = try await Self.captureImageCompat(
         contentFilter: filter,
         configuration: config
       )
@@ -384,6 +423,330 @@ final class ScreenCaptureManager: ObservableObject {
     } catch {
       DiagnosticLogger.shared.log(.error, .capture, "Fullscreen capture failed: \(error.localizedDescription)")
       return .failure(.captureFailed(error.localizedDescription))
+    }
+  }
+
+  func captureAllDisplays(
+    saveDirectory: URL,
+    fileName: String? = nil,
+    format: ImageFormat = .png,
+    showCursor: Bool = false,
+    excludeDesktopIcons: Bool = false,
+    excludeDesktopWidgets: Bool = false,
+    excludeOwnApplication: Bool = false,
+    allowFastPathWhenOwnApplicationHidden: Bool = false,
+    prefetchedContentTask: ShareableContentPrefetchTask? = nil
+  ) async -> MultiDisplayScreenshotResult {
+    if let unavailableError = await ensureCaptureAvailability() {
+      return MultiDisplayScreenshotResult(
+        savedURLs: [],
+        failures: [CGMainDisplayID(): unavailableError],
+        acquisitionDurationMs: 0,
+        saveDurationMs: 0
+      )
+    }
+
+    isCapturing = true
+    defer { isCapturing = false }
+
+    do {
+      let canUseFastPath = canUseFastDisplayCapturePath(
+        showCursor: showCursor,
+        excludeDesktopIcons: excludeDesktopIcons,
+        excludeDesktopWidgets: excludeDesktopWidgets,
+        excludeOwnApplication: excludeOwnApplication,
+        allowFastPathWhenOwnApplicationHidden: allowFastPathWhenOwnApplicationHidden
+      )
+      let content: SCShareableContent?
+      let targets: [DisplayCaptureTarget]
+
+      if canUseFastPath {
+        content = nil
+        targets = makeFastDisplayCaptureTargets()
+      } else {
+        let includeDesktopWindows = excludeDesktopIcons || excludeDesktopWidgets
+        let loadedContent = try await loadShareableContent(
+          prefetchedContentTask: prefetchedContentTask,
+          includeDesktopWindows: includeDesktopWindows
+        )
+        content = loadedContent
+        targets = makeDisplayCaptureTargets(content: loadedContent)
+      }
+
+      guard !targets.isEmpty else {
+        return MultiDisplayScreenshotResult(
+          savedURLs: [],
+          failures: [CGMainDisplayID(): .noDisplayFound],
+          acquisitionDurationMs: 0,
+          saveDurationMs: 0
+        )
+      }
+
+      let acquisitionStartedAt = Date()
+      let payloads = await captureDisplayPayloads(
+        targets: targets,
+        content: content,
+        canUseFastPath: canUseFastPath,
+        showCursor: showCursor,
+        excludeDesktopIcons: excludeDesktopIcons,
+        excludeDesktopWidgets: excludeDesktopWidgets,
+        excludeOwnApplication: excludeOwnApplication
+      )
+      let acquisitionDurationMs = Int(Date().timeIntervalSince(acquisitionStartedAt) * 1000)
+
+      let savedPayloads = payloads.compactMap { result -> DisplayCapturePayload? in
+        if case .success(let payload) = result { return payload }
+        return nil
+      }
+      var failures: [CGDirectDisplayID: CaptureError] = [:]
+      for result in payloads {
+        if case .failure(let displayID, let error) = result {
+          failures[displayID] = error
+        }
+      }
+
+      let saveStartedAt = Date()
+      let saveResult = await saveDisplayPayloads(
+        savedPayloads,
+        to: saveDirectory,
+        baseFileName: fileName,
+        format: format
+      )
+      let savedURLs = saveResult.savedURLs
+      for (displayID, error) in saveResult.failures {
+        failures[displayID] = error
+      }
+      let saveDurationMs = Int(Date().timeIntervalSince(saveStartedAt) * 1000)
+
+      DiagnosticLogger.shared.log(
+        acquisitionDurationMs <= 50 ? .info : .warning,
+        .capture,
+        "Multi-display fullscreen capture completed",
+        context: [
+          "displayCount": "\(targets.count)",
+          "savedCount": "\(savedURLs.count)",
+          "failureCount": "\(failures.count)",
+          "acquisition_ms": "\(acquisitionDurationMs)",
+          "save_ms": "\(saveDurationMs)",
+          "target_ms": "50",
+          "perfect_ms": "30",
+        ]
+      )
+
+      return MultiDisplayScreenshotResult(
+        savedURLs: savedURLs,
+        failures: failures,
+        acquisitionDurationMs: acquisitionDurationMs,
+        saveDurationMs: saveDurationMs
+      )
+    } catch {
+      DiagnosticLogger.shared.logError(.capture, error, "Multi-display fullscreen capture failed")
+      return MultiDisplayScreenshotResult(
+        savedURLs: [],
+        failures: [CGMainDisplayID(): .captureFailed(error.localizedDescription)],
+        acquisitionDurationMs: 0,
+        saveDurationMs: 0
+      )
+    }
+  }
+
+  private func makeDisplayCaptureTargets(content: SCShareableContent) -> [DisplayCaptureTarget] {
+    NSScreen.screens.enumerated().compactMap { order, screen in
+      guard let displayID = screen.displayID,
+            let display = content.displays.first(where: { $0.displayID == Int(displayID) }) else {
+        return nil
+      }
+
+      return DisplayCaptureTarget(
+        displayID: displayID,
+        order: order,
+        screen: screen,
+        display: display,
+        scaleFactor: screen.backingScaleFactor
+      )
+    }
+  }
+
+  private func makeFastDisplayCaptureTargets() -> [DisplayCaptureTarget] {
+    NSScreen.screens.enumerated().compactMap { order, screen in
+      guard let displayID = screen.displayID else { return nil }
+      return DisplayCaptureTarget(
+        displayID: displayID,
+        order: order,
+        screen: screen,
+        display: nil,
+        scaleFactor: screen.backingScaleFactor
+      )
+    }
+  }
+
+  private func canUseFastDisplayCapturePath(
+    showCursor: Bool,
+    excludeDesktopIcons: Bool,
+    excludeDesktopWidgets: Bool,
+    excludeOwnApplication: Bool,
+    allowFastPathWhenOwnApplicationHidden: Bool
+  ) -> Bool {
+    !showCursor
+      && !excludeDesktopIcons
+      && !excludeDesktopWidgets
+      && (!excludeOwnApplication || allowFastPathWhenOwnApplicationHidden)
+  }
+
+  private func captureDisplayPayloads(
+    targets: [DisplayCaptureTarget],
+    content: SCShareableContent?,
+    canUseFastPath: Bool,
+    showCursor: Bool,
+    excludeDesktopIcons: Bool,
+    excludeDesktopWidgets: Bool,
+    excludeOwnApplication: Bool
+  ) async -> [DisplayPayloadResult] {
+    if canUseFastPath {
+      return await captureDisplayPayloadsUsingCoreGraphics(targets: targets)
+    }
+
+    guard let content else {
+      return targets.map { .failure($0.displayID, .noDisplayFound) }
+    }
+
+    let requests = targets.compactMap { target -> (target: DisplayCaptureTarget, filter: SCContentFilter, configuration: SCStreamConfiguration)? in
+      guard let display = target.display else { return nil }
+      let filter = buildFilter(
+        display: display,
+        content: content,
+        excludeDesktopIcons: excludeDesktopIcons,
+        excludeDesktopWidgets: excludeDesktopWidgets,
+        excludeOwnApplication: excludeOwnApplication
+      )
+      let configuration = makeDisplaySnapshotConfiguration(
+        for: target.screen,
+        scaleFactor: target.scaleFactor,
+        showsCursor: showCursor
+      )
+      return (target, filter, configuration)
+    }
+
+    return await withTaskGroup(of: DisplayPayloadResult.self) { group in
+      for request in requests {
+        group.addTask {
+          do {
+            let image = try await Self.captureImageCompat(
+              contentFilter: request.filter,
+              configuration: request.configuration
+            )
+            return .success(
+              DisplayCapturePayload(
+                displayID: request.target.displayID,
+                order: request.target.order,
+                image: image,
+                scaleFactor: request.target.scaleFactor
+              )
+            )
+          } catch {
+            return .failure(request.target.displayID, .captureFailed(error.localizedDescription))
+          }
+        }
+      }
+
+      var results: [DisplayPayloadResult] = []
+      for await result in group {
+        results.append(result)
+      }
+      return results.sorted(by: Self.displayPayloadResultOrder)
+    }
+  }
+
+  private nonisolated func captureDisplayPayloadsUsingCoreGraphics(
+    targets: [DisplayCaptureTarget]
+  ) async -> [DisplayPayloadResult] {
+    await withTaskGroup(of: DisplayPayloadResult.self) { group in
+      for target in targets {
+        group.addTask {
+          guard let image = CGDisplayCreateImage(target.displayID) else {
+            return .failure(target.displayID, .captureFailed(L10n.ScreenCapture.unableToCaptureSelectedArea))
+          }
+
+          return .success(
+            DisplayCapturePayload(
+              displayID: target.displayID,
+              order: target.order,
+              image: image,
+              scaleFactor: target.scaleFactor
+            )
+          )
+        }
+      }
+
+      var results: [DisplayPayloadResult] = []
+      for await result in group {
+        results.append(result)
+      }
+      return results.sorted(by: Self.displayPayloadResultOrder)
+    }
+  }
+
+  private nonisolated static func displayPayloadResultOrder(_ lhs: DisplayPayloadResult, _ rhs: DisplayPayloadResult) -> Bool {
+    func order(_ result: DisplayPayloadResult) -> Int {
+      switch result {
+      case .success(let payload):
+        return payload.order
+      case .failure:
+        return Int.max
+      }
+    }
+    return order(lhs) < order(rhs)
+  }
+
+  private func saveDisplayPayloads(
+    _ payloads: [DisplayCapturePayload],
+    to directory: URL,
+    baseFileName: String?,
+    format: ImageFormat
+  ) async -> (savedURLs: [URL], failures: [CGDirectDisplayID: CaptureError]) {
+    guard !payloads.isEmpty else {
+      return ([], [:])
+    }
+
+    let baseName = CaptureOutputNaming.resolveBaseName(
+      customName: baseFileName,
+      kind: .screenshot
+    )
+    let needsDisplaySuffix = payloads.count > 1
+
+    return await withTaskGroup(of: (order: Int, displayID: CGDirectDisplayID, result: CaptureResult).self) { group in
+      for payload in payloads {
+        let outputName = needsDisplaySuffix ? "\(baseName)_Display-\(payload.order + 1)" : baseName
+        group.addTask { [weak self] in
+          guard let self else {
+            return (payload.order, payload.displayID, .failure(.captureFailed(L10n.ScreenCapture.unableToCaptureSelectedArea)))
+          }
+
+          let result = await self.saveImage(
+            payload.image,
+            to: directory,
+            fileName: outputName,
+            format: format,
+            scaleFactor: payload.scaleFactor,
+            emitCompletion: false
+          )
+          return (payload.order, payload.displayID, result)
+        }
+      }
+
+      var saved: [(order: Int, url: URL)] = []
+      var failures: [CGDirectDisplayID: CaptureError] = [:]
+      for await item in group {
+        switch item.result {
+        case .success(let url):
+          saved.append((item.order, url))
+        case .failure(let error):
+          failures[item.displayID] = error
+        }
+      }
+
+      let urls = saved.sorted { $0.order < $1.order }.map(\.url)
+      return (urls, failures)
     }
   }
 
@@ -535,7 +898,8 @@ final class ScreenCaptureManager: ObservableObject {
     to directory: URL,
     fileName: String?,
     format: ImageFormat,
-    scaleFactor: CGFloat? = nil
+    scaleFactor: CGFloat? = nil,
+    emitCompletion: Bool = true
   ) async -> CaptureResult {
     let directoryAccess = SandboxFileAccessManager.shared.beginAccessingURL(directory)
     defer { directoryAccess.stop() }
@@ -556,6 +920,11 @@ final class ScreenCaptureManager: ObservableObject {
     // Move file I/O to background thread to avoid blocking main thread
     let isWebP = fileExtension == "webp"
     let destinationProperties = Self.imageDestinationProperties(for: format, scaleFactor: scaleFactor)
+    let fileURL = CaptureOutputNaming.makeUniqueFileURL(
+      in: scopedDirectory,
+      baseName: baseName,
+      fileExtension: fileExtension
+    )
     let writeResult: Result<URL, CaptureError> = await Task.detached {
       // Create directory if needed
       do {
@@ -563,12 +932,6 @@ final class ScreenCaptureManager: ObservableObject {
       } catch {
         return .failure(.saveFailed(L10n.ScreenCapture.couldNotCreateDirectory(error.localizedDescription)))
       }
-
-      let fileURL = CaptureOutputNaming.makeUniqueFileURL(
-        in: scopedDirectory,
-        baseName: baseName,
-        fileExtension: fileExtension
-      )
 
       if isWebP {
         // WebP: use WebPEncoder (cwebp CLI) since ImageIO doesn't support WebP encoding
@@ -607,7 +970,9 @@ final class ScreenCaptureManager: ObservableObject {
     switch writeResult {
     case .success(let url):
       DiagnosticLogger.shared.log(.info, .capture, "Capture saved: \(url.lastPathComponent)")
-      captureCompletedSubject.send(url)
+      if emitCompletion {
+        captureCompletedSubject.send(url)
+      }
       return .success(url)
     case .failure(let error):
       DiagnosticLogger.shared.log(.error, .capture, "Save failed: \(error.localizedDescription)")
@@ -742,7 +1107,7 @@ final class ScreenCaptureManager: ObservableObject {
   }
 
   func capturePreparedArea(_ context: PreparedAreaCaptureContext) async throws -> CGImage? {
-    let fullImage = try await captureImageCompat(
+    let fullImage = try await Self.captureImageCompat(
       contentFilter: context.contentFilter,
       configuration: context.configuration
     )
@@ -939,7 +1304,7 @@ final class ScreenCaptureManager: ObservableObject {
       configuration.colorSpaceName = colorSpaceName
     }
 
-    let image = try await captureImageCompat(
+    let image = try await Self.captureImageCompat(
       contentFilter: contentFilter,
       configuration: configuration
     )
@@ -1407,7 +1772,7 @@ final class ScreenCaptureManager: ObservableObject {
   }
 
   /// Compatibility wrapper: uses SCScreenshotManager on macOS 14+, falls back to SCStream single-frame capture on macOS 13.
-  private func captureImageCompat(
+  private static func captureImageCompat(
     contentFilter: SCContentFilter,
     configuration: SCStreamConfiguration
   ) async throws -> CGImage {

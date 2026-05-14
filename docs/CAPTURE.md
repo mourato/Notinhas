@@ -43,7 +43,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     A["ScreenCaptureViewModel"] --> B["Ensure export folder permission"]
-    B --> C["Prefetch SCShareableContent"]
+    B --> C["Prefetch SCShareableContent when ScreenCaptureKit path needs it"]
     C --> D{"Capture mode"}
 
     D -->|Fullscreen| E["captureFullscreen()"]
@@ -52,7 +52,7 @@ flowchart TD
     D -->|OCR / QR| G["AreaSelectionController.startSelection()"]
     D -->|Cutout| H["AreaSelectionController.startSelection()"]
 
-    E --> I["ScreenCaptureManager.captureFullscreen()"]
+    E --> I["ScreenCaptureManager.captureAllDisplays()"]
     F --> J["AreaSelectionController.startSelection(backdrops:, applicationConfiguration:)"]
     J --> K{"Interaction mode"}
     F1 --> K0["Select region, annotate directly, finish with Command-S/Enter"]
@@ -83,8 +83,10 @@ flowchart TD
 
 ### Notes
 
-- Fullscreen still runs directly through `ScreenCaptureManager`, but area screenshot now freezes the active display first via `FrozenAreaCaptureSession`, then either crops from that cached snapshot or switches into exact window capture for application mode.
-- Non-target displays still get blocking overlay windows during area screenshot, but only the frozen display accepts the drag selection in the current implementation.
+- Fullscreen runs through `ScreenCaptureManager.captureAllDisplays()` and saves one screenshot per connected display. The hot path uses `CGDisplayCreateImage` in parallel when cursor and desktop icon/widget exclusions are off; it falls back to ScreenCaptureKit for correctness when those options are enabled.
+- Multi-display fullscreen post-capture is batch-aware: Quick Access and history receive every file, clipboard receives file URLs for multi-file batches, and auto-open Annotate opens only the first saved screenshot.
+- Area screenshot freezes the active display first via `FrozenAreaCaptureSession`, then either crops from that cached snapshot or switches into exact window capture for application mode.
+- Area screenshot freezes the active display first, then lazily prepares idle/hovered displays when possible. Area-selection overlay windows are excluded from screen capture, so lazy snapshots do not bake in the dim overlay or create a double-darkened backdrop. During an active cross-display drag, a newly crossed display stays live and is captured after mouse-up once the overlay has been hidden, avoiding a mid-drag freeze jump while preserving fast initial activation. Manual selection is tracked in global screen coordinates and rendered per display, so one selection rectangle can span multiple monitors.
 - For screenshot sessions, the target display overlay now owns direct keyboard handling for `Escape` and the application-mode toggle key, so cancel still works when Snapzy starts from a background custom shortcut without depending on Accessibility-backed global key monitoring.
 - `Cmd+Shift+4` area capture now has two interaction modes inside the same overlay session: manual region by default, and application window mode toggled with the configurable `Application Capture` key from Preferences → Shortcuts. The default key is `A`.
 - Area + inline annotate is a separate screenshot flow with the default shortcut `Cmd+Shift+7`. Users can enable/disable or configure it from Preferences → Shortcuts. It freezes the active display, lets the user select, move, and resize one region, supports both the move handle and Space-drag for moving the selected region, reuses Annotate tool models/rendering on that region, and saves the rendered image through the normal screenshot post-capture pipeline after Command-S, Enter, or Done.

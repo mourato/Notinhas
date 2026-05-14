@@ -64,6 +64,9 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
   private let fileAccessManager = SandboxFileAccessManager.shared
   private let tempCaptureManager = TempCaptureManager.shared
   private var isAreaSelectionActive = false
+  private var activeAreaSelectionSessionID: UUID?
+  private var lazyAreaSnapshotTasks: [CGDirectDisplayID: Task<Void, Never>] = [:]
+  private var lazyAreaSnapshotFailedDisplayIDs = Set<CGDirectDisplayID>()
   private var cancellables = Set<AnyCancellable>()
 
   // Shortcut bindings for UI
@@ -360,10 +363,17 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       DiagnosticLogger.shared.log(.info, .capture, "Fullscreen capture flow started", context: ["format": resolvedFormat.fileExtension])
       let excludeDesktopIcons = DesktopIconManager.shared.isIconHidingEnabled
       let excludeDesktopWidgets = DesktopIconManager.shared.isWidgetHidingEnabled
-      let prefetchedContentTask = captureManager.prefetchShareableContent(
-        includeDesktopWindows: excludeDesktopIcons || excludeDesktopWidgets
-      )
+      let excludeOwnApplication = !includesOwnAppInScreenshots
+      let canUseFastMultiDisplayPath = !showsCursorInScreenshots
+        && !excludeDesktopIcons
+        && !excludeDesktopWidgets
+      let prefetchedContentTask = canUseFastMultiDisplayPath
+        ? nil
+        : captureManager.prefetchShareableContent(
+          includeDesktopWindows: excludeDesktopIcons || excludeDesktopWidgets
+        )
       await Task.yield()
+      let hiddenWindowSession = hideVisibleNormalWindowsIfNeeded(excludeOwnApplication)
 
       // Resolve save directory based on auto-save toggle
       let actualSaveDirectory = tempCaptureManager.resolveSaveDirectory(
@@ -371,21 +381,28 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
         exportDirectory: resolvedSaveDirectory
       )
 
-      let result = await captureManager.captureFullscreen(
+      if hiddenWindowSession.didHideWindows {
+        try? await Task.sleep(nanoseconds: UInt64(windowHideSettleDelay * 1_000_000_000))
+      }
+
+      let result = await captureManager.captureAllDisplays(
         saveDirectory: actualSaveDirectory,
         format: resolvedFormat,
         showCursor: showsCursorInScreenshots,
         excludeDesktopIcons: excludeDesktopIcons,
         excludeDesktopWidgets: excludeDesktopWidgets,
-        excludeOwnApplication: !includesOwnAppInScreenshots,
+        excludeOwnApplication: excludeOwnApplication,
+        allowFastPathWhenOwnApplicationHidden: excludeOwnApplication,
         prefetchedContentTask: prefetchedContentTask
       )
 
       isCapturing = false
-      lastCaptureResult = result
+      lastCaptureResult = result.primaryCaptureResult
+      hiddenWindowSession.restore()
 
-      if case .success = result {
+      if !result.savedURLs.isEmpty {
         SoundManager.playScreenshotCapture()
+        await postCaptureHandler.handleScreenshotCaptures(urls: result.savedURLs)
       }
     }
   }
@@ -647,6 +664,10 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     initialInteractionMode: AreaSelectionInteractionMode = .manualRegion,
     hiddenWindowSession: HiddenWindowSession
   ) {
+    cancelLazyAreaSnapshotTasks()
+    let sessionID = UUID()
+    activeAreaSelectionSessionID = sessionID
+
     AreaSelectionController.shared.startSelection(
       mode: .screenshot,
       backdrops: frozenSession.backdrops,
@@ -654,7 +675,19 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
         prefetchedContentTask: prefetchedContentTask,
         excludeOwnApplication: excludeOwnApplication
       ),
-      initialInteractionMode: initialInteractionMode
+      initialInteractionMode: initialInteractionMode,
+      onDisplayActivationRequested: { [weak self] displayID in
+        self?.prepareLazyFrozenDisplay(
+          displayID,
+          sessionID: sessionID,
+          frozenSession: frozenSession,
+          prefetchedContentTask: prefetchedContentTask,
+          showCursor: showCursor,
+          excludeDesktopIcons: excludeDesktopIcons,
+          excludeDesktopWidgets: excludeDesktopWidgets,
+          excludeOwnApplication: excludeOwnApplication
+        )
+      }
     ) { [weak self] selection in
       guard let self = self else {
         DiagnosticLogger.shared.log(.warning, .capture, "captureArea completion: self deallocated")
@@ -667,6 +700,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       }
 
       guard let selection else {
+        self.cancelLazyAreaSnapshotTasks()
         frozenSession.invalidate()
         hiddenWindowSession.restore()
         DiagnosticLogger.shared.log(.info, .capture, "Area capture cancelled by user")
@@ -674,8 +708,11 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
         return
       }
 
+      self.cancelLazyAreaSnapshotTasks(clearFailures: false)
+
       Task { @MainActor in
         defer {
+          self.lazyAreaSnapshotFailedDisplayIDs.removeAll()
           hiddenWindowSession.restore()
         }
         self.isCapturing = true
@@ -695,15 +732,67 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
             context: ["rect": "\(Int(selection.rect.width))x\(Int(selection.rect.height))"]
           )
 
-          do {
-            let cropResult = try frozenSession.cropImage(for: selection)
-            let result = await self.captureManager.saveProcessedImage(
-              cropResult.image,
-              to: actualSaveDirectory,
-              format: self.resolvedFormat,
-              scaleFactor: cropResult.scaleFactor
-            )
+          if selection.spansMultipleDisplays || frozenSession.containsSnapshot(for: selection.displayID) {
+            do {
+              if selection.spansMultipleDisplays {
+                try await self.ensureFrozenSnapshots(
+                  for: selection.displayIDs,
+                  frozenSession: frozenSession,
+                  prefetchedContentTask: prefetchedContentTask,
+                  showCursor: showCursor,
+                  excludeDesktopIcons: excludeDesktopIcons,
+                  excludeDesktopWidgets: excludeDesktopWidgets,
+                  excludeOwnApplication: excludeOwnApplication
+                )
+              }
+              let cropResult: FrozenAreaCropResult
+              if selection.spansMultipleDisplays {
+                cropResult = try frozenSession.cropCompositeImage(for: selection)
+              } else {
+                cropResult = try frozenSession.cropImage(for: selection)
+              }
+              let result = await self.captureManager.saveProcessedImage(
+                cropResult.image,
+                to: actualSaveDirectory,
+                format: self.resolvedFormat,
+                scaleFactor: cropResult.scaleFactor
+              )
 
+              frozenSession.invalidate()
+              self.isCapturing = false
+              self.lastCaptureResult = result
+
+              if case .success = result {
+                SoundManager.playScreenshotCapture()
+              }
+            } catch let error as CaptureError {
+              frozenSession.invalidate()
+              self.isCapturing = false
+              self.lastCaptureResult = .failure(error)
+              DiagnosticLogger.shared.log(.error, .capture, "Frozen area crop failed: \(error.localizedDescription)")
+            } catch {
+              frozenSession.invalidate()
+              self.isCapturing = false
+              self.lastCaptureResult = .failure(.captureFailed(error.localizedDescription))
+              DiagnosticLogger.shared.log(.error, .capture, "Frozen area crop failed: \(error.localizedDescription)")
+            }
+          } else if self.lazyAreaSnapshotFailedDisplayIDs.contains(selection.displayID) {
+            DiagnosticLogger.shared.log(
+              .info,
+              .capture,
+              "Using live area capture fallback after lazy snapshot failure",
+              context: ["displayID": "\(selection.displayID)"]
+            )
+            let result = await self.captureManager.captureArea(
+              rect: selection.rect,
+              saveDirectory: actualSaveDirectory,
+              format: self.resolvedFormat,
+              showCursor: showCursor,
+              excludeDesktopIcons: excludeDesktopIcons,
+              excludeDesktopWidgets: excludeDesktopWidgets,
+              excludeOwnApplication: excludeOwnApplication,
+              prefetchedContentTask: prefetchedContentTask
+            )
             frozenSession.invalidate()
             self.isCapturing = false
             self.lastCaptureResult = result
@@ -711,16 +800,16 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
             if case .success = result {
               SoundManager.playScreenshotCapture()
             }
-          } catch let error as CaptureError {
+          } else {
             frozenSession.invalidate()
             self.isCapturing = false
-            self.lastCaptureResult = .failure(error)
-            DiagnosticLogger.shared.log(.error, .capture, "Frozen area crop failed: \(error.localizedDescription)")
-          } catch {
-            frozenSession.invalidate()
-            self.isCapturing = false
-            self.lastCaptureResult = .failure(.captureFailed(error.localizedDescription))
-            DiagnosticLogger.shared.log(.error, .capture, "Frozen area crop failed: \(error.localizedDescription)")
+            self.lastCaptureResult = .failure(.captureFailed(L10n.ScreenCapture.selectionOutsideDisplayBounds))
+            DiagnosticLogger.shared.log(
+              .error,
+              .capture,
+              "Area selection completed without a frozen snapshot",
+              context: ["displayID": "\(selection.displayID)"]
+            )
           }
         case .window(let target):
           DiagnosticLogger.shared.log(
@@ -752,6 +841,189 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
           }
         }
       }
+    }
+  }
+
+  private func ensureFrozenSnapshots(
+    for displayIDs: Set<CGDirectDisplayID>,
+    frozenSession: FrozenAreaCaptureSession,
+    prefetchedContentTask: ShareableContentPrefetchTask?,
+    showCursor: Bool,
+    excludeDesktopIcons: Bool,
+    excludeDesktopWidgets: Bool,
+    excludeOwnApplication: Bool
+  ) async throws {
+    var missingDisplayIDs = frozenSession.missingSnapshotDisplayIDs(for: displayIDs)
+    guard !missingDisplayIDs.isEmpty else { return }
+
+    let startedAt = Date()
+    if !showCursor, !excludeDesktopIcons, !excludeDesktopWidgets {
+      for displayID in missingDisplayIDs {
+        let fastSnapshot = AreaSelectionController.shared.withDisplayOverlayHidden(for: displayID) {
+          captureManager.captureFastDisplaySnapshot(
+            displayID: displayID,
+            showCursor: false,
+            excludeDesktopIcons: false,
+            excludeDesktopWidgets: false,
+            excludeOwnApplication: false
+          )
+        }
+        if let fastSnapshot {
+          frozenSession.addSnapshot(fastSnapshot)
+        }
+      }
+      missingDisplayIDs = frozenSession.missingSnapshotDisplayIDs(for: displayIDs)
+    }
+
+    if !missingDisplayIDs.isEmpty {
+      let snapshots = try await captureManager.captureDisplaySnapshots(
+        displayIDs: missingDisplayIDs,
+        showCursor: showCursor,
+        excludeDesktopIcons: excludeDesktopIcons,
+        excludeDesktopWidgets: excludeDesktopWidgets,
+        excludeOwnApplication: excludeOwnApplication,
+        prefetchedContentTask: prefetchedContentTask
+      )
+      for snapshot in snapshots.values {
+        frozenSession.addSnapshot(snapshot)
+      }
+    }
+
+    let unresolvedDisplayIDs = frozenSession.missingSnapshotDisplayIDs(for: displayIDs)
+    guard unresolvedDisplayIDs.isEmpty else {
+      throw CaptureError.noDisplayFound
+    }
+
+    let durationMs = Int(Date().timeIntervalSince(startedAt) * 1000)
+    DiagnosticLogger.shared.log(
+      durationMs <= 50 ? .info : .warning,
+      .capture,
+      "Cross-display frozen snapshots ensured",
+      context: [
+        "displayCount": "\(displayIDs.count)",
+        "duration_ms": "\(durationMs)",
+        "target_ms": "50",
+      ]
+    )
+  }
+
+  private func prepareLazyFrozenDisplay(
+    _ displayID: CGDirectDisplayID,
+    sessionID: UUID,
+    frozenSession: FrozenAreaCaptureSession,
+    prefetchedContentTask: ShareableContentPrefetchTask?,
+    showCursor: Bool,
+    excludeDesktopIcons: Bool,
+    excludeDesktopWidgets: Bool,
+    excludeOwnApplication: Bool
+  ) {
+    guard activeAreaSelectionSessionID == sessionID else { return }
+    guard !frozenSession.containsSnapshot(for: displayID) else {
+      if let backdrop = frozenSession.backdrop(for: displayID) {
+        AreaSelectionController.shared.applyBackdrop(backdrop, for: displayID)
+      }
+      return
+    }
+    guard lazyAreaSnapshotTasks[displayID] == nil else { return }
+    guard !lazyAreaSnapshotFailedDisplayIDs.contains(displayID) else { return }
+
+    let startedAt = Date()
+    if !showCursor, !excludeDesktopIcons, !excludeDesktopWidgets {
+      let fastSnapshot = AreaSelectionController.shared.withDisplayOverlayHidden(for: displayID) {
+        captureManager.captureFastDisplaySnapshot(
+          displayID: displayID,
+          showCursor: false,
+          excludeDesktopIcons: false,
+          excludeDesktopWidgets: false,
+          excludeOwnApplication: false
+        )
+      }
+      if let fastSnapshot {
+        applyLazyFrozenSnapshot(
+          fastSnapshot,
+          mode: excludeOwnApplication ? "coregraphics-hidden-overlay" : "coregraphics",
+          displayID: displayID,
+          startedAt: startedAt,
+          sessionID: sessionID,
+          frozenSession: frozenSession
+        )
+        return
+      }
+    }
+
+    let task = Task { @MainActor [weak self] in
+      guard let self else { return }
+      do {
+        let snapshots = try await self.captureManager.captureDisplaySnapshots(
+          displayIDs: [displayID],
+          showCursor: showCursor,
+          excludeDesktopIcons: excludeDesktopIcons,
+          excludeDesktopWidgets: excludeDesktopWidgets,
+          excludeOwnApplication: excludeOwnApplication,
+          prefetchedContentTask: prefetchedContentTask
+        )
+        guard let snapshot = snapshots[displayID] else {
+          throw CaptureError.noDisplayFound
+        }
+        self.applyLazyFrozenSnapshot(
+          snapshot,
+          mode: "screencapturekit",
+          displayID: displayID,
+          startedAt: startedAt,
+          sessionID: sessionID,
+          frozenSession: frozenSession
+        )
+      } catch {
+        guard self.activeAreaSelectionSessionID == sessionID else { return }
+        self.lazyAreaSnapshotFailedDisplayIDs.insert(displayID)
+        AreaSelectionController.shared.enableLiveFallbackSelection(for: displayID)
+        DiagnosticLogger.shared.logError(
+          .capture,
+          error,
+          "Lazy frozen display snapshot failed; enabled live fallback",
+          context: ["displayID": "\(displayID)"]
+        )
+      }
+      self.lazyAreaSnapshotTasks[displayID] = nil
+    }
+    lazyAreaSnapshotTasks[displayID] = task
+  }
+
+  private func applyLazyFrozenSnapshot(
+    _ snapshot: FrozenDisplaySnapshot,
+    mode: String,
+    displayID: CGDirectDisplayID,
+    startedAt: Date,
+    sessionID: UUID,
+    frozenSession: FrozenAreaCaptureSession
+  ) {
+    guard activeAreaSelectionSessionID == sessionID else { return }
+    frozenSession.addSnapshot(snapshot)
+    guard let backdrop = frozenSession.backdrop(for: displayID) else { return }
+    AreaSelectionController.shared.applyBackdrop(backdrop, for: displayID)
+
+    let durationMs = Int(Date().timeIntervalSince(startedAt) * 1000)
+    DiagnosticLogger.shared.log(
+      durationMs <= 50 ? .info : .warning,
+      .capture,
+      "Lazy frozen display snapshot prepared",
+      context: [
+        "displayID": "\(displayID)",
+        "duration_ms": "\(durationMs)",
+        "mode": mode,
+        "target_ms": "50",
+      ]
+    )
+  }
+
+  private func cancelLazyAreaSnapshotTasks(clearFailures: Bool = true) {
+    for task in lazyAreaSnapshotTasks.values {
+      task.cancel()
+    }
+    lazyAreaSnapshotTasks.removeAll()
+    activeAreaSelectionSessionID = nil
+    if clearFailures {
+      lazyAreaSnapshotFailedDisplayIDs.removeAll()
     }
   }
 

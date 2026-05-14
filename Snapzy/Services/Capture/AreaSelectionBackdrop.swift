@@ -61,8 +61,25 @@ nonisolated struct AreaSelectionResult {
   let target: AreaSelectionTarget
   let displayID: CGDirectDisplayID
   let mode: SelectionMode
+  let displayIDs: Set<CGDirectDisplayID>
+
+  init(
+    target: AreaSelectionTarget,
+    displayID: CGDirectDisplayID,
+    mode: SelectionMode,
+    displayIDs: Set<CGDirectDisplayID>? = nil
+  ) {
+    self.target = target
+    self.displayID = displayID
+    self.mode = mode
+    self.displayIDs = displayIDs ?? [displayID]
+  }
 
   var rect: CGRect {
     target.rect
+  }
+
+  var spansMultipleDisplays: Bool {
+    displayIDs.count > 1
   }
 }

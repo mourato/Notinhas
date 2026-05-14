@@ -23,6 +23,9 @@ enum SelectionMode {
 /// Callback type with mode
 typealias AreaSelectionCompletionWithMode = (CGRect?, SelectionMode) -> Void
 
+/// Callback type for displays that should be prepared during a selection session.
+typealias AreaSelectionDisplayActivationHandler = (CGDirectDisplayID) -> Void
+
 // MARK: - NSScreen Extension for Display ID
 
 extension NSScreen {
@@ -61,9 +64,11 @@ final class AreaSelectionController: NSObject {
   private var completionWithResult: AreaSelectionResultCompletion?
   private var selectionMode: SelectionMode = .screenshot
   private var selectionBackdrops: [CGDirectDisplayID: AreaSelectionBackdrop] = [:]
+  private var liveFallbackDisplayIDs = Set<CGDirectDisplayID>()
   private var interactionMode: AreaSelectionInteractionMode = .manualRegion
   private var allowsApplicationWindowSelection = false
   private var applicationConfiguration: AreaSelectionApplicationConfiguration?
+  private var displayActivationHandler: AreaSelectionDisplayActivationHandler?
   private var windowSelectionSnapshot: WindowSelectionSnapshot?
   private var windowSelectionTask: Task<Void, Never>?
   private var selectionSessionID = UUID()
@@ -71,6 +76,12 @@ final class AreaSelectionController: NSObject {
   private var keyboardOwnerDisplayID: CGDirectDisplayID?
   private var localEscapeMonitor: Any?
   private var globalEscapeMonitor: Any?
+  private var requestedDisplayActivationIDs = Set<CGDirectDisplayID>()
+  private var deferredBackdropDisplayIDs = Set<CGDirectDisplayID>()
+  private var manualSelectionStartPoint: CGPoint?
+  private var manualSelectionCurrentPoint: CGPoint?
+  private weak var manualSelectionSourceWindow: AreaSelectionWindow?
+  private var manualSelectionLocalMonitor: Any?
 
   /// Whether the overlay should be dismissed immediately after a selection is made.
   /// When `false`, the caller is responsible for calling `cancelSelection()` to dismiss.
@@ -271,6 +282,7 @@ final class AreaSelectionController: NSObject {
     backdrops: [CGDirectDisplayID: AreaSelectionBackdrop],
     applicationConfiguration: AreaSelectionApplicationConfiguration?,
     initialInteractionMode: AreaSelectionInteractionMode = .manualRegion,
+    onDisplayActivationRequested: AreaSelectionDisplayActivationHandler? = nil,
     completion: @escaping AreaSelectionResultCompletion
   ) {
     self.completion = nil
@@ -280,7 +292,8 @@ final class AreaSelectionController: NSObject {
       mode: mode,
       backdrops: backdrops,
       applicationConfiguration: applicationConfiguration,
-      initialInteractionMode: initialInteractionMode
+      initialInteractionMode: initialInteractionMode,
+      onDisplayActivationRequested: onDisplayActivationRequested
     )
   }
 
@@ -288,10 +301,12 @@ final class AreaSelectionController: NSObject {
     mode: SelectionMode,
     backdrops: [CGDirectDisplayID: AreaSelectionBackdrop],
     applicationConfiguration: AreaSelectionApplicationConfiguration? = nil,
-    initialInteractionMode: AreaSelectionInteractionMode = .manualRegion
+    initialInteractionMode: AreaSelectionInteractionMode = .manualRegion,
+    onDisplayActivationRequested: AreaSelectionDisplayActivationHandler? = nil
   ) {
     // Always clean up prior session's monitors to prevent orphaned leaks
     removeEscapeMonitors()
+    clearManualSelectionTracking(render: false)
     cancelWindowSelectionTask()
     DiagnosticLogger.shared.log(
       .info,
@@ -306,7 +321,11 @@ final class AreaSelectionController: NSObject {
 
     selectionMode = mode
     selectionBackdrops = backdrops
+    liveFallbackDisplayIDs.removeAll()
     self.applicationConfiguration = applicationConfiguration
+    displayActivationHandler = onDisplayActivationRequested
+    requestedDisplayActivationIDs.removeAll()
+    deferredBackdropDisplayIDs.removeAll()
     allowsApplicationWindowSelection = applicationConfiguration != nil
     interactionMode = applicationConfiguration == nil ? .manualRegion : initialInteractionMode
     windowSelectionSnapshot = nil
@@ -354,7 +373,7 @@ final class AreaSelectionController: NSObject {
   private func selectionEnabled(for displayID: CGDirectDisplayID) -> Bool {
     switch interactionMode {
     case .manualRegion:
-      selectionBackdrops.isEmpty || selectionBackdrops[displayID] != nil
+      selectionBackdrops.isEmpty || selectionBackdrops[displayID] != nil || liveFallbackDisplayIDs.contains(displayID)
     case .applicationWindow:
       allowsApplicationWindowSelection
     }
@@ -386,7 +405,8 @@ final class AreaSelectionController: NSObject {
   }
 
   private func toggleInteractionMode() {
-    guard !windowPool.values.contains(where: { $0.overlayView.isManualSelectionInProgress }) else {
+    guard manualSelectionStartPoint == nil,
+          !windowPool.values.contains(where: { $0.overlayView.isManualSelectionInProgress }) else {
       return
     }
     let nextMode: AreaSelectionInteractionMode = interactionMode == .manualRegion
@@ -433,11 +453,77 @@ final class AreaSelectionController: NSObject {
     windowSelectionTask = nil
   }
 
+  func applyBackdrop(_ backdrop: AreaSelectionBackdrop, for displayID: CGDirectDisplayID) {
+    let shouldDeferVisualBackdrop = manualSelectionStartPoint != nil
+      && selectionBackdrops[displayID] == nil
+    liveFallbackDisplayIDs.remove(displayID)
+    selectionBackdrops[displayID] = backdrop
+    guard let window = windowPool[displayID] else { return }
+    if shouldDeferVisualBackdrop {
+      // Avoid a visible freeze jump when a secondary display finishes snapshotting mid-drag.
+      deferredBackdropDisplayIDs.insert(displayID)
+    } else {
+      deferredBackdropDisplayIDs.remove(displayID)
+      window.overlayView.applyBackdrop(backdrop)
+    }
+    window.overlayView.setSelectionEnabled(selectionEnabled(for: displayID))
+    window.overlayView.activatePendingSelectionIfNeeded()
+    window.overlayView.refreshCursor()
+    renderManualSelectionIfNeeded()
+  }
+
+  func enableLiveFallbackSelection(for displayID: CGDirectDisplayID) {
+    liveFallbackDisplayIDs.insert(displayID)
+    guard let window = windowPool[displayID] else { return }
+    window.overlayView.clearBackdrop()
+    window.overlayView.setSelectionEnabled(selectionEnabled(for: displayID))
+    window.overlayView.activatePendingSelectionIfNeeded()
+    window.overlayView.refreshCursor()
+    renderManualSelectionIfNeeded()
+  }
+
+  func withDisplayOverlayHidden<T>(
+    for displayID: CGDirectDisplayID,
+    perform work: () -> T
+  ) -> T {
+    guard let window = windowPool[displayID], window.isVisible else {
+      return work()
+    }
+
+    // Capture-excluded overlays can stay visible without being baked into the snapshot.
+    if window.sharingType == .none {
+      return work()
+    }
+
+    window.orderOut(nil)
+    let result = work()
+    window.orderFrontRegardless()
+    window.activateKeyboardInputIfNeeded()
+    window.overlayView.refreshCursor()
+    return result
+  }
+
+  private func requestDisplayActivationIfNeeded(for window: AreaSelectionWindow) {
+    guard interactionMode == .manualRegion else { return }
+    guard selectionMode == .screenshot else { return }
+    guard let displayID = window.displayID else { return }
+    if enableLiveSelectionDuringManualDrag(for: displayID) {
+      return
+    }
+    requestDisplayActivationIfNeeded(for: displayID)
+  }
+
+  private func requestDisplayActivationIfNeeded(for displayID: CGDirectDisplayID) {
+    guard selectionBackdrops[displayID] == nil else { return }
+    guard requestedDisplayActivationIDs.insert(displayID).inserted else { return }
+    displayActivationHandler?(displayID)
+  }
+
   private func completeSelection(target: AreaSelectionTarget, from window: AreaSelectionWindow) {
     let rect = target.rect
+    let intersectingDisplayIDs = displayIDsIntersecting(rect)
     let displayID = target.windowTarget?.displayID
-      ?? window.displayID
-      ?? NSScreen.screens.first(where: { $0.frame.intersects(rect) })?.displayID
+      ?? primaryDisplayID(for: rect, fallback: window.displayID)
     DiagnosticLogger.shared.log(
       .info,
       .capture,
@@ -448,6 +534,7 @@ final class AreaSelectionController: NSObject {
         "target": target.windowTarget == nil ? "region" : "window",
       ]
     )
+    removeManualSelectionMonitor()
     removeEscapeMonitors()
     cancelWindowSelectionTask()
     resetPooledWindows()
@@ -457,7 +544,15 @@ final class AreaSelectionController: NSObject {
     completion?(rect)
     completionWithMode?(rect, selectionMode)
     if let displayID {
-      completionWithResult?(AreaSelectionResult(target: target, displayID: displayID, mode: selectionMode))
+      let displayIDs = target.windowTarget.map { Set([$0.displayID]) } ?? intersectingDisplayIDs
+      completionWithResult?(
+        AreaSelectionResult(
+          target: target,
+          displayID: displayID,
+          mode: selectionMode,
+          displayIDs: displayIDs.isEmpty ? [displayID] : displayIDs
+        )
+      )
     } else {
       completionWithResult?(nil)
     }
@@ -468,6 +563,7 @@ final class AreaSelectionController: NSObject {
   /// Cancel the current selection
   func cancelSelection() {
     DiagnosticLogger.shared.log(.info, .capture, "Area selection cancelled", context: ["mode": "\(selectionMode)"])
+    clearManualSelectionTracking(render: false)
     removeEscapeMonitors()
     cancelWindowSelectionTask()
     deactivatePooledWindows()
@@ -502,11 +598,208 @@ final class AreaSelectionController: NSObject {
     completionWithMode = nil
     completionWithResult = nil
     selectionBackdrops.removeAll()
+    liveFallbackDisplayIDs.removeAll()
+    requestedDisplayActivationIDs.removeAll()
+    deferredBackdropDisplayIDs.removeAll()
     applicationConfiguration = nil
+    displayActivationHandler = nil
     allowsApplicationWindowSelection = false
     interactionMode = .manualRegion
     windowSelectionSnapshot = nil
     keyboardOwnerDisplayID = nil
+  }
+
+  private func beginManualSelection(at screenPoint: CGPoint, from window: AreaSelectionWindow) {
+    guard interactionMode == .manualRegion else { return }
+    guard let displayID = window.displayID, selectionEnabled(for: displayID) else {
+      requestDisplayActivationIfNeeded(for: window)
+      return
+    }
+
+    manualSelectionStartPoint = screenPoint
+    manualSelectionCurrentPoint = screenPoint
+    manualSelectionSourceWindow = window
+    activeWindow = window
+    installManualSelectionMonitorIfNeeded()
+    requestDisplayActivationForManualSelection()
+    renderManualSelectionIfNeeded()
+  }
+
+  private func updateManualSelection(to screenPoint: CGPoint) {
+    guard manualSelectionStartPoint != nil else { return }
+    manualSelectionCurrentPoint = screenPoint
+    requestDisplayActivationForManualSelection()
+    renderManualSelectionIfNeeded()
+  }
+
+  private func endManualSelection(at screenPoint: CGPoint) {
+    guard manualSelectionStartPoint != nil else { return }
+    manualSelectionCurrentPoint = screenPoint
+    removeManualSelectionMonitor()
+
+    guard let rect = manualSelectionRect, rect.width > 5, rect.height > 5 else {
+      clearManualSelectionTracking(render: true)
+      return
+    }
+
+    let sourceWindow = manualSelectionSourceWindow
+      ?? activeWindow
+      ?? window(containing: screenPoint)
+      ?? window(containing: rect.origin)
+    guard let sourceWindow else {
+      clearManualSelectionTracking(render: true)
+      return
+    }
+
+    manualSelectionStartPoint = nil
+    manualSelectionCurrentPoint = nil
+    manualSelectionSourceWindow = nil
+    completeSelection(target: .rect(rect), from: sourceWindow)
+  }
+
+  private var manualSelectionRect: CGRect? {
+    guard let start = manualSelectionStartPoint,
+          let current = manualSelectionCurrentPoint else {
+      return nil
+    }
+    return CGRect(
+      x: min(start.x, current.x),
+      y: min(start.y, current.y),
+      width: abs(current.x - start.x),
+      height: abs(current.y - start.y)
+    )
+  }
+
+  private func installManualSelectionMonitorIfNeeded() {
+    guard manualSelectionLocalMonitor == nil else { return }
+    manualSelectionLocalMonitor = NSEvent.addLocalMonitorForEvents(
+      matching: [.leftMouseDragged, .leftMouseUp]
+    ) { [weak self] event in
+      switch event.type {
+      case .leftMouseDragged:
+        let mouseLocation = NSEvent.mouseLocation
+        MainActor.assumeIsolated {
+          self?.updateManualSelection(to: mouseLocation)
+        }
+        return nil
+      case .leftMouseUp:
+        let mouseLocation = NSEvent.mouseLocation
+        MainActor.assumeIsolated {
+          self?.endManualSelection(at: mouseLocation)
+        }
+        return nil
+      default:
+        return event
+      }
+    }
+  }
+
+  private func removeManualSelectionMonitor() {
+    if let monitor = manualSelectionLocalMonitor {
+      NSEvent.removeMonitor(monitor)
+      manualSelectionLocalMonitor = nil
+    }
+  }
+
+  private func clearManualSelectionTracking(render: Bool) {
+    removeManualSelectionMonitor()
+    manualSelectionStartPoint = nil
+    manualSelectionCurrentPoint = nil
+    manualSelectionSourceWindow = nil
+    if render {
+      applyDeferredBackdropsIfPossible()
+      for (_, window) in windowPool {
+        window.overlayView.resetSelection()
+      }
+    }
+  }
+
+  private func applyDeferredBackdropsIfPossible() {
+    guard manualSelectionStartPoint == nil else { return }
+    for displayID in deferredBackdropDisplayIDs {
+      guard let backdrop = selectionBackdrops[displayID],
+            let window = windowPool[displayID] else {
+        continue
+      }
+      window.overlayView.applyBackdrop(backdrop)
+      window.overlayView.setSelectionEnabled(selectionEnabled(for: displayID))
+      window.overlayView.refreshCursor()
+    }
+    deferredBackdropDisplayIDs.removeAll()
+  }
+
+  private func renderManualSelectionIfNeeded() {
+    let rect = manualSelectionRect
+    let currentPoint = manualSelectionCurrentPoint
+    for (_, window) in windowPool {
+      window.overlayView.renderManualSelection(
+        screenRect: rect,
+        currentScreenPoint: currentPoint
+      )
+    }
+  }
+
+  private func requestDisplayActivationForManualSelection() {
+    guard selectionMode == .screenshot else { return }
+    let rect = manualSelectionRect
+    let currentPoint = manualSelectionCurrentPoint
+    for screen in NSScreen.screens {
+      guard let displayID = screen.displayID else { continue }
+      let shouldPrepare = currentPoint.map { screen.frame.contains($0) } == true
+        || rect.map { screen.frame.intersects($0) } == true
+      if shouldPrepare {
+        if enableLiveSelectionDuringManualDrag(for: displayID) {
+          continue
+        }
+        requestDisplayActivationIfNeeded(for: displayID)
+      }
+    }
+  }
+
+  @discardableResult
+  private func enableLiveSelectionDuringManualDrag(for displayID: CGDirectDisplayID) -> Bool {
+    guard manualSelectionStartPoint != nil else { return false }
+    guard selectionBackdrops[displayID] == nil else { return false }
+    guard liveFallbackDisplayIDs.insert(displayID).inserted else { return true }
+    guard let window = windowPool[displayID] else { return true }
+    window.overlayView.clearBackdrop()
+    window.overlayView.setSelectionEnabled(selectionEnabled(for: displayID))
+    window.overlayView.refreshCursor()
+    return true
+  }
+
+  private func displayIDsIntersecting(_ rect: CGRect) -> Set<CGDirectDisplayID> {
+    Set(
+      NSScreen.screens.compactMap { screen in
+        guard screen.frame.intersects(rect) else { return nil }
+        return screen.displayID
+      }
+    )
+  }
+
+  private func primaryDisplayID(for rect: CGRect, fallback: CGDirectDisplayID?) -> CGDirectDisplayID? {
+    let bestMatch = NSScreen.screens
+      .compactMap { screen -> (displayID: CGDirectDisplayID, area: CGFloat)? in
+        guard let displayID = screen.displayID else { return nil }
+        let intersection = screen.frame.intersection(rect)
+        guard !intersection.isEmpty else { return nil }
+        return (displayID, intersection.width * intersection.height)
+      }
+      .max { $0.area < $1.area }
+
+    return bestMatch?.displayID ?? fallback
+  }
+
+  private func window(containing screenPoint: CGPoint) -> AreaSelectionWindow? {
+    for screen in NSScreen.screens {
+      guard screen.frame.contains(screenPoint),
+            let displayID = screen.displayID,
+            let window = windowPool[displayID] else {
+        continue
+      }
+      return window
+    }
+    return nil
   }
 
   deinit {
@@ -539,6 +832,22 @@ extension AreaSelectionController: AreaSelectionWindowDelegate {
     guard window.displayID == keyboardOwnerDisplayID else { return false }
     return handleSessionKeyEvent(event)
   }
+
+  func areaSelectionWindowDidRequestDisplayActivation(_ window: AreaSelectionWindow) {
+    requestDisplayActivationIfNeeded(for: window)
+  }
+
+  func areaSelectionWindow(_ window: AreaSelectionWindow, manualSelectionBeganAt screenPoint: CGPoint) {
+    beginManualSelection(at: screenPoint, from: window)
+  }
+
+  func areaSelectionWindow(_ window: AreaSelectionWindow, manualSelectionChangedTo screenPoint: CGPoint) {
+    updateManualSelection(to: screenPoint)
+  }
+
+  func areaSelectionWindow(_ window: AreaSelectionWindow, manualSelectionEndedAt screenPoint: CGPoint) {
+    endManualSelection(at: screenPoint)
+  }
 }
 
 // MARK: - AreaSelectionWindowDelegate Protocol
@@ -549,6 +858,10 @@ protocol AreaSelectionWindowDelegate: AnyObject {
   func areaSelectionWindowDidCancel(_ window: AreaSelectionWindow)
   func areaSelectionWindowDidBecomeActive(_ window: AreaSelectionWindow)
   func areaSelectionWindow(_ window: AreaSelectionWindow, didReceiveKeyEvent event: NSEvent) -> Bool
+  func areaSelectionWindowDidRequestDisplayActivation(_ window: AreaSelectionWindow)
+  func areaSelectionWindow(_ window: AreaSelectionWindow, manualSelectionBeganAt screenPoint: CGPoint)
+  func areaSelectionWindow(_ window: AreaSelectionWindow, manualSelectionChangedTo screenPoint: CGPoint)
+  func areaSelectionWindow(_ window: AreaSelectionWindow, manualSelectionEndedAt screenPoint: CGPoint)
 }
 
 // MARK: - AreaSelectionWindow
@@ -583,6 +896,7 @@ final class AreaSelectionWindow: NSPanel {
     self.isFloatingPanel = true
     self.isOpaque = false
     self.backgroundColor = .clear
+    self.sharingType = .none
     self.level = .screenSaver
     self.ignoresMouseEvents = false
     self.acceptsMouseMovedEvents = true
@@ -654,6 +968,22 @@ extension AreaSelectionWindow: AreaSelectionOverlayViewDelegate {
     selectionDelegate?.areaSelectionWindowDidCancel(self)
   }
 
+  func overlayViewDidRequestDisplayActivation(_ view: AreaSelectionOverlayView) {
+    selectionDelegate?.areaSelectionWindowDidRequestDisplayActivation(self)
+  }
+
+  func overlayView(_ view: AreaSelectionOverlayView, manualSelectionBeganAt point: CGPoint) {
+    selectionDelegate?.areaSelectionWindow(self, manualSelectionBeganAt: convertToScreenPoint(point))
+  }
+
+  func overlayView(_ view: AreaSelectionOverlayView, manualSelectionChangedTo point: CGPoint) {
+    selectionDelegate?.areaSelectionWindow(self, manualSelectionChangedTo: convertToScreenPoint(point))
+  }
+
+  func overlayView(_ view: AreaSelectionOverlayView, manualSelectionEndedAt point: CGPoint) {
+    selectionDelegate?.areaSelectionWindow(self, manualSelectionEndedAt: convertToScreenPoint(point))
+  }
+
   private func convertToScreenCoordinates(_ rect: CGRect) -> CGRect {
     // The rect is in window coordinates (bottom-left origin)
     // Convert to global screen coordinates (also bottom-left origin)
@@ -666,6 +996,13 @@ extension AreaSelectionWindow: AreaSelectionOverlayViewDelegate {
       height: rect.height
     )
   }
+
+  private func convertToScreenPoint(_ point: CGPoint) -> CGPoint {
+    CGPoint(
+      x: frame.origin.x + point.x,
+      y: frame.origin.y + point.y
+    )
+  }
 }
 
 // MARK: - AreaSelectionOverlayViewDelegate Protocol
@@ -674,6 +1011,10 @@ protocol AreaSelectionOverlayViewDelegate: AnyObject {
   func overlayView(_ view: AreaSelectionOverlayView, didSelectRect rect: CGRect)
   func overlayView(_ view: AreaSelectionOverlayView, didSelectWindow target: WindowCaptureTarget)
   func overlayViewDidCancel(_ view: AreaSelectionOverlayView)
+  func overlayViewDidRequestDisplayActivation(_ view: AreaSelectionOverlayView)
+  func overlayView(_ view: AreaSelectionOverlayView, manualSelectionBeganAt point: CGPoint)
+  func overlayView(_ view: AreaSelectionOverlayView, manualSelectionChangedTo point: CGPoint)
+  func overlayView(_ view: AreaSelectionOverlayView, manualSelectionEndedAt point: CGPoint)
 }
 
 // MARK: - AreaSelectionOverlayView
@@ -695,8 +1036,7 @@ final class AreaSelectionOverlayView: NSView {
   // MARK: - Selection State
 
   private var isSelecting = false
-  private var selectionStartPoint: CGPoint?
-  private var selectionEndPoint: CGPoint?
+  private var pendingSelectionStartPoint: CGPoint?
   private var currentMousePosition: CGPoint = .zero
   private var windowSelectionSnapshot: WindowSelectionSnapshot?
   private var hoveredWindowCandidate: WindowSelectionCandidate?
@@ -713,6 +1053,31 @@ final class AreaSelectionOverlayView: NSView {
   private var sizeIndicatorTextLayer: CATextLayer!
   private var modeHintBackgroundLayer: CALayer!
   private var modeHintTextLayer: CATextLayer!
+
+  private static let hiddenManualRegionCursor: NSCursor = {
+    let image = NSImage(size: NSSize(width: 1, height: 1))
+    let rep = NSBitmapImageRep(
+      bitmapDataPlanes: nil,
+      pixelsWide: 1,
+      pixelsHigh: 1,
+      bitsPerSample: 8,
+      samplesPerPixel: 4,
+      hasAlpha: true,
+      isPlanar: false,
+      colorSpaceName: .deviceRGB,
+      bytesPerRow: 4,
+      bitsPerPixel: 32
+    )
+    if let rep {
+      if let bitmapData = rep.bitmapData {
+        for offset in 0..<(rep.bytesPerRow * rep.pixelsHigh) {
+          bitmapData[offset] = 0
+        }
+      }
+      image.addRepresentation(rep)
+    }
+    return NSCursor(image: image, hotSpot: .zero)
+  }()
 
   // Appearance constants
   private let dimColor = NSColor.black.withAlphaComponent(0.4)
@@ -778,7 +1143,7 @@ final class AreaSelectionOverlayView: NSView {
     dimLayer.actions = disabledActions
     rootLayer.addSublayer(dimLayer)
 
-    // Horizontal crosshair line (hidden - using cursor instead)
+    // Horizontal crosshair line (hidden - using compact indicator instead)
     horizontalCrosshairLayer = CAShapeLayer()
     horizontalCrosshairLayer.strokeColor = crosshairColor.cgColor
     horizontalCrosshairLayer.lineWidth = 1.0
@@ -786,7 +1151,7 @@ final class AreaSelectionOverlayView: NSView {
     horizontalCrosshairLayer.actions = disabledActions
     rootLayer.addSublayer(horizontalCrosshairLayer)
 
-    // Vertical crosshair line (hidden - using cursor instead)
+    // Vertical crosshair line (hidden - using compact indicator instead)
     verticalCrosshairLayer = CAShapeLayer()
     verticalCrosshairLayer.strokeColor = crosshairColor.cgColor
     verticalCrosshairLayer.lineWidth = 1.0
@@ -860,6 +1225,7 @@ final class AreaSelectionOverlayView: NSView {
   }
 
   override func mouseEntered(with event: NSEvent) {
+    delegate?.overlayViewDidRequestDisplayActivation(self)
     activeCursor.set()
   }
 
@@ -893,8 +1259,7 @@ final class AreaSelectionOverlayView: NSView {
   /// Reset selection state for window pool reuse
   func resetSelection() {
     isSelecting = false
-    selectionStartPoint = nil
-    selectionEndPoint = nil
+    pendingSelectionStartPoint = nil
     hoveredWindowCandidate = nil
 
     // Initialize crosshair at current mouse position immediately
@@ -931,15 +1296,43 @@ final class AreaSelectionOverlayView: NSView {
   }
 
   func setSelectionEnabled(_ enabled: Bool) {
+    let wasSelectionEnabled = selectionEnabled
     selectionEnabled = enabled
+    if enabled, !wasSelectionEnabled {
+      initializeCrosshairAtCurrentMousePosition()
+      refreshInteractionState()
+    } else if !enabled {
+      isSelecting = false
+      CATransaction.begin()
+      CATransaction.setDisableActions(true)
+      crosshairIndicatorLayer.isHidden = true
+      selectionBorderLayer.isHidden = true
+      hideSizeIndicator()
+      dimLayer.mask = nil
+      CATransaction.commit()
+    }
     refreshActiveCursor()
   }
 
+  func activatePendingSelectionIfNeeded() {
+    guard selectionEnabled, interactionMode == .manualRegion else { return }
+    guard let pendingSelectionStartPoint else { return }
+    self.pendingSelectionStartPoint = nil
+    isSelecting = true
+    delegate?.overlayView(self, manualSelectionBeganAt: pendingSelectionStartPoint)
+    delegate?.overlayView(self, manualSelectionChangedTo: currentMousePosition)
+  }
+
   func applyBackdrop(_ backdrop: AreaSelectionBackdrop) {
+    let imageSize = CGSize(
+      width: CGFloat(backdrop.image.width) / max(backdrop.scaleFactor, 1),
+      height: CGFloat(backdrop.image.height) / max(backdrop.scaleFactor, 1)
+    )
+    let layerImage = NSImage(cgImage: backdrop.image, size: imageSize)
     CATransaction.begin()
     CATransaction.setDisableActions(true)
     snapshotLayer.frame = bounds
-    snapshotLayer.contents = backdrop.image
+    snapshotLayer.contents = layerImage
     snapshotLayer.contentsScale = backdrop.scaleFactor
     snapshotLayer.isHidden = false
     CATransaction.commit()
@@ -1019,18 +1412,6 @@ final class AreaSelectionOverlayView: NSView {
     updateModeHint()
   }
 
-  private func calculateSelectionRect() -> CGRect? {
-    guard let start = selectionStartPoint, let end = selectionEndPoint else {
-      return nil
-    }
-    let minX = min(start.x, end.x)
-    let maxX = max(start.x, end.x)
-    let minY = min(start.y, end.y)
-    let maxY = max(start.y, end.y)
-
-    return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
-  }
-
   // MARK: - CALayer Updates (60fps performance)
 
   private func updateCrosshairLayers() {
@@ -1067,28 +1448,6 @@ final class AreaSelectionOverlayView: NSView {
     path.addLine(to: CGPoint(x: point.x + size, y: point.y))
 
     return path
-  }
-
-  private func updateSelectionLayers() {
-    guard let rect = calculateSelectionRect() else { return }
-
-    CATransaction.begin()
-    CATransaction.setDisableActions(true)
-
-    // Hide crosshair indicator during selection
-    crosshairIndicatorLayer.isHidden = true
-    horizontalCrosshairLayer.isHidden = true
-    verticalCrosshairLayer.isHidden = true
-
-    // Show selection border
-    selectionBorderLayer.isHidden = false
-    selectionBorderLayer.path = CGPath(rect: rect, transform: nil)
-
-    // Update dim layer mask to clear selection area
-    updateDimLayerMask(for: rect)
-    updateSizeIndicator(for: rect)
-
-    CATransaction.commit()
   }
 
   private func updateDimLayerMask(for selectionRect: CGRect) {
@@ -1136,8 +1495,9 @@ final class AreaSelectionOverlayView: NSView {
     sizeIndicatorTextLayer.isHidden = true
   }
 
-  private func updateSizeIndicator(for rect: CGRect) {
-    let sizeText = "\(Int(rect.width)) x \(Int(rect.height))"
+  private func updateSizeIndicator(for rect: CGRect, measuredSize: CGSize? = nil) {
+    let displayedSize = measuredSize ?? rect.size
+    let sizeText = "\(Int(displayedSize.width)) x \(Int(displayedSize.height))"
     let attributes = overlayTextAttributes
     let textSize = sizeText.size(withAttributes: attributes)
     let padding: CGFloat = 6
@@ -1247,6 +1607,63 @@ final class AreaSelectionOverlayView: NSView {
     updateModeHint()
   }
 
+  func renderManualSelection(screenRect: CGRect?, currentScreenPoint: CGPoint?) {
+    guard interactionMode == .manualRegion else { return }
+
+    let localCurrentPoint: CGPoint?
+    if let currentScreenPoint, let window = self.window {
+      let pointInWindow = window.convertPoint(fromScreen: currentScreenPoint)
+      localCurrentPoint = convert(pointInWindow, from: nil)
+      currentMousePosition = localCurrentPoint ?? currentMousePosition
+    } else {
+      localCurrentPoint = nil
+    }
+
+    guard let screenRect, !screenRect.isEmpty else {
+      CATransaction.begin()
+      CATransaction.setDisableActions(true)
+      selectionBorderLayer.isHidden = true
+      dimLayer.mask = nil
+      hideSizeIndicator()
+      if let localCurrentPoint, bounds.contains(localCurrentPoint), selectionEnabled {
+        crosshairIndicatorLayer.isHidden = false
+        crosshairIndicatorLayer.path = createCrosshairIndicatorPath(at: localCurrentPoint)
+      } else {
+        crosshairIndicatorLayer.isHidden = true
+      }
+      CATransaction.commit()
+      return
+    }
+
+    let localRect = convertToLocalRect(screenRect).intersection(bounds)
+    let showsCurrentPointer = localCurrentPoint.map { bounds.contains($0) } == true
+
+    CATransaction.begin()
+    CATransaction.setDisableActions(true)
+    horizontalCrosshairLayer.isHidden = true
+    verticalCrosshairLayer.isHidden = true
+    crosshairIndicatorLayer.isHidden = !showsCurrentPointer
+    if let localCurrentPoint, showsCurrentPointer {
+      crosshairIndicatorLayer.path = createCrosshairIndicatorPath(at: localCurrentPoint)
+    }
+
+    if localRect.isEmpty {
+      selectionBorderLayer.isHidden = true
+      dimLayer.mask = nil
+      hideSizeIndicator()
+    } else {
+      selectionBorderLayer.isHidden = false
+      selectionBorderLayer.path = CGPath(rect: localRect, transform: nil)
+      updateDimLayerMask(for: localRect)
+      if showsCurrentPointer {
+        updateSizeIndicator(for: localRect, measuredSize: screenRect.size)
+      } else {
+        hideSizeIndicator()
+      }
+    }
+    CATransaction.commit()
+  }
+
   func setWindowSelectionSnapshot(_ windowSelectionSnapshot: WindowSelectionSnapshot?) {
     self.windowSelectionSnapshot = windowSelectionSnapshot
     if interactionMode == .applicationWindow {
@@ -1259,8 +1676,10 @@ final class AreaSelectionOverlayView: NSView {
     case .manualRegion:
       hoveredWindowCandidate = nil
       dimLayer.mask = nil
-      selectionBorderLayer.isHidden = true
-      updateCrosshairLayers()
+      if !isSelecting {
+        selectionBorderLayer.isHidden = true
+        updateCrosshairLayers()
+      }
     case .applicationWindow:
       refreshWindowHover()
     }
@@ -1335,50 +1754,58 @@ final class AreaSelectionOverlayView: NSView {
   // MARK: - Mouse Events
 
   override func mouseDown(with event: NSEvent) {
-    guard selectionEnabled else { return }
     let point = convert(event.locationInWindow, from: nil)
+    currentMousePosition = point
+    delegate?.overlayViewDidRequestDisplayActivation(self)
+    guard selectionEnabled else {
+      if interactionMode == .manualRegion {
+        pendingSelectionStartPoint = point
+      }
+      return
+    }
     switch interactionMode {
     case .manualRegion:
-      selectionStartPoint = point
-      selectionEndPoint = point
       isSelecting = true
-      updateSelectionLayers()
+      delegate?.overlayView(self, manualSelectionBeganAt: point)
     case .applicationWindow:
       updateWindowHover(at: point)
     }
   }
 
   override func mouseDragged(with event: NSEvent) {
-    guard selectionEnabled else { return }
     let point = convert(event.locationInWindow, from: nil)
+    currentMousePosition = point
+    delegate?.overlayViewDidRequestDisplayActivation(self)
+    guard selectionEnabled else {
+      if pendingSelectionStartPoint != nil {
+        currentMousePosition = point
+      }
+      return
+    }
     switch interactionMode {
     case .manualRegion:
       guard isSelecting else { return }
-      selectionEndPoint = point
-      updateSelectionLayers()
+      delegate?.overlayView(self, manualSelectionChangedTo: point)
     case .applicationWindow:
       updateWindowHover(at: point)
     }
   }
 
   override func mouseUp(with event: NSEvent) {
-    guard selectionEnabled else { return }
     let point = convert(event.locationInWindow, from: nil)
+    currentMousePosition = point
+    delegate?.overlayViewDidRequestDisplayActivation(self)
+    guard selectionEnabled else {
+      pendingSelectionStartPoint = nil
+      return
+    }
 
     switch interactionMode {
     case .manualRegion:
       guard isSelecting else { return }
-      selectionEndPoint = point
       isSelecting = false
 
-      if let selectionRect = calculateSelectionRect(),
-        selectionRect.width > 5 && selectionRect.height > 5
-      {
-        delegate?.overlayView(self, didSelectRect: selectionRect)
-      } else {
-        // Reset selection state if too small
-        resetSelection()
-      }
+      delegate?.overlayView(self, manualSelectionEndedAt: point)
     case .applicationWindow:
       updateWindowHover(at: point)
       if let hoveredWindowCandidate {
@@ -1388,12 +1815,13 @@ final class AreaSelectionOverlayView: NSView {
   }
 
   override func mouseMoved(with event: NSEvent) {
+    let point = convert(event.locationInWindow, from: nil)
+    currentMousePosition = point
+    delegate?.overlayViewDidRequestDisplayActivation(self)
     guard selectionEnabled else { return }
     activeCursor.set()
-    let point = convert(event.locationInWindow, from: nil)
     switch interactionMode {
     case .manualRegion:
-      currentMousePosition = point
       if !isSelecting {
         updateCrosshairLayers()
       }
@@ -1408,7 +1836,7 @@ final class AreaSelectionOverlayView: NSView {
 
   private var activeCursor: NSCursor {
     guard selectionEnabled else { return .arrow }
-    return interactionMode == .manualRegion ? .crosshair : .pointingHand
+    return interactionMode == .manualRegion ? Self.hiddenManualRegionCursor : .pointingHand
   }
 
   var isManualSelectionInProgress: Bool {
