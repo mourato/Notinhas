@@ -493,6 +493,8 @@ final class AppStatusBarController: ObservableObject {
       keyEquivalent: ""
     )
     updateItem.target = self
+    updateItem.image = NSImage(
+      systemSymbolName: "arrow.triangle.2.circlepath", accessibilityDescription: nil)
     updateItem.isEnabled = true
     menu?.addItem(updateItem)
 
