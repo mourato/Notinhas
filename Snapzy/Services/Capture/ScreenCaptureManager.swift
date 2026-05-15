@@ -459,12 +459,15 @@ final class ScreenCaptureManager: ObservableObject {
     excludeDesktopWidgets: Bool = false,
     excludeOwnApplication: Bool = false,
     allowFastPathWhenOwnApplicationHidden: Bool = false,
-    prefetchedContentTask: ShareableContentPrefetchTask? = nil
+    prefetchedContentTask: ShareableContentPrefetchTask? = nil,
+    targetDisplayIDs: Set<CGDirectDisplayID>? = nil
   ) async -> MultiDisplayScreenshotResult {
+    let fallbackDisplayID = targetDisplayIDs?.first ?? CGMainDisplayID()
+
     if let unavailableError = await ensureCaptureAvailability() {
       return MultiDisplayScreenshotResult(
         savedURLs: [],
-        failures: [CGMainDisplayID(): unavailableError],
+        failures: [fallbackDisplayID: unavailableError],
         acquisitionDurationMs: 0,
         saveDurationMs: 0
       )
@@ -486,7 +489,7 @@ final class ScreenCaptureManager: ObservableObject {
 
       if canUseFastPath {
         content = nil
-        targets = makeFastDisplayCaptureTargets()
+        targets = makeFastDisplayCaptureTargets(targetDisplayIDs: targetDisplayIDs)
       } else {
         let includeDesktopWindows = excludeDesktopIcons || excludeDesktopWidgets
         let loadedContent = try await loadShareableContent(
@@ -494,13 +497,16 @@ final class ScreenCaptureManager: ObservableObject {
           includeDesktopWindows: includeDesktopWindows
         )
         content = loadedContent
-        targets = makeDisplayCaptureTargets(content: loadedContent)
+        targets = makeDisplayCaptureTargets(
+          content: loadedContent,
+          targetDisplayIDs: targetDisplayIDs
+        )
       }
 
       guard !targets.isEmpty else {
         return MultiDisplayScreenshotResult(
           savedURLs: [],
-          failures: [CGMainDisplayID(): .noDisplayFound],
+          failures: [fallbackDisplayID: .noDisplayFound],
           acquisitionDurationMs: 0,
           saveDurationMs: 0
         )
@@ -541,12 +547,17 @@ final class ScreenCaptureManager: ObservableObject {
         failures[displayID] = error
       }
       let saveDurationMs = Int(Date().timeIntervalSince(saveStartedAt) * 1000)
+      let captureScope = targetDisplayIDs == nil ? "all-displays" : "selected-displays"
+      let completionMessage = targetDisplayIDs == nil
+        ? "Multi-display fullscreen capture completed"
+        : "Selected-display fullscreen capture completed"
 
       DiagnosticLogger.shared.log(
         acquisitionDurationMs <= 50 ? .info : .warning,
         .capture,
-        "Multi-display fullscreen capture completed",
+        completionMessage,
         context: [
+          "captureScope": captureScope,
           "displayCount": "\(targets.count)",
           "savedCount": "\(savedURLs.count)",
           "failureCount": "\(failures.count)",
@@ -567,16 +578,20 @@ final class ScreenCaptureManager: ObservableObject {
       DiagnosticLogger.shared.logError(.capture, error, "Multi-display fullscreen capture failed")
       return MultiDisplayScreenshotResult(
         savedURLs: [],
-        failures: [CGMainDisplayID(): .captureFailed(error.localizedDescription)],
+        failures: [fallbackDisplayID: .captureFailed(error.localizedDescription)],
         acquisitionDurationMs: 0,
         saveDurationMs: 0
       )
     }
   }
 
-  private func makeDisplayCaptureTargets(content: SCShareableContent) -> [DisplayCaptureTarget] {
+  private func makeDisplayCaptureTargets(
+    content: SCShareableContent,
+    targetDisplayIDs: Set<CGDirectDisplayID>? = nil
+  ) -> [DisplayCaptureTarget] {
     NSScreen.screens.enumerated().compactMap { order, screen in
       guard let displayID = screen.displayID,
+            targetDisplayIDs?.contains(displayID) ?? true,
             let display = content.displays.first(where: { $0.displayID == Int(displayID) }) else {
         return nil
       }
@@ -592,9 +607,12 @@ final class ScreenCaptureManager: ObservableObject {
     }
   }
 
-  private func makeFastDisplayCaptureTargets() -> [DisplayCaptureTarget] {
+  private func makeFastDisplayCaptureTargets(
+    targetDisplayIDs: Set<CGDirectDisplayID>? = nil
+  ) -> [DisplayCaptureTarget] {
     NSScreen.screens.enumerated().compactMap { order, screen in
-      guard let displayID = screen.displayID else { return nil }
+      guard let displayID = screen.displayID,
+            targetDisplayIDs?.contains(displayID) ?? true else { return nil }
       return DisplayCaptureTarget(
         displayID: displayID,
         order: order,

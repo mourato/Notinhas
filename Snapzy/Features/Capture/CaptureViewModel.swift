@@ -353,6 +353,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
 
   func captureFullscreen() {
     Task {
+      let targetDisplayID = ScreenUtility.activeDisplayID()
+
       guard
         let resolvedSaveDirectory = fileAccessManager.ensureExportDirectoryForOperation(
           promptMessage: L10n.Recording.chooseSaveLocationMessage)
@@ -364,7 +366,10 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       saveDirectory = resolvedSaveDirectory
 
       isCapturing = true
-      DiagnosticLogger.shared.log(.info, .capture, "Fullscreen capture flow started", context: ["format": resolvedFormat.fileExtension])
+      DiagnosticLogger.shared.log(.info, .capture, "Fullscreen capture flow started", context: [
+        "displayID": "\(targetDisplayID)",
+        "format": resolvedFormat.fileExtension,
+      ])
       let excludeDesktopIcons = DesktopIconManager.shared.isIconHidingEnabled
       let excludeDesktopWidgets = DesktopIconManager.shared.isWidgetHidingEnabled
       let excludeOwnApplication = !includesOwnAppInScreenshots
@@ -397,7 +402,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
         excludeDesktopWidgets: excludeDesktopWidgets,
         excludeOwnApplication: excludeOwnApplication,
         allowFastPathWhenOwnApplicationHidden: excludeOwnApplication,
-        prefetchedContentTask: prefetchedContentTask
+        prefetchedContentTask: prefetchedContentTask,
+        targetDisplayIDs: [targetDisplayID]
       )
 
       isCapturing = false
