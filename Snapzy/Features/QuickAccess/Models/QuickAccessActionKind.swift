@@ -91,6 +91,8 @@ enum QuickAccessActionKind: String, CaseIterable, Codable, Hashable, Identifiabl
     .pinToScreen,
   ]
 
+  static let defaultEnabledActions = Set(defaultOrder)
+
   var displayStyle: QuickAccessActionDisplayStyle {
     switch self {
     case .copy, .saveOrOpen:

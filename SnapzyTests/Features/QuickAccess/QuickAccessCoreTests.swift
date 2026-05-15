@@ -117,6 +117,7 @@ final class QuickAccessCoreTests: XCTestCase {
     XCTAssertEqual(store.actionOrder, QuickAccessActionKind.defaultOrder)
     XCTAssertEqual(store.orderedActions(includeDisabled: false), QuickAccessActionKind.defaultOrder)
     XCTAssertEqual(store.slotAssignments, QuickAccessActionSlot.defaultAssignments)
+    XCTAssertTrue(store.isEnabled(.pinToScreen))
   }
 
   func testQuickAccessActionKind_contextMenuOrderKeepsCloseAndDeleteAtEnd() {
@@ -162,6 +163,25 @@ final class QuickAccessCoreTests: XCTestCase {
       [.delete, .copy, .saveOrOpen, .dismiss, .edit, .uploadToCloud, .pinToScreen]
     )
     XCTAssertEqual(store.orderedActions(includeDisabled: false), [.copy])
+  }
+
+  func testQuickAccessActionConfigurationStore_preservesExplicitPinToScreenDisable() {
+    let defaults = makeIsolatedDefaults()
+    defaults.set(
+      QuickAccessActionKind.defaultOrder.map(\.rawValue),
+      forKey: PreferencesKeys.quickAccessActionOrder
+    )
+    defaults.set(
+      QuickAccessActionKind.defaultOrder
+        .filter { $0 != .pinToScreen }
+        .map(\.rawValue),
+      forKey: PreferencesKeys.quickAccessEnabledActions
+    )
+
+    let store = makeActionConfigurationStore(defaults: defaults)
+
+    XCTAssertFalse(store.isEnabled(.pinToScreen))
+    XCTAssertFalse(store.orderedActions(includeDisabled: false).contains(.pinToScreen))
   }
 
   func testQuickAccessActionConfigurationStore_togglesMovesAndPersistsActions() {

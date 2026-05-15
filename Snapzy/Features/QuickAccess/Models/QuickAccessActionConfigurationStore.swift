@@ -93,7 +93,7 @@ final class QuickAccessActionConfigurationStore: ObservableObject {
 
   func resetToDefaults() {
     actionOrder = QuickAccessActionKind.defaultOrder
-    enabledActions = Set(QuickAccessActionKind.defaultOrder)
+    enabledActions = QuickAccessActionKind.defaultEnabledActions
     slotAssignments = QuickAccessActionSlot.defaultAssignments
     save()
   }
@@ -126,7 +126,7 @@ final class QuickAccessActionConfigurationStore: ObservableObject {
 
   private static func normalizedEnabledActions(from rawIDs: [String]?) -> Set<QuickAccessActionKind> {
     guard let rawIDs else {
-      return Set(QuickAccessActionKind.defaultOrder)
+      return QuickAccessActionKind.defaultEnabledActions
     }
 
     return Set(rawIDs.compactMap(QuickAccessActionKind.init(rawValue:)))
