@@ -28,7 +28,8 @@
     <a href="#community">Cộng đồng</a> •
     <a href="#security">Bảo mật</a> •
     <a href="#contributing">Đóng góp</a> •
-    <a href="#contributors">Cộng tác viên</a>
+    <a href="#contributors">Cộng tác viên</a> •
+    <a href="#acknowledgments">Lời cảm ơn</a>
   </p>
 
   <p>
@@ -239,6 +240,10 @@ Cảm ơn tất cả mọi người đã đóng góp cho Snapzy!
    <img alt="Biểu đồ lịch sử sao" src="https://api.star-history.com/image?repos=duongductrong/Snapzy&type=date&logscale&legend=top-left" />
  </picture>
 </a>
+
+## Lời cảm ơn
+
+Snapzy lấy cảm hứng từ [CleanShot X](https://cleanshot.com/), một ứng dụng chụp màn hình và quay màn hình tiên tiến dành cho macOS.
 
 ## Giấy phép
 

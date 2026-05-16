@@ -27,7 +27,8 @@
     <a href="#community">Community</a> •
     <a href="#security">Security</a> •
     <a href="#contributing">Contributing</a> •
-    <a href="#contributors">Contributors</a>
+    <a href="#contributors">Contributors</a> •
+    <a href="#acknowledgments">Acknowledgments</a>
   </p>
 
   <p>
@@ -218,6 +219,10 @@ Thanks to all the people who contribute to Snapzy!
    <img alt="Star History Chart" src="https://api.star-history.com/image?repos=duongductrong/Snapzy&type=date&logscale&legend=top-left" />
  </picture>
 </a>
+
+## Acknowledgments
+
+Snapzy is inspired by [CleanShot X](https://cleanshot.com/), an advanced screenshot and screen recording application for macOS.
 
 ## License
 

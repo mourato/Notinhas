@@ -28,7 +28,8 @@
     <a href="#community">社区</a> •
     <a href="#security">安全</a> •
     <a href="#contributing">贡献</a> •
-    <a href="#contributors">贡献者</a>
+    <a href="#contributors">贡献者</a> •
+    <a href="#acknowledgments">致谢</a>
   </p>
 
   <p>
@@ -239,6 +240,10 @@ Snapzy 在 macOS App Sandbox 中运行，仅请求最小必要 entitlement。网
    <img alt="Star 历史图表" src="https://api.star-history.com/image?repos=duongductrong/Snapzy&type=date&logscale&legend=top-left" />
  </picture>
 </a>
+
+## 致谢
+
+Snapzy 的灵感来源于 [CleanShot X](https://cleanshot.com/)，一款适用于 macOS 的先进截图与录屏应用。
 
 ## 许可证
 
