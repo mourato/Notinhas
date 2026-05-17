@@ -42,6 +42,26 @@ final class AnnotateCoreTests: XCTestCase {
   }
 
   @MainActor
+  func testAnnotateWindowFocusSyncKeepsInactiveWindowAtRestingLevel() {
+    let window = AnnotateWindow(
+      contentRect: NSRect(x: 0, y: 0, width: 800, height: 600)
+    )
+    defer { window.close() }
+
+    let activeLevel = NSWindow.Level(rawValue: NSWindow.Level.floating.rawValue + 1)
+    window.applyActiveEditorLevel()
+    XCTAssertEqual(window.level, activeLevel)
+
+    window.syncLevelWithFocusState()
+    XCTAssertEqual(window.level, .normal)
+
+    window.setRestingLevel(.floating)
+    window.applyActiveEditorLevel()
+    window.syncLevelWithFocusState()
+    XCTAssertEqual(window.level, .floating)
+  }
+
+  @MainActor
   func testAnnotateStateToggleSidebarVisibilitySkipsPreviewMode() {
     let state = makeAnnotateState()
 

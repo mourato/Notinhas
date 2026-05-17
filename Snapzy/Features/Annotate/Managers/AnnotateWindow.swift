@@ -84,7 +84,7 @@ final class AnnotateWindow: NSWindow {
 
   func setRestingLevel(_ newLevel: NSWindow.Level) {
     restingLevel = newLevel
-    level = (isKeyWindow || isMainWindow) ? Self.activeEditorLevel : newLevel
+    syncLevelWithFocusState()
   }
 
   func applyActiveEditorLevel() {
@@ -93,6 +93,10 @@ final class AnnotateWindow: NSWindow {
 
   func restoreRestingLevel() {
     level = restingLevel
+  }
+
+  func syncLevelWithFocusState() {
+    level = isKeyWindow ? Self.activeEditorLevel : restingLevel
   }
 
   override func layoutIfNeeded() {

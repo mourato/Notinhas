@@ -177,12 +177,20 @@ final class AnnotateWindowController: NSWindowController, NSWindowDelegate {
     NSApp.activate(ignoringOtherApps: true)
   }
 
-  func windowDidBecomeMain(_ notification: Notification) {
+  func windowDidBecomeKey(_ notification: Notification) {
     (notification.object as? AnnotateWindow)?.applyActiveEditorLevel()
   }
 
-  func windowDidResignMain(_ notification: Notification) {
+  func windowDidResignKey(_ notification: Notification) {
     (notification.object as? AnnotateWindow)?.restoreRestingLevel()
+  }
+
+  func windowDidBecomeMain(_ notification: Notification) {
+    (notification.object as? AnnotateWindow)?.syncLevelWithFocusState()
+  }
+
+  func windowDidResignMain(_ notification: Notification) {
+    (notification.object as? AnnotateWindow)?.syncLevelWithFocusState()
   }
 
   // MARK: - Image Loading

@@ -5,12 +5,28 @@
 //  Unit tests for video export sizing and zoom segment value models.
 //
 
+import AppKit
 import AVFoundation
 import CoreGraphics
 import XCTest
 @testable import Snapzy
 
 final class VideoEditorExportSettingsTests: XCTestCase {
+
+  @MainActor
+  func testVideoEditorWindowFocusSyncKeepsInactiveWindowAtRestingLevel() {
+    let window = VideoEditorWindow(
+      contentRect: NSRect(x: 0, y: 0, width: 800, height: 600)
+    )
+    defer { window.close() }
+
+    let activeLevel = NSWindow.Level(rawValue: NSWindow.Level.floating.rawValue + 1)
+    window.applyActiveEditorLevel()
+    XCTAssertEqual(window.level, activeLevel)
+
+    window.syncLevelWithFocusState()
+    XCTAssertEqual(window.level, .normal)
+  }
 
   func testVideoEditorExportLayoutEvenSize_roundsToEvenMinimumDimensions() {
     XCTAssertEqual(

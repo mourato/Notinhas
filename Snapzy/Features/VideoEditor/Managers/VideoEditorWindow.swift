@@ -51,6 +51,10 @@ final class VideoEditorWindow: NSWindow {
     level = restingLevel
   }
 
+  func syncLevelWithFocusState() {
+    level = isKeyWindow ? Self.activeEditorLevel : restingLevel
+  }
+
   /// Apply current theme from ThemeManager
   func applyTheme() {
     let themeManager = ThemeManager.shared
