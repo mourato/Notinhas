@@ -51,6 +51,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.16.1] - 2026-05-17
+
+### Features
+-  use camera cursor in application capture mode (#193) (04363b8)
+
+### Chore
+- refactor: Update RecordingMouseTracker and its tests for MainActor compliance (ebb8ee0)
+- refactor: Enhance RecordingMouseTracker initialization with providers and improve file size retrieval in CaptureHistoryStore (1a9df3d)
+- chore: Add custom scrollbar and scroll view reader for history panel (25b5cf8)
+- docs: Add GitHub badges for stars, forks, and downloads to README files (6212e79)
+- docs: Add acknowledgments section to README files with inspiration source (44d13af)
+- chore: update appcast, cask, and readme for v1.16.0 (0ee625f)
+
+### Contributors
+- @duongductrong
+- @github-actions[bot]
+- @omarshahine
+
 ## [1.16.0] - 2026-05-16
 
 ### Features
