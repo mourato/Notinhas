@@ -14,11 +14,13 @@ struct QuickAccessIconButton: View {
   let action: () -> Void
   var helpText: String? = nil
 
+  @Environment(\.isEnabled) private var isEnabled
   @State private var isHovering = false
   @State private var isPressed = false
 
   var body: some View {
     Button(action: {
+      guard isEnabled else { return }
       // Immediate visual feedback before action
       withAnimation(.easeOut(duration: 0.05)) {
         isPressed = true
@@ -32,7 +34,7 @@ struct QuickAccessIconButton: View {
     }) {
       Image(systemName: icon)
         .font(.system(size: 10, weight: .bold))
-        .foregroundColor(.white)
+        .foregroundColor(.white.opacity(isEnabled ? 1 : 0.7))
         .frame(width: 20, height: 20)
         .background(
           Circle()
@@ -42,6 +44,11 @@ struct QuickAccessIconButton: View {
     }
     .buttonStyle(.plain)
     .onHover { hovering in
+      guard isEnabled else {
+        isHovering = false
+        NSCursor.arrow.set()
+        return
+      }
       withAnimation(.easeInOut(duration: 0.1)) {
         isHovering = hovering
       }
@@ -57,7 +64,9 @@ struct QuickAccessIconButton: View {
   }
 
   private var buttonBackgroundColor: Color {
-    if isPressed {
+    if !isEnabled {
+      return Color.black.opacity(0.4)
+    } else if isPressed {
       return Color.white.opacity(0.5)
     } else if isHovering {
       return Color.white.opacity(0.35)

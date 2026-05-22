@@ -150,10 +150,6 @@ struct QuickAccessCardView: View {
     TempCaptureManager.shared.isTempFile(item.url)
   }
 
-  private var shouldShowSaveOrOpenAction: Bool {
-    preferencesManager.isActionEnabled(.save, for: captureType) || isTempFile
-  }
-
   private var saveOrOpenActionTitle: String {
     isTempFile ? L10n.Common.save : L10n.Common.open
   }
@@ -395,30 +391,29 @@ struct QuickAccessCardView: View {
 
   private func isActionAvailable(
     _ action: QuickAccessActionKind,
-    on surface: QuickAccessActionSurface
+    on _: QuickAccessActionSurface
   ) -> Bool {
     switch action {
     case .copy, .dismiss, .edit:
       return true
     case .pinToScreen:
-      return !item.isVideo
+      return true
     case .saveOrOpen:
-      return shouldShowSaveOrOpenAction
+      return true
     case .uploadToCloud:
       return shouldShowCloudButton
     case .delete:
-      if surface == .overlay {
-        return preferencesManager.isActionEnabled(.save, for: captureType)
-      }
       return true
     }
   }
 
   private func isActionEnabled(_ action: QuickAccessActionKind) -> Bool {
     switch action {
+    case .pinToScreen:
+      return !item.isVideo
     case .uploadToCloud:
-      return !alreadyUploadedToCloud && !isCloudUploading
-    default:
+      return shouldShowCloudButton && !alreadyUploadedToCloud && !isCloudUploading
+    case .copy, .saveOrOpen, .dismiss, .delete, .edit:
       return true
     }
   }
@@ -566,6 +561,8 @@ struct QuickAccessCardView: View {
     QuickAccessTextButton(label: actionTitle(for: action)) {
       performAction(action)
     }
+      .disabled(!isActionEnabled(action))
+      .opacity(isActionEnabled(action) ? 1 : 0.6)
       .transition(buttonTransition(delay: delay))
   }
 
@@ -725,7 +722,7 @@ struct QuickAccessCardView: View {
             do {
               try await CloudManager.shared.deleteByKey(key: oldKey)
             } catch {
-              DiagnosticLogger.shared.logError(.cloud, error, "Quick access old cloud object cleanup failed")
+              await DiagnosticLogger.shared.logError(.cloud, error, "Quick access old cloud object cleanup failed")
             }
           }
         }
