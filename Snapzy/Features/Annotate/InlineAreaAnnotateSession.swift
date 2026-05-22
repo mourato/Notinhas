@@ -245,6 +245,9 @@ final class InlineAreaAnnotateSession: ObservableObject {
       SoundManager.playScreenshotCapture()
     }
     complete(result)
+    if case .success(let url) = result {
+      persistCommittedSession(for: url)
+    }
   }
 
   func copyCurrentImage() {
@@ -380,6 +383,19 @@ final class InlineAreaAnnotateSession: ObservableObject {
       }
     }
     onComplete(result)
+  }
+
+  private func persistCommittedSession(for url: URL) {
+    guard AnnotationSessionStore.shared.shouldPersist(for: url),
+          let sourceImage = state.sourceImage,
+          let originalImageData = AnnotateExporter.imageData(from: sourceImage, for: "png") else {
+      return
+    }
+    let sessionData = AnnotationSessionData.snapshot(
+      from: state,
+      originalImageData: originalImageData
+    )
+    AnnotationSessionStore.shared.persist(sessionData, for: url)
   }
 
   private static func imageScale(_ image: NSImage) -> CGFloat {

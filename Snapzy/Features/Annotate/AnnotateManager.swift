@@ -108,7 +108,11 @@ final class AnnotateManager {
     // Switch to regular app mode for Cmd+Tab visibility
     becomeRegularApp()
 
-    let controller = AnnotateWindowController(item: item, sessionData: sessionCache[item.id])
+    let sessionData = sessionCache[item.id] ?? AnnotationSessionStore.shared.load(for: item.url)
+    if let sessionData, sessionCache[item.id] == nil {
+      sessionCache[item.id] = sessionData
+    }
+    let controller = AnnotateWindowController(item: item, sessionData: sessionData)
     windowControllers[item.id] = controller
     DiagnosticLogger.shared.log(.info, .action, "Annotate window opened for item \(item.id)")
 
@@ -172,7 +176,8 @@ final class AnnotateManager {
     // Switch to regular app mode for Cmd+Tab visibility
     becomeRegularApp()
 
-    let controller = AnnotateWindowController(url: url, sessionData: sessionData)
+    let restoredSessionData = sessionData ?? AnnotationSessionStore.shared.load(for: url)
+    let controller = AnnotateWindowController(url: url, sessionData: restoredSessionData)
     let controllerId = UUID()
     windowControllers[controllerId] = controller
     DiagnosticLogger.shared.log(.info, .action, "Annotate window opened for URL \(url.lastPathComponent)")
@@ -271,5 +276,39 @@ final class AnnotateManager {
   /// Clear session data when QA card is dismissed
   func clearSessionData(for itemId: UUID) {
     sessionCache.removeValue(forKey: itemId)
+  }
+
+  func makeSessionData(for state: AnnotateState, originalImageData: Data? = nil) -> AnnotationSessionData? {
+    let resolvedOriginalImageData = originalImageData
+      ?? state.quickAccessItemId.flatMap { sessionCache[$0]?.originalImageData }
+      ?? state.sourceURL.flatMap { Self.readFileData(from: $0) }
+
+    guard let resolvedOriginalImageData else { return nil }
+    return AnnotationSessionData.snapshot(from: state, originalImageData: resolvedOriginalImageData)
+  }
+
+  private static func readFileData(from url: URL) -> Data? {
+    SandboxFileAccessManager.shared.withScopedAccess(to: url) {
+      try? Data(contentsOf: url)
+    }
+  }
+}
+
+extension AnnotationSessionData {
+  static func snapshot(from state: AnnotateState, originalImageData: Data) -> AnnotationSessionData {
+    let cutoutSnapshot = state.cutoutSnapshot()
+    return AnnotationSessionData(
+      originalImageData: originalImageData,
+      annotations: state.annotations,
+      canvasEffects: state.canvasEffectsSnapshot,
+      selectedCanvasPresetId: state.selectedCanvasPresetId,
+      isSelectedCanvasPresetDirty: state.isSelectedCanvasPresetDirty,
+      cropRect: state.cropRect,
+      isCutoutApplied: cutoutSnapshot.isApplied,
+      cutoutImageData: cutoutSnapshot.cutoutImageData,
+      didCutoutAutoApplyCrop: cutoutSnapshot.didAutoApplyCrop,
+      cutoutAutoAppliedCropRect: cutoutSnapshot.autoAppliedCropRect,
+      embeddedImageAssetsData: state.embeddedImageAssetsSnapshotData()
+    )
   }
 }

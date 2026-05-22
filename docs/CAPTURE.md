@@ -328,14 +328,25 @@ flowchart TD
     E --> G{"Capture type"}
     F --> G
     G -->|Screenshot| H["AnnotateManager.openAnnotation(for:)"]
+    H --> H1{"Editable session available?"}
+    H1 -->|Quick Access cache| H2["Restore in-memory AnnotationSessionData"]
+    H1 -->|Sidecar| H3["AnnotationSessionStore.load(for:)"]
+    H1 -->|No| H4["Open flattened screenshot as source image"]
     G -->|Video / GIF| I["VideoEditorManager.openEditor(for:)"]
 ```
 
 ### Notes
 
 - Opening a capture from either history surface restores the item through Quick Access before opening the editor.
-- History restore reuses an existing Quick Access card for the same file when one is already present, so the editor keeps the same item-scoped session.
+- History restore reuses an existing Quick Access card for the same file when one is already present, so the editor keeps the same item-scoped session and avoids extra disk reads.
+- Screenshot history restore first tries the Quick Access in-memory `AnnotationSessionData`, then the persisted annotation sidecar, then falls back to opening the flattened image if no valid editable session exists.
+- Annotation sidecars live under `~/Library/Application Support/Snapzy/AnnotationSessions/<sha256-normalized-source-path>/`. Each package stores `manifest.json`, `original.bin`, optional `cutout.png`, and embedded image assets referenced by annotations.
+- The sidecar manifest binds the editable session to the source screenshot using normalized path hash plus a file signature (`size`, `modifiedAt`, `extension`). If the user or another app replaces the screenshot at the same path, Snapzy ignores the stale sidecar instead of restoring annotations onto the wrong pixels.
 - Screenshot, video, and GIF saves from restored history items follow the same Quick Access session behavior as fresh captures.
+- Sidecar cleanup is tied to the same lifecycle as the source screenshot: Quick Access delete, Annotate delete-image, History delete, clear-history, and retention sweeps remove matching sidecars. Saving a temp Quick Access item to the export folder moves the sidecar to the new source path, with a cached-session re-persist fallback.
+- Retention cleanup also prunes orphan sidecars whose source screenshot no longer exists, no longer has an active history record, or no longer matches the stored signature.
+- Editable history persistence is commit-based, not live autosave. Unsaved edits in an open Annotate window still follow the existing unsaved-change prompt/window lifecycle; Snapzy does not create draft recovery sidecars on app quit.
+- Performance contract: no per-edit disk writes and no polling watcher. Sidecars are read only when opening a screenshot for annotation and written after committed save/share/upload flows, so normal annotation interaction stays memory-only.
 
 ## Annotate and Cloud Re-Upload
 
@@ -352,8 +363,9 @@ flowchart TD
     E -->|Upload| I["CloudManager.upload()"]
 
     F --> J["Update file on disk"]
-    J --> K["QuickAccess thumbnail refresh"]
-    J --> L{"Cloud URL already exists?"}
+    J --> J1["Persist editable annotation sidecar"]
+    J1 --> K["QuickAccess thumbnail refresh"]
+    J1 --> L{"Cloud URL already exists?"}
     L -->|Yes| M["Mark item as cloud-stale"]
     L -->|No| N["No stale marker"]
 
@@ -364,7 +376,9 @@ flowchart TD
 
 ### Notes
 
-- Annotate windows cache session state per Quick Access item so the user can reopen the same card and keep editing.
+- Annotate windows cache session state per Quick Access item so the user can reopen the same card and keep editing. Committed screenshot sessions are also persisted through `AnnotationSessionStore`, so a restored History screenshot can continue editing previous annotations instead of only reopening the flattened output.
+- Persisted annotate sessions include the original image bytes, annotation items, canvas/background effects, crop state, cutout state/data, and embedded image assets. The final screenshot file remains the rendered user-facing image.
+- Session persistence happens after committed actions: save, save-and-close, copy/close with save, successful drag-to-app save, cloud upload/re-upload save, inline area annotate finish, and default-preset auto-apply during post-capture routing.
 - Canvas presets can be marked as the default for new full Annotate windows and include background style, blurred background effect, spacing, shadow, corner radius, aspect ratio, and ratio orientation. Session restore keeps the cached canvas effects, and inline area annotate does not auto-apply this window default.
 - Full Annotate sidebar background effects include gradients, wallpapers, solid colors, and blurred presets. The blurred presets combine with the selected wallpaper or solid color background, precompute image-backed blur for preview performance, and render through the same exporter path used by save, copy, and drag-to-app.
 - Watermark annotations are editable items with text, style, opacity, size, rotation, and color controls; export/copy/share/upload render them through the same final image pipeline as other annotations.
@@ -428,9 +442,12 @@ flowchart TD
 | `Snapzy/Features/QuickAccess/Managers/QuickAccessPinWindowManager.swift` | Independent always-on-top pinned screenshot windows |
 | `Snapzy/Features/History/HistoryWindowController.swift` | History restore routing through Quick Access |
 | `Snapzy/Features/Annotate/AnnotateManager.swift` | Annotate window lifecycle and session caching |
+| `Snapzy/Features/Annotate/Services/AnnotationSessionStore.swift` | Persistent sidecar storage for committed editable screenshot annotation sessions |
+| `Snapzy/Features/Annotate/Models/PersistedAnnotationSession.swift` | Codable sidecar manifest and persisted annotation models |
 | `Snapzy/Features/Annotate/InlineAreaAnnotateSession.swift` | Session state machine (selecting → annotating), key handling, finish/cancel |
 | `Snapzy/Features/Annotate/InlineAreaAnnotateWindow.swift` | Full overlay UI: selection gesture, canvas, toolbar, properties bar, action rail, resize handles |
 | `Snapzy/Features/Annotate/Services/AnnotateExporter.swift` | Final image render/export |
+| `Snapzy/Services/History/CaptureHistoryRetentionService.swift` | History retention, media cleanup, thumbnail cleanup, and orphan annotation sidecar cleanup |
 | `Snapzy/Features/VideoEditor/VideoEditorManager.swift` | Video editor window lifecycle |
 | `Snapzy/Features/VideoEditor/Services/VideoEditorAutoFocusEngine.swift` | Follow Mouse / Smart Camera path reconstruction |
 | `Snapzy/Services/Cloud/CloudManager.swift` | Upload facade, provider creation, history persistence |

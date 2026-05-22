@@ -420,6 +420,7 @@ final class QuickAccessManager: ObservableObject {
           "Quick access item dismissed; temp file auto-delete requested",
           context: ["fileName": url.lastPathComponent]
         )
+        AnnotationSessionStore.shared.deleteSession(for: url)
         Task { @MainActor in
           tempCaptureManager.deleteTempFile(at: url)
         }
@@ -832,6 +833,7 @@ final class QuickAccessManager: ObservableObject {
     //  - Saved files: history is cleared before the file is trashed, avoiding a
     //    "file missing" ghost entry in the history panel.
     CaptureHistoryStore.shared.removeByFilePath(url.path)
+    AnnotationSessionStore.shared.deleteSession(for: url)
 
     removeItem(id: id)
 
@@ -906,6 +908,7 @@ final class QuickAccessManager: ObservableObject {
       return
     }
     let tempURL = item.url
+    let cachedSessionData = AnnotateManager.shared.getSessionData(for: id)
     DiagnosticLogger.shared.log(
       .info,
       .action,
@@ -934,6 +937,11 @@ final class QuickAccessManager: ObservableObject {
           from: tempURL.path,
           to: savedURL.path
         )
+        if !AnnotationSessionStore.shared.moveSession(from: tempURL, to: savedURL),
+           let cachedSessionData,
+           AnnotationSessionStore.shared.shouldPersist(for: savedURL) {
+          AnnotationSessionStore.shared.persist(cachedSessionData, for: savedURL)
+        }
 
         let captureType: CaptureType = item.isVideo ? .recording : .screenshot
         PostCaptureActionHandler.shared.copyEditedCaptureToClipboardIfEnabled(
@@ -958,6 +966,7 @@ final class QuickAccessManager: ObservableObject {
           context: ["fileName": tempURL.lastPathComponent]
         )
       }
+      AnnotateManager.shared.clearSessionData(for: id)
     }
   }
 

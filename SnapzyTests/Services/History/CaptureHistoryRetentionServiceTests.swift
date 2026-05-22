@@ -16,10 +16,17 @@ final class CaptureHistoryRetentionServiceTests: XCTestCase {
   private var service: CaptureHistoryRetentionService!
   private var defaults: UserDefaults!
   private var defaultsSuiteName: String!
+  private var tempDirectory: URL!
+  private var annotationSessionStore: AnnotationSessionStore!
 
   override func setUp() {
     super.setUp()
     service = CaptureHistoryRetentionService.shared
+    tempDirectory = FileManager.default.temporaryDirectory
+      .appendingPathComponent("SnapzyTests_CaptureHistoryRetention_\(UUID().uuidString)", isDirectory: true)
+    annotationSessionStore = AnnotationSessionStore(
+      rootDirectory: tempDirectory.appendingPathComponent("AnnotationSessions", isDirectory: true)
+    )
     defaultsSuiteName = "SnapzyTests.CaptureHistoryRetentionServiceTests.\(UUID().uuidString)"
     defaults = UserDefaults(suiteName: defaultsSuiteName)
     defaults.removePersistentDomain(forName: defaultsSuiteName)
@@ -28,6 +35,7 @@ final class CaptureHistoryRetentionServiceTests: XCTestCase {
     defaults.set(0, forKey: PreferencesKeys.historyMaxCount)
     CaptureHistoryStore.shared.userDefaults = defaults
     service.userDefaults = defaults
+    service.annotationSessionStore = annotationSessionStore
 
     CaptureHistoryStore.shared.removeAll()
     CaptureHistoryStore.shared.refreshRecords()
@@ -40,6 +48,10 @@ final class CaptureHistoryRetentionServiceTests: XCTestCase {
     UserDefaults.standard.removePersistentDomain(forName: defaultsSuiteName)
     CaptureHistoryStore.shared.userDefaults = .standard
     service.userDefaults = .standard
+    service.annotationSessionStore = .shared
+    try? FileManager.default.removeItem(at: tempDirectory)
+    annotationSessionStore = nil
+    tempDirectory = nil
     super.tearDown()
   }
 
@@ -103,6 +115,35 @@ final class CaptureHistoryRetentionServiceTests: XCTestCase {
     XCTAssertTrue(CaptureHistoryStore.shared.records.isEmpty)
   }
 
+  func testClearAllHistory_removesAnnotationSidecars() throws {
+    let sourceURL = try writeSourceFile(named: "capture.png")
+    XCTAssertTrue(annotationSessionStore.persist(makeSessionData(), for: sourceURL))
+    XCTAssertNotNil(annotationSessionStore.load(for: sourceURL))
+
+    service.clearAllHistory()
+
+    XCTAssertNil(annotationSessionStore.load(for: sourceURL))
+  }
+
+  func testSweep_cleansOrphanedAnnotationSidecars() async throws {
+    let activeURL = try writeSourceFile(named: "active.png")
+    let inactiveURL = try writeSourceFile(named: "inactive.png")
+    let missingURL = try writeSourceFile(named: "missing.png")
+
+    CaptureHistoryStore.shared.add(makeRecord(filePath: activeURL.path))
+    CaptureHistoryStore.shared.refreshRecords()
+    XCTAssertTrue(annotationSessionStore.persist(makeSessionData(), for: activeURL))
+    XCTAssertTrue(annotationSessionStore.persist(makeSessionData(), for: inactiveURL))
+    XCTAssertTrue(annotationSessionStore.persist(makeSessionData(), for: missingURL))
+    try FileManager.default.removeItem(at: missingURL)
+
+    await service.sweep()
+
+    XCTAssertNotNil(annotationSessionStore.load(for: activeURL))
+    XCTAssertFalse(FileManager.default.fileExists(atPath: sidecarDirectory(for: inactiveURL).path))
+    XCTAssertFalse(FileManager.default.fileExists(atPath: sidecarDirectory(for: missingURL).path))
+  }
+
   // MARK: - start / stop
 
   func testStartStop_lifecycleDoesNotCrash() {
@@ -116,6 +157,10 @@ final class CaptureHistoryRetentionServiceTests: XCTestCase {
 
   private func makeRecord(capturedAt: Date = Date()) -> CaptureHistoryRecord {
     let path = "/tmp/\(UUID().uuidString).png"
+    return makeRecord(filePath: path, capturedAt: capturedAt)
+  }
+
+  private func makeRecord(filePath path: String, capturedAt: Date = Date()) -> CaptureHistoryRecord {
     return CaptureHistoryRecord(
       id: UUID(),
       filePath: path,
@@ -129,5 +174,35 @@ final class CaptureHistoryRetentionServiceTests: XCTestCase {
       thumbnailPath: nil,
       isDeleted: false
     )
+  }
+
+  private func makeSessionData() -> AnnotationSessionData {
+    AnnotationSessionData(
+      originalImageData: Data("original".utf8),
+      annotations: [
+        AnnotationItem(
+          type: .text("History"),
+          bounds: CGRect(x: 0, y: 0, width: 40, height: 16),
+          properties: AnnotationProperties()
+        )
+      ],
+      canvasEffects: AnnotationCanvasEffects(),
+      cropRect: nil
+    )
+  }
+
+  private func writeSourceFile(named fileName: String) throws -> URL {
+    let directory = tempDirectory.appendingPathComponent("Sources", isDirectory: true)
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    let url = directory.appendingPathComponent(fileName)
+    try Data("source-\(fileName)".utf8).write(to: url, options: .atomic)
+    return url
+  }
+
+  private func sidecarDirectory(for sourceURL: URL) -> URL {
+    let normalizedPath = AnnotationSessionStore.normalizedPath(for: sourceURL)
+    return tempDirectory
+      .appendingPathComponent("AnnotationSessions", isDirectory: true)
+      .appendingPathComponent(AnnotationSessionStore.pathHash(for: normalizedPath), isDirectory: true)
   }
 }

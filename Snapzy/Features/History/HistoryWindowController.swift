@@ -199,6 +199,9 @@ final class HistoryWindowController {
     let ids = recordsToDelete.map(\.id)
     CaptureHistoryStore.shared.remove(ids: ids)
     ids.forEach { HistoryThumbnailGenerator.shared.deleteThumbnail(for: $0) }
+    recordsToDelete
+      .filter { $0.captureType == .screenshot }
+      .forEach { AnnotationSessionStore.shared.deleteSession(for: $0.fileURL) }
 
     AppToastManager.shared.show(
       message: L10n.PreferencesHistory.deletedCaptures(recordsToDelete.count),

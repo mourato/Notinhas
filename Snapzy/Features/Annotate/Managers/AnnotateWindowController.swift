@@ -514,8 +514,9 @@ final class AnnotateWindowController: NSWindowController, NSWindowDelegate {
     if state.sourceURL != nil {
       // Render once, update thumbnail instantly, close, save in background
       let sourceURL = state.sourceURL
+      let sessionSnapshot = makeSessionSnapshot()
       state.markAsSaved()
-      saveSessionCache()
+      saveSessionCache(sessionSnapshot)
       let renderedImage = AnnotateExporter.renderFinalImage(state: state)
       if let renderedImage = renderedImage, let itemId = quickAccessItemId {
         QuickAccessManager.shared.updateItemThumbnail(id: itemId, image: renderedImage)
@@ -526,6 +527,7 @@ final class AnnotateWindowController: NSWindowController, NSWindowDelegate {
       Task.detached(priority: .userInitiated) {
         guard await AnnotateExporter.saveToFile(image: renderedImage, state: capturedState),
               let sourceURL else { return }
+        await Self.persistCommittedSession(sessionSnapshot, for: sourceURL)
         await PostCaptureActionHandler.shared.copyEditedCaptureToClipboardIfEnabled(
           for: .screenshot,
           url: sourceURL
@@ -697,7 +699,9 @@ final class AnnotateWindowController: NSWindowController, NSWindowDelegate {
       return
     }
 
+    let sessionSnapshot = makeSessionSnapshot()
     state.markAsSaved()
+    saveSessionCache(sessionSnapshot)
     if let itemId = quickAccessItemId {
       QuickAccessManager.shared.updateItemThumbnail(id: itemId, image: renderedImage)
       QuickAccessManager.shared.markCloudStale(id: itemId)
@@ -714,6 +718,7 @@ final class AnnotateWindowController: NSWindowController, NSWindowDelegate {
         )
         return
       }
+      await Self.persistCommittedSession(sessionSnapshot, for: sourceURL)
       await PostCaptureActionHandler.shared.copyEditedCaptureToClipboardIfEnabled(
         for: .screenshot,
         url: sourceURL
@@ -784,11 +789,12 @@ final class AnnotateWindowController: NSWindowController, NSWindowDelegate {
 
       // Render the annotated image once
       let sourceURL = state.sourceURL
+      let sessionSnapshot = makeSessionSnapshot()
       let renderedImage = AnnotateExporter.renderFinalImage(state: state)
 
       // Update QA thumbnail instantly (synchronous, no file I/O)
       state.markAsSaved()
-      saveSessionCache()
+      saveSessionCache(sessionSnapshot)
       if let renderedImage = renderedImage, let itemId = quickAccessItemId {
         QuickAccessManager.shared.updateItemThumbnail(id: itemId, image: renderedImage)
         QuickAccessManager.shared.markCloudStale(id: itemId)
@@ -802,6 +808,7 @@ final class AnnotateWindowController: NSWindowController, NSWindowDelegate {
       Task.detached(priority: .userInitiated) {
         guard await AnnotateExporter.saveToFile(image: renderedImage, state: capturedState),
               let sourceURL else { return }
+        await Self.persistCommittedSession(sessionSnapshot, for: sourceURL)
         await PostCaptureActionHandler.shared.copyEditedCaptureToClipboardIfEnabled(
           for: .screenshot,
           url: sourceURL
@@ -893,9 +900,10 @@ final class AnnotateWindowController: NSWindowController, NSWindowDelegate {
     }
 
     // Update QA thumbnail instantly + cache
+    let sessionSnapshot = makeSessionSnapshot()
     if let _ = state.sourceURL {
       state.markAsSaved()
-      saveSessionCache()
+      saveSessionCache(sessionSnapshot)
     }
     if let renderedImage = renderedImage, let itemId = quickAccessItemId {
       QuickAccessManager.shared.updateItemThumbnail(id: itemId, image: renderedImage)
@@ -904,9 +912,12 @@ final class AnnotateWindowController: NSWindowController, NSWindowDelegate {
 
     // Close instantly, save in background
     let capturedState = state
+    let sourceURL = state.sourceURL
     forceClose()
     Task.detached(priority: .userInitiated) {
-      await AnnotateExporter.saveToFile(image: renderedImage, state: capturedState)
+      guard await AnnotateExporter.saveToFile(image: renderedImage, state: capturedState),
+            let sourceURL else { return }
+      await Self.persistCommittedSession(sessionSnapshot, for: sourceURL)
     }
   }
 
@@ -941,11 +952,15 @@ final class AnnotateWindowController: NSWindowController, NSWindowDelegate {
     guard let sourceURL = state.sourceURL else { return }
 
     // Render once
+    let sessionSnapshot = makeSessionSnapshot()
     let renderedImage = AnnotateExporter.renderFinalImage(state: state)
 
     // Save to disk first (so cloud upload reads the updated file)
     if let renderedImage = renderedImage {
-      AnnotateExporter.saveToFile(image: renderedImage, state: state)
+      let didSaveRenderedImage = AnnotateExporter.saveToFile(image: renderedImage, state: state)
+      if didSaveRenderedImage {
+        Self.persistCommittedSession(sessionSnapshot, for: sourceURL)
+      }
     }
 
     let oldCloudKey = state.cloudKey
@@ -1031,11 +1046,15 @@ final class AnnotateWindowController: NSWindowController, NSWindowDelegate {
     guard let sourceURL = state.sourceURL else { return }
 
     // Render once
+    let sessionSnapshot = makeSessionSnapshot()
     let renderedImage = AnnotateExporter.renderFinalImage(state: state)
 
     // Save to disk first
     if let renderedImage = renderedImage {
-      AnnotateExporter.saveToFile(image: renderedImage, state: state)
+      let didSaveRenderedImage = AnnotateExporter.saveToFile(image: renderedImage, state: state)
+      if didSaveRenderedImage {
+        Self.persistCommittedSession(sessionSnapshot, for: sourceURL)
+      }
     }
 
     let oldCloudKey = state.cloudKey
@@ -1117,39 +1136,35 @@ final class AnnotateWindowController: NSWindowController, NSWindowDelegate {
 
   // MARK: - Session Cache
 
-  /// Save current annotation state to session cache for re-editing
-  private func saveSessionCache() {
-    guard let itemId = quickAccessItemId,
-          let imageData = originalImageData else { return }
-    let startedAt = CFAbsoluteTimeGetCurrent()
-    let embeddedImageAssetsData = state.embeddedImageAssetsSnapshotData()
-    let snapshotDurationMs = Int((CFAbsoluteTimeGetCurrent() - startedAt) * 1_000)
-    let embeddedBytes = embeddedImageAssetsData.values.reduce(0) { $0 + $1.count }
+  private func makeSessionSnapshot() -> AnnotationSessionData? {
+    AnnotateManager.shared.makeSessionData(for: state, originalImageData: originalImageData)
+  }
 
-    let cutoutSnapshot = state.cutoutSnapshot()
-    AnnotateManager.shared.saveSessionData(
-      for: itemId,
-      originalImageData: imageData,
-      annotations: state.annotations,
-      canvasEffects: state.canvasEffectsSnapshot,
-      selectedCanvasPresetId: state.selectedCanvasPresetId,
-      isSelectedCanvasPresetDirty: state.isSelectedCanvasPresetDirty,
-      cropRect: state.cropRect,
-      isCutoutApplied: cutoutSnapshot.isApplied,
-      cutoutImageData: cutoutSnapshot.cutoutImageData,
-      didCutoutAutoApplyCrop: cutoutSnapshot.didAutoApplyCrop,
-      cutoutAutoAppliedCropRect: cutoutSnapshot.autoAppliedCropRect,
-      embeddedImageAssetsData: embeddedImageAssetsData
-    )
+  /// Save current annotation state to session cache for re-editing
+  private func saveSessionCache(_ snapshot: AnnotationSessionData?) {
+    guard let itemId = quickAccessItemId,
+          let snapshot else { return }
+    let startedAt = CFAbsoluteTimeGetCurrent()
+    let snapshotDurationMs = Int((CFAbsoluteTimeGetCurrent() - startedAt) * 1_000)
+    let embeddedBytes = snapshot.embeddedImageAssetsData.values.reduce(0) { $0 + $1.count }
+
+    AnnotateManager.shared.saveSessionData(snapshot, for: itemId)
 
     let totalDurationMs = Int((CFAbsoluteTimeGetCurrent() - startedAt) * 1_000)
     DiagnosticLogger.shared.log(.debug, .annotate, "Session cache updated", context: [
       "itemId": itemId.uuidString,
-      "annotations": "\(state.annotations.count)",
-      "embeddedAssets": "\(embeddedImageAssetsData.count)",
+      "annotations": "\(snapshot.annotations.count)",
+      "embeddedAssets": "\(snapshot.embeddedImageAssetsData.count)",
       "embeddedBytes": "\(embeddedBytes)",
       "snapshotMs": "\(snapshotDurationMs)",
       "totalMs": "\(totalDurationMs)"
     ])
+  }
+
+  @MainActor
+  private static func persistCommittedSession(_ snapshot: AnnotationSessionData?, for sourceURL: URL) {
+    guard let snapshot,
+          AnnotationSessionStore.shared.shouldPersist(for: sourceURL) else { return }
+    AnnotationSessionStore.shared.persist(snapshot, for: sourceURL)
   }
 }

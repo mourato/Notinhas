@@ -81,6 +81,7 @@ final class PostCaptureActionHandler {
     for url in validURLs {
       if let sessionData = screenshotPresetAutoApplier.applyDefaultPresetIfNeeded(to: url) {
         sessionDataByURL[url] = sessionData
+        persistAnnotationSessionIfNeeded(sessionData, for: url)
       }
     }
 
@@ -291,6 +292,9 @@ final class PostCaptureActionHandler {
     let screenshotSessionData = captureType == .screenshot
       ? screenshotPresetAutoApplier.applyDefaultPresetIfNeeded(to: url)
       : nil
+    if let screenshotSessionData {
+      persistAnnotationSessionIfNeeded(screenshotSessionData, for: url)
+    }
     let isTempCapture = TempCaptureManager.shared.isTempFile(url)
     let locationLabel = isTempCapture ? "temp" : "export"
     let typeLabel = captureType == .screenshot ? "screenshot" : "recording"
@@ -391,5 +395,10 @@ final class PostCaptureActionHandler {
         context: ["fileName": url.lastPathComponent]
       )
     }
+  }
+
+  private func persistAnnotationSessionIfNeeded(_ sessionData: AnnotationSessionData, for url: URL) {
+    guard AnnotationSessionStore.shared.shouldPersist(for: url) else { return }
+    AnnotationSessionStore.shared.persist(sessionData, for: url)
   }
 }

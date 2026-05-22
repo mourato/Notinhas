@@ -454,6 +454,7 @@ struct AnnotateBottomBarView: View {
       // Clear matching history record FIRST so the user does not see a stale
       // "file missing" entry after the underlying file is trashed.
       CaptureHistoryStore.shared.removeByFilePath(sourceURL.path)
+      AnnotationSessionStore.shared.deleteSession(for: sourceURL)
 
       // Remove QuickAccess card if it exists
       if let itemId = state.quickAccessItemId {
@@ -492,11 +493,17 @@ struct AnnotateBottomBarView: View {
     }
 
     // Step 1: Render flattened image with annotations BEFORE uploading
+    let sessionSnapshot = AnnotateManager.shared.makeSessionData(for: state)
     let renderedImage = AnnotateExporter.renderFinalImage(state: state)
 
     // Step 2: Save rendered image to disk (so the file includes annotations)
     if let renderedImage = renderedImage {
-      AnnotateExporter.saveToFile(image: renderedImage, state: state)
+      let didSave = AnnotateExporter.saveToFile(image: renderedImage, state: state)
+      if didSave,
+         let sessionSnapshot,
+         AnnotationSessionStore.shared.shouldPersist(for: sourceURL) {
+        AnnotationSessionStore.shared.persist(sessionSnapshot, for: sourceURL)
+      }
     }
 
     isCloudUploading = true

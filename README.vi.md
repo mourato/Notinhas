@@ -62,7 +62,7 @@
 - **Thiết lập sau khi chụp**: ma trận hành động theo từng chế độ cho lưu, Quick Access, copy clipboard và annotate, cùng một tùy chọn auto-crop toàn cục riêng cho remove background (bật mặc định)
 - **Trình chỉnh sửa video**: cắt với timeline trực quan + dải frame, zoom segment với auto-focus (Follow Mouse), nền wallpaper + padding, kích thước export tùy chỉnh, trình xem GIF động, undo/redo
 - **Quick Access**: bảng nổi sau mỗi lần chụp với các thao tác copy, edit, drag-to-app, open và delete
-- **Lịch sử capture**: panel history nổi + cửa sổ duyệt đầy đủ cho screenshot, video và GIF gần đây, có lọc theo loại/thời gian, tìm theo tên file, thao tác copy/open/delete nhanh, mở lại bằng Annotate hoặc Video Editor chỉ với một lần nhấn, tùy chỉnh layout panel, và retention policy
+- **Lịch sử capture**: panel history nổi + cửa sổ duyệt đầy đủ cho screenshot, video và GIF gần đây, có lọc theo loại/thời gian, tìm theo tên file, thao tác copy/open/delete nhanh, mở lại bằng Annotate hoặc Video Editor chỉ với một lần nhấn, restore annotation đã commit để tiếp tục chỉnh sửa, tùy chỉnh layout panel, và retention policy
 - **Shortcut**: shortcut toàn cục cấu hình đầy đủ cho chụp, quay và công cụ annotate, có bật/tắt cho từng shortcut và phát hiện xung đột hệ thống
 - **Onboarding**: màn hình chào, chọn ngôn ngữ lần đầu, hướng dẫn cấp quyền, và cấu hình shortcut cho người dùng lần đầu
 - **Bản địa hóa**: bản địa hóa ứng dụng cho 🇺🇸 English, 🇻🇳 Vietnamese, 🇨🇳 Simplified Chinese, 🇹🇼 Traditional Chinese, 🇪🇸 Spanish, 🇯🇵 Japanese, 🇰🇷 Korean, 🇷🇺 Russian, 🇫🇷 French và 🇩🇪 German, hỗ trợ chọn ngôn ngữ riêng cho từng app theo macOS

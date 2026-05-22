@@ -18,6 +18,7 @@ final class CaptureHistoryRetentionService {
 
   private var timer: Timer?
   var userDefaults: UserDefaults = .standard
+  var annotationSessionStore: AnnotationSessionStore = .shared
 
   private init() {}
 
@@ -90,6 +91,7 @@ final class CaptureHistoryRetentionService {
 
     // Clean up orphaned thumbnails
     await cleanupOrphanedThumbnails()
+    cleanupOrphanedAnnotationSessions()
 
     logger.info("Retention sweep completed")
     DiagnosticLogger.shared.log(
@@ -174,6 +176,7 @@ final class CaptureHistoryRetentionService {
   func clearAllHistory() {
     CaptureHistoryStore.shared.removeAll()
     HistoryThumbnailGenerator.shared.clearAllThumbnails()
+    annotationSessionStore.deleteAllSessions()
     logger.info("All history cleared by user request")
     DiagnosticLogger.shared.log(.info, .history, "All capture history cleared by user request")
   }
@@ -224,5 +227,14 @@ final class CaptureHistoryRetentionService {
         context: ["thumbnailCount": "\(removedCount)"]
       )
     }
+  }
+
+  private func cleanupOrphanedAnnotationSessions() {
+    let activeScreenshotPaths = Set(
+      CaptureHistoryStore.shared.records
+        .filter { $0.captureType == .screenshot }
+        .map(\.filePath)
+    )
+    annotationSessionStore.cleanup(keepingScreenshotFilePaths: activeScreenshotPaths)
   }
 }

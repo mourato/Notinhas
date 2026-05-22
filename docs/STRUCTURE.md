@@ -45,6 +45,7 @@ flowchart LR
 
     subgraph Storage["Persistence"]
         STC["Application Support/Snapzy/Captures"]
+        AS["Application Support/Snapzy/AnnotationSessions"]
         RMD["RecordingMetadataStore"]
         DB["Application Support/Snapzy/snapzy.db"]
         KC["Keychain"]
@@ -82,9 +83,12 @@ flowchart LR
     QA --> AN
     QA --> VE
     QA --> CL
+    QA --> AS
     AN --> CL
+    AN --> AS
 
     P --> STC
+    O --> AS
     N --> RMD
     CL --> DB
     CL --> KC
@@ -225,6 +229,13 @@ SnapzyUITests/
       index.json
       Entries/
         <uuid>.json
+  AnnotationSessions/
+    <sha256-normalized-source-path>/
+      manifest.json
+      original.bin
+      cutout.png                 # optional
+      assets/
+        <uuid>.bin               # optional embedded image assets
   snapzy.db
 ```
 
@@ -233,6 +244,7 @@ SnapzyUITests/
 | `UserDefaults` | Preferences, shortcut configs, onboarding flags, feature toggles |
 | `Keychain` | Cloud access key, secret key, optional cloud protection password |
 | `Application Support/Snapzy/Captures/` | Temp captures, per-session recording processing files, and recording metadata sidecars |
+| `Application Support/Snapzy/AnnotationSessions/` | Sidecar packages for committed editable screenshot annotation sessions |
 | `Application Support/Snapzy/snapzy.db` | Cloud upload history via GRDB |
 
 ## Implementation Notes That Matter
@@ -244,8 +256,10 @@ SnapzyUITests/
 - `AreaSelectionController` and `AreaSelectionWindow` own the cross-display overlay session, target-display keyboard ownership for screenshot sessions, and highlight rendering for both manual and application screenshot interaction modes.
 - `WindowSelectionQueryService` resolves the hovered topmost app window from CoreGraphics window lists plus `SCShareableContent`, so app-mode hover stays accurate without doing expensive live queries on every draw pass.
 - `PostCaptureActionHandler` executes Quick Access, clipboard copy, and screenshot auto-open in Annotate after files already exist.
+- `PostCaptureActionHandler` also persists editable annotation sidecars when screenshot default presets are auto-applied before the file reaches Quick Access, history, clipboard, or Annotate auto-open.
 - Manual Open Annotate (`⇧⌘A`, menu bar, and `snapzy://open/annotate`) opens an empty editor through `AnnotateManager.openEmptyAnnotation()` and then applies the configured clipboard-image behavior: ask by default, load automatically, or do nothing.
 - Settings → Annotate owns full-editor Annotate preferences, including clipboard-image import behavior, `Close after drop`, and `Reactivate after drop`. `Close after drop` defaults on for legacy behavior; `AnnotateWindowController` reads both drag preferences when a drag-to-app session completes.
+- `AnnotateManager` restores screenshot editability from the Quick Access session cache first, then `AnnotationSessionStore`, then the flattened screenshot file. `AnnotationSessionStore` stores only committed sessions and validates the source file signature before returning editable data.
 - `TempCaptureManager` is where the `Save` after-capture toggle becomes real behavior. Recording uses an internal per-session processing directory first, then moves the final video to export or the temp capture root after AVAssetWriter finishes.
 - `QuickAccessActionConfigurationStore` owns user-configurable Quick Access action visibility, context-menu order, and card slot assignments. Settings → Quick Access lets users reorder the context menu from the list, then drag actions onto explicit preview slots for the live hover card layout.
 - `RecordingCoordinator` owns the toolbar/overlay UX. `ScreenRecordingManager` owns the media pipeline.
@@ -316,6 +330,7 @@ Directory structure mirrors the app: `SnapzyTests/Services/Cloud/AWSV4SignerTest
 | Recording toolbar, overlays, GIF flow | `Features/Recording/`, `Services/Capture/ScreenRecordingManager.swift` |
 | Post-capture actions or temp-file logic | `Features/Preferences/PreferencesManager.swift`, `Services/Capture/PostCaptureActionHandler.swift`, `Services/Capture/TempCaptureManager.swift`, `Features/QuickAccess/` |
 | Annotate editor (full + inline) | `Features/Annotate/` |
+| Editable screenshot annotation history | `Features/Annotate/Services/AnnotationSessionStore.swift`, `Features/Annotate/Models/PersistedAnnotationSession.swift`, `Features/History/`, `Services/History/CaptureHistoryRetentionService.swift` |
 | Video editor or Smart Camera | `Features/VideoEditor/`, `Services/Capture/RecordingMetadata.swift` |
 | Cloud upload/config transfer | `Services/Cloud/`, `Features/Preferences/Components/PreferencesCloudSettingsView.swift`, `Features/QuickAccess/Components/QuickAccessCardView.swift`, `Features/Annotate/Components/AnnotateBottomBarView.swift` |
 | Onboarding or app startup | `App/`, `Features/Splash/`, `Features/Onboarding/` |
@@ -328,6 +343,8 @@ Directory structure mirrors the app: `SnapzyTests/Services/Cloud/AWSV4SignerTest
 
 - `Upload to Cloud & copy link` in Preferences enables manual cloud actions in Quick Access for screenshots, videos, and GIFs, plus Annotate for screenshots; it does not auto-run inside `PostCaptureActionHandler`.
 - Quick Access can outlive the original capture location: saved captures stay in the export folder, temp captures are deleted when dismissed unless the user explicitly saves them.
+- Committed screenshot annotations are stored as sidecar packages in Application Support. History/Quick Access restore uses those packages to reopen editable annotations after the rendered screenshot has been saved, while delete, clear-history, retention sweep, and temp-to-export save paths remove or move sidecars with the source file.
+- Sidecar persistence is intentionally commit-based. There is no continuous annotation autosave or draft recovery package for an unsaved Annotate window during app quit.
 - Quick Access screenshot pin opens an independent always-on-top pin window with fit-based sizing, a minimum interactive footprint, compact zoom/drag controls, close or Esc-to-unpin, drag-to-app from the current pinned image, and a lock mode that fades the screenshot while allowing pointer interaction with windows underneath except for the unlock control.
 - Annotate, Video Editor, GIF conversion, and cloud upload pause Quick Access countdowns for the active item and resume them when the activity ends.
 - During recording, the menu bar item no longer turns into a left-click stop button. It keeps the normal menu path available, adds a live timer to the status item, and exposes stop plus pause/resume from the active menu section.

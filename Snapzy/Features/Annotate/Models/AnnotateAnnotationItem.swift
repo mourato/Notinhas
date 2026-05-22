@@ -335,8 +335,8 @@ struct AnnotationItem: Identifiable, Equatable {
   var bounds: CGRect
   var properties: AnnotationProperties
 
-  init(type: AnnotationType, bounds: CGRect, properties: AnnotationProperties) {
-    self.id = UUID()
+  init(id: UUID = UUID(), type: AnnotationType, bounds: CGRect, properties: AnnotationProperties) {
+    self.id = id
     self.type = type
     self.bounds = bounds
     self.properties = properties
