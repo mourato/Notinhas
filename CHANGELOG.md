@@ -57,6 +57,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.17.2] - 2026-05-22
+
+### Features
+-  Add quick properties synchronization feature for annotation tools (#189) (a35c277)
+-  Enhance Annotate functionality and preferences (#141) (a8fe89a)
+
+### Bug Fixes
+-  Implement vertical CJK OCR normalization and bitmap analysis (#184) (2fac38e)
+
+### Chore
+- chore: update appcast, cask, and readme for v1.17.1 (c2a5e9a)
+
+### Contributors
+- @duongductrong
+- @github-actions[bot]
+
 ## [1.17.1] - 2026-05-21
 
 ### Chore
