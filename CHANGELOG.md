@@ -59,6 +59,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.19.0] - 2026-05-23
+
+### Features
+-  Implement auto-scrolling functionality with accessibility support in scrolling capture (#106) (2ed9fa9)
+
+### Bug Fixes
+-  stabilize auto-scroll ci tests (08aefb0)
+
+### Chore
+- refactor: Refactor auto-scroll toggle logic and enhance related unit tests (7e97c9e)
+- chore: update appcast, cask, and readme for v1.18.0 (7307845)
+
+### Contributors
+- @duongductrong
+- @github-actions[bot]
+
 ## [1.18.0] - 2026-05-22
 
 ### Features
