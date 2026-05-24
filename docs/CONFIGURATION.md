@@ -13,9 +13,14 @@ Default path:
 Settings -> Advanced -> Backup requires config folder access before Import,
 Export, Restore defaults, or Open config.toml can be used. Granting access lets
 Snapzy create `config.toml` with the current preferences if it is missing.
-Snapzy does not live-watch `config.toml`. Direct edits are picked up on the next
-app launch; explicit import validates a selected `.toml` backup, replaces the
-managed `~/.config/snapzy/config.toml`, then applies it immediately.
+When Open config.toml is used, Snapzy first compares the managed file with the
+current app settings. If the file is simply stale from older in-app changes,
+Snapzy syncs it in the background before opening it. If the file appears to have
+external edits that Snapzy has not applied yet, Snapzy asks before replacing it.
+Snapzy does not live-watch direct edits to `config.toml`; those edits are picked
+up on the next app launch, or through explicit Import. Explicit import validates
+a selected `.toml` backup, replaces the managed
+`~/.config/snapzy/config.toml`, then applies it immediately.
 
 If `~/.config` or `~/.config/snapzy` does not exist yet, the grant flow starts
 from the nearest existing parent and creates the missing folder after the user
@@ -212,6 +217,9 @@ log section.
   default folder and file so the user does not need to export/import manually.
 - Settings import replaces the managed `config.toml` after validation succeeds,
   then applies the same contents so the backup file and app state stay aligned.
+- Open config.toml syncs current settings into the managed file first when the
+  file still matches Snapzy's last applied/exported signature. If the file has
+  unapplied external edits, Settings asks before replacing it.
 - Restore defaults replaces the managed `config.toml` with a generated default
   TOML document and applies it after confirmation.
 - `SnapzyConfigurationAutoImporter` runs during app launch, hashes the current

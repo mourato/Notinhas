@@ -258,7 +258,7 @@ SnapzyUITests/
 | `Application Support/Snapzy/Captures/` | Temp captures, per-session recording processing files, and recording metadata sidecars |
 | `Application Support/Snapzy/AnnotationSessions/` | Sidecar packages for committed editable screenshot annotation sessions |
 | `Application Support/Snapzy/snapzy.db` | Cloud upload history via GRDB |
-| `~/.config/snapzy/config.toml` | User-managed TOML preferences file, created from the onboarding config access step or Settings -> Advanced after user-confirmed folder access, replaced by explicit Import/Restore defaults actions, and auto-applied on launch when changed |
+| `~/.config/snapzy/config.toml` | User-managed TOML preferences file, created from the onboarding config access step or Settings -> Advanced after user-confirmed folder access, replaced by explicit Import/Restore defaults actions, auto-applied on launch when changed, and synced from current settings before Open config.toml when safe |
 
 ## Implementation Notes That Matter
 
@@ -279,7 +279,7 @@ SnapzyUITests/
 - `ScrollingCaptureCoordinator` is its own subsystem. Treat `Services/Capture/ScrollingCapture/*` as a unit.
 - `ScrollingCaptureFrameSource` publishes timestamped region frames into `ScrollingCaptureFrameRing`, so live preview and commit/stitch decisions share one bounded frame timeline before falling back to still area capture.
 - `CloudManager` is a facade. Provider-specific behavior lives under `Services/Cloud/`.
-- `SnapzyConfigurationService` is the Settings-facing facade for TOML export/import. `SnapzyConfigurationAccessGranting` shares the config folder grant flow between upgrade onboarding and Settings -> Advanced, creating `~/.config/snapzy` and `config.toml` after a successful grant if either is missing. Settings import validates the selected `.toml`, replaces the managed `config.toml`, then applies it so app state and file state stay aligned. `SnapzyConfigurationAutoImporter` runs during startup, hashes `config.toml`, and imports only when the file changed since the last successful launch-time apply. Import paths validate the whole file before applying any mutation and intentionally exclude Keychain secrets, history rows, temp captures, and sandbox bookmarks.
+- `SnapzyConfigurationService` is the Settings-facing facade for TOML export/import. `SnapzyConfigurationAccessGranting` shares the config folder grant flow between upgrade onboarding and Settings -> Advanced, creating `~/.config/snapzy` and `config.toml` after a successful grant if either is missing. Settings import validates the selected `.toml`, replaces the managed `config.toml`, then applies it so app state and file state stay aligned. Open config.toml syncs current settings into the managed file first when the file still matches Snapzy's last applied/exported signature; if the file has unapplied external edits, Settings asks before replacing it. `SnapzyConfigurationAutoImporter` runs during startup, hashes `config.toml`, and imports only when the file changed since the last successful launch-time apply. Import paths validate the whole file before applying any mutation and intentionally exclude Keychain secrets, history rows, temp captures, and sandbox bookmarks.
 - `Shared/Localization/L10n.swift` is the bridge for user-facing copy that does not live directly in SwiftUI view literals.
 - `Resources/Localization/Shared/*.xcstrings` and `Resources/Localization/Features/*.xcstrings` are the runtime localization catalogs.
 - `tools/localization/CatalogTool.swift` owns audit and verify for split localization catalogs.
@@ -367,9 +367,11 @@ Directory structure mirrors the app: `SnapzyTests/Services/Cloud/AWSV4SignerTest
 - TOML config import is all-or-nothing for validation errors. Warnings, such as
   imported folder paths that may need macOS file-access confirmation, are shown
   after import and do not block applied changes.
-- `~/.config/snapzy/config.toml` is not live-watched. Valid direct edits are
-  applied when Snapzy launches again, after macOS folder access has been granted
-  once through onboarding or Settings -> Advanced.
+- `~/.config/snapzy/config.toml` is not live-watched for direct edits. Valid
+  direct edits are applied when Snapzy launches again, after macOS folder access
+  has been granted once through onboarding or Settings -> Advanced. Opening the
+  file from Settings first syncs app-originated settings changes when doing so
+  will not silently overwrite unapplied external edits.
 - Existing users who have already completed onboarding see the onboarding flow
   open directly on the config access step once when launch-time auto-import
   detects missing folder access. Skipping it leaves a warning/action in

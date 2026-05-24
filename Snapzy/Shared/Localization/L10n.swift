@@ -304,6 +304,41 @@ enum L10n {
       defaultValue: "config.toml opened.",
       comment: "Toast shown after config.toml is opened"
     )
+    static let configSyncing = string(
+      "preferences-advanced.config-syncing",
+      defaultValue: "Syncing config.toml...",
+      comment: "Toast shown while Snapzy syncs current settings into config.toml"
+    )
+    static let configSynced = string(
+      "preferences-advanced.config-synced",
+      defaultValue: "config.toml synced.",
+      comment: "Toast shown after Snapzy syncs current settings into config.toml"
+    )
+    static let configSyncNeedsConfirmation = string(
+      "preferences-advanced.config-sync-needs-confirmation",
+      defaultValue: "config.toml has external changes.",
+      comment: "Toast shown when Snapzy needs confirmation before replacing externally changed config.toml"
+    )
+    static let configSyncConfirmationTitle = string(
+      "preferences-advanced.config-sync-confirmation-title",
+      defaultValue: "Sync config.toml?",
+      comment: "Confirmation alert title before replacing a config file with external changes"
+    )
+    static let configSyncConfirmationMessage = string(
+      "preferences-advanced.config-sync-confirmation-message",
+      defaultValue: "config.toml no longer matches Snapzy settings and may have edits from outside the app. Syncing will replace it with current settings.",
+      comment: "Confirmation alert message before replacing a config file with external changes"
+    )
+    static let syncConfigConfirmButton = string(
+      "preferences-advanced.sync-config-confirm-button",
+      defaultValue: "Sync & Open",
+      comment: "Confirmation button that replaces config.toml with current settings and opens it"
+    )
+    static let openExistingConfigButton = string(
+      "preferences-advanced.open-existing-config-button",
+      defaultValue: "Open Existing",
+      comment: "Confirmation button that opens config.toml without syncing current settings"
+    )
     static let importSucceeded = string(
       "preferences-advanced.import-succeeded",
       defaultValue: "Backup imported and config.toml replaced.",

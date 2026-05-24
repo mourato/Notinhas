@@ -26,3 +26,20 @@ struct SnapzyConfigurationImportResult {
     issues.contains { $0.severity == .error }
   }
 }
+
+enum SnapzyConfigurationSyncDecision: Equatable {
+  case alreadyCurrent
+  case syncAutomatically
+  case askBeforeReplacing
+}
+
+enum SnapzyConfigurationSyncStatus: Equatable {
+  case alreadyCurrent
+  case synced
+  case needsConfirmation
+}
+
+struct SnapzyConfigurationSyncResult {
+  let status: SnapzyConfigurationSyncStatus
+  let fileURL: URL
+}

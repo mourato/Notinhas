@@ -140,8 +140,134 @@ final class SnapzyConfigurationServiceTests: XCTestCase {
     XCTAssertEqual(try String(contentsOf: managedURL, encoding: .utf8), existingSource)
   }
 
+  func testSyncDecisionAlreadyCurrentWhenSourcesMatch() {
+    let defaults = UserDefaultsFactory.make()
+    let source = "schema_version = 1\n"
+
+    let decision = SnapzyConfigurationService.syncDecision(
+      fileSource: source,
+      currentSource: source,
+      defaults: defaults
+    )
+
+    XCTAssertEqual(decision, .alreadyCurrent)
+  }
+
+  func testSyncDecisionAutoSyncsWhenFileMatchesLastAppliedSignature() {
+    let defaults = UserDefaultsFactory.make()
+    let fileSource = "schema_version = 1\n"
+    let currentSource = "schema_version = 1\n\n[general]\nplay_sounds = false\n"
+    SnapzyConfigurationAutoImporter.markCurrentFileApplied(fileSource, defaults: defaults)
+
+    let decision = SnapzyConfigurationService.syncDecision(
+      fileSource: fileSource,
+      currentSource: currentSource,
+      defaults: defaults
+    )
+
+    XCTAssertEqual(decision, .syncAutomatically)
+  }
+
+  func testSyncDecisionAsksBeforeReplacingExternallyChangedFile() {
+    let defaults = UserDefaultsFactory.make()
+    let fileSource = "schema_version = 1\n\n[general]\nplay_sounds = true\n"
+    let currentSource = "schema_version = 1\n\n[general]\nplay_sounds = false\n"
+
+    let decision = SnapzyConfigurationService.syncDecision(
+      fileSource: fileSource,
+      currentSource: currentSource,
+      defaults: defaults
+    )
+
+    XCTAssertEqual(decision, .askBeforeReplacing)
+  }
+
+  func testPrepareManagedConfigForOpeningCreatesMissingFileFromCurrentSettings() throws {
+    try withRestoredLastAppliedSignature {
+      let directory = temporaryHomeDirectory()
+      defer { try? FileManager.default.removeItem(at: directory) }
+      let managedURL = directory.appendingPathComponent("config.toml")
+
+      let result = try SnapzyConfigurationService.shared.prepareManagedConfigForOpening(at: managedURL)
+
+      XCTAssertEqual(result.status, .synced)
+      XCTAssertTrue(FileManager.default.fileExists(atPath: managedURL.path))
+      let source = try String(contentsOf: managedURL, encoding: .utf8)
+      XCTAssertTrue(SnapzyConfigurationAutoImporter.isCurrentFileApplied(source))
+    }
+  }
+
+  func testPrepareManagedConfigForOpeningAutoSyncsStaleAppOwnedFile() throws {
+    try withRestoredLastAppliedSignature {
+      let directory = temporaryHomeDirectory()
+      defer { try? FileManager.default.removeItem(at: directory) }
+      let managedURL = directory.appendingPathComponent("config.toml")
+      let staleSource = "schema_version = 1\n"
+
+      try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+      try staleSource.write(to: managedURL, atomically: true, encoding: .utf8)
+      SnapzyConfigurationAutoImporter.markCurrentFileApplied(staleSource)
+
+      let result = try SnapzyConfigurationService.shared.prepareManagedConfigForOpening(at: managedURL)
+      let syncedSource = try String(contentsOf: managedURL, encoding: .utf8)
+
+      XCTAssertEqual(result.status, .synced)
+      XCTAssertNotEqual(syncedSource, staleSource)
+      XCTAssertTrue(SnapzyConfigurationAutoImporter.isCurrentFileApplied(syncedSource))
+    }
+  }
+
+  func testPrepareManagedConfigForOpeningDoesNotOverwriteExternalChangesWithoutConfirmation() throws {
+    try withRestoredLastAppliedSignature {
+      let directory = temporaryHomeDirectory()
+      defer { try? FileManager.default.removeItem(at: directory) }
+      let managedURL = directory.appendingPathComponent("config.toml")
+      let externalSource = "schema_version = 1\n\n[general]\nplay_sounds = false\n"
+
+      try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+      try externalSource.write(to: managedURL, atomically: true, encoding: .utf8)
+
+      let result = try SnapzyConfigurationService.shared.prepareManagedConfigForOpening(at: managedURL)
+
+      XCTAssertEqual(result.status, .needsConfirmation)
+      XCTAssertEqual(try String(contentsOf: managedURL, encoding: .utf8), externalSource)
+    }
+  }
+
+  func testSyncManagedConfigToCurrentSettingsOverwritesAfterConfirmation() throws {
+    try withRestoredLastAppliedSignature {
+      let directory = temporaryHomeDirectory()
+      defer { try? FileManager.default.removeItem(at: directory) }
+      let managedURL = directory.appendingPathComponent("config.toml")
+      let externalSource = "schema_version = 1\n\n[general]\nplay_sounds = false\n"
+
+      try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+      try externalSource.write(to: managedURL, atomically: true, encoding: .utf8)
+
+      try SnapzyConfigurationService.shared.syncManagedConfigToCurrentSettings(at: managedURL)
+      let syncedSource = try String(contentsOf: managedURL, encoding: .utf8)
+
+      XCTAssertNotEqual(syncedSource, externalSource)
+      XCTAssertTrue(SnapzyConfigurationAutoImporter.isCurrentFileApplied(syncedSource))
+    }
+  }
+
   private func temporaryHomeDirectory() -> URL {
     FileManager.default.temporaryDirectory
       .appendingPathComponent("snapzy-config-service-\(UUID().uuidString)", isDirectory: true)
+  }
+
+  private func withRestoredLastAppliedSignature(_ body: () throws -> Void) rethrows {
+    let defaults = UserDefaults.standard
+    let key = PreferencesKeys.configurationLastAppliedSignature
+    let previousValue = defaults.object(forKey: key)
+    defer {
+      if let previousValue {
+        defaults.set(previousValue, forKey: key)
+      } else {
+        defaults.removeObject(forKey: key)
+      }
+    }
+    try body()
   }
 }

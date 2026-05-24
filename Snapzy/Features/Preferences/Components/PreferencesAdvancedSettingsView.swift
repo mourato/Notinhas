@@ -15,6 +15,8 @@ struct AdvancedSettingsView: View {
 
   @State private var needsConfigAccess = SnapzyConfigurationService.shared.needsUserSelectedConfigAccess
   @State private var isRestoreConfirmationPresented = false
+  @State private var isConfigSyncConfirmationPresented = false
+  @State private var pendingConfigSyncURL: URL?
   @State private var logSizeText = L10n.PreferencesAdvanced.calculating
 
   private let service = SnapzyConfigurationService.shared
@@ -150,6 +152,22 @@ struct AdvancedSettingsView: View {
     } message: {
       Text(L10n.PreferencesAdvanced.restoreDefaultsConfirmationMessage)
     }
+    .alert(
+      L10n.PreferencesAdvanced.configSyncConfirmationTitle,
+      isPresented: $isConfigSyncConfirmationPresented
+    ) {
+      Button(L10n.Common.cancel, role: .cancel) {
+        pendingConfigSyncURL = nil
+      }
+      Button(L10n.PreferencesAdvanced.openExistingConfigButton) {
+        openPendingConfigWithoutSync()
+      }
+      Button(L10n.PreferencesAdvanced.syncConfigConfirmButton, role: .destructive) {
+        syncPendingConfigAndOpen()
+      }
+    } message: {
+      Text(L10n.PreferencesAdvanced.configSyncConfirmationMessage)
+    }
   }
 
   private var disabledBackupActionHelp: String {
@@ -218,8 +236,45 @@ struct AdvancedSettingsView: View {
   private func openConfigFile() {
     guard backupActionsAreAvailable() else { return }
 
-    guard let url = ensureSuggestedConfigExists(reportFailure: true) else { return }
-    openConfigFile(at: url)
+    let toastHandle = AppToastManager.shared.show(
+      message: L10n.PreferencesAdvanced.configSyncing,
+      style: .info,
+      duration: nil,
+      iconMode: .spinner
+    )
+
+    do {
+      let result = try service.prepareManagedConfigForOpening()
+      switch result.status {
+      case .alreadyCurrent:
+        openConfigFile(at: result.fileURL)
+      case .synced:
+        updateConfigSyncToast(
+          toastHandle,
+          message: L10n.PreferencesAdvanced.configSynced,
+          style: .success,
+          duration: 1.2
+        )
+        openConfigFile(at: result.fileURL)
+      case .needsConfirmation:
+        pendingConfigSyncURL = result.fileURL
+        updateConfigSyncToast(
+          toastHandle,
+          message: L10n.PreferencesAdvanced.configSyncNeedsConfirmation,
+          style: .warning,
+          duration: 4.0
+        )
+        isConfigSyncConfirmationPresented = true
+      }
+    } catch {
+      updateConfigSyncToast(
+        toastHandle,
+        message: error.localizedDescription,
+        fallback: L10n.PreferencesAdvanced.openConfigUnavailable,
+        style: .error,
+        duration: 4.0
+      )
+    }
   }
 
   private func openConfigFile(at url: URL) {
@@ -237,6 +292,43 @@ struct AdvancedSettingsView: View {
 
         self.showNotice(L10n.PreferencesAdvanced.openConfigSucceeded, style: .success)
       }
+    }
+  }
+
+  private func openPendingConfigWithoutSync() {
+    guard let url = pendingConfigSyncURL else { return }
+    pendingConfigSyncURL = nil
+    openConfigFile(at: url)
+  }
+
+  private func syncPendingConfigAndOpen() {
+    guard let url = pendingConfigSyncURL else { return }
+    pendingConfigSyncURL = nil
+
+    let toastHandle = AppToastManager.shared.show(
+      message: L10n.PreferencesAdvanced.configSyncing,
+      style: .info,
+      duration: nil,
+      iconMode: .spinner
+    )
+
+    do {
+      let syncedURL = try service.syncManagedConfigToCurrentSettings(at: url)
+      updateConfigSyncToast(
+        toastHandle,
+        message: L10n.PreferencesAdvanced.configSynced,
+        style: .success,
+        duration: 1.2
+      )
+      openConfigFile(at: syncedURL)
+    } catch {
+      updateConfigSyncToast(
+        toastHandle,
+        message: error.localizedDescription,
+        fallback: L10n.PreferencesAdvanced.openConfigUnavailable,
+        style: .error,
+        duration: 4.0
+      )
     }
   }
 
@@ -414,6 +506,35 @@ struct AdvancedSettingsView: View {
     )
   }
 
+  private func updateConfigSyncToast(
+    _ handle: AppToastHandle?,
+    message: String,
+    fallback: String? = nil,
+    style: AppToastStyle,
+    duration: TimeInterval?,
+    iconMode: AppToastIconMode = .symbol
+  ) {
+    let resolvedMessage = message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      ? fallback ?? L10n.PreferencesAdvanced.operationFinished
+      : message
+
+    if let handle {
+      AppToastManager.shared.update(
+        handle,
+        message: resolvedMessage,
+        style: style,
+        duration: duration,
+        iconMode: iconMode
+      )
+    } else {
+      AppToastManager.shared.show(
+        message: resolvedMessage,
+        style: style,
+        duration: duration,
+        iconMode: iconMode
+      )
+    }
+  }
 }
 
 private struct AdvancedConfigAccessWarningRow: View {

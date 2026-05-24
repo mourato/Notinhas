@@ -121,6 +121,10 @@ enum SnapzyConfigurationAutoImporter {
     defaults.set(contentSignature(for: source), forKey: PreferencesKeys.configurationLastAppliedSignature)
   }
 
+  static func isCurrentFileApplied(_ source: String, defaults: UserDefaults = .standard) -> Bool {
+    defaults.string(forKey: PreferencesKeys.configurationLastAppliedSignature) == contentSignature(for: source)
+  }
+
   private static func contentSignature(for source: String) -> String {
     let digest = SHA256.hash(data: Data(source.utf8))
     return digest.map { String(format: "%02x", $0) }.joined()
