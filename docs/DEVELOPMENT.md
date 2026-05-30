@@ -31,6 +31,29 @@ xcodebuild -project Snapzy.xcodeproj -scheme Snapzy -configuration Debug build
 
 Output: `~/Library/Developer/Xcode/DerivedData/Snapzy-*/Build/Products/Debug/Snapzy.app`
 
+## Run the local debug app
+
+```bash
+./scripts/build_and_run.sh
+```
+
+The script builds the Debug app at
+`.build/xcode-derived-data/Build/Products/Debug/Snapzy Debug.app`. This local
+build uses app name `Snapzy Debug` and bundle ID `com.trongduong.snapzy.debug`
+so macOS Privacy permissions stay separate from the published `Snapzy` app.
+
+Reset local Debug permissions with:
+
+```bash
+tccutil reset ScreenCapture com.trongduong.snapzy.debug
+tccutil reset Microphone com.trongduong.snapzy.debug
+tccutil reset Accessibility com.trongduong.snapzy.debug
+```
+
+If System Settings still shows the old `Snapzy` label for the debug bundle,
+quit System Settings, run the reset commands above, launch `Snapzy Debug` again,
+then grant permissions from the fresh prompt/list entry.
+
 ## Run tests
 
 Unit tests live in `SnapzyTests/`, a peer folder of `Snapzy/`. Keep XCTest files

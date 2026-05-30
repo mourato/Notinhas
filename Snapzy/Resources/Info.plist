@@ -4,6 +4,8 @@
 <dict>
 	<key>CFBundleIconFile</key>
 	<string>SnapzyIcon</string>
+	<key>CFBundleName</key>
+	<string>$(SNAPZY_BUNDLE_NAME)</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>

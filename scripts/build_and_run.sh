@@ -2,6 +2,7 @@
 set -euo pipefail
 
 APP_NAME="Snapzy"
+DEBUG_BUNDLE_NAME="Snapzy Debug"
 SCHEME="Snapzy"
 PROJECT="Snapzy.xcodeproj"
 LOG_SUBSYSTEM="${LOG_SUBSYSTEM:-Snapzy}"
@@ -172,7 +173,12 @@ build_products_dir() {
 }
 
 app_bundle_path() {
-  printf "%s/%s.app" "$(build_products_dir)" "$APP_NAME"
+  local bundle_name="$APP_NAME"
+  if [[ "$CONFIGURATION" == "Debug" ]]; then
+    bundle_name="$DEBUG_BUNDLE_NAME"
+  fi
+
+  printf "%s/%s.app" "$(build_products_dir)" "$bundle_name"
 }
 
 app_binary_path() {

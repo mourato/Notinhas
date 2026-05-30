@@ -10,7 +10,11 @@ import Foundation
 import Security
 
 enum AppBundleIdentity {
+  #if DEBUG
+  static let expected = "com.trongduong.snapzy.debug"
+  #else
   static let expected = "com.trongduong.snapzy"
+  #endif
 }
 
 enum AppIdentityIssue: Equatable, Hashable {
