@@ -64,6 +64,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.20.4] - 2026-06-03
+
+### Features
+-  enhance image rotation functionality and add layout rect preservation for text annotations (bbf25c2)
+-  add 90° image rotation buttons to annotate editor (#226) (7ed1334)
+
+### Bug Fixes
+-  don't drop first click on area selection overlay while backdrop is pending (#228) (70b9dc0)
+
+### Chore
+- chore: update appcast, cask, and readme for v1.20.3 (8eacd47)
+
+### Contributors
+- @duongductrong
+- @github-actions[bot]
+- @omarshahine
+
 ## [1.20.3] - 2026-06-01
 
 ### Features
