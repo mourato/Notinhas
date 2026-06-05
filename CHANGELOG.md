@@ -66,6 +66,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.20.6] - 2026-06-05
+
+### Bug Fixes
+-  Implement database recovery flow and enhance error handling for database operations (#223) (5f438f3)
+
+### Chore
+- chore: Add mixdown input volume calculation and logging for audio sample formats (#210) (fe84ebe)
+- chore: update appcast, cask, and readme for v1.20.5 (35ef3e6)
+
+### Contributors
+- @duongductrong
+- @github-actions[bot]
+
 ## [1.20.5] - 2026-06-05
 
 ### Features
