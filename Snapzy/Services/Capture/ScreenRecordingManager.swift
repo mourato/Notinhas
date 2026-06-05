@@ -226,10 +226,16 @@ enum RecordingAudioCompatibilityExporter {
     audioTrackCount > 1
   }
 
+  static func mixdownInputVolume(audioTrackCount: Int) -> Float {
+    guard audioTrackCount > 1 else { return 1.0 }
+    return 1.0 / Float(audioTrackCount)
+  }
+
   static func normalizeIfNeeded(
     at sourceURL: URL,
     fileType: AVFileType,
-    preservesAudioSource: Bool = true
+    preservesAudioSource: Bool = true,
+    appliesMixdownHeadroom: Bool = false
   ) async throws -> Result {
     let asset = AVURLAsset(url: sourceURL)
     let audioTracks = try await asset.loadTracks(withMediaType: .audio)
@@ -251,6 +257,7 @@ enum RecordingAudioCompatibilityExporter {
     let sourceFormatHint = try await videoTrack.load(.formatDescriptions).first
     let normalizedURL = normalizedTemporaryURL(for: sourceURL)
     let preservedSourceURL = preservesAudioSource ? preservedAudioSourceTemporaryURL(for: sourceURL) : nil
+    let inputVolume = appliesMixdownHeadroom ? mixdownInputVolume(audioTrackCount: audioTracks.count) : 1.0
 
     do {
       try await writeNormalizedFile(
@@ -261,7 +268,8 @@ enum RecordingAudioCompatibilityExporter {
         preferredTransform: preferredTransform,
         sourceFormatHint: sourceFormatHint,
         outputURL: normalizedURL,
-        fileType: fileType
+        fileType: fileType,
+        audioInputVolume: inputVolume
       )
       if let preservedSourceURL {
         try? FileManager.default.removeItem(at: preservedSourceURL)
@@ -326,7 +334,8 @@ enum RecordingAudioCompatibilityExporter {
     preferredTransform: CGAffineTransform,
     sourceFormatHint: CMFormatDescription?,
     outputURL: URL,
-    fileType: AVFileType
+    fileType: AVFileType,
+    audioInputVolume: Float
   ) async throws {
     try? FileManager.default.removeItem(at: outputURL)
 
@@ -342,7 +351,8 @@ enum RecordingAudioCompatibilityExporter {
             preferredTransform: preferredTransform,
             sourceFormatHint: sourceFormatHint,
             outputURL: outputURL,
-            fileType: fileType
+            fileType: fileType,
+            audioInputVolume: audioInputVolume
           )
           continuation.resume()
         } catch {
@@ -360,7 +370,8 @@ enum RecordingAudioCompatibilityExporter {
     preferredTransform: CGAffineTransform,
     sourceFormatHint: CMFormatDescription?,
     outputURL: URL,
-    fileType: AVFileType
+    fileType: AVFileType,
+    audioInputVolume: Float
   ) throws {
     let reader = try AVAssetReader(asset: asset)
     reader.timeRange = CMTimeRange(start: .zero, duration: duration)
@@ -391,7 +402,7 @@ enum RecordingAudioCompatibilityExporter {
       audioTracks: audioTracks,
       audioSettings: makeReaderAudioSettings()
     )
-    audioOutput.audioMix = makeAudioMix(for: audioTracks)
+    audioOutput.audioMix = makeAudioMix(for: audioTracks, inputVolume: audioInputVolume)
     guard reader.canAdd(audioOutput) else {
       throw ExportError.cannotAddReaderOutput("audio")
     }
@@ -443,11 +454,11 @@ enum RecordingAudioCompatibilityExporter {
     }
   }
 
-  private static func makeAudioMix(for audioTracks: [AVAssetTrack]) -> AVAudioMix {
+  private static func makeAudioMix(for audioTracks: [AVAssetTrack], inputVolume: Float) -> AVAudioMix {
     let mix = AVMutableAudioMix()
     mix.inputParameters = audioTracks.map { track in
       let parameters = AVMutableAudioMixInputParameters(track: track)
-      parameters.setVolume(1.0, at: .zero)
+      parameters.setVolume(inputVolume, at: .zero)
       return parameters
     }
     return mix
@@ -1222,7 +1233,8 @@ final class ScreenRecordingManager: NSObject, ObservableObject {
     do {
       let result = try await RecordingAudioCompatibilityExporter.normalizeIfNeeded(
         at: writerURL,
-        fileType: videoFormat.fileType
+        fileType: videoFormat.fileType,
+        appliesMixdownHeadroom: true
       )
       if result.didNormalize {
         DiagnosticLogger.shared.log(.info, .recording, "Recording audio normalized for compatibility", context: [
@@ -1232,6 +1244,10 @@ final class ScreenRecordingManager: NSObject, ObservableObject {
           "audioCodec": "aac-lc",
           "sampleRate": "\(RecordingAudioEncodingSettings.sampleRate)",
           "channels": "\(RecordingAudioEncodingSettings.channelCount)",
+          "mixdownInputVolume": String(
+            format: "%.3f",
+            RecordingAudioCompatibilityExporter.mixdownInputVolume(audioTrackCount: result.audioTrackCount)
+          ),
           "editorAudioSource": result.audioSourceURL?.lastPathComponent ?? "nil",
         ])
       } else {

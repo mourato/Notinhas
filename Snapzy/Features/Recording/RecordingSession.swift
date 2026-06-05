@@ -48,6 +48,8 @@ final class RecordingSession: @unchecked Sendable {
   private var _didLogVideoAppendFailure = false
   private var _didLogAudioAppendFailure = false
   private var _didLogMicrophoneAppendFailure = false
+  private var _didLogSystemAudioSampleFormat = false
+  private var _didLogMicrophoneAudioSampleFormat = false
 
   init() {}
   
@@ -230,6 +232,7 @@ final class RecordingSession: @unchecked Sendable {
     // Get audio timestamp
     let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
     guard timestamp.isValid else { return }
+    logAudioSampleFormatIfNeeded(sampleBuffer, role: .systemAudio)
 
     let (writer, audioInput, firstTs): (AVAssetWriter?, AVAssetWriterInput?, CMTime?) = lock.withLock {
       guard _isCapturing, let writer = _assetWriter, writer.status == .writing else {
@@ -271,6 +274,7 @@ final class RecordingSession: @unchecked Sendable {
     // Get mic timestamp
     let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
     guard timestamp.isValid else { return }
+    logAudioSampleFormatIfNeeded(sampleBuffer, role: .microphone)
 
     let (writer, microphoneInput, firstTs): (AVAssetWriter?, AVAssetWriterInput?, CMTime?) = lock.withLock {
       guard _isCapturing, let writer = _assetWriter, writer.status == .writing else {
@@ -378,7 +382,82 @@ final class RecordingSession: @unchecked Sendable {
       _didLogVideoAppendFailure = false
       _didLogAudioAppendFailure = false
       _didLogMicrophoneAppendFailure = false
+      _didLogSystemAudioSampleFormat = false
+      _didLogMicrophoneAudioSampleFormat = false
     }
+  }
+
+  private enum AudioSampleRole {
+    case systemAudio
+    case microphone
+
+    var logValue: String {
+      switch self {
+      case .systemAudio: return "systemAudio"
+      case .microphone: return "microphone"
+      }
+    }
+  }
+
+  private func logAudioSampleFormatIfNeeded(_ sampleBuffer: CMSampleBuffer, role: AudioSampleRole) {
+    let shouldLog = lock.withLock {
+      switch role {
+      case .systemAudio:
+        if _didLogSystemAudioSampleFormat { return false }
+        _didLogSystemAudioSampleFormat = true
+        return true
+      case .microphone:
+        if _didLogMicrophoneAudioSampleFormat { return false }
+        _didLogMicrophoneAudioSampleFormat = true
+        return true
+      }
+    }
+    guard shouldLog else { return }
+
+    var context: [String: String] = ["role": role.logValue]
+    let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+    if timestamp.isValid, timestamp.seconds.isFinite {
+      context["timestampSeconds"] = String(format: "%.3f", timestamp.seconds)
+    }
+
+    let duration = CMSampleBufferGetDuration(sampleBuffer)
+    if duration.isValid, duration.seconds.isFinite {
+      context["durationMs"] = String(format: "%.2f", duration.seconds * 1000)
+    }
+
+    if let formatDescription = CMSampleBufferGetFormatDescription(sampleBuffer) {
+      context["mediaSubType"] = fourCC(CMFormatDescriptionGetMediaSubType(formatDescription))
+      if let streamDescription = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription)?.pointee {
+        context["sampleRate"] = String(format: "%.0f", streamDescription.mSampleRate)
+        context["channels"] = "\(streamDescription.mChannelsPerFrame)"
+        context["formatID"] = fourCC(streamDescription.mFormatID)
+        context["formatFlags"] = String(format: "0x%X", streamDescription.mFormatFlags)
+        context["bitsPerChannel"] = "\(streamDescription.mBitsPerChannel)"
+        context["framesPerPacket"] = "\(streamDescription.mFramesPerPacket)"
+      }
+    }
+
+    DiagnosticLogger.shared.log(
+      .info,
+      .recording,
+      "Recording audio sample format",
+      context: context
+    )
+  }
+
+  private func fourCC(_ value: FourCharCode) -> String {
+    let bytes = [
+      UInt8((value >> 24) & 0xff),
+      UInt8((value >> 16) & 0xff),
+      UInt8((value >> 8) & 0xff),
+      UInt8(value & 0xff),
+    ]
+    guard bytes.allSatisfy({ $0 >= 32 && $0 <= 126 }),
+          let string = String(bytes: bytes, encoding: .ascii)
+    else {
+      return "\(value)"
+    }
+    return string
   }
 
   private func logWriterIssue(

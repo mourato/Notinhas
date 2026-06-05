@@ -172,6 +172,17 @@ final class ScreenRecordingEncodingSettingsTests: XCTestCase {
     XCTAssertTrue(RecordingAudioCompatibilityExporter.requiresMixDown(audioTrackCount: 3))
   }
 
+  func testAudioCompatibilityExporterMixdownInputVolumeAddsHeadroom() {
+    XCTAssertEqual(RecordingAudioCompatibilityExporter.mixdownInputVolume(audioTrackCount: 0), 1.0)
+    XCTAssertEqual(RecordingAudioCompatibilityExporter.mixdownInputVolume(audioTrackCount: 1), 1.0)
+    XCTAssertEqual(RecordingAudioCompatibilityExporter.mixdownInputVolume(audioTrackCount: 2), 0.5)
+    XCTAssertEqual(
+      RecordingAudioCompatibilityExporter.mixdownInputVolume(audioTrackCount: 3),
+      1.0 / 3.0,
+      accuracy: 0.0001
+    )
+  }
+
   private func codecRawValue(_ value: Any?) -> String? {
     if let codec = value as? AVVideoCodecType {
       return codec.rawValue
