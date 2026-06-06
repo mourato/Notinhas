@@ -16,8 +16,9 @@ private let logger = Logger(subsystem: "Snapzy", category: "ClipboardHelper")
 
 /// Centralized helper for copying images to clipboard while respecting the configured format.
 ///
-/// Strategy: write one `NSPasteboardItem` containing multiple representations.
-/// File-aware apps (Finder, Preview) use the URL; image-consuming apps
+/// Strategy: write the file URL via `writeObjects([NSURL])` to obtain sandbox extensions,
+/// then augment the first pasteboard item with pixel-data representations via `addTypes`
+/// so file-aware apps (Finder, Preview) use the URL and image-consuming apps
 /// (Telegram, Slack, Chrome, etc.) use image data, without treating the same
 /// screenshot as separate clipboard items.
 /// Temp files must NOT be deleted immediately — the receiving app needs them at paste time.
@@ -151,18 +152,33 @@ enum ClipboardHelper {
     encodedData: Data?,
     encodedType: NSPasteboard.PasteboardType?
   ) {
-    let item = NSPasteboardItem()
-    item.setString(fileURL.absoluteString, forType: .fileURL)
+    // Use writeObjects with NSURL to ensure macOS grants a sandbox extension
+    // to the receiving app. NSPasteboardItem.setString(url, forType: .fileURL)
+    // does NOT grant sandbox extensions — this was the root cause of Area
+    // Capture's "auto copy" failing in sandboxed builds.
+    pasteboard.writeObjects([fileURL as NSURL])
 
-    if let encodedData, let encodedType {
-      item.setData(encodedData, forType: encodedType)
+    // Augment the first pasteboard item with image data representations so
+    // image-consuming apps (Telegram, Slack, etc.) can paste inline images
+    // instead of a file reference.
+    var extraTypes: [NSPasteboard.PasteboardType] = []
+    if let encodedType {
+      extraTypes.append(encodedType)
+    }
+    if image != nil {
+      extraTypes.append(.tiff)
     }
 
-    if let tiffData = image?.tiffRepresentation {
-      item.setData(tiffData, forType: .tiff)
-    }
+    if !extraTypes.isEmpty {
+      pasteboard.addTypes(extraTypes, owner: nil)
 
-    pasteboard.writeObjects([item])
+      if let encodedData, let encodedType {
+        pasteboard.setData(encodedData, forType: encodedType)
+      }
+      if let tiffData = image?.tiffRepresentation {
+        pasteboard.setData(tiffData, forType: .tiff)
+      }
+    }
   }
 
   private static func pasteboardImageType(for fileExtension: String) -> NSPasteboard.PasteboardType? {
