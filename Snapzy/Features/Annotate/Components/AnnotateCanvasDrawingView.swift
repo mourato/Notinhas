@@ -469,6 +469,10 @@ final class DrawingCanvasNSView: NSView {
       return
     }
 
+    // Blank-canvas clicks should blur the active item while leaving the
+    // current drawing tool active, matching toolbar reactivation semantics.
+    state.deselectAnnotation()
+
     // Start drawing for other tools (in image coordinates)
     isDrawing = true
     drawingStartDisplayPoint = displayPoint

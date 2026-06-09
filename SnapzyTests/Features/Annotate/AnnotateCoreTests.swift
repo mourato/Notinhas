@@ -879,6 +879,36 @@ final class AnnotateCoreTests: XCTestCase {
     }
   }
 
+  @MainActor
+  func testCanvasBlankClickWithActiveShapeToolDeselectsItemButKeepsTool() {
+    let state = makeAnnotateState()
+    let annotation = AnnotationItem(
+      type: .rectangle,
+      bounds: CGRect(x: 10, y: 10, width: 40, height: 40),
+      properties: AnnotationProperties()
+    )
+    state.annotations = [annotation]
+    state.selectedAnnotationId = annotation.id
+    state.selectedTool = .rectangle
+
+    let canvas = DrawingCanvasNSView(state: state)
+    canvas.frame = CGRect(x: 0, y: 0, width: 400, height: 300)
+    canvas.displayScale = 1
+    canvas.canvasBounds = CGRect(x: 0, y: 0, width: 400, height: 300)
+
+    let clickPoint = CGPoint(x: 220, y: 180)
+    let mouseDown = makeMouseEvent(type: .leftMouseDown, location: clickPoint)
+    let mouseUp = makeMouseEvent(type: .leftMouseUp, location: clickPoint)
+
+    canvas.mouseDown(with: mouseDown)
+    canvas.mouseUp(with: mouseUp)
+
+    XCTAssertNil(state.selectedAnnotationId)
+    XCTAssertFalse(state.hasSelectedAnnotations)
+    XCTAssertEqual(state.selectedTool, .rectangle)
+    XCTAssertEqual(state.annotations.count, 1)
+  }
+
   func testAnnotationFactory_normalizesNearlyHorizontalHighlighterStroke() throws {
     let path = [
       CGPoint(x: 10, y: 100),
@@ -1902,6 +1932,20 @@ final class AnnotateCoreTests: XCTestCase {
       watermarkText: watermarkText,
       activeAnnotationBounds: bounds
     )
+  }
+
+  private func makeMouseEvent(type: NSEvent.EventType, location: CGPoint) -> NSEvent {
+    NSEvent.mouseEvent(
+      with: type,
+      location: location,
+      modifierFlags: [],
+      timestamp: 0,
+      windowNumber: 0,
+      context: nil,
+      eventNumber: 0,
+      clickCount: 1,
+      pressure: 1
+    )!
   }
 
   private func makeRetinaPixelPatternImage(
