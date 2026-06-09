@@ -69,6 +69,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.21.0] - 2026-06-09
+
+### Features
+-  Improve annotate item behavior blur and focus (1e6a002)
+-  Add new blur styles and corresponding tests for hexagonal, crystallized, pointillism, halftone, tape, and washi effects (950ea8a)
+-  Add auto redaction shortcut functionality (c18bab4)
+
+### Bug Fixes
+-  update deprecated stanza (#238) (923b4f1)
+
+### Chore
+- refactor: Simplify context chip rendering by removing full context condition and unused functions (eef8fd2)
+- chore: update appcast, cask, and readme for v1.20.8 (58cf7d6)
+
+### Contributors
+- @Justin24506
+- @duongductrong
+- @github-actions[bot]
+
 ## [1.20.8] - 2026-06-07
 
 ### Features
