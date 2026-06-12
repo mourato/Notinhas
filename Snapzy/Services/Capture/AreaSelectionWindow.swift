@@ -88,6 +88,7 @@ final class AreaSelectionController: NSObject {
   /// app activates, so the local monitor never sees them and the selection silently resets.
   /// A global monitor still receives those events, ensuring the first gesture commits.
   private var manualSelectionGlobalMonitor: Any?
+  private var previouslyActiveApplication: NSRunningApplication?
 
   /// Whether the overlay should be dismissed immediately after a selection is made.
   /// When `false`, the caller is responsible for calling `cancelSelection()` to dismiss.
@@ -358,7 +359,10 @@ final class AreaSelectionController: NSObject {
     // activating would deactivate/dim them and leave Snapzy frontmost afterward; those keep the
     // non-activating behavior this window class is built around.
     if !selectionBackdrops.isEmpty {
+      previouslyActiveApplication = NSWorkspace.shared.frontmostApplication
       NSApp.activate(ignoringOtherApps: true)
+    } else {
+      previouslyActiveApplication = nil
     }
 
     startWindowSelectionPreparationIfNeeded()
@@ -578,6 +582,10 @@ final class AreaSelectionController: NSObject {
     } else {
       completionWithResult?(nil)
     }
+    
+    previouslyActiveApplication?.activate(options: [])
+    previouslyActiveApplication = nil
+    
     resetCallbacks()
     dismissesAfterSelection = true
   }
@@ -592,6 +600,10 @@ final class AreaSelectionController: NSObject {
     completion?(nil)
     completionWithMode?(nil, selectionMode)
     completionWithResult?(nil)
+    
+    previouslyActiveApplication?.activate(options: [])
+    previouslyActiveApplication = nil
+    
     resetCallbacks()
   }
 
