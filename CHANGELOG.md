@@ -71,6 +71,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.22.1] - 2026-06-12
+
+### Bug Fixes
+-  retain and restore previously active application during area selection (#242) (8ab3030)
+-  commit first area-selection drag and apply cursor on capture start (#242) (#244) (66cd6eb)
+
+### Chore
+- chore: update appcast, cask, and readme for v1.22.0 (3a7c3ff)
+
+### Contributors
+- @duongductrong
+- @github-actions[bot]
+- @omarshahine
+
 ## [1.22.0] - 2026-06-11
 
 ### Features
