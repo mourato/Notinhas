@@ -72,6 +72,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.22.2] - 2026-06-12
+
+### Bug Fixes
+-  Optimize snapshot capturing with async task group and reuse mask layer (#242) (45e9f2d)
+
+### Chore
+- chore: update appcast, cask, and readme for v1.22.1 (7cbef1d)
+
+### Contributors
+- @duongductrong
+- @github-actions[bot]
+
 ## [1.22.1] - 2026-06-12
 
 ### Bug Fixes
