@@ -66,7 +66,8 @@ final class SmartElementQueryService {
 
   private func bindPipeline() {
     inputSubject
-      .debounce(for: .milliseconds(debounceMilliseconds), scheduler: DispatchQueue.main)
+      .throttle(for: .milliseconds(debounceMilliseconds), scheduler: DispatchQueue.main, latest: true)
+      .receive(on: DispatchQueue.global(qos: .userInteractive))
       .sink { [weak self] point, pid in
         self?.queryElement(at: point, pid: pid)
       }
@@ -175,10 +176,13 @@ final class SmartElementQueryService {
   }
 
   private func emit(_ rect: CGRect?) {
-    if hasEmittedAtLeastOnce && rect == lastEmittedRect { return }
-    hasEmittedAtLeastOnce = true
-    lastEmittedRect = rect
-    detectedSubject.send(rect)
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
+      if self.hasEmittedAtLeastOnce && rect == self.lastEmittedRect { return }
+      self.hasEmittedAtLeastOnce = true
+      self.lastEmittedRect = rect
+      self.detectedSubject.send(rect)
+    }
   }
 
   private func logPermissionDeniedOnce() {

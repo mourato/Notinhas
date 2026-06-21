@@ -50,6 +50,11 @@ final class SmartElementOverlayView: NSView {
     true
   }
 
+  override func resetCursorRects() {
+    super.resetCursorRects()
+    addCursorRect(bounds, cursor: .crosshair)
+  }
+
   override func updateTrackingAreas() {
     super.updateTrackingAreas()
     trackingAreas.forEach(removeTrackingArea)
@@ -122,7 +127,7 @@ final class SmartElementOverlayView: NSView {
 
     dimLayer = CALayer()
     dimLayer.frame = bounds
-    dimLayer.backgroundColor = NSColor.black.withAlphaComponent(0.10).cgColor
+    dimLayer.backgroundColor = NSColor.black.withAlphaComponent(0.40).cgColor
     dimLayer.actions = disabledActions
     rootLayer.addSublayer(dimLayer)
 
