@@ -41,10 +41,40 @@ final class RecordingToolbarShortcutsTests: XCTestCase {
   func testKeyboardShortcutManager_toolbarShortcuts_resolveNilByDefault() {
     let manager = KeyboardShortcutManager.shared
     
+    // Save current states of these shortcuts to restore on teardown
+    let origPen = manager.shortcut(for: .togglePenRecording)
+    let origRestart = manager.shortcut(for: .restartRecording)
+    let origDelete = manager.shortcut(for: .deleteRecording)
+    let origPenEnabled = manager.isShortcutEnabled(for: .togglePenRecording)
+    let origRestartEnabled = manager.isShortcutEnabled(for: .restartRecording)
+    let origDeleteEnabled = manager.isShortcutEnabled(for: .deleteRecording)
+    
+    addTeardownBlock { @MainActor in
+      manager.setTogglePenRecordingShortcut(origPen)
+      manager.setRestartRecordingShortcut(origRestart)
+      manager.setDeleteRecordingShortcut(origDelete)
+      manager.setShortcutEnabled(origPenEnabled, for: .togglePenRecording)
+      manager.setShortcutEnabled(origRestartEnabled, for: .restartRecording)
+      manager.setShortcutEnabled(origDeleteEnabled, for: .deleteRecording)
+    }
+    
+    // Explicitly reset to default clean-install state
+    manager.setTogglePenRecordingShortcut(nil)
+    manager.setRestartRecordingShortcut(nil)
+    manager.setDeleteRecordingShortcut(nil)
+    manager.setShortcutEnabled(true, for: .togglePenRecording)
+    manager.setShortcutEnabled(true, for: .restartRecording)
+    manager.setShortcutEnabled(true, for: .deleteRecording)
+    
     // Check initial/default values
     XCTAssertNil(manager.shortcut(for: .togglePenRecording))
     XCTAssertNil(manager.shortcut(for: .restartRecording))
     XCTAssertNil(manager.shortcut(for: .deleteRecording))
+    
+    // Check default enablement (should be toggled on)
+    XCTAssertTrue(manager.isShortcutEnabled(for: .togglePenRecording))
+    XCTAssertTrue(manager.isShortcutEnabled(for: .restartRecording))
+    XCTAssertTrue(manager.isShortcutEnabled(for: .deleteRecording))
   }
 
   @MainActor
@@ -110,15 +140,91 @@ final class RecordingToolbarShortcutsTests: XCTestCase {
   // MARK: - TOML Config Export/Import
 
   @MainActor
-  func testTOMLConfigExportImport() {
+  func testTOMLConfigExportImport() throws {
     // Exporter configKey checks
     XCTAssertEqual(GlobalShortcutKind.togglePenRecording.configKey, "toggle_pen_recording")
     XCTAssertEqual(GlobalShortcutKind.restartRecording.configKey, "restart_recording")
     XCTAssertEqual(GlobalShortcutKind.deleteRecording.configKey, "delete_recording")
 
     // Default configuration document checks
-    // We import SnapzyConfigurationDefaultDocument's private/internal method or verify default doc structure.
-    // Note: We can't access private methods directly, but we can verify defaultDocument TOML export contains them as nil/empty or test default document.
-    // Actually, let's verify DefaultDocument.globalShortcut(for:) compiles and handles it.
+    let defaultDoc = SnapzyConfigurationDefaultDocument.self
+    let defaultTOML = defaultDoc.toml()
+    let defaultParsed = try SimpleTOMLParser.parse(defaultTOML)
+    
+    XCTAssertEqual(defaultParsed.value(at: "shortcuts", "global", "toggle_pen_recording", "key")?.stringValue, "")
+    XCTAssertEqual(defaultParsed.value(at: "shortcuts", "global", "toggle_pen_recording", "enabled")?.boolValue, true)
+    XCTAssertEqual(defaultParsed.value(at: "shortcuts", "global", "restart_recording", "key")?.stringValue, "")
+    XCTAssertEqual(defaultParsed.value(at: "shortcuts", "global", "restart_recording", "enabled")?.boolValue, true)
+    XCTAssertEqual(defaultParsed.value(at: "shortcuts", "global", "delete_recording", "key")?.stringValue, "")
+    XCTAssertEqual(defaultParsed.value(at: "shortcuts", "global", "delete_recording", "enabled")?.boolValue, true)
+
+    // Import test
+    let defaults = UserDefaultsFactory.make()
+    let manager = KeyboardShortcutManager.shared
+    
+    // Save current states of these shortcuts to restore on teardown
+    let origPen = manager.shortcut(for: .togglePenRecording)
+    let origRestart = manager.shortcut(for: .restartRecording)
+    let origDelete = manager.shortcut(for: .deleteRecording)
+    let origPenEnabled = manager.isShortcutEnabled(for: .togglePenRecording)
+    let origRestartEnabled = manager.isShortcutEnabled(for: .restartRecording)
+    let origDeleteEnabled = manager.isShortcutEnabled(for: .deleteRecording)
+    
+    addTeardownBlock { @MainActor in
+      manager.setTogglePenRecordingShortcut(origPen)
+      manager.setRestartRecordingShortcut(origRestart)
+      manager.setDeleteRecordingShortcut(origDelete)
+      manager.setShortcutEnabled(origPenEnabled, for: .togglePenRecording)
+      manager.setShortcutEnabled(origRestartEnabled, for: .restartRecording)
+      manager.setShortcutEnabled(origDeleteEnabled, for: .deleteRecording)
+    }
+
+    let source = """
+    schema_version = 1
+
+    [shortcuts.global.toggle_pen_recording]
+    key = "p"
+    modifiers = ["command", "option"]
+    enabled = true
+
+    [shortcuts.global.restart_recording]
+    key = "r"
+    modifiers = ["command", "option"]
+    enabled = true
+
+    [shortcuts.global.delete_recording]
+    key = "d"
+    modifiers = ["command", "option"]
+    enabled = false
+    """
+
+    let result = SnapzyConfigurationImporter.importTOML(source, defaults: defaults)
+    XCTAssertFalse(result.hasErrors)
+    
+    // Check imported values in KeyboardShortcutManager
+    let expectedPen = ShortcutConfig(keyCode: UInt32(kVK_ANSI_P), modifiers: UInt32(cmdKey | optionKey))
+    let expectedRestart = ShortcutConfig(keyCode: UInt32(kVK_ANSI_R), modifiers: UInt32(cmdKey | optionKey))
+    let expectedDelete = ShortcutConfig(keyCode: UInt32(kVK_ANSI_D), modifiers: UInt32(cmdKey | optionKey))
+    
+    XCTAssertEqual(manager.shortcut(for: .togglePenRecording), expectedPen)
+    XCTAssertEqual(manager.shortcut(for: .restartRecording), expectedRestart)
+    XCTAssertEqual(manager.shortcut(for: .deleteRecording), expectedDelete)
+    
+    XCTAssertTrue(manager.isShortcutEnabled(for: .togglePenRecording))
+    XCTAssertTrue(manager.isShortcutEnabled(for: .restartRecording))
+    XCTAssertFalse(manager.isShortcutEnabled(for: .deleteRecording))
+
+    // Export test
+    let exportedSource = SnapzyConfigurationExporter.exportTOML(defaults: defaults)
+    let document = try SimpleTOMLParser.parse(exportedSource)
+    
+    XCTAssertEqual(document.value(at: "shortcuts", "global", "toggle_pen_recording", "key")?.stringValue, "P")
+    XCTAssertEqual(document.value(at: "shortcuts", "global", "toggle_pen_recording", "enabled")?.boolValue, true)
+    
+    XCTAssertEqual(document.value(at: "shortcuts", "global", "restart_recording", "key")?.stringValue, "R")
+    XCTAssertEqual(document.value(at: "shortcuts", "global", "restart_recording", "enabled")?.boolValue, true)
+    
+    XCTAssertEqual(document.value(at: "shortcuts", "global", "delete_recording", "key")?.stringValue, "D")
+    XCTAssertEqual(document.value(at: "shortcuts", "global", "delete_recording", "enabled")?.boolValue, false)
   }
 }

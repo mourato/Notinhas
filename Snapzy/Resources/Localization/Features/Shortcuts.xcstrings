@@ -5653,6 +5653,71 @@
           }
         }
       }
+    },
+    "preferences-shortcuts.pause-resume-recording-description": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine aktive Aufnahme pausieren oder fortsetzen. Optional. Empfohlen: ⌘⇧Space."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause or resume an active recording. Optional. Recommended: ⌘⇧Space."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausar o reanudar una grabación activa. Opcional. Recomendado: ⌘⇧Space."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mettre en pause ou reprendre un enregistrement actif. Optionnel. Recommandé : ⌘⇧Space."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アクティブな録画を一時停止または再開します。オプション。推奨：⌘⇧Space。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "활성 녹화를 일시 정지하거나 재개합니다. 선택 사항. 권장: ⌘⇧Space."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Приостановить или возобновить активную запись. Необязательно. Рекомендуется: ⌘⇧Space."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tạm dừng hoặc tiếp tục ghi hình. Tuỳ chọn. Khuyên dùng: ⌘⇧Space."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暂停或恢复当前录制。可选。推荐：⌘⇧Space."
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暫停或恢復當前錄製。可選。推薦：⌘⇧Space."
+          }
+        }
+      }
     }
   },
   "version": "1.0"
