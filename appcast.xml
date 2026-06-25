@@ -6,6 +6,22 @@
     <description>Snapzy application updates</description>
     <language>en</language>
     <item>
+      <title>Version 1.25.1</title>
+      <sparkle:version>126</sparkle:version>
+      <sparkle:shortVersionString>1.25.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <pubDate>Thu, 25 Jun 2026 08:51:35 +0000</pubDate>
+      <description><![CDATA[
+        <style>:root { color-scheme: light dark; } body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.5; padding: 8px 16px; } h3 { font-size: 14px; margin: 12px 0 6px; } ul { padding-left: 20px; margin: 4px 0; } li { margin: 3px 0; }</style>
+        <h3>🐛 Bug Fixes</h3><ul><li>Enhance Quick Access customization with drag-and-drop reordering support</li><li>restore activation policy when preferences window closes</li></ul>
+      ]]></description>
+      <enclosure
+        url="https://github.com/duongductrong/Snapzy/releases/download/v1.25.1/Snapzy-v1.25.1.dmg"
+        sparkle:edSignature="jnLHDn2nL03maQHNPJ2Upi1TTbDLSvy93rXAGgK9TOvhP7NgrD+Oh3pDXhf5L03aTOMmrv6KFECqKgm4foSABw=="
+        length="46149859"
+        type="application/octet-stream"/>
+    </item>
+    <item>
       <title>Version 1.25.0</title>
       <sparkle:version>125</sparkle:version>
       <sparkle:shortVersionString>1.25.0</sparkle:shortVersionString>
