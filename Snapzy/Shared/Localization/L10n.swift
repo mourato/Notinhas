@@ -2483,12 +2483,12 @@ enum L10n {
     )
     static let freezeAreaTitle = string(
       "preferences-capture.freeze-area-title",
-      defaultValue: "Freeze screen during area capture",
+      defaultValue: "Freeze screen",
       comment: "Capture preferences setting title"
     )
     static let freezeAreaDescription = string(
       "preferences-capture.freeze-area-description",
-      defaultValue: "Hold a still snapshot while selecting. Turn off to keep content like videos playing; the region is captured when you release.",
+      defaultValue: "Freeze the screen while selecting. Enable to hold a still snapshot.",
       comment: "Capture preferences setting description"
     )
     static let recordingShowCursorDescription = string(

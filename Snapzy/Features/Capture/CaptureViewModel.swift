@@ -138,11 +138,11 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     UserDefaults.standard.object(forKey: PreferencesKeys.screenshotShowCursor) as? Bool ?? false
   }
 
-  /// When enabled (default), area capture selects against a frozen snapshot of the screen. When
-  /// disabled, the screen stays live during selection (e.g. video keeps playing) and the region is
+  /// When enabled, area capture selects against a frozen snapshot of the screen. When
+  /// disabled (default), the screen stays live during selection (e.g. video keeps playing) and the region is
   /// captured at the moment selection completes.
   private var freezesAreaCapture: Bool {
-    UserDefaults.standard.object(forKey: PreferencesKeys.screenshotFreezeArea) as? Bool ?? true
+    UserDefaults.standard.object(forKey: PreferencesKeys.screenshotFreezeArea) as? Bool ?? false
   }
 
   private var isBackgroundCutoutAutoCropEnabled: Bool {

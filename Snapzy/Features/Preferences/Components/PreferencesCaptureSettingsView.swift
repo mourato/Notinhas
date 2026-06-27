@@ -33,7 +33,7 @@ struct CaptureSettingsView: View {
   @AppStorage(PreferencesKeys.hideDesktopWidgets) private var hideDesktopWidgets = false
   @AppStorage(PreferencesKeys.screenshotIncludeOwnApp) private var includeOwnAppInScreenshots = false
   @AppStorage(PreferencesKeys.screenshotShowCursor) private var screenshotShowCursor = false
-  @AppStorage(PreferencesKeys.screenshotFreezeArea) private var freezeAreaCapture = true
+  @AppStorage(PreferencesKeys.screenshotFreezeArea) private var freezeAreaCapture = false
 
   @AppStorage(PreferencesKeys.screenshotFormat) private var screenshotFormat = "png"
   @AppStorage(PreferencesKeys.scrollingCaptureShowHints) private var scrollingCaptureShowHints = true
