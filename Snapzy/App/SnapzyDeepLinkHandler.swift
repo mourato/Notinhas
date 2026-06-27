@@ -17,6 +17,16 @@ struct SnapzyDeepLinkHandler {
   }
 
   func handle(_ url: URL) {
+    guard UserDefaults.standard.object(forKey: PreferencesKeys.urlSchemeEnabled) as? Bool ?? true else {
+      DiagnosticLogger.shared.log(
+        .info,
+        .action,
+        "Ignored deeplink because URL scheme is disabled in preferences",
+        context: ["url": url.absoluteString]
+      )
+      return
+    }
+
     guard let action = SnapzyDeepLinkAction(url: url) else {
       DiagnosticLogger.shared.log(
         .warning,

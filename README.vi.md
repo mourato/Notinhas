@@ -148,7 +148,7 @@ Lệnh này sẽ xóa ứng dụng khỏi `/Applications`, xóa preferences và 
 
 ## Tự động hóa
 
-Snapzy đăng ký URL scheme `snapzy://` để launcher và công cụ tự động hóa có thể kích hoạt các thao tác capture.
+Snapzy đăng ký URL scheme `snapzy://` để launcher và công cụ tự động hóa có thể kích hoạt các thao tác capture. Tùy chọn tích hợp này có thể bật hoặc tắt dưới **Cài đặt -> Nâng cao -> Tích hợp URL Scheme**.
 
 | Tác vụ                  | URL                               |
 | ----------------------- | --------------------------------- |

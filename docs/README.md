@@ -77,6 +77,7 @@ flowchart TD
 - Annotation sidecars are cleaned with their source screenshots through Quick Access delete, History delete, clear-history, retention sweep, and temp-to-export save/move paths. They are not draft autosaves for unsaved Annotate windows during app quit.
 - Full Annotate drag-to-app closes the editor by default. Settings → Annotate → `Close after drop` can be turned off to keep the editor session alive after sharing a rendered copy; `Reactivate after drop` controls whether that preserved editor is activated after drop.
 - During recording, the menu bar item stays menu-first instead of left-click-to-stop. It shows the live timer, keeps Preferences reachable, and temporarily excludes the Settings window from own-app recordings when needed.
+- URL Scheme automation triggers via `snapzy://` deep links can be disabled by the user under Settings -> Advanced -> URL Scheme integration (enabled by default). When disabled, incoming automation requests are logged and ignored.
 - Settings -> Advanced exports and imports portable TOML preferences. The
   default path is `~/.config/snapzy/config.toml`; Backup actions stay disabled
   until macOS folder access is granted once, then Snapzy creates the folder/file

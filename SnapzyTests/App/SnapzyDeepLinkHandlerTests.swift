@@ -101,4 +101,22 @@ final class SnapzyDeepLinkHandlerTests: XCTestCase {
       XCTAssertNil(SnapzyDeepLinkAction(url: url), urlString)
     }
   }
+
+  func testDeepLinkHandlerChecksUrlSchemeEnabled() throws {
+    let defaults = UserDefaults.standard
+    let originalValue = defaults.object(forKey: PreferencesKeys.urlSchemeEnabled)
+    defer {
+      if let originalValue {
+        defaults.set(originalValue, forKey: PreferencesKeys.urlSchemeEnabled)
+      } else {
+        defaults.removeObject(forKey: PreferencesKeys.urlSchemeEnabled)
+      }
+    }
+
+    defaults.set(false, forKey: PreferencesKeys.urlSchemeEnabled)
+    let viewModel = ScreenCaptureViewModel()
+    let handler = SnapzyDeepLinkHandler(screenCaptureViewModel: viewModel)
+    let url = try XCTUnwrap(URL(string: "snapzy://capture/fullscreen"))
+    handler.handle(url)
+  }
 }

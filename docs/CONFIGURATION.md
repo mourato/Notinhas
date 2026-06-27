@@ -45,7 +45,7 @@ step and grant access later from Settings -> Advanced.
 
 The TOML file covers portable app preferences:
 
-- General settings: language, appearance, sounds, login item, export folder path.
+- General settings: language, appearance, sounds, URL scheme integration, login item, export folder path.
 - Capture settings: naming templates, screenshot format, cursor/app inclusion,
   scrolling hints, OCR notification, object cutout auto-crop.
 - After-capture actions for screenshot and recording.
@@ -102,6 +102,7 @@ snapzy_min_version = "1.20.0"
 language = "system"
 appearance = "system"
 play_sounds = true
+url_scheme_enabled = true
 start_at_login = false
 export_location = "~/Desktop"
 

@@ -135,7 +135,7 @@ This will remove the app from `/Applications`, delete preferences and caches, an
 
 ## Automation
 
-Snapzy registers the `snapzy://` URL scheme so launchers and automation tools can trigger capture actions.
+Snapzy registers the `snapzy://` URL scheme so launchers and automation tools can trigger capture actions. This integration can be toggled on or off under **Settings -> Advanced -> URL Scheme integration**.
 
 | Action                | URL                               |
 | --------------------- | --------------------------------- |

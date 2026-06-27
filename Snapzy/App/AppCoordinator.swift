@@ -34,6 +34,10 @@ final class AppCoordinator {
       defaults.set(LogCleanupScheduler.defaultRetentionDays, forKey: PreferencesKeys.diagnosticsRetentionDays)
     }
 
+    if defaults.object(forKey: PreferencesKeys.urlSchemeEnabled) == nil {
+      defaults.set(true, forKey: PreferencesKeys.urlSchemeEnabled)
+    }
+
     // History defaults
     if defaults.object(forKey: PreferencesKeys.historyEnabled) == nil {
       defaults.set(true, forKey: PreferencesKeys.historyEnabled)

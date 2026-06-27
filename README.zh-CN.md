@@ -148,7 +148,7 @@ curl -fsSL https://raw.githubusercontent.com/duongductrong/Snapzy/master/uninsta
 
 ## 自动化
 
-Snapzy 注册了 `snapzy://` URL scheme，因此 launcher 和自动化工具可以直接触发各类捕获动作。
+Snapzy 注册了 `snapzy://` URL scheme，因此 launcher 和自动化工具可以直接触发各类捕获动作。此集成选项可以在 **设置 -> 高级 -> URL Scheme 集成** 中开启或关闭。
 
 | 操作           | URL                               |
 | -------------- | --------------------------------- |

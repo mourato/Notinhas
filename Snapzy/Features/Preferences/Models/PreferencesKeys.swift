@@ -19,6 +19,7 @@ enum PreferencesKeys {
 
   // General
   static let playSounds = "playSounds"
+  static let urlSchemeEnabled = "urlSchemeEnabled"
   static let showMenuBarIcon = "showMenuBarIcon"
   static let exportLocation = "exportLocation"
   static let exportLocationBookmark = "exportLocation.bookmark"

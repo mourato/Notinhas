@@ -95,6 +95,9 @@ enum SnapzyConfigurationImporter {
     collectBool(&reader, "general", "play_sounds", mutations: &mutations) {
       defaults.set($0, forKey: PreferencesKeys.playSounds)
     }
+    collectBool(&reader, "general", "url_scheme_enabled", mutations: &mutations) {
+      defaults.set($0, forKey: PreferencesKeys.urlSchemeEnabled)
+    }
     if let startAtLogin = reader.bool("general", "start_at_login") {
       mutations.append { LoginItemManager.setEnabled(startAtLogin) }
     }

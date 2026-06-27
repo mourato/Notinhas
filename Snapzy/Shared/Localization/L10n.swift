@@ -201,6 +201,21 @@ enum L10n {
       defaultValue: "Backup",
       comment: "Advanced preferences backup section title"
     )
+    static let integrationSection = string(
+      "preferences-advanced.section-integration",
+      defaultValue: "Integration",
+      comment: "Advanced preferences integration section title"
+    )
+    static let urlSchemeTitle = string(
+      "preferences-advanced.url-scheme-title",
+      defaultValue: "URL Scheme integration",
+      comment: "Advanced preferences setting title"
+    )
+    static let urlSchemeDescription = string(
+      "preferences-advanced.url-scheme-description",
+      defaultValue: "Allow external triggers via snapzy:// URLs",
+      comment: "Advanced preferences setting description"
+    )
     static let diagnosticsSection = PreferencesGeneral.diagnosticsSection
     static let diagnosticLoggingTitle = PreferencesGeneral.diagnosticLoggingTitle
     static let diagnosticLoggingDescription = PreferencesGeneral.diagnosticLoggingDescription

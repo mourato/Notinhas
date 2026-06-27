@@ -12,6 +12,7 @@ import UniformTypeIdentifiers
 struct AdvancedSettingsView: View {
   @AppStorage(PreferencesKeys.diagnosticsEnabled) private var diagnosticsEnabled = true
   @AppStorage(PreferencesKeys.diagnosticsRetentionDays) private var diagnosticsRetentionDays = LogCleanupScheduler.defaultRetentionDays
+  @AppStorage(PreferencesKeys.urlSchemeEnabled) private var urlSchemeEnabled = true
 
   @State private var needsConfigAccess = SnapzyConfigurationService.shared.needsUserSelectedConfigAccess
   @State private var isRestoreConfirmationPresented = false
@@ -107,6 +108,17 @@ struct AdvancedSettingsView: View {
           .controlSize(.small)
           .disabled(!canUseBackupActions)
           .help(disabledBackupActionHelp)
+        }
+      }
+
+      Section(L10n.PreferencesAdvanced.integrationSection) {
+        SettingRow(
+          icon: "link",
+          title: L10n.PreferencesAdvanced.urlSchemeTitle,
+          description: L10n.PreferencesAdvanced.urlSchemeDescription
+        ) {
+          Toggle("", isOn: $urlSchemeEnabled)
+            .labelsHidden()
         }
       }
 
