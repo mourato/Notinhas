@@ -102,7 +102,20 @@ final class ScreenCaptureManager: ObservableObject {
     let outputWidth: Int
     let outputHeight: Int
     let scaleFactor: CGFloat
-    let sharpensPromotedOutput: Bool
+    // Logical (point-space) geometry used at crop time to reconcile against the
+    // actually-returned image dimensions. Needed because SCStream may return an
+    // image whose pixel size differs from screenFrame × scaleFactor on scaled
+    // HiDPI / non-default-density displays (issue #308).
+    let screenFrame: CGRect
+    let logicalCropSize: CGSize
+    let minimumOutputScaleFactor: CGFloat
+    let assumedFullPixelSize: CGSize
+    let displayID: CGDirectDisplayID
+  }
+
+  struct PreparedAreaCaptureResult {
+    let image: CGImage
+    let scaleFactor: CGFloat
   }
 
   private struct DisplayCaptureTarget {
@@ -431,14 +444,14 @@ final class ScreenCaptureManager: ObservableObject {
         display: display,
         contentFilter: filter
       )
-      let scaleFactor = max(nativeScaleFactor, preferredScreenshotOutputScaleFactor)
+      let outputScaleFactor = max(nativeScaleFactor, preferredScreenshotOutputScaleFactor)
 
       let config = SCStreamConfiguration()
       if #available(macOS 14.0, *) { config.ignoreShadowsSingleWindow = false }
       if #available(macOS 14.2, *) { config.captureResolution = .best }
       let captureFrame = matchedScreen?.frame ?? display.frame
-      config.width = max(1, Int((captureFrame.width * scaleFactor).rounded()))
-      config.height = max(1, Int((captureFrame.height * scaleFactor).rounded()))
+      config.width = max(1, Int((captureFrame.width * nativeScaleFactor).rounded()))
+      config.height = max(1, Int((captureFrame.height * nativeScaleFactor).rounded()))
       config.pixelFormat = kCVPixelFormatType_32BGRA
       config.showsCursor = showCursor
       if let matchedScreen, let colorSpaceName = preferredCaptureColorSpaceName(for: matchedScreen) {
@@ -450,14 +463,28 @@ final class ScreenCaptureManager: ObservableObject {
         contentFilter: filter,
         configuration: config
       )
+
+      DiagnosticLogger.shared.log(
+        .debug,
+        .capture,
+        "Fullscreen captured image",
+        context: [
+          "displayID": "\(display.displayID)",
+          "actualFull": "\(image.width)x\(image.height)",
+          "configFull": "\(config.width)x\(config.height)",
+          "nativeScale": String(format: "%.3f", Double(nativeScaleFactor)),
+          "outputScale": String(format: "%.3f", Double(outputScaleFactor)),
+        ]
+      )
+
       let imageScaleFactor = matchedScreen.map {
         Self.imageScaleFactor(for: image, screenFrame: $0.frame, fallback: nativeScaleFactor)
-      } ?? scaleFactor
+      } ?? nativeScaleFactor
       let promotedImage = Self.promoteScreenshotImageIfNeeded(
         image,
         logicalSize: captureFrame.size,
         sourceScaleFactor: imageScaleFactor,
-        minimumOutputScaleFactor: scaleFactor,
+        minimumOutputScaleFactor: outputScaleFactor,
         colorSpaceName: config.colorSpaceName
       )
 
@@ -687,7 +714,8 @@ final class ScreenCaptureManager: ObservableObject {
         screenFrame: CGRect,
         filter: SCContentFilter,
         configuration: SCStreamConfiguration,
-        scaleFactor: CGFloat
+        captureScale: CGFloat,
+        outputScale: CGFloat
       )? in
       guard let display = target.display else { return nil }
       let filter = buildFilter(
@@ -702,13 +730,14 @@ final class ScreenCaptureManager: ObservableObject {
         display: display,
         contentFilter: filter
       )
-      let scaleFactor = max(nativeScaleFactor, preferredScreenshotOutputScaleFactor)
+      let captureScale = nativeScaleFactor
+      let outputScale = max(nativeScaleFactor, preferredScreenshotOutputScaleFactor)
       let configuration = makeDisplaySnapshotConfiguration(
         for: target.screen,
-        scaleFactor: scaleFactor,
+        scaleFactor: captureScale,
         showsCursor: showCursor
       )
-      return (target.displayID, target.order, target.screenFrame, filter, configuration, scaleFactor)
+      return (target.displayID, target.order, target.screenFrame, filter, configuration, captureScale, outputScale)
     }
 
     return await withTaskGroup(of: DisplayPayloadResult.self) { group in
@@ -722,13 +751,13 @@ final class ScreenCaptureManager: ObservableObject {
             let imageScaleFactor = Self.imageScaleFactor(
               for: image,
               screenFrame: request.screenFrame,
-              fallback: request.scaleFactor
+              fallback: request.captureScale
             )
             let promotedImage = Self.promoteScreenshotImageIfNeeded(
               image,
               logicalSize: request.screenFrame.size,
               sourceScaleFactor: imageScaleFactor,
-              minimumOutputScaleFactor: request.scaleFactor,
+              minimumOutputScaleFactor: request.outputScale,
               colorSpaceName: request.configuration.colorSpaceName
             )
             return .success(
@@ -908,17 +937,18 @@ final class ScreenCaptureManager: ObservableObject {
         minimumOutputScaleFactor: preferredScreenshotOutputScaleFactor
       )
 
-      guard let croppedImage = try await capturePreparedArea(context) else {
+      guard let captured = try await capturePreparedArea(context) else {
         return .failure(.captureFailed(L10n.ScreenCapture.failedToCropCapturedImage))
       }
 
-      // Save the cropped image
+      // Save the cropped image. Use the post-reconciliation scale so DPI metadata
+      // matches the actual returned pixels (may be promoted to min-2x baseline).
       return await saveImage(
-        croppedImage,
+        captured.image,
         to: saveDirectory,
         fileName: fileName,
         format: format,
-        scaleFactor: context.scaleFactor
+        scaleFactor: captured.scaleFactor
       )
 
     } catch {
@@ -1205,7 +1235,7 @@ final class ScreenCaptureManager: ObservableObject {
       prefetchedContentTask: prefetchedContentTask
     )
 
-    return try await capturePreparedArea(context)
+    return try await capturePreparedArea(context)?.image
   }
 
   func prepareAreaCapture(
@@ -1230,11 +1260,58 @@ final class ScreenCaptureManager: ObservableObject {
     )
   }
 
-  func capturePreparedArea(_ context: PreparedAreaCaptureContext) async throws -> CGImage? {
+  func capturePreparedArea(_ context: PreparedAreaCaptureContext) async throws -> PreparedAreaCaptureResult? {
     let fullImage = try await Self.captureImageCompat(
       contentFilter: context.contentFilter,
       configuration: context.configuration
     )
+
+    // Reconcile assumed-vs-actual: SCStream can return an image whose pixel
+    // size differs from `screenFrame × assumedScale` on scaled HiDPI displays.
+    // Trusting the pre-computed `pixelCropRect` against the actual image clamps
+    // the crop to upper-left when the image is smaller than assumed (issue #308).
+    let reconciled = Self.reconciledPixelCrop(
+      fullImagePixelWidth: fullImage.width,
+      fullImagePixelHeight: fullImage.height,
+      screenFrame: context.screenFrame,
+      logicalSourceRect: context.sourceRect,
+      logicalCropSize: context.logicalCropSize,
+      fallbackScale: context.scaleFactor
+    )
+
+    let assumedWidth = Int(context.assumedFullPixelSize.width.rounded())
+    let assumedHeight = Int(context.assumedFullPixelSize.height.rounded())
+    let mismatch =
+      abs(fullImage.width - assumedWidth) > 1 ||
+      abs(fullImage.height - assumedHeight) > 1
+
+    DiagnosticLogger.shared.log(
+      .debug,
+      .capture,
+      "Area captured image",
+      context: [
+        "displayID": "\(context.displayID)",
+        "actualFull": "\(fullImage.width)x\(fullImage.height)",
+        "assumedFull": "\(assumedWidth)x\(assumedHeight)",
+        "actualScale": String(format: "%.3f", Double(reconciled.actualScale)),
+        "assumedScale": String(format: "%.3f", Double(context.scaleFactor)),
+        "rebuiltCrop": "\(Int(reconciled.pixelCrop.origin.x))x\(Int(reconciled.pixelCrop.origin.y))+\(Int(reconciled.pixelCrop.width))x\(Int(reconciled.pixelCrop.height))",
+      ]
+    )
+
+    if mismatch {
+      DiagnosticLogger.shared.log(
+        .info,
+        .capture,
+        "#308 dimension mismatch (actual≠assumed) — rebuilt crop from actual pixels",
+        context: [
+          "displayID": "\(context.displayID)",
+          "actualFull": "\(fullImage.width)x\(fullImage.height)",
+          "assumedFull": "\(assumedWidth)x\(assumedHeight)",
+          "actualScale": String(format: "%.3f", Double(reconciled.actualScale)),
+        ]
+      )
+    }
 
     let fullImageBounds = CGRect(
       x: 0,
@@ -1243,24 +1320,93 @@ final class ScreenCaptureManager: ObservableObject {
       height: fullImage.height
     )
     let capturedImage: CGImage?
-    if context.pixelCropRect.integral == fullImageBounds.integral {
+    if reconciled.pixelCrop.integral == fullImageBounds.integral {
       capturedImage = fullImage
+    } else if reconciled.pixelCrop.isEmpty {
+      capturedImage = nil
     } else {
-      capturedImage = fullImage.cropping(to: context.pixelCropRect)
+      capturedImage = fullImage.cropping(to: reconciled.pixelCrop)
     }
 
     guard let capturedImage else {
       return nil
     }
 
-    if context.sharpensPromotedOutput {
-      return FrozenAreaCaptureSession.sharpenPromotedImageIfUseful(
-        capturedImage,
+    // Promote low-density slices to the minimum screenshot output baseline
+    // (mirrors fullscreen + frozen paths). Native-density images pass through
+    // unchanged; the sharpener only runs when an actual upscale happened.
+    let promoted = FrozenAreaCaptureSession.imageByPromotingScaleIfNeeded(
+      capturedImage,
+      logicalSize: context.logicalCropSize,
+      sourceScaleFactor: reconciled.actualScale,
+      minimumOutputScaleFactor: context.minimumOutputScaleFactor,
+      colorSpaceName: context.configuration.colorSpaceName
+    )
+
+    let didPromote = promoted.scaleFactor > reconciled.actualScale + 0.0001
+    let outputImage = didPromote
+      ? FrozenAreaCaptureSession.sharpenPromotedImageIfUseful(
+        promoted.image,
         colorSpaceName: context.configuration.colorSpaceName
       )
-    }
+      : promoted.image
 
-    return capturedImage
+    return PreparedAreaCaptureResult(image: outputImage, scaleFactor: promoted.scaleFactor)
+  }
+
+  /// Pure geometry helper — given the actually-returned pixel dimensions, the
+  /// logical screen frame, and the logical (point-space, top-left, screen-local)
+  /// source rect, returns the pixel crop rect and the derived actual scale.
+  /// Exposed (internal) for unit-testing scale-mismatch without SCStream.
+  nonisolated static func reconciledPixelCrop(
+    fullImagePixelWidth: Int,
+    fullImagePixelHeight: Int,
+    screenFrame: CGRect,
+    logicalSourceRect: CGRect,
+    logicalCropSize: CGSize,
+    fallbackScale: CGFloat
+  ) -> (pixelCrop: CGRect, actualScale: CGFloat) {
+    let actualScale = dimensionScale(
+      pixelWidth: fullImagePixelWidth,
+      pixelHeight: fullImagePixelHeight,
+      frame: screenFrame
+    ) ?? max(fallbackScale, 1)
+
+    let originX = (logicalSourceRect.origin.x * actualScale).rounded()
+    let originY = (logicalSourceRect.origin.y * actualScale).rounded()
+    let width = CGFloat(max(1, Int((logicalCropSize.width * actualScale).rounded())))
+    let height = CGFloat(max(1, Int((logicalCropSize.height * actualScale).rounded())))
+
+    let rawCrop = CGRect(x: originX, y: originY, width: width, height: height)
+    let imageBounds = CGRect(
+      x: 0,
+      y: 0,
+      width: CGFloat(fullImagePixelWidth),
+      height: CGFloat(fullImagePixelHeight)
+    )
+    return (rawCrop.intersection(imageBounds), actualScale)
+  }
+
+  /// Pure straddle picker — index of the frame in `frames` with the LARGEST area
+  /// intersection with `rect`, or `nil` if no frame intersects. Mirrors the
+  /// pattern in `AreaSelectionWindow.primaryDisplayID`. Exposed (internal) for
+  /// unit-testing the phase-03 selection without `NSScreen`.
+  nonisolated static func indexOfLargestIntersectingFrame(
+    frames: [CGRect],
+    rect: CGRect
+  ) -> Int? {
+    var bestIndex: Int?
+    var bestArea: CGFloat = 0
+    for (index, frame) in frames.enumerated() {
+      let intersection = frame.intersection(rect)
+      guard !intersection.isEmpty else { continue }
+      let area = intersection.width * intersection.height
+      if area > bestArea {
+        bestArea = area
+        bestIndex = index
+      }
+    }
+    return bestIndex
   }
 
   func makeAreaStreamConfiguration(
@@ -1304,12 +1450,17 @@ final class ScreenCaptureManager: ObservableObject {
       includeDesktopWindows: includeDesktopWindows
     )
 
-    var targetScreen: NSScreen?
-    for screen in NSScreen.screens {
-      if screen.frame.intersects(rect) {
-        targetScreen = screen
-        break
-      }
+    // Pick the display with the LARGEST intersection (phase-03). Order-dependent
+    // `first` pick was wrong for straddling selections — see issue #308 notes and
+    // `AreaSelectionWindow.primaryDisplayID` for the mirrored pattern.
+    let targetScreen: NSScreen?
+    if let bestIndex = Self.indexOfLargestIntersectingFrame(
+      frames: NSScreen.screens.map(\.frame),
+      rect: rect
+    ) {
+      targetScreen = NSScreen.screens[bestIndex]
+    } else {
+      targetScreen = nil
     }
 
     let targetDisplayID: CGDirectDisplayID
@@ -1346,7 +1497,8 @@ final class ScreenCaptureManager: ObservableObject {
       display: display,
       contentFilter: contentFilter
     )
-    let scaleFactor = max(nativeScaleFactor, minimumOutputScaleFactor)
+    let captureScale = nativeScaleFactor
+    let outputScale = max(nativeScaleFactor, minimumOutputScaleFactor)
 
     let relativeRect = CGRect(
       x: rect.origin.x - screenFrame.origin.x,
@@ -1362,7 +1514,7 @@ final class ScreenCaptureManager: ObservableObject {
       throw CaptureError.captureFailed(L10n.ScreenCapture.selectionOutsideDisplayBounds)
     }
 
-    let alignedRect = pixelAlignedRect(clampedRect, scaleFactor: scaleFactor, bounds: screenBounds)
+    let alignedRect = pixelAlignedRect(clampedRect, scaleFactor: captureScale, bounds: screenBounds)
     guard !alignedRect.isEmpty else {
       throw CaptureError.captureFailed(L10n.ScreenCapture.selectionOutsideDisplayBounds)
     }
@@ -1374,10 +1526,10 @@ final class ScreenCaptureManager: ObservableObject {
       width: alignedRect.width,
       height: alignedRect.height
     )
-    let outputWidth = max(1, Int((alignedRect.width * scaleFactor).rounded()))
-    let outputHeight = max(1, Int((alignedRect.height * scaleFactor).rounded()))
-    let fullCaptureWidth = max(1, Int((screenFrame.width * scaleFactor).rounded()))
-    let fullCaptureHeight = max(1, Int((screenFrame.height * scaleFactor).rounded()))
+    let outputWidth = max(1, Int((alignedRect.width * captureScale).rounded()))
+    let outputHeight = max(1, Int((alignedRect.height * captureScale).rounded()))
+    let fullCaptureWidth = max(1, Int((screenFrame.width * captureScale).rounded()))
+    let fullCaptureHeight = max(1, Int((screenFrame.height * captureScale).rounded()))
 
     let config = SCStreamConfiguration()
     if #available(macOS 14.0, *) { config.ignoreShadowsSingleWindow = false }
@@ -1391,24 +1543,45 @@ final class ScreenCaptureManager: ObservableObject {
     }
 
     let pixelCropRect = CGRect(
-      x: (sourceRect.origin.x * scaleFactor).rounded(),
-      y: (sourceRect.origin.y * scaleFactor).rounded(),
+      x: (sourceRect.origin.x * captureScale).rounded(),
+      y: (sourceRect.origin.y * captureScale).rounded(),
       width: CGFloat(outputWidth),
       height: CGFloat(outputHeight)
     ).intersection(
       CGRect(x: 0, y: 0, width: CGFloat(fullCaptureWidth), height: CGFloat(fullCaptureHeight))
     )
 
-    return PreparedAreaCaptureContext(
+    let context = PreparedAreaCaptureContext(
       contentFilter: contentFilter,
       configuration: config,
       pixelCropRect: pixelCropRect,
       sourceRect: sourceRect,
       outputWidth: outputWidth,
       outputHeight: outputHeight,
-      scaleFactor: scaleFactor,
-      sharpensPromotedOutput: scaleFactor > nativeScaleFactor + 0.0001
+      scaleFactor: captureScale,
+      screenFrame: screenFrame,
+      logicalCropSize: alignedRect.size,
+      minimumOutputScaleFactor: outputScale,
+      assumedFullPixelSize: CGSize(width: fullCaptureWidth, height: fullCaptureHeight),
+      displayID: targetDisplayID
     )
+
+    DiagnosticLogger.shared.log(
+      .debug,
+      .capture,
+      "Area prepared context",
+      context: [
+        "displayID": "\(targetDisplayID)",
+        "screenFrame": "\(Int(screenFrame.width))x\(Int(screenFrame.height))",
+        "nativeScale": String(format: "%.3f", Double(nativeScaleFactor)),
+        "scale": String(format: "%.3f", Double(captureScale)),
+        "outputScale": String(format: "%.3f", Double(outputScale)),
+        "assumedFull": "\(fullCaptureWidth)x\(fullCaptureHeight)",
+        "assumedPixelCrop": "\(Int(pixelCropRect.origin.x))x\(Int(pixelCropRect.origin.y))+\(Int(pixelCropRect.width))x\(Int(pixelCropRect.height))",
+      ]
+    )
+
+    return context
   }
 
   private func captureWindowImage(

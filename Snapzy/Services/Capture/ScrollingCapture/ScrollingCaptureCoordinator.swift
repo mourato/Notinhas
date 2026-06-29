@@ -955,7 +955,7 @@ final class ScrollingCaptureCoordinator {
   private func capturePreparedAreaForSession() async throws -> CGImage? {
     do {
       let context = try await ensurePreparedCaptureContext()
-      return try await captureManager.capturePreparedArea(context)
+      return try await captureManager.capturePreparedArea(context)?.image
     } catch {
       preparedCaptureContext = nil
       prepareCaptureContextTask?.cancel()
