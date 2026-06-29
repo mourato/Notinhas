@@ -179,6 +179,12 @@ enum SnapzyConfigurationDefaultDocument {
       shortcut: CaptureOverlayShortcutSettings.defaultRecordingApplicationCaptureShortcut
     )
 
+    writer.section("shortcuts.quick_access.edit_latest_capture")
+    writer.value("enabled", false)
+    let defaultEditorShortcut = QuickAccessManager.defaultOpenEditorShortcut
+    writer.value("key", SnapzyConfigurationShortcutCodec.exportKey(defaultEditorShortcut))
+    writer.stringArray("modifiers", SnapzyConfigurationShortcutCodec.exportModifiers(defaultEditorShortcut))
+
     writer.section("shortcuts.annotate_tools")
     writer.stringArray("disabled", [])
     for tool in AnnotateShortcutManager.configurableTools {

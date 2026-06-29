@@ -162,6 +162,11 @@ enabled = true
 enabled = true
 key = ""
 modifiers = []
+
+[shortcuts.quick_access.edit_latest_capture]
+enabled = false
+key = "return"
+modifiers = ["command"]
 ```
 
 ## Manual Testing

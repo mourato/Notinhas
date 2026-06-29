@@ -29,8 +29,22 @@ extension SnapzyConfigurationExporter {
       shortcut: CaptureOverlayShortcutSettings.recordingApplicationCaptureShortcut
     )
 
+    writeQuickAccessShortcut(&writer)
     writeAnnotateToolShortcuts(&writer)
     writeAnnotateActionShortcuts(&writer)
+  }
+
+  private static func writeQuickAccessShortcut(_ writer: inout SimpleTOMLWriter) {
+    let manager = QuickAccessManager.shared
+    writer.section("shortcuts.quick_access.edit_latest_capture")
+    writer.value("enabled", manager.openEditorShortcutEnabled)
+    guard let shortcut = manager.openEditorShortcut else {
+      writer.value("key", "")
+      writer.stringArray("modifiers", [])
+      return
+    }
+    writer.value("key", SnapzyConfigurationShortcutCodec.exportKey(shortcut))
+    writer.stringArray("modifiers", SnapzyConfigurationShortcutCodec.exportModifiers(shortcut))
   }
 
   private static func writeGlobalShortcut(

@@ -38,8 +38,48 @@ extension SnapzyConfigurationImporter {
       CaptureOverlayShortcutSettings.setRecordingApplicationCaptureShortcut($0)
     }
 
+    collectQuickAccessShortcut(&reader, mutations: &mutations)
     collectAnnotateTools(&reader, mutations: &mutations)
     collectAnnotateActions(&reader, mutations: &mutations)
+  }
+
+  private static func collectQuickAccessShortcut(
+    _ reader: inout SnapzyConfigurationReader,
+    mutations: inout [() -> Void]
+  ) {
+    let path = ["shortcuts", "quick_access", "edit_latest_capture"]
+    let enabled = reader.bool(path + ["enabled"])
+    let key = reader.string(path + ["key"])
+    let modifiers = reader.stringArray(path + ["modifiers"])
+    guard enabled != nil || key != nil || modifiers != nil else { return }
+
+    if enabled == false || key == "" {
+      mutations.append {
+        QuickAccessManager.shared.openEditorShortcutEnabled = false
+        QuickAccessManager.shared.setOpenEditorShortcut(nil)
+      }
+      return
+    }
+
+    if let enabled {
+      mutations.append {
+        QuickAccessManager.shared.openEditorShortcutEnabled = enabled
+      }
+    }
+
+    if let key {
+      guard let shortcut = SnapzyConfigurationShortcutCodec.shortcut(
+        key: key,
+        modifiers: modifiers ?? [],
+        requireModifier: true
+      ) else {
+        reader.error("shortcuts.quick_access.edit_latest_capture has an invalid shortcut")
+        return
+      }
+      mutations.append {
+        QuickAccessManager.shared.setOpenEditorShortcut(shortcut)
+      }
+    }
   }
 
   static func quickAccessSlots(
