@@ -76,7 +76,12 @@ final class AreaSelectionModelsTests: XCTestCase {
 
 final class CaptureViewModelTests: XCTestCase {
 
-  func testHiddenWindowSession_restore_postsSyntheticMouseMovedEvent() {
+  func testHiddenWindowSession_restore_postsSyntheticMouseMovedEvent() throws {
+    let policy = AppLaunchPolicy()
+    if policy.isHeadlessDisplaySession {
+      throw XCTSkip("Skipping window restore test in headless display session")
+    }
+
     let window = NSWindow(
       contentRect: NSRect(x: 0, y: 0, width: 100, height: 100),
       styleMask: .borderless,
@@ -94,7 +99,6 @@ final class CaptureViewModelTests: XCTestCase {
     
     let expectation = XCTestExpectation(description: "Synthetic mouse event posted")
     
-    #if DEBUG
     ScreenCaptureViewModel.HiddenWindowSession.onPostSyntheticMouseEvent = { event in
       if event.windowNumber == 0 {
         expectation.fulfill()
@@ -103,7 +107,6 @@ final class CaptureViewModelTests: XCTestCase {
     defer {
       ScreenCaptureViewModel.HiddenWindowSession.onPostSyntheticMouseEvent = nil
     }
-    #endif
     
     session.restore()
     

@@ -143,24 +143,11 @@ final class RecordingAudioLevelMeterTests: XCTestCase {
   }
 
   private static func makeSampleBuffer(from pcm: AVAudioPCMBuffer) -> CMSampleBuffer? {
-    var asbd = pcm.format.streamDescription.pointee
-    var formatDesc: CMAudioFormatDescription?
-    guard CMAudioFormatDescriptionCreate(
-      allocator: kCFAllocatorDefault,
-      asbd: &asbd,
-      layoutSize: 0,
-      layout: nil,
-      magicCookieSize: 0,
-      magicCookie: nil,
-      extensions: nil,
-      formatDescriptionOut: &formatDesc
-    ) == noErr, let formatDesc else {
-      return nil
-    }
+    let formatDesc = pcm.format.formatDescription
 
     var sampleBuffer: CMSampleBuffer?
     var timing = CMSampleTimingInfo(
-      duration: CMTime(value: 1, timescale: CMTimeScale(asbd.mSampleRate)),
+      duration: CMTime(value: 1, timescale: CMTimeScale(pcm.format.streamDescription.pointee.mSampleRate)),
       presentationTimeStamp: .zero,
       decodeTimeStamp: .invalid
     )
