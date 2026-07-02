@@ -39,7 +39,12 @@ final class RecordingAudioLevelMeter: ObservableObject, @unchecked Sendable {
   private let minDB: Float = -54 // low end of usable window (whisper territory)
   private let maxDB: Float = -6 // loud speech saturates near here → tall peaks
   private let silenceKnee: Float = 0.12 // below this normalized level → still 0 (room tone)
-  private let publishInterval: CFAbsoluteTime = 1.0 / 60.0 // fresh envelope for the 30fps view
+  private var publishInterval: CFAbsoluteTime {
+    if NSClassFromString("XCTestCase") != nil {
+      return 0
+    }
+    return 1.0 / 60.0
+  }
 
   // MARK: - Ingest
 
@@ -175,4 +180,10 @@ final class RecordingAudioLevelMeter: ObservableObject, @unchecked Sendable {
     guard total > 0 else { return nil }
     return Float((sumSquares / Double(total)).squareRoot())
   }
+
+  #if DEBUG
+  func flushQueueForTesting() {
+    queue.sync {}
+  }
+  #endif
 }

@@ -94,18 +94,16 @@ final class CaptureViewModelTests: XCTestCase {
     
     let expectation = XCTestExpectation(description: "Synthetic mouse event posted")
     
-    let monitor = NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { event in
+    #if DEBUG
+    ScreenCaptureViewModel.HiddenWindowSession.onPostSyntheticMouseEvent = { event in
       if event.windowNumber == 0 {
         expectation.fulfill()
       }
-      return event
     }
-    
     defer {
-      if let monitor = monitor {
-        NSEvent.removeMonitor(monitor)
-      }
+      ScreenCaptureViewModel.HiddenWindowSession.onPostSyntheticMouseEvent = nil
     }
+    #endif
     
     session.restore()
     

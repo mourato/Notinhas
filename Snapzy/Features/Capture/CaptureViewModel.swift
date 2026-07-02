@@ -177,6 +177,10 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
 
   @MainActor
   final class HiddenWindowSession {
+    #if DEBUG
+    static var onPostSyntheticMouseEvent: ((NSEvent) -> Void)?
+    #endif
+
     private struct Entry {
       weak var window: NSWindow?
       let windowNumber: Int
@@ -255,6 +259,9 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
           pressure: 0
         ) {
           NSApp.postEvent(syntheticEvent, atStart: false)
+          #if DEBUG
+          Self.onPostSyntheticMouseEvent?(syntheticEvent)
+          #endif
         }
       }
 

@@ -20,7 +20,7 @@ final class RecordingAudioLevelMeterTests: XCTestCase {
     // Ingest a few buffers to let ballistics build up.
     for _ in 0 ..< 10 {
       meter.ingest(buffer, source: .microphone)
-      drainQueues(0.02)
+      drainQueues(meter, 0.02)
     }
 
     XCTAssertTrue(
@@ -36,7 +36,7 @@ final class RecordingAudioLevelMeterTests: XCTestCase {
 
     for _ in 0 ..< 10 {
       meter.ingest(silence, source: .system)
-      drainQueues(0.02)
+      drainQueues(meter, 0.02)
     }
 
     XCTAssertEqual(meter.level, 0, accuracy: 0.0001, "Silence must be gated to a flat zero level")
@@ -51,7 +51,7 @@ final class RecordingAudioLevelMeterTests: XCTestCase {
     for _ in 0 ..< 10 {
       meter.ingest(silent, source: .system)
       meter.ingest(loud, source: .microphone)
-      drainQueues(0.02)
+      drainQueues(meter, 0.02)
     }
 
     XCTAssertTrue(waitForLevel(meter) { $0 > 0.3 }, "max(system, mic) should follow the loud source")
@@ -64,7 +64,7 @@ final class RecordingAudioLevelMeterTests: XCTestCase {
     let loud = Self.makeSineBuffer(amplitude: 0.8)
     for _ in 0 ..< 10 {
       meter.ingest(loud, source: .microphone)
-      drainQueues(0.02)
+      drainQueues(meter, 0.02)
     }
     XCTAssertTrue(waitForLevel(meter) { $0 > 0.3 })
 
@@ -77,19 +77,19 @@ final class RecordingAudioLevelMeterTests: XCTestCase {
     let loud = Self.makeSineBuffer(amplitude: 0.8)
     for _ in 0 ..< 10 {
       meter.ingest(loud, source: .microphone)
-      drainQueues(0.02)
+      drainQueues(meter, 0.02)
     }
     XCTAssertTrue(waitForLevel(meter) { $0 > 0.3 })
     let frozenLevel = meter.level
 
     meter.freeze()
-    drainQueues(0.05)
+    drainQueues(meter, 0.05)
 
     // Feeding silence while frozen must NOT change the held level.
     let silence = Self.makeSineBuffer(amplitude: 0.0)
     for _ in 0 ..< 10 {
       meter.ingest(silence, source: .microphone)
-      drainQueues(0.02)
+      drainQueues(meter, 0.02)
     }
     XCTAssertEqual(meter.level, frozenLevel, accuracy: 0.0001, "Frozen meter must hold its level")
 
@@ -97,7 +97,7 @@ final class RecordingAudioLevelMeterTests: XCTestCase {
     meter.unfreeze()
     for _ in 0 ..< 40 {
       meter.ingest(silence, source: .microphone)
-      drainQueues(0.02)
+      drainQueues(meter, 0.02)
     }
     XCTAssertTrue(waitForLevel(meter) { $0 < frozenLevel }, "After unfreeze, silence should let level fall")
   }
@@ -106,7 +106,8 @@ final class RecordingAudioLevelMeterTests: XCTestCase {
 
   /// Spins the run loop briefly so the meter's serial queue and its main-thread
   /// publish can drain before assertions read `level`.
-  private func drainQueues(_ interval: TimeInterval) {
+  private func drainQueues(_ meter: RecordingAudioLevelMeter, _ interval: TimeInterval) {
+    meter.flushQueueForTesting()
     RunLoop.current.run(until: Date().addingTimeInterval(interval))
   }
 
@@ -119,7 +120,7 @@ final class RecordingAudioLevelMeterTests: XCTestCase {
     let deadline = Date().addingTimeInterval(timeout)
     while Date() < deadline {
       if predicate(meter.level) { return true }
-      RunLoop.current.run(until: Date().addingTimeInterval(0.02))
+      drainQueues(meter, 0.02)
     }
     return predicate(meter.level)
   }
