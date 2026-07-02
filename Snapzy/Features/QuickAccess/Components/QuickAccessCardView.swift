@@ -87,12 +87,13 @@ struct QuickAccessCardView: View {
       cardShape
         .fill(Color.black.opacity(0.1))
     )
+    // GPU-cached drop shadow (furthest back). Replaces per-frame SwiftUI `.shadow()`
+    // blur that lagged when many stacked cards recomposited during capture-area mode.
+    .background(QuickAccessCardShadowView(cornerRadius: cornerRadius))
     .overlay(
       cardShape
         .stroke(Color.white.opacity(0.2), lineWidth: 1)
     )
-    .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
-    .shadow(color: Color.black.opacity(0.08), radius: 2, x: 0, y: 1)
     .opacity(cardOpacity)
     .offset(x: reduceMotion ? 0 : swipeOffset)
     .rotationEffect(.degrees(reduceMotion ? 0 : Double(swipeOffset) * 0.03))

@@ -42,9 +42,6 @@ enum QuickAccessLayout {
   /// Opacity of the oldest (bottom) card in stack
   static let maxDepthOpacity: CGFloat = 0.7
 
-  /// Shadow increase when card is hovered/lifted
-  static let hoverShadowRadius: CGFloat = 12
-
   /// Scale increase when card is hovered
   static let hoverScaleBoost: CGFloat = 1.02
 }
