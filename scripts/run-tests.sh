@@ -14,7 +14,13 @@ CONFIGURATION="${CONFIGURATION:-Debug}"
 DESTINATION="${DESTINATION:-platform=macOS}"
 BUILD_DIR="${BUILD_DIR:-build}"
 DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-${BUILD_DIR}/DerivedData}"
-SOURCE_PACKAGES_PATH="${SOURCE_PACKAGES_PATH:-${BUILD_DIR}/SourcePackages}"
+# If running in CI, default to local package cache to avoid caching issues on CI runners.
+# Otherwise, default to empty to let xcodebuild use the user's global SwiftPM cache for speed.
+if [[ -n "${CI:-}" || -n "${GITHUB_ACTIONS:-}" ]]; then
+  SOURCE_PACKAGES_PATH="${SOURCE_PACKAGES_PATH:-${BUILD_DIR}/SourcePackages}"
+else
+  SOURCE_PACKAGES_PATH="${SOURCE_PACKAGES_PATH:-}"
+fi
 MODULE_CACHE_PATH="${MODULE_CACHE_PATH:-${BUILD_DIR}/swift-module-cache}"
 RESULT_BUNDLE_PATH="${RESULT_BUNDLE_PATH:-${BUILD_DIR}/ci-test.xcresult}"
 LOG_PATH="${LOG_PATH:-${BUILD_DIR}/ci-test.log}"
@@ -146,7 +152,11 @@ require_command xcodebuild
 require_command grep
 require_command tail
 
-mkdir -p "$BUILD_DIR" "$DERIVED_DATA_PATH" "$SOURCE_PACKAGES_PATH" "$MODULE_CACHE_PATH"
+mkdir_paths=("$BUILD_DIR" "$DERIVED_DATA_PATH" "$MODULE_CACHE_PATH")
+if [[ -n "$SOURCE_PACKAGES_PATH" ]]; then
+  mkdir_paths+=("$SOURCE_PACKAGES_PATH")
+fi
+mkdir -p "${mkdir_paths[@]}"
 
 if [ "$KEEP_RESULT" -eq 0 ]; then
   rm -rf "$RESULT_BUNDLE_PATH"
@@ -158,19 +168,29 @@ info "Result bundle: ${RESULT_BUNDLE_PATH}"
 
 set +e
 set +u
-CLANG_MODULE_CACHE_PATH="$MODULE_CACHE_PATH" xcodebuild \
-  -project "$PROJECT" \
-  -scheme "$SCHEME" \
-  -configuration "$CONFIGURATION" \
-  -destination "$DESTINATION" \
-  -derivedDataPath "$DERIVED_DATA_PATH" \
-  -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_PATH" \
-  -resultBundlePath "$RESULT_BUNDLE_PATH" \
-  CODE_SIGN_IDENTITY= \
-  CODE_SIGNING_REQUIRED=NO \
-  CODE_SIGNING_ALLOWED=NO \
-  "${XCODEBUILD_ARGS[@]}" \
-  test > "$LOG_PATH" 2>&1
+XCODEBUILD_CMD=(
+  xcodebuild
+  -project "$PROJECT"
+  -scheme "$SCHEME"
+  -configuration "$CONFIGURATION"
+  -destination "$DESTINATION"
+  -derivedDataPath "$DERIVED_DATA_PATH"
+  -resultBundlePath "$RESULT_BUNDLE_PATH"
+)
+
+if [[ -n "${CI:-}" || -n "${GITHUB_ACTIONS:-}" ]]; then
+  XCODEBUILD_CMD+=(
+    CODE_SIGN_IDENTITY=
+    CODE_SIGNING_REQUIRED=NO
+    CODE_SIGNING_ALLOWED=NO
+  )
+fi
+
+if [[ -n "$SOURCE_PACKAGES_PATH" ]]; then
+  XCODEBUILD_CMD+=(-clonedSourcePackagesDirPath "$SOURCE_PACKAGES_PATH")
+fi
+
+CLANG_MODULE_CACHE_PATH="$MODULE_CACHE_PATH" "${XCODEBUILD_CMD[@]}" "${XCODEBUILD_ARGS[@]}" test > "$LOG_PATH" 2>&1
 STATUS=$?
 set -u
 set -e

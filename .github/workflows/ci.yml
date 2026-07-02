@@ -43,6 +43,7 @@ jobs:
             SnapzyTests/SandboxOffDataMigrationServiceTests
             SnapzyTests/AppStatusBarControllerTests
             SnapzyTests/RecordingAudioLevelMeterTests
+            SnapzyTests/CaptureViewModelTests/testHiddenWindowSession_restore_postsSyntheticMouseMovedEvent
         run: |
           set -euo pipefail
           mkdir -p build

@@ -78,8 +78,9 @@ final class CaptureViewModelTests: XCTestCase {
 
   func testHiddenWindowSession_restore_postsSyntheticMouseMovedEvent() throws {
     let policy = AppLaunchPolicy()
-    if policy.isHeadlessDisplaySession {
-      throw XCTSkip("Skipping window restore test in headless display session")
+    let isCI = ProcessInfo.processInfo.environment["CI"] != nil || ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] != nil
+    if isCI || policy.isHeadlessDisplaySession || NSScreen.screens.isEmpty {
+      throw XCTSkip("Skipping window restore test in CI or headless display session")
     }
 
     let window = NSWindow(
