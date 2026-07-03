@@ -114,7 +114,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Phím tắt cho các thao tác phổ biến bên trong trình chỉnh sửa Annotate."
+            "value": "Phím tắt cho các thao tác phổ biến bên trong trình chỉnh sửa Chú thích."
           }
         },
         "zh-Hans": {
@@ -179,7 +179,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Phím tắt một phím để chuyển công cụ trong trình chỉnh sửa Annotate."
+            "value": "Phím tắt một phím để chuyển công cụ trong trình chỉnh sửa Chú thích."
           }
         },
         "zh-Hans": {
@@ -1244,6 +1244,60 @@
             "state": "translated",
             "value": "Edit latest capture"
           }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neueste Erfassung bearbeiten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar última captura"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier la dernière capture"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最新のキャプチャを編集"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "최근 캡처 편집"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Редактировать последний снимок"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chỉnh sửa bản chụp mới nhất"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "编辑最新捕获"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "編輯最新擷取"
+          }
         }
       }
     },
@@ -1254,6 +1308,60 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open the editor for the most recent capture while its preview is showing"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnen Sie den Editor für die letzte Erfassung, während deren Vorschau angezeigt wird."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre el editor para la captura más reciente mientras se muestra su vista previa."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir l’éditeur pour la capture la plus récente pendant que son aperçu est affiché."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プレビューが表示されている間に、最新のキャプチャのエディタを開きます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "미리보기가 표시되는 동안 최근 캡처에 대한 편집기를 엽니다."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть редактор для последнего снимка, пока отображается его превью."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở trình chỉnh sửa cho bản chụp gần nhất khi bản xem trước đang hiển thị."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在显示预览时打开最新捕获的编辑器。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在顯示預覽時開啟最新擷取的編輯器。"
           }
         }
       }
@@ -2046,6 +2154,60 @@
             "state": "translated",
             "value": "Quick Access"
           }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schnellzugriff"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso rápido"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accès rapide"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クイック アクセス"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빠른 액세스"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Быстрый доступ"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Truy cập nhanh"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快速访问"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快速訪問"
+          }
         }
       }
     },
@@ -2056,6 +2218,60 @@
           "stringUnit": {
             "state": "translated",
             "value": "Shortcuts active while a Quick Access preview is on screen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verknüpfungen, die aktiv sind, während eine Schnellzugriff-Vorschau auf dem Bildschirm angezeigt wird."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atajos activos mientras se muestra una vista previa de acceso rápido en pantalla."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raccourcis actifs lorsqu’un aperçu de l’Accès rapide est affiché à l’écran."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クイックアクセスプレビューが画面に表示されているときにアクティブになるショートカット。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "빠른 액세스 미리보기가 화면에 표시되는 동안 활성화되는 단축키."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Горячие клавиши, активные, когда на экране отображается превью быстрого доступа."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phím tắt hoạt động khi bản xem trước của Truy cập nhanh hiển thị trên màn hình."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快速访问预览显示在屏幕上时处于激活状态的快捷键。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快速訪問預覽顯示在螢幕上時處於啟用狀態的快速鍵。"
           }
         }
       }
@@ -2303,7 +2519,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Các phím tắt macOS chuẩn dùng trong trình chỉnh sửa Annotate."
+            "value": "Các phím tắt macOS chuẩn dùng trong trình chỉnh sửa Chú thích."
           }
         },
         "zh-Hans": {
@@ -3081,7 +3297,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Thao tác Annotate"
+            "value": "Thao tác Chú thích"
           }
         },
         "zh-Hans": {
@@ -3146,7 +3362,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tham chiếu Annotate"
+            "value": "Tham chiếu Chú thích"
           }
         },
         "zh-Hans": {
@@ -3211,7 +3427,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Phím công cụ Annotate"
+            "value": "Phím công cụ Chú thích"
           }
         },
         "zh-Hans": {
@@ -3926,7 +4142,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trong trình chỉnh sửa Annotate"
+            "value": "Trong trình chỉnh sửa Chú thích"
           }
         },
         "zh-Hans": {
@@ -5184,7 +5400,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wird bereits von %@ im Annotate Editor verwendet."
+            "value": "Wird bereits von %@ im Anmerkungseditor verwendet."
           }
         },
         "en": {
@@ -5196,25 +5412,25 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ya utilizado por %@ en Annotate Editor."
+            "value": "Ya utilizado por %@ en el editor de Anotar."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Déjà utilisé par %@ dans Annotate Editor."
+            "value": "Déjà utilisé par %@ dans l’éditeur Annoter."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Annotate Editor の %@ によってすでに使用されています。"
+            "value": "注釈エディタの %@ によってすでに使用されています。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Annotate Editor에서 %@이(가) 이미 사용했습니다."
+            "value": "주석 편집기에서 %@이(가) 이미 사용했습니다."
           }
         },
         "ru": {
@@ -5226,7 +5442,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Đã được %@ dùng trong trình chỉnh sửa Annotate."
+            "value": "Đã được %@ dùng trong trình chỉnh sửa Chú thích."
           }
         },
         "zh-Hans": {
@@ -5889,6 +6105,71 @@
           "stringUnit": {
             "state": "translated",
             "value": "暫停或恢復當前錄製。可選。推薦：⌘⇧Space."
+          }
+        }
+      }
+    },
+    "preferences-shortcuts.open-history-description": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erfassungsverlauf-Browser öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the capture history browser"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir el explorador de historial de capturas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir le navigateur d’historique de capture"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャプチャ履歴ブラウザを開く"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "캡처 기록 탐색기 열기"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть браузер истории снимков"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở trình duyệt lịch sử capture"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开捕获历史记录浏览器"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打開擷取歷史記錄瀏覽器"
           }
         }
       }

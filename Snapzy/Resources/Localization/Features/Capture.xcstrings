@@ -332,7 +332,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Öffnen Sie den Annotate-Editor"
+            "value": "Öffnen Sie den Anmerkungseditor"
           }
         },
         "en": {
@@ -374,7 +374,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mở trình chỉnh sửa Annotate"
+            "value": "Mở trình chỉnh sửa Chú thích"
           }
         },
         "zh-Hans": {
@@ -439,7 +439,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mở Annotate sau khi chụp"
+            "value": "Mở Chú thích sau khi chụp"
           }
         },
         "zh-Hans": {
@@ -2022,7 +2022,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wenn der Editor geöffnet bleibt, Snapzy nach Abschluss des Drops nach vorn holen und Annotate fokussieren"
+            "value": "Wenn der Editor geöffnet bleibt, Snapzy nach Abschluss des Drops nach vorn holen und Anmerkungen fokussieren"
           }
         },
         "en": {
@@ -2034,49 +2034,49 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cuando el editor permanezca abierto, traer Snapzy al frente y enfocar Annotate después de soltar"
+            "value": "Cuando el editor permanezca abierto, traer Snapzy al frente y enfocar Anotar después de soltar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quand l’éditeur reste ouvert, remettre Snapzy au premier plan et focaliser Annotate une fois le dépôt terminé"
+            "value": "Quand l’éditeur reste ouvert, remettre Snapzy au premier plan et focaliser Annoter une fois le dépôt terminé"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "エディタを開いたままにする場合、ドロップ完了後に Snapzy を前面へ移動し Annotate にフォーカス"
+            "value": "エディタを開いたままにする場合、ドロップ完了後に Snapzy を前面へ移動し注釈にフォーカス"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "편집기를 열어 둔 경우 드롭이 완료된 뒤 Snapzy를 앞으로 가져오고 Annotate에 포커스"
+            "value": "편집기를 열어 둔 경우 드롭이 완료된 뒤 Snapzy를 앞으로 가져오고 주석에 포커스"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Если редактор остается открытым, вывести Snapzy на передний план и сфокусировать Annotate после завершения перетаскивания"
+            "value": "Если редактор остается открытым, вывести Snapzy на передний план и сфокусировать Аннотации после завершения перетаскивания"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Khi trình chỉnh sửa vẫn mở, đưa Snapzy lên trước và focus Annotate sau khi thao tác thả hoàn tất"
+            "value": "Khi trình chỉnh sửa vẫn mở, đưa Snapzy lên trước và focus Chú thích sau khi thao tác thả hoàn tất"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "编辑器保持打开时，在放下完成后将 Snapzy 置于前台并聚焦 Annotate"
+            "value": "编辑器保持打开时，在放下完成后将 Snapzy 置于前台并聚焦 标注"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "編輯器保持開啟時，在放開完成後將 Snapzy 帶到前景並聚焦 Annotate"
+            "value": "編輯器保持開啟時，在放開完成後將 Snapzy 帶到前景並聚焦 標註"
           }
         }
       }
@@ -2217,7 +2217,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wähle aus, was passieren soll, wenn beim Öffnen von Annotate ein Bild in der Zwischenablage verfügbar ist"
+            "value": "Wähle aus, was passieren soll, wenn beim Öffnen von Anmerkungen ein Bild in der Zwischenablage verfügbar ist"
           }
         },
         "en": {
@@ -2229,49 +2229,49 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elige qué sucede cuando hay una imagen en el portapapeles al abrir Annotate"
+            "value": "Elige qué sucede cuando hay una imagen en el portapapeles al abrir Anotar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Choisissez ce qui se passe lorsqu’une image du presse-papiers est disponible à l’ouverture d’Annotate"
+            "value": "Choisissez ce qui se passe lorsqu’une image du presse-papiers est disponible à l’ouverture d’Annoter"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Annotate を開くときにクリップボード画像がある場合の動作を選択"
+            "value": "注釈を開くときにクリップボード画像がある場合の動作を選択"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Annotate를 열 때 클립보드 이미지가 있으면 수행할 동작을 선택"
+            "value": "주석을 열 때 클립보드 이미지가 있으면 수행할 동작을 선택"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Выберите, что делать, если при открытии Annotate в буфере обмена есть изображение"
+            "value": "Выберите, что делать, если при открытии Аннотаций в буфере обмена есть изображение"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chọn hành động khi có ảnh trong clipboard lúc mở Annotate"
+            "value": "Chọn hành động khi có ảnh trong clipboard lúc mở Chú thích"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "选择打开 Annotate 时若剪贴板中有图像要执行的操作"
+            "value": "选择打开 标注 时若剪贴板中有图像要执行的操作"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "選擇開啟 Annotate 時若剪貼簿中有圖片要執行的動作"
+            "value": "選擇開啟 標註 時若剪貼簿中有圖片要執行的動作"
           }
         }
       }
@@ -2412,7 +2412,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zwischenablagebild beim Öffnen von Annotate"
+            "value": "Zwischenablagebild beim Öffnen von Anmerkungen"
           }
         },
         "en": {
@@ -2424,49 +2424,49 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Imagen del portapapeles al abrir Annotate"
+            "value": "Imagen del portapapeles al abrir Anotar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Image du presse-papiers à l’ouverture d’Annotate"
+            "value": "Image du presse-papiers à l’ouverture d’Annoter"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Annotate を開くときのクリップボード画像"
+            "value": "注釈を開くときのクリップボード画像"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Annotate 열 때 클립보드 이미지"
+            "value": "주석 열 때 클립보드 이미지"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Изображение из буфера при открытии Annotate"
+            "value": "Изображение из буфера при открытии Аннотаций"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ảnh clipboard khi mở Annotate"
+            "value": "Ảnh clipboard khi mở Chú thích"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "打开 Annotate 时的剪贴板图像"
+            "value": "打开 标注 时的剪贴板图像"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "開啟 Annotate 時的剪貼簿圖片"
+            "value": "開啟 標註 時的剪貼簿圖片"
           }
         }
       }
@@ -2477,7 +2477,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Den Annotate-Editor nach einem erfolgreichen Drag-to-App-Drop automatisch schließen"
+            "value": "Den Anmerkungseditor nach einem erfolgreichen Drag-to-App-Drop automatisch schließen"
           }
         },
         "en": {
@@ -2489,49 +2489,49 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cerrar automáticamente el editor Annotate tras soltar correctamente en otra app"
+            "value": "Cerrar automáticamente el editor de Anotar tras soltar correctamente en otra app"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fermer automatiquement l’éditeur Annotate après un dépôt réussi dans une autre app"
+            "value": "Fermer automatiquement l’éditeur Annoter après un dépôt réussi dans une autre app"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "別のアプリへのドラッグ＆ドロップが成功した後、Annotate エディタを自動的に閉じる"
+            "value": "別のアプリへのドラッグ＆ドロップが成功した後、注釈エディタを自動的に閉じる"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "다른 앱으로 드래그 앤 드롭에 성공한 후 Annotate 편집기를 자동으로 닫기"
+            "value": "다른 앱으로 드래그 앤 드롭에 성공한 후 주석 편집기를 자동으로 닫기"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Автоматически закрывать редактор Annotate после успешного перетаскивания в другое приложение"
+            "value": "Автоматически закрывать редактор Аннотаций после успешного перетаскивания в другое приложение"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tự động đóng trình chỉnh sửa Annotate sau khi thả thành công sang ứng dụng khác"
+            "value": "Tự động đóng trình chỉnh sửa Chú thích sau khi thả thành công sang ứng dụng khác"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "成功拖放到其他应用后自动关闭 Annotate 编辑器"
+            "value": "成功拖放到 other 应用后自动关闭 标注 编辑器"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "成功拖放到其他 App 後自動關閉 Annotate 編輯器"
+            "value": "成功拖放到其他 App 後自動關閉 標註 編輯器"
           }
         }
       }
@@ -2804,7 +2804,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gilt für die Hintergrundentfernung in Capture und Annotate"
+            "value": "Gilt für die Hintergrundentfernung in Capture und Anmerkungen"
           }
         },
         "en": {
@@ -2822,7 +2822,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "S'applique à la suppression de l'arrière-plan dans Capture et Annotate"
+            "value": "S’applique à la suppression de l’arrière-plan dans Capture et Annoter"
           }
         },
         "ja": {
@@ -2846,7 +2846,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Áp dụng cho xóa nền trong Capture và Annotate"
+            "value": "Áp dụng cho xóa nền trong Chụp và Chú thích"
           }
         },
         "zh-Hans": {
@@ -2928,13 +2928,12 @@
         }
       }
     },
-
     "preferences-capture.default-preset-description": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wendet direkt nach jeder Screenshot-Aufnahme ein Annotate-Preset an"
+            "value": "Wendet direkt nach jeder Screenshot-Aufnahme ein Anmerkungs-Preset an"
           }
         },
         "en": {
@@ -2946,49 +2945,49 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aplica un preajuste de Annotate justo después de cada captura de pantalla"
+            "value": "Aplica un preajuste de Anotar justo después de cada captura de pantalla"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Applique un préréglage Annotate juste après chaque capture d’écran"
+            "value": "Applique un préréglage Annoter juste après chaque capture d’écran"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "各スクリーンショット撮影直後にAnnotateプリセットを適用します"
+            "value": "各スクリーンショット撮影直後に注釈プリセットを適用します"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "각 스크린샷 캡처 직후 Annotate 프리셋을 적용합니다"
+            "value": "각 스크린샷 캡처 직후 주석 프리셋을 적용합니다"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Применяет пресет Annotate сразу после каждого снимка экрана"
+            "value": "Применяет пресет Аннотаций сразу после каждого снимка экрана"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Áp dụng preset Annotate ngay sau mỗi lần chụp ảnh"
+            "value": "Áp dụng preset Chú thích ngay sau mỗi lần chụp ảnh"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "每次截图后立即应用 Annotate 预设"
+            "value": "每次截图后立即应用 标注 预设"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "每次截圖後立即套用 Annotate 預設"
+            "value": "每次截圖後立即套用 標註 預設"
           }
         }
       }
@@ -4139,13 +4138,13 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Показывать окна Snapzy, такие как Annotate, в записанных видео"
+            "value": "Показывать окна Snapzy, такие как Аннотации, в записанных видео"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hiển thị các cửa sổ Snapzy như Annotate trong video đã ghi"
+            "value": "Hiển thị các cửa sổ Snapzy như Chú thích trong video đã ghi"
           }
         },
         "zh-Hans": {
@@ -4233,7 +4232,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Snapzy-Fenster wie „Annotate“ in aufgenommenen Bildern anzeigen"
+            "value": "Snapzy-Fenster wie „Anmerkungen“ in aufgenommenen Bildern anzeigen"
           }
         },
         "en": {
@@ -4263,19 +4262,19 @@
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "캡처된 이미지에 Annotate와 같은 Snapzy 창 표시"
+            "value": "캡처된 이미지에 주석과 같은 Snapzy 창 표시"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Показывать окна Snapzy, такие как Annotate, на захваченных изображениях"
+            "value": "Показывать окна Snapzy, такие как Аннотации, на захваченных изображениях"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hiển thị các cửa sổ Snapzy như Annotate trong ảnh đã chụp"
+            "value": "Hiển thị các cửa sổ Snapzy như Chú thích trong ảnh đã chụp"
           }
         },
         "zh-Hans": {

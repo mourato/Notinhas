@@ -3064,6 +3064,11 @@ enum L10n {
       defaultValue: "Manage keyboard shortcuts for capture history browser and floating mode toggle.",
       comment: "Description for the History shortcuts section"
     )
+    static let openHistoryDescription = string(
+      "preferences-shortcuts.open-history-description",
+      defaultValue: "Open the capture history browser",
+      comment: "Description for open history shortcut"
+    )
     static let quickAccessSection = string(
       "preferences-shortcuts.quick-access-section",
       defaultValue: "Quick Access",

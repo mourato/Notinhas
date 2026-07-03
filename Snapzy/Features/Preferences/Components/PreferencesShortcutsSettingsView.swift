@@ -555,7 +555,7 @@ struct ShortcutsSettingsView: View {
           ShortcutRecorderView(
             label: L10n.Actions.openHistory,
             icon: "clock.arrow.circlepath",
-            description: "Open the capture history browser",
+            description: L10n.PreferencesShortcuts.openHistoryDescription,
             shortcut: $historyShortcut,
             defaultShortcut: .defaultHistory,
             isEnabled: globalEnabledBinding(for: .history),

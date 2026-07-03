@@ -527,7 +527,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Öffnen Sie Annotate"
+            "value": "Anmerkungen öffnen"
           }
         },
         "en": {
@@ -569,7 +569,7 @@
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mở Annotate"
+            "value": "Mở Chú thích"
           }
         },
         "zh-Hans": {
