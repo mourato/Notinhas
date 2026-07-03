@@ -1303,7 +1303,15 @@ final class AreaSelectionOverlayView: NSView {
   // MARK: - CALayer-based Rendering (Phase 2 Optimization)
 
   private var snapshotLayer: CALayer!
-  private var dimLayer: CALayer!
+  var dimLayer: CALayer!
+  var insideSelectionOverlayLayer: CAShapeLayer!
+  private var showSelectionAreaOverlay = true
+  private var backdropPixelDataArray: [UInt8]?
+  private var backdropWidth = 0
+  private var backdropHeight = 0
+  private var backdropScale: CGFloat = 1.0
+  private var insideOverlayIsDark = true
+
   private lazy var reusableDimMaskLayer: CAShapeLayer = {
     let layer = CAShapeLayer()
     layer.fillRule = .evenOdd
@@ -1477,6 +1485,15 @@ final class AreaSelectionOverlayView: NSView {
     dimLayer.actions = disabledActions
     rootLayer.addSublayer(dimLayer)
 
+    // Inside selection dark overlay layer (when backdrop overlay is disabled)
+    insideSelectionOverlayLayer = CAShapeLayer()
+    insideSelectionOverlayLayer.fillColor = NSColor.black.withAlphaComponent(0.12).cgColor
+    insideSelectionOverlayLayer.strokeColor = NSColor.black.withAlphaComponent(0.3).cgColor
+    insideSelectionOverlayLayer.lineWidth = 4.0
+    insideSelectionOverlayLayer.isHidden = true
+    insideSelectionOverlayLayer.actions = disabledActions
+    rootLayer.addSublayer(insideSelectionOverlayLayer)
+
     // Horizontal crosshair line (hidden - using compact indicator instead)
     horizontalCrosshairLayer = CAShapeLayer()
     horizontalCrosshairLayer.strokeColor = crosshairColor.cgColor
@@ -1613,12 +1630,17 @@ final class AreaSelectionOverlayView: NSView {
     horizontalCrosshairLayer.isHidden = true
     verticalCrosshairLayer.isHidden = true
     selectionBorderLayer.isHidden = true
-    crosshairIndicatorLayer.isHidden = !selectionEnabled || interactionMode != .manualRegion
+    crosshairIndicatorLayer.isHidden = true
     hideSizeIndicator()
+    showSelectionAreaOverlay = UserDefaults.standard.object(forKey: PreferencesKeys.screenshotShowSelectionAreaOverlay) as? Bool ?? true
+    dimLayer.backgroundColor = showSelectionAreaOverlay ? dimColor.cgColor : nil
     dimLayer.mask = nil
     dimLayer.frame = bounds
+    insideSelectionOverlayLayer.isHidden = true
+    insideOverlayIsDark = true
 
     CATransaction.commit()
+    refreshCursor()
 
     // Update interaction state immediately
     if selectionEnabled {
@@ -1642,6 +1664,7 @@ final class AreaSelectionOverlayView: NSView {
       crosshairIndicatorLayer.isHidden = true
       selectionBorderLayer.isHidden = true
       hideSizeIndicator()
+      insideSelectionOverlayLayer.isHidden = true
       dimLayer.mask = nil
       CATransaction.commit()
     }
@@ -1657,6 +1680,107 @@ final class AreaSelectionOverlayView: NSView {
     delegate?.overlayView(self, manualSelectionChangedTo: currentMousePosition)
   }
 
+  private func cacheBackdropPixels(from cgImage: CGImage, scale: CGFloat) {
+    let width = cgImage.width
+    let height = cgImage.height
+    self.backdropWidth = width
+    self.backdropHeight = height
+    self.backdropScale = scale
+
+    let totalBytes = width * height * 4
+    var buffer = [UInt8](repeating: 0, count: totalBytes)
+
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    let context = CGContext(
+      data: &buffer,
+      width: width,
+      height: height,
+      bitsPerComponent: 8,
+      bytesPerRow: width * 4,
+      space: colorSpace,
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+    )
+
+    if let context {
+      context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+      self.backdropPixelDataArray = buffer
+    } else {
+      self.backdropPixelDataArray = nil
+    }
+  }
+
+  private func calculateAverageLuminance(for rect: CGRect) -> Double? {
+    guard let pixelData = backdropPixelDataArray,
+          backdropWidth > 0,
+          backdropHeight > 0,
+          !rect.isEmpty else {
+      return nil
+    }
+
+    let scale = backdropScale
+    let pixelRect = CGRect(
+      x: rect.origin.x * scale,
+      y: rect.origin.y * scale,
+      width: rect.width * scale,
+      height: rect.height * scale
+    )
+
+    let gridCount = 5
+    var totalLuma = 0.0
+    var sampleCount = 0
+
+    for row in 0..<gridCount {
+      for col in 0..<gridCount {
+        let pctX = Double(col + 1) / Double(gridCount + 1)
+        let pctY = Double(row + 1) / Double(gridCount + 1)
+
+        let sampleX = Int(pixelRect.origin.x + pixelRect.width * CGFloat(pctX))
+        let sampleY = Int(pixelRect.origin.y + pixelRect.height * CGFloat(pctY))
+
+        let x = max(0, min(backdropWidth - 1, sampleX))
+        let y = max(0, min(backdropHeight - 1, sampleY))
+
+        let pixelOffset = (y * backdropWidth + x) * 4
+        if pixelOffset + 2 < pixelData.count {
+          let r = Double(pixelData[pixelOffset]) / 255.0
+          let g = Double(pixelData[pixelOffset + 1]) / 255.0
+          let b = Double(pixelData[pixelOffset + 2]) / 255.0
+          // BT.601 luminance formula
+          let luma = 0.299 * r + 0.587 * g + 0.114 * b
+          totalLuma += luma
+          sampleCount += 1
+        }
+      }
+    }
+
+    return sampleCount > 0 ? (totalLuma / Double(sampleCount)) : nil
+  }
+
+  private func updateInsideOverlayAppearance(for localRect: CGRect) {
+    if let avgLuma = calculateAverageLuminance(for: localRect) {
+      if insideOverlayIsDark {
+        if avgLuma < 0.4 {
+          insideOverlayIsDark = false
+        }
+      } else {
+        if avgLuma > 0.6 {
+          insideOverlayIsDark = true
+        }
+      }
+    }
+
+    CATransaction.begin()
+    CATransaction.setDisableActions(true)
+    if insideOverlayIsDark {
+      insideSelectionOverlayLayer.fillColor = NSColor.black.withAlphaComponent(0.12).cgColor
+      insideSelectionOverlayLayer.strokeColor = NSColor.black.withAlphaComponent(0.3).cgColor
+    } else {
+      insideSelectionOverlayLayer.fillColor = NSColor.white.withAlphaComponent(0.15).cgColor
+      insideSelectionOverlayLayer.strokeColor = NSColor.white.withAlphaComponent(0.35).cgColor
+    }
+    CATransaction.commit()
+  }
+
   func applyBackdrop(_ backdrop: AreaSelectionBackdrop) {
     CATransaction.begin()
     CATransaction.setDisableActions(true)
@@ -1665,6 +1789,8 @@ final class AreaSelectionOverlayView: NSView {
     snapshotLayer.contentsScale = backdrop.scaleFactor
     snapshotLayer.isHidden = false
     CATransaction.commit()
+
+    cacheBackdropPixels(from: backdrop.image, scale: backdrop.scaleFactor)
   }
 
   func clearBackdrop() {
@@ -1674,6 +1800,11 @@ final class AreaSelectionOverlayView: NSView {
     snapshotLayer.contentsScale = 1.0
     snapshotLayer.isHidden = true
     CATransaction.commit()
+
+    backdropPixelDataArray = nil
+    backdropWidth = 0
+    backdropHeight = 0
+    backdropScale = 1.0
   }
 
   /// Initialize crosshair at current mouse position (called on activation)
@@ -1736,6 +1867,7 @@ final class AreaSelectionOverlayView: NSView {
     CATransaction.setDisableActions(true)
     snapshotLayer.frame = bounds
     dimLayer.frame = bounds
+    insideSelectionOverlayLayer.frame = bounds
     hideSizeIndicator()
     CATransaction.commit()
     updateModeHint()
@@ -1746,13 +1878,12 @@ final class AreaSelectionOverlayView: NSView {
   private func updateCrosshairLayers() {
     guard selectionEnabled, interactionMode == .manualRegion else {
       crosshairIndicatorLayer.isHidden = true
+      hideSizeIndicator()
       return
     }
 
-    // Update crosshair indicator position
-    crosshairIndicatorLayer.isHidden = false
-    let path = createCrosshairIndicatorPath(at: currentMousePosition)
-    crosshairIndicatorLayer.path = path
+    crosshairIndicatorLayer.isHidden = true
+    updateCoordinateIndicator(at: currentMousePosition)
   }
 
   /// Updates and returns the reusable crosshair indicator path centered at the given point
@@ -1870,6 +2001,64 @@ final class AreaSelectionOverlayView: NSView {
     sizeIndicatorTextLayer.isHidden = false
   }
 
+  private func updateCoordinateIndicator(at point: CGPoint) {
+    guard selectionEnabled, interactionMode == .manualRegion, !isSelecting else {
+      hideSizeIndicator()
+      return
+    }
+
+    let text: String
+    if let window = self.window {
+      let screenPoint = window.convertPoint(toScreen: convert(point, to: nil))
+      if let screen = window.screen {
+        let flipY = Int(screen.frame.height - screenPoint.y)
+        text = "(\(Int(screenPoint.x)), \(flipY))"
+      } else {
+        text = "(\(Int(screenPoint.x)), \(Int(screenPoint.y)))"
+      }
+    } else {
+      text = "(\(Int(point.x)), \(Int(point.y)))"
+    }
+
+    let attributes = overlayTextAttributes
+    let textSize: CGSize
+    if text == lastSizeIndicatorText {
+      textSize = lastSizeIndicatorTextSize
+    } else {
+      textSize = text.size(withAttributes: attributes)
+      lastSizeIndicatorText = text
+      lastSizeIndicatorTextSize = textSize
+    }
+
+    let padding: CGFloat = 6
+    var backgroundRect = CGRect(
+      x: point.x + 16,
+      y: point.y - textSize.height - padding - 8,
+      width: textSize.width + padding * 2,
+      height: textSize.height + padding
+    )
+
+    if backgroundRect.maxX > bounds.maxX {
+      backgroundRect.origin.x = point.x - backgroundRect.width - 8
+    }
+    if backgroundRect.minY < bounds.minY {
+      backgroundRect.origin.y = point.y + 16
+    }
+
+    updateTextLayerScales()
+    sizeIndicatorBackgroundLayer.frame = backgroundRect
+    sizeIndicatorBackgroundLayer.isHidden = false
+
+    sizeIndicatorTextLayer.string = text
+    sizeIndicatorTextLayer.frame = CGRect(
+      x: backgroundRect.minX + padding,
+      y: backgroundRect.minY + padding / 2,
+      width: textSize.width,
+      height: textSize.height
+    )
+    sizeIndicatorTextLayer.isHidden = false
+  }
+
   private func updateModeHint() {
     guard allowsApplicationWindowSelection else {
       modeHintBackgroundLayer.isHidden = true
@@ -1953,12 +2142,12 @@ final class AreaSelectionOverlayView: NSView {
       CATransaction.setDisableActions(true)
       selectionBorderLayer.isHidden = true
       dimLayer.mask = nil
-      hideSizeIndicator()
+      insideSelectionOverlayLayer.isHidden = true
+      crosshairIndicatorLayer.isHidden = true
       if let localCurrentPoint, bounds.contains(localCurrentPoint), selectionEnabled {
-        crosshairIndicatorLayer.isHidden = false
-        crosshairIndicatorLayer.path = createCrosshairIndicatorPath(at: localCurrentPoint)
+        updateCoordinateIndicator(at: localCurrentPoint)
       } else {
-        crosshairIndicatorLayer.isHidden = true
+        hideSizeIndicator()
       }
       CATransaction.commit()
       return
@@ -1971,19 +2160,25 @@ final class AreaSelectionOverlayView: NSView {
     CATransaction.setDisableActions(true)
     horizontalCrosshairLayer.isHidden = true
     verticalCrosshairLayer.isHidden = true
-    crosshairIndicatorLayer.isHidden = !showsCurrentPointer
-    if let localCurrentPoint, showsCurrentPointer {
-      crosshairIndicatorLayer.path = createCrosshairIndicatorPath(at: localCurrentPoint)
-    }
+    crosshairIndicatorLayer.isHidden = true
 
     if localRect.isEmpty {
       selectionBorderLayer.isHidden = true
       dimLayer.mask = nil
+      insideSelectionOverlayLayer.isHidden = true
       hideSizeIndicator()
     } else {
       selectionBorderLayer.isHidden = false
       selectionBorderLayer.path = CGPath(rect: localRect, transform: nil)
-      updateDimLayerMask(for: localRect)
+      if showSelectionAreaOverlay {
+        updateDimLayerMask(for: localRect)
+        insideSelectionOverlayLayer.isHidden = true
+      } else {
+        dimLayer.mask = nil
+        insideSelectionOverlayLayer.path = CGPath(rect: localRect, transform: nil)
+        updateInsideOverlayAppearance(for: localRect)
+        insideSelectionOverlayLayer.isHidden = false
+      }
       if showsCurrentPointer {
         updateSizeIndicator(for: localRect, measuredSize: screenRect.size)
       } else {
@@ -2060,14 +2255,24 @@ final class AreaSelectionOverlayView: NSView {
       if localRect.isEmpty {
         selectionBorderLayer.isHidden = true
         dimLayer.mask = nil
+        insideSelectionOverlayLayer.isHidden = true
       } else {
         selectionBorderLayer.isHidden = false
         selectionBorderLayer.path = CGPath(rect: localRect, transform: nil)
-        updateDimLayerMask(for: localRect)
+        if showSelectionAreaOverlay {
+          updateDimLayerMask(for: localRect)
+          insideSelectionOverlayLayer.isHidden = true
+        } else {
+          dimLayer.mask = nil
+          insideSelectionOverlayLayer.path = CGPath(rect: localRect, transform: nil)
+          updateInsideOverlayAppearance(for: localRect)
+          insideSelectionOverlayLayer.isHidden = false
+        }
       }
     } else {
       selectionBorderLayer.isHidden = true
       dimLayer.mask = nil
+      insideSelectionOverlayLayer.isHidden = true
     }
 
     CATransaction.commit()
@@ -2189,7 +2394,7 @@ final class AreaSelectionOverlayView: NSView {
     guard selectionEnabled else { return .arrow }
     switch interactionMode {
     case .manualRegion:
-      return Self.hiddenManualRegionCursor
+      return showSelectionAreaOverlay ? NSCursor.vectorScreenshotCrosshairLight : NSCursor.vectorScreenshotCrosshairHighContrast
     case .applicationWindow:
       return Self.applicationWindowCursor
     }
@@ -2198,4 +2403,101 @@ final class AreaSelectionOverlayView: NSView {
   var isManualSelectionInProgress: Bool {
     interactionMode == .manualRegion && isSelecting
   }
+}
+
+// MARK: - Recreated macOS Crosshair Cursors
+private extension NSCursor {
+  static var vectorScreenshotCrosshairHighContrast: NSCursor = {
+    let size = NSSize(width: 32, height: 32)
+    let image = NSImage(size: size)
+    image.isTemplate = false
+    
+    image.lockFocus()
+    NSColor.clear.set()
+    NSRect(origin: .zero, size: size).fill()
+    
+    let baseColor = NSColor(red: 0.137, green: 0.122, blue: 0.125, alpha: 1.0)
+    
+    let verticalPath = NSBezierPath()
+    verticalPath.move(to: NSPoint(x: 15.5, y: 5))
+    verticalPath.line(to: NSPoint(x: 15.5, y: 28))
+    
+    let horizontalPath = NSBezierPath()
+    horizontalPath.move(to: NSPoint(x: 4, y: 16.5))
+    horizontalPath.line(to: NSPoint(x: 27, y: 16.5))
+    
+    let circleRect = NSRect(x: 10.0, y: 11.0, width: 11.0, height: 11.0)
+    let circlePath = NSBezierPath(ovalIn: circleRect)
+    
+    // Draw white outline first (width 3.0) for high contrast on dark backgrounds
+    NSColor.white.setStroke()
+    verticalPath.lineWidth = 3.0
+    verticalPath.stroke()
+    horizontalPath.lineWidth = 3.0
+    horizontalPath.stroke()
+    circlePath.lineWidth = 3.0
+    circlePath.stroke()
+    
+    // Draw dark core (width 1.0) for high contrast on light backgrounds
+    baseColor.withAlphaComponent(0.85).setStroke()
+    verticalPath.lineWidth = 1.0
+    verticalPath.stroke()
+    horizontalPath.lineWidth = 1.0
+    horizontalPath.stroke()
+    
+    // Circle fill
+    baseColor.withAlphaComponent(0.15).setFill()
+    circlePath.fill()
+    
+    // Circle dark core stroke (inner-line of circle)
+    baseColor.withAlphaComponent(0.30).setStroke()
+    circlePath.lineWidth = 1.0
+    circlePath.stroke()
+    
+    image.unlockFocus()
+    return NSCursor(image: image, hotSpot: NSPoint(x: 15, y: 15))
+  }()
+
+  static var vectorScreenshotCrosshairLight: NSCursor = {
+    let size = NSSize(width: 32, height: 32)
+    let image = NSImage(size: size)
+    image.isTemplate = false
+    
+    image.lockFocus()
+    NSColor.clear.set()
+    NSRect(origin: .zero, size: size).fill()
+    
+    let verticalPath = NSBezierPath()
+    verticalPath.move(to: NSPoint(x: 15.5, y: 5))
+    verticalPath.line(to: NSPoint(x: 15.5, y: 28))
+    
+    let horizontalPath = NSBezierPath()
+    horizontalPath.move(to: NSPoint(x: 4, y: 16.5))
+    horizontalPath.line(to: NSPoint(x: 27, y: 16.5))
+    
+    let circleRect = NSRect(x: 10.0, y: 11.0, width: 11.0, height: 11.0)
+    let circlePath = NSBezierPath(ovalIn: circleRect)
+    
+    // Draw clean single light-colored line (no white outline)
+    let lightColor = NSColor.white
+    lightColor.withAlphaComponent(0.85).setStroke()
+    
+    verticalPath.lineWidth = 1.0
+    verticalPath.stroke()
+    
+    horizontalPath.lineWidth = 1.0
+    horizontalPath.stroke()
+    
+    // Circle fill
+    lightColor.withAlphaComponent(0.15).setFill()
+    circlePath.fill()
+    
+    // Circle stroke
+    lightColor.withAlphaComponent(0.65).setStroke()
+    circlePath.lineWidth = 1.0
+    circlePath.stroke()
+    
+    image.unlockFocus()
+    return NSCursor(image: image, hotSpot: NSPoint(x: 15, y: 15))
+  }()
 }

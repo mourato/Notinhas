@@ -36,6 +36,7 @@ struct CaptureSettingsView: View {
   @AppStorage(PreferencesKeys.screenshotIncludeOwnApp) private var includeOwnAppInScreenshots = false
   @AppStorage(PreferencesKeys.screenshotShowCursor) private var screenshotShowCursor = false
   @AppStorage(PreferencesKeys.screenshotFreezeArea) private var freezeAreaCapture = false
+  @AppStorage(PreferencesKeys.screenshotShowSelectionAreaOverlay) private var showSelectionAreaOverlay = true
 
   @AppStorage(PreferencesKeys.screenshotFormat) private var screenshotFormat = "png"
   @AppStorage(PreferencesKeys.scrollingCaptureShowHints) private var scrollingCaptureShowHints = true
@@ -155,6 +156,15 @@ struct CaptureSettingsView: View {
               description: L10n.PreferencesCapture.hideDesktopWidgetsDescription
             ) {
               Toggle("", isOn: $hideDesktopWidgets)
+                .labelsHidden()
+            }
+
+            SettingRow(
+              icon: "macwindow",
+              title: L10n.PreferencesCapture.showSelectionAreaOverlayTitle,
+              description: L10n.PreferencesCapture.showSelectionAreaOverlayDescription
+            ) {
+              Toggle("", isOn: $showSelectionAreaOverlay)
                 .labelsHidden()
             }
           }

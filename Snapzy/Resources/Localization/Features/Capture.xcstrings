@@ -15992,6 +15992,40 @@
           }
         }
       }
+    },
+    "preferences-capture.show-selection-area-overlay-title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show selection area overlay"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiển thị lớp phủ vùng chọn"
+          }
+        }
+      }
+    },
+    "preferences-capture.show-selection-area-overlay-description": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dim the background outside the selection area during capture"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Làm tối phần màn hình bên ngoài vùng chọn khi chụp"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

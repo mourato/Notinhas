@@ -2496,6 +2496,16 @@ enum L10n {
       defaultValue: "Temporarily hide widgets during capture",
       comment: "Capture preferences setting description"
     )
+    static let showSelectionAreaOverlayTitle = string(
+      "preferences-capture.show-selection-area-overlay-title",
+      defaultValue: "Show selection area overlay",
+      comment: "Capture preferences setting title"
+    )
+    static let showSelectionAreaOverlayDescription = string(
+      "preferences-capture.show-selection-area-overlay-description",
+      defaultValue: "Dim the background outside the selection area during capture",
+      comment: "Capture preferences setting description"
+    )
     static let showCursorTitle = string(
       "preferences-capture.show-cursor-title",
       defaultValue: "Show cursor",
