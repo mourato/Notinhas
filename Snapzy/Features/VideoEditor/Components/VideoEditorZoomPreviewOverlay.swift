@@ -1,5 +1,5 @@
 //
-//  ZoomPreviewOverlay.swift
+//  VideoEditorZoomPreviewOverlay.swift
 //  Snapzy
 //
 //  Overlay that applies zoom effect to video preview in real-time
@@ -14,7 +14,7 @@ struct ZoomableVideoPlayerSection: View {
   @ObservedObject private var playbackState: VideoEditorPlaybackState
 
   @State private var currentZoomLevel: CGFloat = 1.0
-  @State private var currentZoomCenter: CGPoint = CGPoint(x: 0.5, y: 0.5)
+  @State private var currentZoomCenter: CGPoint = .init(x: 0.5, y: 0.5)
 
   init(state: VideoEditorState) {
     _state = ObservedObject(wrappedValue: state)
@@ -56,8 +56,8 @@ struct ZoomableVideoPlayerSection: View {
           shadowRadius: scaledShadowRadius,
           shadowY: scaledShadowY
         )
-          .frame(width: videoCanvasSize.width, height: videoCanvasSize.height)
-          .padding(scaledPadding)
+        .frame(width: videoCanvasSize.width, height: videoCanvasSize.height)
+        .padding(scaledPadding)
       }
       .frame(width: compositeSize.width, height: compositeSize.height)
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignmentValue)
@@ -78,7 +78,6 @@ struct ZoomableVideoPlayerSection: View {
 
   // MARK: - Background View
 
-  @ViewBuilder
   private var backgroundView: some View {
     Group {
       switch state.backgroundStyle {
@@ -126,7 +125,6 @@ struct ZoomableVideoPlayerSection: View {
 
   // MARK: - Video Player Content
 
-  @ViewBuilder
   private func videoPlayerContent(
     in canvasSize: CGSize,
     displayedVideoRect: CGRect,
@@ -158,15 +156,15 @@ struct ZoomableVideoPlayerSection: View {
 
   private var alignmentValue: Alignment {
     switch state.backgroundAlignment {
-    case .topLeft: return .topLeading
-    case .top: return .top
-    case .topRight: return .topTrailing
-    case .left: return .leading
-    case .center: return .center
-    case .right: return .trailing
-    case .bottomLeft: return .bottomLeading
-    case .bottom: return .bottom
-    case .bottomRight: return .bottomTrailing
+    case .topLeft: .topLeading
+    case .top: .top
+    case .topRight: .topTrailing
+    case .left: .leading
+    case .center: .center
+    case .right: .trailing
+    case .bottomLeft: .bottomLeading
+    case .bottom: .bottom
+    case .bottomRight: .bottomTrailing
     }
   }
 
@@ -191,23 +189,22 @@ struct ZoomableVideoPlayerSection: View {
   private func previewScaleFactor(for containerSize: CGSize) -> CGFloat {
     // Use export size for WYSIWYG preview - shows scaled video matching export result
     let effectiveSize = state.exportSettings.exportSize(from: state.naturalSize)
-    guard effectiveSize.width > 0 && effectiveSize.height > 0 &&
-          containerSize.width > 0 && containerSize.height > 0 else { return 1.0 }
+    guard effectiveSize.width > 0, effectiveSize.height > 0,
+          containerSize.width > 0, containerSize.height > 0 else { return 1.0 }
 
     // Calculate how the video fits in the container (aspect fit)
     let containerAspect = containerSize.width / containerSize.height
     let videoAspect = effectiveSize.width / effectiveSize.height
 
-    let fittedSize: CGSize
-    if containerAspect > videoAspect {
+    let fittedSize = if containerAspect > videoAspect {
       // Container is wider - video height fills container
-      fittedSize = CGSize(
+      CGSize(
         width: containerSize.height * videoAspect,
         height: containerSize.height
       )
     } else {
       // Container is taller - video width fills container
-      fittedSize = CGSize(
+      CGSize(
         width: containerSize.width,
         height: containerSize.width / videoAspect
       )
@@ -225,8 +222,8 @@ struct ZoomableVideoPlayerSection: View {
   private func calculateCompositeSize(containerSize: CGSize) -> CGSize {
     // Use export size for WYSIWYG preview
     let effectiveSize = state.exportSettings.exportSize(from: state.naturalSize)
-    guard effectiveSize.width > 0 && effectiveSize.height > 0 &&
-          containerSize.width > 0 && containerSize.height > 0 else {
+    guard effectiveSize.width > 0, effectiveSize.height > 0,
+          containerSize.width > 0, containerSize.height > 0 else {
       return containerSize
     }
 

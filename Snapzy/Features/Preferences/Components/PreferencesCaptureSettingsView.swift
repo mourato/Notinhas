@@ -1,5 +1,5 @@
 //
-//  CaptureSettingsView.swift
+//  PreferencesCaptureSettingsView.swift
 //  Snapzy
 //
 //  Capture preferences tab combining screenshot behavior, recording settings, and post-capture actions
@@ -13,16 +13,18 @@ private enum CaptureSettingsPane: CaseIterable, Hashable, Identifiable {
   case screenshot
   case recording
 
-  var id: Self { self }
+  var id: Self {
+    self
+  }
 
   var title: String {
     switch self {
     case .general:
-      return L10n.Preferences.generalTab
+      L10n.Preferences.generalTab
     case .screenshot:
-      return CaptureType.screenshot.displayName
+      CaptureType.screenshot.displayName
     case .recording:
-      return CaptureType.recording.displayName
+      CaptureType.recording.displayName
     }
   }
 }
@@ -42,7 +44,7 @@ struct CaptureSettingsView: View {
   @AppStorage(PreferencesKeys.screenshotFileNameTemplate)
   private var screenshotFileNameTemplate = CaptureOutputKind.screenshot.defaultTemplate
 
-  // Recording settings
+  /// Recording settings
   @AppStorage(PreferencesKeys.recordingFormat) private var format = "mov"
   @AppStorage(PreferencesKeys.recordingFileNameTemplate)
   private var recordingFileNameTemplate = CaptureOutputKind.recording.defaultTemplate
@@ -64,7 +66,8 @@ struct CaptureSettingsView: View {
 
   // Keystroke Overlay settings
   @AppStorage(PreferencesKeys.keystrokeFontSize) private var keystrokeFontSize: Double = 16
-  @AppStorage(PreferencesKeys.keystrokePosition) private var keystrokePosition: String = KeystrokeOverlayPosition.bottomCenter.rawValue
+  @AppStorage(PreferencesKeys.keystrokePosition) private var keystrokePosition: String = KeystrokeOverlayPosition
+    .bottomCenter.rawValue
   @AppStorage(PreferencesKeys.keystrokeDisplayDuration) private var keystrokeDisplayDuration: Double = 1.5
 
   @State private var showPermissionDeniedAlert = false
@@ -89,7 +92,6 @@ struct CaptureSettingsView: View {
       }
     )
   }
-
 
   var body: some View {
     VStack(spacing: 0) {
@@ -229,7 +231,6 @@ struct CaptureSettingsView: View {
             PreferencesScreenshotDefaultPresetPicker()
           }
         }
-
 
         if selectedPane == .screenshot {
           Section(L10n.PreferencesCapture.scrollingCaptureSection) {
@@ -406,7 +407,7 @@ struct CaptureSettingsView: View {
               title: L10n.PreferencesCapture.highlightSizeTitle,
               description: L10n.PreferencesCapture.highlightSizeDescription(Int(mouseHighlightSize))
             ) {
-              Slider(value: $mouseHighlightSize.stepped(by: 2, in: 30...100), in: 30...100)
+              Slider(value: $mouseHighlightSize.stepped(by: 2, in: 30 ... 100), in: 30 ... 100)
                 .frame(width: 140)
             }
 
@@ -417,7 +418,7 @@ struct CaptureSettingsView: View {
                 String(format: "%.1f", mouseHighlightAnimDuration)
               )
             ) {
-              Slider(value: $mouseHighlightAnimDuration.stepped(by: 0.1, in: 0.3...2.0), in: 0.3...2.0)
+              Slider(value: $mouseHighlightAnimDuration.stepped(by: 0.1, in: 0.3 ... 2.0), in: 0.3 ... 2.0)
                 .frame(width: 140)
             }
 
@@ -427,7 +428,7 @@ struct CaptureSettingsView: View {
               description: L10n.PreferencesCapture.rippleCountDescription
             ) {
               Picker("", selection: $mouseHighlightRippleCount) {
-                ForEach(1...5, id: \.self) { count in
+                ForEach(1 ... 5, id: \.self) { count in
                   Text("\(count)").tag(count)
                 }
               }
@@ -450,7 +451,7 @@ struct CaptureSettingsView: View {
               title: L10n.PreferencesCapture.opacityTitle,
               description: L10n.PreferencesCapture.opacityDescription(Int(mouseHighlightOpacity * 100))
             ) {
-              Slider(value: $mouseHighlightOpacity.stepped(by: 0.05, in: 0.2...1.0), in: 0.2...1.0)
+              Slider(value: $mouseHighlightOpacity.stepped(by: 0.05, in: 0.2 ... 1.0), in: 0.2 ... 1.0)
                 .frame(width: 140)
             }
 
@@ -473,7 +474,7 @@ struct CaptureSettingsView: View {
               title: L10n.PreferencesCapture.fontSizeTitle,
               description: L10n.PreferencesCapture.fontSizeDescription(Int(keystrokeFontSize))
             ) {
-              Slider(value: $keystrokeFontSize.stepped(by: 1, in: 12...32), in: 12...32)
+              Slider(value: $keystrokeFontSize.stepped(by: 1, in: 12 ... 32), in: 12 ... 32)
                 .frame(width: 140)
             }
 
@@ -499,7 +500,7 @@ struct CaptureSettingsView: View {
                 String(format: "%.1f", keystrokeDisplayDuration)
               )
             ) {
-              Slider(value: $keystrokeDisplayDuration.stepped(by: 0.5, in: 0.5...5.0), in: 0.5...5.0)
+              Slider(value: $keystrokeDisplayDuration.stepped(by: 0.5, in: 0.5 ... 5.0), in: 0.5 ... 5.0)
                 .frame(width: 140)
             }
 

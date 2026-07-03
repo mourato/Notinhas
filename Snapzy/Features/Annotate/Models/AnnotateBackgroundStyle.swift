@@ -1,5 +1,5 @@
 //
-//  BackgroundStyle.swift
+//  AnnotateBackgroundStyle.swift
 //  Snapzy
 //
 //  Background style types and presets for annotation canvas
@@ -19,18 +19,18 @@ enum BackgroundStyle: Equatable, Sendable {
   var supportsBlurredBackgroundEffect: Bool {
     switch self {
     case .wallpaper, .blurred, .solidColor:
-      return true
+      true
     case .none, .gradient:
-      return false
+      false
     }
   }
 
   var blurredEffectImageURL: URL? {
     switch self {
     case .wallpaper(let url), .blurred(let url):
-      return url
+      url
     case .none, .gradient, .solidColor:
-      return nil
+      nil
     }
   }
 }
@@ -42,81 +42,83 @@ enum BlurredBackgroundEffect: String, CaseIterable, Identifiable, Codable, Equat
   case vivid
   case dim
 
-  var id: String { rawValue }
+  var id: String {
+    rawValue
+  }
 
   var displayName: String {
     switch self {
     case .soft:
-      return L10n.AnnotateUI.blurredBackgroundSoft
+      L10n.AnnotateUI.blurredBackgroundSoft
     case .frosted:
-      return L10n.AnnotateUI.blurredBackgroundFrosted
+      L10n.AnnotateUI.blurredBackgroundFrosted
     case .vivid:
-      return L10n.AnnotateUI.blurredBackgroundVivid
+      L10n.AnnotateUI.blurredBackgroundVivid
     case .dim:
-      return L10n.AnnotateUI.blurredBackgroundDim
+      L10n.AnnotateUI.blurredBackgroundDim
     }
   }
 
   var blurRadius: CGFloat {
     switch self {
     case .soft:
-      return 18
+      18
     case .frosted:
-      return 30
+      30
     case .vivid:
-      return 22
+      22
     case .dim:
-      return 24
+      24
     }
   }
 
   var saturation: Double {
     switch self {
     case .soft:
-      return 1.0
+      1.0
     case .frosted:
-      return 0.85
+      0.85
     case .vivid:
-      return 1.35
+      1.35
     case .dim:
-      return 0.9
+      0.9
     }
   }
 
   var brightness: Double {
     switch self {
     case .soft:
-      return 0
+      0
     case .frosted:
-      return 0.06
+      0.06
     case .vivid:
-      return 0.02
+      0.02
     case .dim:
-      return -0.06
+      -0.06
     }
   }
 
   var tintColor: Color {
     switch self {
     case .soft, .frosted:
-      return .white
+      .white
     case .vivid:
-      return .orange
+      .orange
     case .dim:
-      return .black
+      .black
     }
   }
 
   var tintOpacity: Double {
     switch self {
     case .soft:
-      return 0.08
+      0.08
     case .frosted:
-      return 0.28
+      0.28
     case .vivid:
-      return 0.10
+      0.10
     case .dim:
-      return 0.24
+      0.24
     }
   }
 }
@@ -132,18 +134,20 @@ enum GradientPreset: String, CaseIterable, Identifiable, Sendable {
   case yellowOrange
   case cyanBlue
 
-  var id: String { rawValue }
+  var id: String {
+    rawValue
+  }
 
   var colors: [Color] {
     switch self {
-    case .pinkOrange: return [.pink, .orange]
-    case .bluePurple: return [.blue, .purple]
-    case .greenBlue: return [.green, .blue]
-    case .orangeRed: return [.orange, .red]
-    case .purplePink: return [.purple, .pink]
-    case .blueGreen: return [.blue, .green]
-    case .yellowOrange: return [.yellow, .orange]
-    case .cyanBlue: return [.cyan, .blue]
+    case .pinkOrange: [.pink, .orange]
+    case .bluePurple: [.blue, .purple]
+    case .greenBlue: [.green, .blue]
+    case .orangeRed: [.orange, .red]
+    case .purplePink: [.purple, .pink]
+    case .blueGreen: [.blue, .green]
+    case .yellowOrange: [.yellow, .orange]
+    case .cyanBlue: [.cyan, .blue]
     }
   }
 }
@@ -155,28 +159,41 @@ enum ImageAlignment: String, CaseIterable, Sendable {
   case bottomLeft, bottom, bottomRight
 }
 
-
 /// Predefined wallpaper presets (abstract gradient patterns)
 enum WallpaperPreset: String, CaseIterable, Identifiable {
   case oceanBreeze
   case sunsetGlow
   case forestMist
 
-  var id: String { rawValue }
+  var id: String {
+    rawValue
+  }
 
   var displayName: String {
     switch self {
-    case .oceanBreeze: return L10n.AnnotateContext.wallpaperOcean
-    case .sunsetGlow: return L10n.AnnotateContext.wallpaperSunset
-    case .forestMist: return L10n.AnnotateContext.wallpaperForest
+    case .oceanBreeze: L10n.AnnotateContext.wallpaperOcean
+    case .sunsetGlow: L10n.AnnotateContext.wallpaperSunset
+    case .forestMist: L10n.AnnotateContext.wallpaperForest
     }
   }
 
   var colors: [Color] {
     switch self {
-    case .oceanBreeze: return [Color(red: 0.1, green: 0.4, blue: 0.6), Color(red: 0.2, green: 0.6, blue: 0.8), Color(red: 0.4, green: 0.8, blue: 0.9)]
-    case .sunsetGlow: return [Color(red: 0.9, green: 0.3, blue: 0.2), Color(red: 0.95, green: 0.5, blue: 0.3), Color(red: 1.0, green: 0.7, blue: 0.4)]
-    case .forestMist: return [Color(red: 0.1, green: 0.3, blue: 0.2), Color(red: 0.2, green: 0.5, blue: 0.3), Color(red: 0.4, green: 0.7, blue: 0.5)]
+    case .oceanBreeze: [
+        Color(red: 0.1, green: 0.4, blue: 0.6),
+        Color(red: 0.2, green: 0.6, blue: 0.8),
+        Color(red: 0.4, green: 0.8, blue: 0.9),
+      ]
+    case .sunsetGlow: [
+        Color(red: 0.9, green: 0.3, blue: 0.2),
+        Color(red: 0.95, green: 0.5, blue: 0.3),
+        Color(red: 1.0, green: 0.7, blue: 0.4),
+      ]
+    case .forestMist: [
+        Color(red: 0.1, green: 0.3, blue: 0.2),
+        Color(red: 0.2, green: 0.5, blue: 0.3),
+        Color(red: 0.4, green: 0.7, blue: 0.5),
+      ]
     }
   }
 
@@ -190,14 +207,16 @@ enum AspectRatioOrientation: String, CaseIterable, Identifiable, Sendable {
   case horizontal
   case vertical
 
-  var id: String { rawValue }
+  var id: String {
+    rawValue
+  }
 
   var systemImageName: String {
     switch self {
     case .horizontal:
-      return "rectangle"
+      "rectangle"
     case .vertical:
-      return "rectangle.portrait"
+      "rectangle.portrait"
     }
   }
 }
@@ -211,25 +230,27 @@ enum AspectRatioOption: String, CaseIterable, Identifiable, Sendable {
   case ratio3x2 = "3:2"
   case ratio16x9 = "16:9"
 
-  var id: String { rawValue }
+  var id: String {
+    rawValue
+  }
 
   var displayName: String {
     switch self {
     case .auto:
-      return L10n.Common.original
+      L10n.Common.original
     case .free:
-      return L10n.Common.free
+      L10n.Common.free
     case .square, .ratio4x3, .ratio16x9, .ratio3x2:
-      return rawValue
+      rawValue
     }
   }
 
   var supportsOrientation: Bool {
     switch self {
     case .ratio4x3, .ratio16x9, .ratio3x2:
-      return true
+      true
     case .auto, .free, .square:
-      return false
+      false
     }
   }
 
@@ -293,7 +314,7 @@ enum AspectRatioOption: String, CaseIterable, Identifiable, Sendable {
       for: CGSize(width: normalizedWidth, height: normalizedHeight),
       orientation: orientation
     ),
-          targetRatio > 0 else {
+      targetRatio > 0 else {
       return CGSize(width: minimumWidth, height: minimumHeight)
     }
 

@@ -1,5 +1,5 @@
 //
-//  BlurEffectRenderer.swift
+//  AnnotateBlurEffectRenderer.swift
 //  Snapzy
 //
 //  Helper for rendering pixelated blur effect on image regions
@@ -19,18 +19,17 @@ enum BlurRenderQuality: Equatable {
   var maxGaussianSamplePixels: CGFloat? {
     switch self {
     case .interactive:
-      return 420_000
+      420_000
     case .settled:
-      return 1_600_000
+      1_600_000
     case .export:
-      return nil
+      nil
     }
   }
 }
 
 /// Renders pixelated blur effect for sensitive content redaction
-struct BlurEffectRenderer {
-
+enum BlurEffectRenderer {
   /// Default pixel block size for blur effect
   static let defaultPixelSize: CGFloat = 12
 
@@ -51,7 +50,7 @@ struct BlurEffectRenderer {
     if let metalDevice = MTLCreateSystemDefaultDevice() {
       return CIContext(mtlDevice: metalDevice, options: [
         .cacheIntermediates: true,
-        .priorityRequestLow: false
+        .priorityRequestLow: false,
       ])
     }
     return CIContext(options: [.cacheIntermediates: true])
@@ -191,7 +190,6 @@ struct BlurEffectRenderer {
     context.fill(region)
   }
 
-
   /// Draw a subtle placeholder while an exact async blur render is pending.
   static func drawBlurPlaceholder(
     in context: CGContext,
@@ -295,7 +293,8 @@ struct BlurEffectRenderer {
     )
     let samplePaddingPx = ceil(effectiveRadiusPx * gaussianPaddingMultiplier)
     let pixelBounds = CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height)
-    let sampledPixelRegion = targetPixelRegion.insetBy(dx: -samplePaddingPx, dy: -samplePaddingPx).intersection(pixelBounds)
+    let sampledPixelRegion = targetPixelRegion.insetBy(dx: -samplePaddingPx, dy: -samplePaddingPx)
+      .intersection(pixelBounds)
 
     guard !sampledPixelRegion.isEmpty,
           let sampledCGImage = cgImage.cropping(to: sampledPixelRegion) else {
@@ -305,19 +304,17 @@ struct BlurEffectRenderer {
 
     let sampleExtent = CGRect(x: 0, y: 0, width: sampledCGImage.width, height: sampledCGImage.height)
     let sampleArea = sampleExtent.width * sampleExtent.height
-    let downsampleScale: CGFloat
-    if let maxPixels = quality.maxGaussianSamplePixels, sampleArea > maxPixels {
-      downsampleScale = max(0.05, sqrt(maxPixels / sampleArea))
+    let downsampleScale: CGFloat = if let maxPixels = quality.maxGaussianSamplePixels, sampleArea > maxPixels {
+      max(0.05, sqrt(maxPixels / sampleArea))
     } else {
-      downsampleScale = 1
+      1
     }
 
     let sampledCIImage = CIImage(cgImage: sampledCGImage)
-    let workingImage: CIImage
-    if downsampleScale < 0.999 {
-      workingImage = sampledCIImage.transformed(by: CGAffineTransform(scaleX: downsampleScale, y: downsampleScale))
+    let workingImage: CIImage = if downsampleScale < 0.999 {
+      sampledCIImage.transformed(by: CGAffineTransform(scaleX: downsampleScale, y: downsampleScale))
     } else {
-      workingImage = sampledCIImage
+      sampledCIImage
     }
 
     let clampedInput = workingImage.clampedToExtent()
@@ -439,11 +436,12 @@ struct BlurEffectRenderer {
 
     let targetPixelRegion = mapping.targetPixelRegion
     let imageScale = max(mapping.imageScaleX, mapping.imageScaleY)
-    
+
     // Use a standard padding so filter cell boundaries render correctly
     let samplePaddingPx = ceil(40.0 * imageScale)
     let pixelBounds = CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height)
-    let sampledPixelRegion = targetPixelRegion.insetBy(dx: -samplePaddingPx, dy: -samplePaddingPx).intersection(pixelBounds)
+    let sampledPixelRegion = targetPixelRegion.insetBy(dx: -samplePaddingPx, dy: -samplePaddingPx)
+      .intersection(pixelBounds)
 
     guard !sampledPixelRegion.isEmpty,
           let sampledCGImage = cgImage.cropping(to: sampledPixelRegion) else {
@@ -453,19 +451,17 @@ struct BlurEffectRenderer {
 
     let sampleExtent = CGRect(x: 0, y: 0, width: sampledCGImage.width, height: sampledCGImage.height)
     let sampleArea = sampleExtent.width * sampleExtent.height
-    let downsampleScale: CGFloat
-    if let maxPixels = quality.maxGaussianSamplePixels, sampleArea > maxPixels {
-      downsampleScale = max(0.05, sqrt(maxPixels / sampleArea))
+    let downsampleScale: CGFloat = if let maxPixels = quality.maxGaussianSamplePixels, sampleArea > maxPixels {
+      max(0.05, sqrt(maxPixels / sampleArea))
     } else {
-      downsampleScale = 1
+      1
     }
 
     let sampledCIImage = CIImage(cgImage: sampledCGImage)
-    let workingImage: CIImage
-    if downsampleScale < 0.999 {
-      workingImage = sampledCIImage.transformed(by: CGAffineTransform(scaleX: downsampleScale, y: downsampleScale))
+    let workingImage: CIImage = if downsampleScale < 0.999 {
+      sampledCIImage.transformed(by: CGAffineTransform(scaleX: downsampleScale, y: downsampleScale))
     } else {
-      workingImage = sampledCIImage
+      sampledCIImage
     }
 
     let clampedInput = workingImage.clampedToExtent()
@@ -509,6 +505,7 @@ struct BlurEffectRenderer {
   }
 
   // MARK: - Hexagonal Region Drawing
+
   static func drawHexagonalRegion(
     in context: CGContext,
     sourceImage: NSImage,
@@ -575,15 +572,28 @@ struct BlurEffectRenderer {
   }
 
   // MARK: - Crystallized Region Drawing
+
   private static func drawSparkle(in context: CGContext, center: CGPoint, radius: CGFloat, color: CGColor) {
     context.saveGState()
     context.setFillColor(color)
     let path = CGMutablePath()
     path.move(to: CGPoint(x: center.x, y: center.y - radius))
-    path.addQuadCurve(to: CGPoint(x: center.x + radius, y: center.y), control: CGPoint(x: center.x + radius * 0.15, y: center.y - radius * 0.15))
-    path.addQuadCurve(to: CGPoint(x: center.x, y: center.y + radius), control: CGPoint(x: center.x + radius * 0.15, y: center.y + radius * 0.15))
-    path.addQuadCurve(to: CGPoint(x: center.x - radius, y: center.y), control: CGPoint(x: center.x - radius * 0.15, y: center.y + radius * 0.15))
-    path.addQuadCurve(to: CGPoint(x: center.x, y: center.y - radius), control: CGPoint(x: center.x - radius * 0.15, y: center.y - radius * 0.15))
+    path.addQuadCurve(
+      to: CGPoint(x: center.x + radius, y: center.y),
+      control: CGPoint(x: center.x + radius * 0.15, y: center.y - radius * 0.15)
+    )
+    path.addQuadCurve(
+      to: CGPoint(x: center.x, y: center.y + radius),
+      control: CGPoint(x: center.x + radius * 0.15, y: center.y + radius * 0.15)
+    )
+    path.addQuadCurve(
+      to: CGPoint(x: center.x - radius, y: center.y),
+      control: CGPoint(x: center.x - radius * 0.15, y: center.y + radius * 0.15)
+    )
+    path.addQuadCurve(
+      to: CGPoint(x: center.x, y: center.y - radius),
+      control: CGPoint(x: center.x - radius * 0.15, y: center.y - radius * 0.15)
+    )
     path.closeSubpath()
     context.addPath(path)
     context.fillPath()
@@ -591,6 +601,7 @@ struct BlurEffectRenderer {
   }
 
   // MARK: - Crystallized Region Drawing (Starry Tape)
+
   static func drawCrystallizedRegion(
     in context: CGContext,
     region: CGRect,
@@ -626,7 +637,7 @@ struct BlurEffectRenderer {
     // 4. Draw sparkles/stars
     let starColor1 = CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.8)
     let starColor2 = CGColor(red: 1.0, green: 0.95, blue: 0.77, alpha: 0.7) // pale yellow
-    
+
     let patternSpacing = radius
     var x = normalized.minX + patternSpacing / 2
     while x < normalized.maxX {
@@ -636,13 +647,13 @@ struct BlurEffectRenderer {
         let offsetX = seedValue * (patternSpacing * 0.25)
         let offsetY = cos(x * 0.05 + y * 0.1) * (patternSpacing * 0.25)
         let center = CGPoint(x: x + offsetX, y: y + offsetY)
-        
+
         let sizeSeed = abs(cos(x * 0.2 - y * 0.2))
         let starRadius = max(2.0, patternSpacing * (0.12 + sizeSeed * 0.12))
         let color = sizeSeed > 0.5 ? starColor1 : starColor2
-        
+
         drawSparkle(in: context, center: center, radius: starRadius, color: color)
-        
+
         y += patternSpacing
       }
       x += patternSpacing
@@ -653,38 +664,39 @@ struct BlurEffectRenderer {
 
   static func drawCrystallizedRegion(
     in context: CGContext,
-    sourceImage: NSImage,
+    sourceImage _: NSImage,
     region: CGRect,
     radius: Double,
-    quality: BlurRenderQuality = .export
+    quality _: BlurRenderQuality = .export
   ) {
     drawCrystallizedRegion(in: context, region: region, radius: CGFloat(radius))
   }
 
   static func drawCrystallizedRegion(
     in context: CGContext,
-    sourceImage: NSImage,
-    sourceRegion: CGRect,
+    sourceImage _: NSImage,
+    sourceRegion _: CGRect,
     destRegion: CGRect,
     radius: Double,
-    quality: BlurRenderQuality = .export
+    quality _: BlurRenderQuality = .export
   ) {
     drawCrystallizedRegion(in: context, region: destRegion, radius: CGFloat(radius))
   }
 
   static func drawCrystallizedRegion(
     in context: CGContext,
-    sourceCGImage cgImage: CGImage,
-    sourceSize: CGSize,
-    sourceRegion: CGRect,
+    sourceCGImage _: CGImage,
+    sourceSize _: CGSize,
+    sourceRegion _: CGRect,
     destRegion: CGRect,
     radius: Double,
-    quality: BlurRenderQuality = .export
+    quality _: BlurRenderQuality = .export
   ) {
     drawCrystallizedRegion(in: context, region: destRegion, radius: CGFloat(radius))
   }
 
   // MARK: - Pointillism Region Drawing (Grid Tape)
+
   static func drawPointillismRegion(
     in context: CGContext,
     region: CGRect,
@@ -720,9 +732,9 @@ struct BlurEffectRenderer {
     // 4. Draw grid lines
     context.setStrokeColor(CGColor(red: 0.94, green: 0.82, blue: 0.80, alpha: 0.6))
     context.setLineWidth(1.0)
-    
+
     let patternSpacing = radius
-    
+
     var lx = normalized.minX + patternSpacing
     while lx < normalized.maxX {
       context.move(to: CGPoint(x: lx, y: normalized.minY))
@@ -730,7 +742,7 @@ struct BlurEffectRenderer {
       context.strokePath()
       lx += patternSpacing
     }
-    
+
     var ly = normalized.minY + patternSpacing
     while ly < normalized.maxY {
       context.move(to: CGPoint(x: normalized.minX, y: ly))
@@ -765,38 +777,39 @@ struct BlurEffectRenderer {
 
   static func drawPointillismRegion(
     in context: CGContext,
-    sourceImage: NSImage,
+    sourceImage _: NSImage,
     region: CGRect,
     radius: Double,
-    quality: BlurRenderQuality = .export
+    quality _: BlurRenderQuality = .export
   ) {
     drawPointillismRegion(in: context, region: region, radius: CGFloat(radius))
   }
 
   static func drawPointillismRegion(
     in context: CGContext,
-    sourceImage: NSImage,
-    sourceRegion: CGRect,
+    sourceImage _: NSImage,
+    sourceRegion _: CGRect,
     destRegion: CGRect,
     radius: Double,
-    quality: BlurRenderQuality = .export
+    quality _: BlurRenderQuality = .export
   ) {
     drawPointillismRegion(in: context, region: destRegion, radius: CGFloat(radius))
   }
 
   static func drawPointillismRegion(
     in context: CGContext,
-    sourceCGImage cgImage: CGImage,
-    sourceSize: CGSize,
-    sourceRegion: CGRect,
+    sourceCGImage _: CGImage,
+    sourceSize _: CGSize,
+    sourceRegion _: CGRect,
     destRegion: CGRect,
     radius: Double,
-    quality: BlurRenderQuality = .export
+    quality _: BlurRenderQuality = .export
   ) {
     drawPointillismRegion(in: context, region: destRegion, radius: CGFloat(radius))
   }
 
   // MARK: - Halftone Region Drawing (Gingham Tape)
+
   static func drawHalftoneRegion(
     in context: CGContext,
     region: CGRect,
@@ -832,16 +845,16 @@ struct BlurEffectRenderer {
     // 4. Draw gingham bands
     let bandColor = CGColor(red: 0.98, green: 0.88, blue: 0.65, alpha: 0.4)
     context.setFillColor(bandColor)
-    
+
     let patternSpacing = width
-    
+
     var bx = normalized.minX + patternSpacing / 2
     while bx < normalized.maxX {
       let rectWidth = patternSpacing * 0.5
       context.fill(CGRect(x: bx - rectWidth / 2, y: normalized.minY, width: rectWidth, height: normalized.height))
       bx += patternSpacing
     }
-    
+
     var by = normalized.minY + patternSpacing / 2
     while by < normalized.maxY {
       let rectHeight = patternSpacing * 0.5
@@ -854,33 +867,33 @@ struct BlurEffectRenderer {
 
   static func drawHalftoneRegion(
     in context: CGContext,
-    sourceImage: NSImage,
+    sourceImage _: NSImage,
     region: CGRect,
     width: Double,
-    quality: BlurRenderQuality = .export
+    quality _: BlurRenderQuality = .export
   ) {
     drawHalftoneRegion(in: context, region: region, width: CGFloat(width))
   }
 
   static func drawHalftoneRegion(
     in context: CGContext,
-    sourceImage: NSImage,
-    sourceRegion: CGRect,
+    sourceImage _: NSImage,
+    sourceRegion _: CGRect,
     destRegion: CGRect,
     width: Double,
-    quality: BlurRenderQuality = .export
+    quality _: BlurRenderQuality = .export
   ) {
     drawHalftoneRegion(in: context, region: destRegion, width: CGFloat(width))
   }
 
   static func drawHalftoneRegion(
     in context: CGContext,
-    sourceCGImage cgImage: CGImage,
-    sourceSize: CGSize,
-    sourceRegion: CGRect,
+    sourceCGImage _: CGImage,
+    sourceSize _: CGSize,
+    sourceRegion _: CGRect,
     destRegion: CGRect,
     width: Double,
-    quality: BlurRenderQuality = .export
+    quality _: BlurRenderQuality = .export
   ) {
     drawHalftoneRegion(in: context, region: destRegion, width: CGFloat(width))
   }
@@ -898,7 +911,7 @@ struct BlurEffectRenderer {
 
     // Jagged right edge (vertical zig-zags)
     let steps = max(3, Int(rect.height / 8))
-    for i in 1...steps {
+    for i in 1 ... steps {
       let progress = CGFloat(i) / CGFloat(steps)
       let y = minY + progress * rect.height
       let trigVal = sin(y * 0.4 + CGFloat(seed)) * 2.5 + cos(y * 1.2) * 1.0
@@ -909,7 +922,7 @@ struct BlurEffectRenderer {
     path.addLine(to: CGPoint(x: minX, y: maxY))
 
     // Jagged left edge (vertical zig-zags, going back up)
-    for i in (0...(steps - 1)).reversed() {
+    for i in (0 ... (steps - 1)).reversed() {
       let progress = CGFloat(i) / CGFloat(steps)
       let y = minY + progress * rect.height
       let trigVal = sin(y * 0.4 + CGFloat(seed + 42)) * 2.5 + cos(y * 1.2) * 1.0
@@ -922,6 +935,7 @@ struct BlurEffectRenderer {
   }
 
   // MARK: - Tape Region Drawing
+
   static func drawTapeRegion(
     in context: CGContext,
     region: CGRect,
@@ -973,27 +987,28 @@ struct BlurEffectRenderer {
 
   static func drawTapeRegion(
     in context: CGContext,
-    sourceImage: NSImage,
+    sourceImage _: NSImage,
     region: CGRect,
     patternSpacing: Double,
-    quality: BlurRenderQuality = .export
+    quality _: BlurRenderQuality = .export
   ) {
     drawTapeRegion(in: context, region: region, patternSpacing: CGFloat(patternSpacing))
   }
 
   static func drawTapeRegion(
     in context: CGContext,
-    sourceCGImage cgImage: CGImage,
-    sourceSize: CGSize,
-    sourceRegion: CGRect,
+    sourceCGImage _: CGImage,
+    sourceSize _: CGSize,
+    sourceRegion _: CGRect,
     destRegion: CGRect,
     patternSpacing: Double,
-    quality: BlurRenderQuality = .export
+    quality _: BlurRenderQuality = .export
   ) {
     drawTapeRegion(in: context, region: destRegion, patternSpacing: CGFloat(patternSpacing))
   }
 
   // MARK: - Washi Region Drawing
+
   static func drawWashiRegion(
     in context: CGContext,
     region: CGRect,
@@ -1050,22 +1065,22 @@ struct BlurEffectRenderer {
 
   static func drawWashiRegion(
     in context: CGContext,
-    sourceImage: NSImage,
+    sourceImage _: NSImage,
     region: CGRect,
     patternSpacing: Double,
-    quality: BlurRenderQuality = .export
+    quality _: BlurRenderQuality = .export
   ) {
     drawWashiRegion(in: context, region: region, patternSpacing: CGFloat(patternSpacing))
   }
 
   static func drawWashiRegion(
     in context: CGContext,
-    sourceCGImage cgImage: CGImage,
-    sourceSize: CGSize,
-    sourceRegion: CGRect,
+    sourceCGImage _: CGImage,
+    sourceSize _: CGSize,
+    sourceRegion _: CGRect,
     destRegion: CGRect,
     patternSpacing: Double,
-    quality: BlurRenderQuality = .export
+    quality _: BlurRenderQuality = .export
   ) {
     drawWashiRegion(in: context, region: destRegion, patternSpacing: CGFloat(patternSpacing))
   }

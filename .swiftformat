@@ -1,5 +1,5 @@
 # Format Options
---indent 4
+--indent 2
 --maxwidth 120
 --linebreaks lf
 --swiftversion 5.9

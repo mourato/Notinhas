@@ -1,5 +1,5 @@
 //
-//  VideoBackgroundSidebarView.swift
+//  VideoEditorVideoBackgroundSidebarView.swift
 //  Snapzy
 //
 //  Background customization sidebar for video editor
@@ -71,7 +71,10 @@ struct VideoBackgroundSidebarView: View {
     VStack(alignment: .leading, spacing: Spacing.sm) {
       VideoSidebarSectionHeader(title: L10n.Common.gradients)
 
-      LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: GridConfig.gap), count: GridConfig.backgroundColumns), spacing: GridConfig.gap) {
+      LazyVGrid(
+        columns: Array(repeating: GridItem(.flexible(), spacing: GridConfig.gap), count: GridConfig.backgroundColumns),
+        spacing: GridConfig.gap
+      ) {
         ForEach(GradientPreset.allCases) { preset in
           VideoGradientPresetButton(
             preset: preset,
@@ -93,7 +96,10 @@ struct VideoBackgroundSidebarView: View {
     VStack(alignment: .leading, spacing: Spacing.sm) {
       VideoSidebarSectionHeader(title: L10n.Common.wallpapers)
 
-      LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: GridConfig.gap), count: GridConfig.backgroundColumns), spacing: GridConfig.gap) {
+      LazyVGrid(
+        columns: Array(repeating: GridItem(.flexible(), spacing: GridConfig.gap), count: GridConfig.backgroundColumns),
+        spacing: GridConfig.gap
+      ) {
         // Bundled default wallpapers
         ForEach(wallpaperManager.defaultWallpapers) { item in
           VideoDefaultWallpaperButton(
@@ -230,15 +236,15 @@ struct VideoBackgroundSidebarView: View {
           set: { newValue in
             state.backgroundPadding = newValue
             // Auto-apply white background when padding increases from 0
-            if newValue > 0 && state.backgroundStyle == .none {
+            if newValue > 0, state.backgroundStyle == .none {
               state.backgroundStyle = .solidColor(.white)
             }
           }
         ),
-        range: 0...300
+        range: 0 ... 300
       )
-      VideoSliderRow(label: L10n.Common.shadow, value: $state.backgroundShadowIntensity, range: 0...1)
-      VideoSliderRow(label: L10n.Common.corners, value: $state.backgroundCornerRadius, range: 0...60)
+      VideoSliderRow(label: L10n.Common.shadow, value: $state.backgroundShadowIntensity, range: 0 ... 1)
+      VideoSliderRow(label: L10n.Common.corners, value: $state.backgroundCornerRadius, range: 0 ... 60)
     }
   }
 
@@ -293,7 +299,7 @@ struct VideoBackgroundSidebarView: View {
   private var selectedAspectRatioOption: AspectRatioOption? {
     switch state.exportSettings.dimensionPreset {
     case .original:
-      return .auto
+      .auto
     case .percent90,
          .percent80,
          .percent60,
@@ -301,20 +307,20 @@ struct VideoBackgroundSidebarView: View {
          .percent40,
          .percent30,
          .percent20:
-      return nil
+      nil
     case .custom:
-      return .free
+      .free
     case .ratio1x1:
-      return .square
+      .square
     case .ratio4x3,
          .ratio3x4:
-      return .ratio4x3
+      .ratio4x3
     case .ratio3x2,
          .ratio2x3:
-      return .ratio3x2
+      .ratio3x2
     case .ratio16x9,
          .ratio9x16:
-      return .ratio16x9
+      .ratio16x9
     }
   }
 

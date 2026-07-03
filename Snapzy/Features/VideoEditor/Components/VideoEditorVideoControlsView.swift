@@ -1,5 +1,5 @@
 //
-//  VideoControlsView.swift
+//  VideoEditorVideoControlsView.swift
 //  Snapzy
 //
 //  Playback controls with play/pause button and time display

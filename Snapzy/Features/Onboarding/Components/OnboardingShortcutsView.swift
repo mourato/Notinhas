@@ -1,5 +1,5 @@
 //
-//  ShortcutsView.swift
+//  OnboardingShortcutsView.swift
 //  Snapzy
 //
 //  Shortcuts setup screen for onboarding flow — adaptive dark/light theme
@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ShortcutsView: View {
-  var onBack: (() -> Void)? = nil
+  var onBack: (() -> Void)?
   let onDecline: () -> Void
   let onAccept: () -> Void
 
@@ -21,7 +21,6 @@ struct ShortcutsView: View {
 
   var body: some View {
     OnboardingStepContainer(onBack: onBack) {
-
       // Header icon
       Image(systemName: "keyboard")
         .font(.system(size: 44))
@@ -114,7 +113,10 @@ struct ShortcutsView: View {
           )
           .overlay(
             RoundedRectangle(cornerRadius: 10)
-              .stroke(Color.orange.opacity(conflictCardHighlight ? 0.6 : 0.25), lineWidth: conflictCardHighlight ? 1.5 : 1)
+              .stroke(
+                Color.orange.opacity(conflictCardHighlight ? 0.6 : 0.25),
+                lineWidth: conflictCardHighlight ? 1.5 : 1
+              )
           )
           .scaleEffect(conflictCardHighlight ? 1.02 : 1.0)
           .animation(.easeInOut(duration: 0.25), value: conflictCardHighlight)

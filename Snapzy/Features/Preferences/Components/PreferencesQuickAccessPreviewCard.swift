@@ -1,3 +1,10 @@
+//
+//  PreferencesQuickAccessPreviewCard.swift
+//  Snapzy
+//
+//  A interactive preview card displaying configurable quick access actions.
+//
+
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -13,16 +20,42 @@ struct QuickAccessSettingsPreviewCard: View {
   @State private var hoveredSwipeDirection: QuickAccessSwipeDirection?
   @State private var dropTargetSwipeDirection: QuickAccessSwipeDirection?
 
-  private var cardWidth: CGFloat { QuickAccessLayout.scaledCardWidth(scale) }
-  private var cardHeight: CGFloat { QuickAccessLayout.scaledCardHeight(scale) }
-  private var stackViewportWidth: CGFloat { cardWidth + QuickAccessLayout.containerPadding * 2 }
-  private var stackViewportHeight: CGFloat { cardHeight + 96 }
-  private var previewStackSpacing: CGFloat { QuickAccessLayout.cardSpacing * 2 }
-  private var popoverSideGap: CGFloat { 84 }
+  private var cardWidth: CGFloat {
+    QuickAccessLayout.scaledCardWidth(scale)
+  }
+
+  private var cardHeight: CGFloat {
+    QuickAccessLayout.scaledCardHeight(scale)
+  }
+
+  private var stackViewportWidth: CGFloat {
+    cardWidth + QuickAccessLayout.containerPadding * 2
+  }
+
+  private var stackViewportHeight: CGFloat {
+    cardHeight + 96
+  }
+
+  private var previewStackSpacing: CGFloat {
+    QuickAccessLayout.cardSpacing * 2
+  }
+
+  private var popoverSideGap: CGFloat {
+    84
+  }
+
   private let swipeTargetDiameter: CGFloat = 24
-  private var swipeTargetHitWidth: CGFloat { swipeTargetDiameter + 72 }
-  private var swipeTargetOffsetX: CGFloat { cardWidth / 2 + 76 }
-  private var previewFrameWidth: CGFloat { (swipeTargetOffsetX + swipeTargetHitWidth / 2) * 2 }
+  private var swipeTargetHitWidth: CGFloat {
+    swipeTargetDiameter + 72
+  }
+
+  private var swipeTargetOffsetX: CGFloat {
+    cardWidth / 2 + 76
+  }
+
+  private var previewFrameWidth: CGFloat {
+    (swipeTargetOffsetX + swipeTargetHitWidth / 2) * 2
+  }
 
   var body: some View {
     ZStack {
@@ -242,27 +275,27 @@ struct QuickAccessSettingsPreviewCard: View {
   private func popoverXOffset(for slot: QuickAccessActionSlot) -> CGFloat {
     switch slot {
     case .topLeading, .bottomLeading:
-      return -(cardWidth / 2 + popoverSideGap)
+      -(cardWidth / 2 + popoverSideGap)
     case .centerTop, .centerBottom, .topTrailing, .bottomTrailing:
-      return cardWidth / 2 + popoverSideGap
+      cardWidth / 2 + popoverSideGap
     }
   }
 
   private func popoverYOffset(for slot: QuickAccessActionSlot) -> CGFloat {
     switch slot {
     case .centerTop:
-      return -18
+      -18
     case .centerBottom:
-      return 18
+      18
     case .topLeading, .topTrailing:
-      return -(cardHeight / 2) + 20
+      -(cardHeight / 2) + 20
     case .bottomLeading, .bottomTrailing:
-      return cardHeight / 2 - 20
+      cardHeight / 2 - 20
     }
   }
 
   @ViewBuilder
-  private func draggableSlot<Content: View>(_ content: Content, slot: QuickAccessActionSlot) -> some View {
+  private func draggableSlot(_ content: some View, slot: QuickAccessActionSlot) -> some View {
     if let action = actionStore.action(in: slot) {
       content.onDrag {
         QuickAccessActionDragPayload.itemProvider(action: action, source: .preview(slot: slot))
@@ -299,7 +332,8 @@ struct QuickAccessSettingsPreviewCard: View {
       isHighlighted: hoveredSwipeDirection == direction,
       diameter: swipeTargetDiameter,
       onHover: { isHovering in
-        hoveredSwipeDirection = isHovering ? direction : (hoveredSwipeDirection == direction ? nil : hoveredSwipeDirection)
+        hoveredSwipeDirection = isHovering ? direction :
+          (hoveredSwipeDirection == direction ? nil : hoveredSwipeDirection)
       }
     )
 
@@ -321,8 +355,8 @@ struct QuickAccessSettingsPreviewCard: View {
   }
 
   @ViewBuilder
-  private func draggableSwipeTarget<Content: View>(
-    _ content: Content,
+  private func draggableSwipeTarget(
+    _ content: some View,
     direction: QuickAccessSwipeDirection,
     action: QuickAccessActionKind?
   ) -> some View {
@@ -335,7 +369,8 @@ struct QuickAccessSettingsPreviewCard: View {
     }
   }
 
-  private func assignDroppedSwipeAction(from providers: [NSItemProvider], to direction: QuickAccessSwipeDirection) -> Bool {
+  private func assignDroppedSwipeAction(from providers: [NSItemProvider],
+                                        to direction: QuickAccessSwipeDirection) -> Bool {
     QuickAccessActionDragPayload.load(from: providers) { payload in
       swipeActionStore.setAction(direction, action: payload.action)
     }
@@ -346,7 +381,8 @@ struct QuickAccessSettingsPreviewCard: View {
     Binding(
       get: { dropTargetSwipeDirection == direction },
       set: { isTargeted in
-        dropTargetSwipeDirection = isTargeted ? direction : (dropTargetSwipeDirection == direction ? nil : dropTargetSwipeDirection)
+        dropTargetSwipeDirection = isTargeted ? direction :
+          (dropTargetSwipeDirection == direction ? nil : dropTargetSwipeDirection)
       }
     )
   }
@@ -354,9 +390,9 @@ struct QuickAccessSettingsPreviewCard: View {
   private func swipePopoverOffset(for direction: QuickAccessSwipeDirection) -> CGSize {
     switch direction {
     case .left:
-      return CGSize(width: -swipeTargetOffsetX, height: -54)
+      CGSize(width: -swipeTargetOffsetX, height: -54)
     case .right:
-      return CGSize(width: swipeTargetOffsetX, height: -54)
+      CGSize(width: swipeTargetOffsetX, height: -54)
     }
   }
 }

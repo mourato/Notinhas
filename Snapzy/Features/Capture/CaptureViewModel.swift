@@ -1,5 +1,5 @@
 //
-//  ScreenCaptureViewModel.swift
+//  CaptureViewModel.swift
 //  Snapzy
 //
 //  ViewModel for screen capture operations
@@ -18,17 +18,17 @@ enum ImageFormatOption: String, CaseIterable {
 
   var format: ImageFormat {
     switch self {
-    case .png: return .png
-    case .jpeg: return .jpeg(quality: 0.9)
-    case .webp: return .webp
+    case .png: .png
+    case .jpeg: .jpeg(quality: 0.9)
+    case .webp: .webp
     }
   }
 
   var displayName: String {
     switch self {
-    case .png: return "PNG"
-    case .jpeg: return "JPEG"
-    case .webp: return "WebP"
+    case .png: "PNG"
+    case .jpeg: "JPEG"
+    case .webp: "WebP"
     }
   }
 }
@@ -110,7 +110,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     captureManager.captureCompletedPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] url in
-        guard let self = self else { return }
+        guard let self else { return }
         Task {
           await self.postCaptureHandler.handleScreenshotCapture(url: url)
         }
@@ -148,8 +148,6 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
   private var isBackgroundCutoutAutoCropEnabled: Bool {
     UserDefaults.standard.object(forKey: PreferencesKeys.backgroundCutoutAutoCropEnabled) as? Bool ?? true
   }
-
-
 
   /// Always read format from UserDefaults to stay in sync with Settings @AppStorage
   private var resolvedFormat: ImageFormat {
@@ -262,7 +260,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       }
 
       DiagnosticLogger.shared.log(.debug, .ui, "Hidden Snapzy windows restored", context: [
-        "count": "\(liveEntries.count)"
+        "count": "\(liveEntries.count)",
       ])
     }
   }
@@ -272,8 +270,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
 
     let visibleNormalWindows = NSApp.windows.filter {
       $0.isVisible &&
-      $0.level == .normal &&
-      $0.className != "NSStatusBarWindow"
+        $0.level == .normal &&
+        $0.className != "NSStatusBarWindow"
     }
     let session = HiddenWindowSession(
       windows: visibleNormalWindows,
@@ -285,7 +283,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
 
     visibleNormalWindows.forEach { $0.orderOut(nil) }
     DiagnosticLogger.shared.log(.debug, .ui, "Snapzy windows hidden for capture", context: [
-      "count": "\(visibleNormalWindows.count)"
+      "count": "\(visibleNormalWindows.count)",
     ])
     return session
   }
@@ -415,7 +413,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
 
       guard
         let resolvedSaveDirectory = fileAccessManager.ensureExportDirectoryForOperation(
-          promptMessage: L10n.Recording.chooseSaveLocationMessage)
+          promptMessage: L10n.Recording.chooseSaveLocationMessage
+        )
       else {
         lastCaptureResult = .failure(.saveFailed(L10n.ScreenCapture.saveLocationPermissionRequired))
         DiagnosticLogger.shared.log(.error, .capture, "Fullscreen capture aborted: no save location")
@@ -481,7 +480,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     Task {
       guard
         let resolvedSaveDirectory = fileAccessManager.ensureExportDirectoryForOperation(
-          promptMessage: L10n.Recording.chooseSaveLocationMessage)
+          promptMessage: L10n.Recording.chooseSaveLocationMessage
+        )
       else {
         lastCaptureResult = .failure(.saveFailed(L10n.ScreenCapture.saveLocationPermissionRequired))
         DiagnosticLogger.shared.log(.error, .capture, "Active window capture aborted: no save location")
@@ -552,7 +552,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
 
     guard
       let resolvedSaveDirectory = fileAccessManager.ensureExportDirectoryForOperation(
-        promptMessage: L10n.Recording.chooseSaveLocationMessage)
+        promptMessage: L10n.Recording.chooseSaveLocationMessage
+      )
     else {
       lastCaptureResult = .failure(.saveFailed(L10n.ScreenCapture.saveLocationPermissionRequired))
       return
@@ -600,7 +601,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     // the frozen backdrop is prepared.
     let snapshotDelay = hiddenWindowSession.didHideWindows ? frozenSnapshotWindowHideSettleDelay : 0
     DispatchQueue.main.asyncAfter(deadline: .now() + snapshotDelay) { [weak self] in
-      guard let self = self else {
+      guard let self else {
         DiagnosticLogger.shared.log(.warning, .capture, "captureArea: self deallocated")
         hiddenWindowSession.restore()
         AreaSelectionController.shared.cancelSelection()
@@ -653,14 +654,22 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
           self.isAreaSelectionActive = false
           self.lastCaptureResult = .failure(error)
           hiddenWindowSession.restore()
-          DiagnosticLogger.shared.log(.error, .capture, "Frozen area capture setup failed: \(error.localizedDescription)")
+          DiagnosticLogger.shared.log(
+            .error,
+            .capture,
+            "Frozen area capture setup failed: \(error.localizedDescription)"
+          )
           return
         } catch {
           self.isCapturing = false
           self.isAreaSelectionActive = false
           self.lastCaptureResult = .failure(.captureFailed(error.localizedDescription))
           hiddenWindowSession.restore()
-          DiagnosticLogger.shared.log(.error, .capture, "Frozen area capture setup failed: \(error.localizedDescription)")
+          DiagnosticLogger.shared.log(
+            .error,
+            .capture,
+            "Frozen area capture setup failed: \(error.localizedDescription)"
+          )
           return
         }
         self.startFrozenAreaSelection(
@@ -687,7 +696,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
 
     guard
       let resolvedSaveDirectory = fileAccessManager.ensureExportDirectoryForOperation(
-        promptMessage: L10n.Recording.chooseSaveLocationMessage)
+        promptMessage: L10n.Recording.chooseSaveLocationMessage
+      )
     else {
       lastCaptureResult = .failure(.saveFailed(L10n.ScreenCapture.saveLocationPermissionRequired))
       return
@@ -697,7 +707,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     let captureContext = CaptureContext.fromFrontmostApp()
     isAreaSelectionActive = true
     DiagnosticLogger.shared.log(.info, .capture, "Inline area annotate flow started", context: [
-      "format": resolvedFormat.fileExtension
+      "format": resolvedFormat.fileExtension,
     ])
 
     let targetDisplayID = ScreenUtility.activeDisplayID()
@@ -712,7 +722,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     let snapshotDelay = hiddenWindowSession.didHideWindows ? frozenSnapshotWindowHideSettleDelay : 0
 
     DispatchQueue.main.asyncAfter(deadline: .now() + snapshotDelay) { [weak self] in
-      guard let self = self else {
+      guard let self else {
         hiddenWindowSession.restore()
         return
       }
@@ -747,14 +757,22 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
           self.isAreaSelectionActive = false
           self.lastCaptureResult = .failure(error)
           hiddenWindowSession.restore()
-          DiagnosticLogger.shared.log(.error, .capture, "Inline area annotate setup failed: \(error.localizedDescription)")
+          DiagnosticLogger.shared.log(
+            .error,
+            .capture,
+            "Inline area annotate setup failed: \(error.localizedDescription)"
+          )
           return
         } catch {
           self.isCapturing = false
           self.isAreaSelectionActive = false
           self.lastCaptureResult = .failure(.captureFailed(error.localizedDescription))
           hiddenWindowSession.restore()
-          DiagnosticLogger.shared.log(.error, .capture, "Inline area annotate setup failed: \(error.localizedDescription)")
+          DiagnosticLogger.shared.log(
+            .error,
+            .capture,
+            "Inline area annotate setup failed: \(error.localizedDescription)"
+          )
           return
         }
 
@@ -791,12 +809,12 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
             hiddenWindowSession.restore()
             return
           }
-          self.isAreaSelectionActive = false
-          self.lastCaptureResult = result
+          isAreaSelectionActive = false
+          lastCaptureResult = result
           hiddenWindowSession.restore()
           if case .failure(let error) = result {
             DiagnosticLogger.shared.log(.info, .capture, "Inline area annotate ended", context: [
-              "result": error.localizedDescription
+              "result": error.localizedDescription,
             ])
           }
         }
@@ -878,7 +896,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
         )
       }
     ) { [weak self] selection in
-      guard let self = self else {
+      guard let self else {
         DiagnosticLogger.shared.log(.warning, .capture, "captureArea completion: self deallocated")
         frozenSession.invalidate()
         hiddenWindowSession.restore()
@@ -889,23 +907,22 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       }
 
       guard let selection else {
-        self.cancelLazyAreaSnapshotTasks()
+        cancelLazyAreaSnapshotTasks()
         frozenSession.invalidate()
         hiddenWindowSession.restore()
         DiagnosticLogger.shared.log(.info, .capture, "Area capture cancelled by user")
-        self.lastCaptureResult = .failure(.cancelled)
+        lastCaptureResult = .failure(.cancelled)
         return
       }
 
-      let selectionContext: CaptureContext
-      switch selection.target {
+      let selectionContext: CaptureContext = switch selection.target {
       case .window(let target):
-        selectionContext = CaptureContext.fromPID(target.ownerPID, windowTitle: target.title)
+        CaptureContext.fromPID(target.ownerPID, windowTitle: target.title)
       case .rect:
-        selectionContext = context
+        context
       }
 
-      self.cancelLazyAreaSnapshotTasks(clearFailures: false)
+      cancelLazyAreaSnapshotTasks(clearFailures: false)
 
       Task { @MainActor in
         defer {
@@ -1024,7 +1041,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
             "Application mode target selected",
             context: [
               "windowID": "\(target.windowID)",
-              "rect": "\(Int(target.frame.width))x\(Int(target.frame.height))"
+              "rect": "\(Int(target.frame.width))x\(Int(target.frame.height))",
             ]
           )
           let result = await self.captureManager.captureWindow(
@@ -1075,7 +1092,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       ),
       initialInteractionMode: initialInteractionMode
     ) { [weak self] selection in
-      guard let self = self else {
+      guard let self else {
         hiddenWindowSession.restore()
         return
       }
@@ -1084,16 +1101,15 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       guard let selection else {
         hiddenWindowSession.restore()
         DiagnosticLogger.shared.log(.info, .capture, "Live area capture cancelled by user")
-        self.lastCaptureResult = .failure(.cancelled)
+        lastCaptureResult = .failure(.cancelled)
         return
       }
 
-      let selectionContext: CaptureContext
-      switch selection.target {
+      let selectionContext: CaptureContext = switch selection.target {
       case .window(let target):
-        selectionContext = CaptureContext.fromPID(target.ownerPID, windowTitle: target.title)
+        CaptureContext.fromPID(target.ownerPID, windowTitle: target.title)
       case .rect:
-        selectionContext = context
+        context
       }
 
       Task { @MainActor in
@@ -1235,7 +1251,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     let startedAt = Date()
     let task = Task { @MainActor [weak self] in
       guard let self else { return }
-      guard self.activeAreaSelectionSessionID == sessionID else { return }
+      guard activeAreaSelectionSessionID == sessionID else { return }
 
       // Try fast CG path first (only when no cursor/desktop exclusion needed)
       cgFastPath: do {
@@ -1249,8 +1265,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
         }
         let screenFrame = screen.frame
         let backingScale = screen.backingScaleFactor
-        let colorSpaceName = self.captureManager.preferredCaptureColorSpaceName(for: screen)
-        let captureManager = self.captureManager
+        let colorSpaceName = captureManager.preferredCaptureColorSpaceName(for: screen)
+        let captureManager = captureManager
 
         // withDisplayOverlayHiddenAsync: hides overlay on main, runs work off-main, restores on main.
         let fastSnapshot = await AreaSelectionController.shared.withDisplayOverlayHiddenAsync(
@@ -1269,10 +1285,10 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
         }
 
         // Re-validate session after awaiting — user may have dismissed capture area.
-        guard self.activeAreaSelectionSessionID == sessionID else { return }
+        guard activeAreaSelectionSessionID == sessionID else { return }
 
         if let fastSnapshot {
-          self.applyLazyFrozenSnapshot(
+          applyLazyFrozenSnapshot(
             fastSnapshot,
             mode: excludeOwnApplication ? "coregraphics-hidden-overlay" : "coregraphics",
             displayID: displayID,
@@ -1280,14 +1296,14 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
             sessionID: sessionID,
             frozenSession: frozenSession
           )
-          self.lazyAreaSnapshotTasks[displayID] = nil
+          lazyAreaSnapshotTasks[displayID] = nil
           return
         }
       }
 
       // SCK async path
       do {
-        let snapshots = try await self.captureManager.captureDisplaySnapshots(
+        let snapshots = try await captureManager.captureDisplaySnapshots(
           displayIDs: [displayID],
           showCursor: showCursor,
           excludeDesktopIcons: excludeDesktopIcons,
@@ -1298,7 +1314,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
         guard let snapshot = snapshots[displayID] else {
           throw CaptureError.noDisplayFound
         }
-        self.applyLazyFrozenSnapshot(
+        applyLazyFrozenSnapshot(
           snapshot,
           mode: "screencapturekit",
           displayID: displayID,
@@ -1307,8 +1323,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
           frozenSession: frozenSession
         )
       } catch {
-        guard self.activeAreaSelectionSessionID == sessionID else { return }
-        self.lazyAreaSnapshotFailedDisplayIDs.insert(displayID)
+        guard activeAreaSelectionSessionID == sessionID else { return }
+        lazyAreaSnapshotFailedDisplayIDs.insert(displayID)
         AreaSelectionController.shared.enableLiveFallbackSelection(for: displayID)
         DiagnosticLogger.shared.logError(
           .capture,
@@ -1317,7 +1333,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
           context: ["displayID": "\(displayID)"]
         )
       }
-      self.lazyAreaSnapshotTasks[displayID] = nil
+      lazyAreaSnapshotTasks[displayID] = nil
     }
     lazyAreaSnapshotTasks[displayID] = task
   }
@@ -1377,7 +1393,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
 
     guard
       let resolvedSaveDirectory = fileAccessManager.ensureExportDirectoryForOperation(
-        promptMessage: L10n.Recording.chooseSaveLocationMessage)
+        promptMessage: L10n.Recording.chooseSaveLocationMessage
+      )
     else {
       lastCaptureResult = .failure(.saveFailed(L10n.ScreenCapture.saveLocationPermissionRequired))
       return
@@ -1385,7 +1402,12 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     saveDirectory = resolvedSaveDirectory
 
     isAreaSelectionActive = true
-    DiagnosticLogger.shared.log(.info, .capture, "Scrolling capture flow started", context: ["format": resolvedFormat.fileExtension])
+    DiagnosticLogger.shared.log(
+      .info,
+      .capture,
+      "Scrolling capture flow started",
+      context: ["format": resolvedFormat.fileExtension]
+    )
     let excludeDesktopIcons = DesktopIconManager.shared.isIconHidingEnabled
     let excludeDesktopWidgets = DesktopIconManager.shared.isWidgetHidingEnabled
     let prefetchedContentTask = captureManager.prefetchShareableContent(
@@ -1394,48 +1416,49 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
 
     let hiddenWindowSession = hideVisibleNormalWindowsIfNeeded(true)
 
-    DispatchQueue.main.asyncAfter(deadline: .now() + (hiddenWindowSession.didHideWindows ? windowHideSettleDelay : 0)) { [weak self] in
-      guard let self = self else {
-        DiagnosticLogger.shared.log(.warning, .capture, "captureScrolling: self deallocated")
-        hiddenWindowSession.restore()
-        AreaSelectionController.shared.cancelSelection()
-        return
-      }
-
-      AreaSelectionController.shared.startSelection(mode: .scrollingCapture) { [weak self] rect, _ in
-        guard let self = self else {
-          DiagnosticLogger.shared.log(.warning, .capture, "captureScrolling completion: self deallocated")
+    DispatchQueue.main
+      .asyncAfter(deadline: .now() + (hiddenWindowSession.didHideWindows ? windowHideSettleDelay : 0)) { [weak self] in
+        guard let self else {
+          DiagnosticLogger.shared.log(.warning, .capture, "captureScrolling: self deallocated")
           hiddenWindowSession.restore()
+          AreaSelectionController.shared.cancelSelection()
           return
         }
 
-        defer {
-          self.isAreaSelectionActive = false
-        }
-
-        guard let selectedRect = rect else {
-          DiagnosticLogger.shared.log(.info, .capture, "Scrolling capture cancelled by user")
-          self.lastCaptureResult = .failure(.cancelled)
-          hiddenWindowSession.restore()
-          return
-        }
-
-        let actualSaveDirectory = self.tempCaptureManager.resolveSaveDirectory(
-          for: .screenshot,
-          exportDirectory: resolvedSaveDirectory
-        )
-
-        ScrollingCaptureCoordinator.shared.beginSession(
-          rect: selectedRect,
-          saveDirectory: actualSaveDirectory,
-          format: self.resolvedFormat,
-          prefetchedContentTask: prefetchedContentTask,
-          onSessionEnded: {
+        AreaSelectionController.shared.startSelection(mode: .scrollingCapture) { [weak self] rect, _ in
+          guard let self else {
+            DiagnosticLogger.shared.log(.warning, .capture, "captureScrolling completion: self deallocated")
             hiddenWindowSession.restore()
+            return
           }
-        )
+
+          defer {
+            self.isAreaSelectionActive = false
+          }
+
+          guard let selectedRect = rect else {
+            DiagnosticLogger.shared.log(.info, .capture, "Scrolling capture cancelled by user")
+            lastCaptureResult = .failure(.cancelled)
+            hiddenWindowSession.restore()
+            return
+          }
+
+          let actualSaveDirectory = tempCaptureManager.resolveSaveDirectory(
+            for: .screenshot,
+            exportDirectory: resolvedSaveDirectory
+          )
+
+          ScrollingCaptureCoordinator.shared.beginSession(
+            rect: selectedRect,
+            saveDirectory: actualSaveDirectory,
+            format: resolvedFormat,
+            prefetchedContentTask: prefetchedContentTask,
+            onSessionEnded: {
+              hiddenWindowSession.restore()
+            }
+          )
+        }
       }
-    }
   }
 
   func chooseSaveDirectory() {
@@ -1492,7 +1515,6 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     RecordingCoordinator.shared.deleteFromShortcut()
   }
 
-
   /// Toggle entry from global shortcut: stop/cancel if a recording session is active, otherwise start.
   /// Reuses `RecordingCoordinator.stopFromStatusItem()` which is state-aware
   /// (`.recording`/`.paused` → stop, `.preparing` → cancel, `.idle`/`.stopping` → no-op).
@@ -1538,81 +1560,86 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     // Use the same conditional settle delay as screenshot flows:
     // only wait when windows were actually hidden, and use 1-frame settle (~16ms)
     // instead of the previous hardcoded 200ms which caused perceptible launch lag.
-    DispatchQueue.main.asyncAfter(deadline: .now() + (hiddenWindowSession.didHideWindows ? windowHideSettleDelay : 0)) { [weak self] in
-      guard let self = self else {
-        DiagnosticLogger.shared.log(.warning, .recording, "startRecordingFlow: self deallocated")
-        hiddenWindowSession.restore()
-        AreaSelectionController.shared.cancelSelection()
-        return
-      }
+    DispatchQueue.main
+      .asyncAfter(deadline: .now() + (hiddenWindowSession.didHideWindows ? windowHideSettleDelay : 0)) { [weak self] in
+        guard let self else {
+          DiagnosticLogger.shared.log(.warning, .recording, "startRecordingFlow: self deallocated")
+          hiddenWindowSession.restore()
+          AreaSelectionController.shared.cancelSelection()
+          return
+        }
 
-      // Check for saved recording area - restore if enabled and available
-      let rememberLastArea = UserDefaults.standard.object(forKey: PreferencesKeys.recordingRememberLastArea) as? Bool ?? true
-      if initialInteractionMode == .manualRegion,
-         rememberLastArea,
-         let savedRect = RecordingCoordinator.shared.loadLastAreaRect() {
-        self.isAreaSelectionActive = false
-        DiagnosticLogger.shared.log(.info, .recording, "Using saved recording area", context: ["rect": "\(Int(savedRect.width))x\(Int(savedRect.height))"])
-        Task { @MainActor in
-          RecordingCoordinator.shared.showToolbar(
-            for: savedRect,
-            onSessionEnded: {
-              hiddenWindowSession.restore()
-            }
+        // Check for saved recording area - restore if enabled and available
+        let rememberLastArea = UserDefaults.standard
+          .object(forKey: PreferencesKeys.recordingRememberLastArea) as? Bool ?? true
+        if initialInteractionMode == .manualRegion,
+           rememberLastArea,
+           let savedRect = RecordingCoordinator.shared.loadLastAreaRect() {
+          isAreaSelectionActive = false
+          DiagnosticLogger.shared.log(
+            .info,
+            .recording,
+            "Using saved recording area",
+            context: ["rect": "\(Int(savedRect.width))x\(Int(savedRect.height))"]
           )
-        }
-        return
-      }
-
-      // No saved rect or disabled - start area selection
-      let applicationConfiguration = AreaSelectionApplicationConfiguration(
-        prefetchedContentTask: self.captureManager.prefetchShareableContent(),
-        excludeOwnApplication: !self.includesOwnAppInRecordings
-      )
-      AreaSelectionController.shared.startSelection(
-        mode: .recording,
-        backdrops: [:],
-        applicationConfiguration: applicationConfiguration,
-        initialInteractionMode: initialInteractionMode
-      ) { [weak self] selection in
-        guard let self = self else {
-          DiagnosticLogger.shared.log(.warning, .recording, "startRecordingFlow completion: self deallocated")
-          hiddenWindowSession.restore()
-          return
-        }
-
-        self.isAreaSelectionActive = false
-
-        guard let selection else {
-          hiddenWindowSession.restore()
-          return
-        }
-
-        Task { @MainActor in
-          switch selection.target {
-          case .rect:
+          Task { @MainActor in
             RecordingCoordinator.shared.showToolbar(
-              for: selection.rect,
-              onSessionEnded: {
-                hiddenWindowSession.restore()
-              }
-            )
-          case .window(let target):
-            RecordingCoordinator.shared.showToolbar(
-              for: selection.rect,
-              captureMode: .application,
-              windowTarget: target,
+              for: savedRect,
               onSessionEnded: {
                 hiddenWindowSession.restore()
               }
             )
           }
+          return
+        }
+
+        // No saved rect or disabled - start area selection
+        let applicationConfiguration = AreaSelectionApplicationConfiguration(
+          prefetchedContentTask: captureManager.prefetchShareableContent(),
+          excludeOwnApplication: !includesOwnAppInRecordings
+        )
+        AreaSelectionController.shared.startSelection(
+          mode: .recording,
+          backdrops: [:],
+          applicationConfiguration: applicationConfiguration,
+          initialInteractionMode: initialInteractionMode
+        ) { [weak self] selection in
+          guard let self else {
+            DiagnosticLogger.shared.log(.warning, .recording, "startRecordingFlow completion: self deallocated")
+            hiddenWindowSession.restore()
+            return
+          }
+
+          isAreaSelectionActive = false
+
+          guard let selection else {
+            hiddenWindowSession.restore()
+            return
+          }
+
+          Task { @MainActor in
+            switch selection.target {
+            case .rect:
+              RecordingCoordinator.shared.showToolbar(
+                for: selection.rect,
+                onSessionEnded: {
+                  hiddenWindowSession.restore()
+                }
+              )
+            case .window(let target):
+              RecordingCoordinator.shared.showToolbar(
+                for: selection.rect,
+                captureMode: .application,
+                windowTarget: target,
+                onSessionEnded: {
+                  hiddenWindowSession.restore()
+                }
+              )
+            }
+          }
         }
       }
-    }
   }
-
-
 
   // MARK: - Smart Element Capture
 
@@ -1726,8 +1753,6 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     return NSScreen.main?.backingScaleFactor ?? 2.0
   }
 
-
-
   // MARK: - OCR Capture
 
   func captureOCR() {
@@ -1750,139 +1775,154 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     let hiddenWindowSession = hideVisibleNormalWindowsIfNeeded(!includesOwnAppInScreenshots)
 
     // Minimal delay to ensure window is hidden when we actually hid one.
-    DispatchQueue.main.asyncAfter(deadline: .now() + (hiddenWindowSession.didHideWindows ? windowHideSettleDelay : 0)) { [weak self] in
-      guard let self = self else {
-        DiagnosticLogger.shared.log(.warning, .ocr, "captureOCR: self deallocated")
-        hiddenWindowSession.restore()
-        AreaSelectionController.shared.cancelSelection()
-        return
-      }
-
-
-
-      AreaSelectionController.shared.startSelection { [weak self] rect in
-        guard let self = self else {
-          DiagnosticLogger.shared.log(.warning, .ocr, "captureOCR completion: self deallocated")
+    DispatchQueue.main
+      .asyncAfter(deadline: .now() + (hiddenWindowSession.didHideWindows ? windowHideSettleDelay : 0)) { [weak self] in
+        guard let self else {
+          DiagnosticLogger.shared.log(.warning, .ocr, "captureOCR: self deallocated")
           hiddenWindowSession.restore()
+          AreaSelectionController.shared.cancelSelection()
           return
         }
 
-        guard let selectedRect = rect else {
-          self.isAreaSelectionActive = false
-          hiddenWindowSession.restore()
-          DiagnosticLogger.shared.log(.info, .ocr, "OCR capture cancelled")
-          return
-        }
-
-        DiagnosticLogger.shared.log(.info, .ocr, "OCR area selected", context: ["rect": "\(Int(selectedRect.width))x\(Int(selectedRect.height))"])
-        Task { @MainActor in
-          defer {
-            self.isAreaSelectionActive = false
+        AreaSelectionController.shared.startSelection { [weak self] rect in
+          guard let self else {
+            DiagnosticLogger.shared.log(.warning, .ocr, "captureOCR completion: self deallocated")
             hiddenWindowSession.restore()
+            return
           }
-          await Task.yield()
 
-          do {
-            let operationStartTime = CFAbsoluteTimeGetCurrent()
+          guard let selectedRect = rect else {
+            isAreaSelectionActive = false
+            hiddenWindowSession.restore()
+            DiagnosticLogger.shared.log(.info, .ocr, "OCR capture cancelled")
+            return
+          }
 
-            // Show menubar spinner for processing feedback
-            AppStatusBarController.shared.setProcessing(true)
+          DiagnosticLogger.shared.log(
+            .info,
+            .ocr,
+            "OCR area selected",
+            context: ["rect": "\(Int(selectedRect.width))x\(Int(selectedRect.height))"]
+          )
+          Task { @MainActor in
+            defer {
+              self.isAreaSelectionActive = false
+              hiddenWindowSession.restore()
+            }
+            await Task.yield()
 
-            // Capture the screen region
-            let captureStartTime = CFAbsoluteTimeGetCurrent()
-            guard let image = try await self.captureManager.captureAreaAsImage(
-              rect: selectedRect,
-              excludeDesktopIcons: excludeDesktopIcons,
-              excludeDesktopWidgets: excludeDesktopWidgets,
-              excludeOwnApplication: !self.includesOwnAppInScreenshots,
-              prefetchedContentTask: prefetchedContentTask
-            ) else {
+            do {
+              let operationStartTime = CFAbsoluteTimeGetCurrent()
+
+              // Show menubar spinner for processing feedback
+              AppStatusBarController.shared.setProcessing(true)
+
+              // Capture the screen region
+              let captureStartTime = CFAbsoluteTimeGetCurrent()
+              guard let image = try await self.captureManager.captureAreaAsImage(
+                rect: selectedRect,
+                excludeDesktopIcons: excludeDesktopIcons,
+                excludeDesktopWidgets: excludeDesktopWidgets,
+                excludeOwnApplication: !self.includesOwnAppInScreenshots,
+                prefetchedContentTask: prefetchedContentTask
+              ) else {
+                AppStatusBarController.shared.setProcessing(false)
+                AppToastManager.shared.show(
+                  message: L10n.ScreenCapture.unableToCaptureSelectedArea,
+                  style: .error,
+                  position: .bottomCenter
+                )
+                QuickAccessSound.failed.play()
+                return
+              }
+              let captureDurationMs = Self.elapsedMilliseconds(since: captureStartTime)
+
+              let processingStartTime = CFAbsoluteTimeGetCurrent()
+              async let qrResultTask = self.detectQRCodes(in: image)
+              async let recognizedTextTask = self.recognizeOCRText(in: image)
+              let (qrResult, recognizedText) = await (qrResultTask, recognizedTextTask)
+              let processingDurationMs = Self.elapsedMilliseconds(since: processingStartTime)
+              let totalDurationMs = Self.elapsedMilliseconds(since: operationStartTime)
+
+              let clipboardText = OCRQRPayloadComposer.compose(
+                recognizedText: recognizedText,
+                qrDetections: qrResult.detections,
+                qrSectionTitle: L10n.OCR.qrCodesLabel
+              )
+              let performanceContext = [
+                "captureMs": captureDurationMs,
+                "processingMs": processingDurationMs,
+                "totalMs": totalDurationMs,
+              ]
+
               AppStatusBarController.shared.setProcessing(false)
+
+              guard let clipboardText else {
+                if qrResult.unsupportedPayloadCount > 0 {
+                  var context = performanceContext
+                  context["unsupportedQRCount"] = "\(qrResult.unsupportedPayloadCount)"
+                  DiagnosticLogger.shared.log(
+                    .warning,
+                    .ocr,
+                    "OCR QR capture found unsupported QR payloads",
+                    context: context
+                  )
+                  AppToastManager.shared.show(
+                    message: L10n.OCR.qrTextOnlyUnsupported,
+                    style: .warning,
+                    position: .bottomCenter
+                  )
+                } else {
+                  DiagnosticLogger.shared.log(
+                    .warning,
+                    .ocr,
+                    "OCR capture failed: no text or QR payload found",
+                    context: performanceContext
+                  )
+                  AppToastManager.shared.show(
+                    message: L10n.OCR.noTextFound,
+                    style: .warning,
+                    position: .bottomCenter
+                  )
+                }
+                QuickAccessSound.failed.play()
+                return
+              }
+
+              let pasteboard = NSPasteboard.general
+              pasteboard.clearContents()
+              pasteboard.setString(clipboardText, forType: .string)
+
+              var successContext = performanceContext
+              successContext["chars"] = "\(clipboardText.count)"
+              successContext["qrCount"] = "\(qrResult.detections.count)"
+              successContext["unsupportedQRCount"] = "\(qrResult.unsupportedPayloadCount)"
+              DiagnosticLogger.shared.log(.info, .ocr, "OCR text copied to clipboard", context: successContext)
+              let showOCRNotification = UserDefaults.standard
+                .object(forKey: PreferencesKeys.ocrSuccessNotificationEnabled) as? Bool ?? false
+              if showOCRNotification {
+                AppToastManager.shared.show(
+                  message: L10n.Common.copiedToClipboard,
+                  style: .success,
+                  position: .bottomCenter
+                )
+                QuickAccessSound.complete.play()
+              }
+
+            } catch {
+              // Error feedback
+              AppStatusBarController.shared.setProcessing(false)
+              DiagnosticLogger.shared.logError(.ocr, error, "OCR capture failed")
               AppToastManager.shared.show(
-                message: L10n.ScreenCapture.unableToCaptureSelectedArea,
+                message: error.localizedDescription,
                 style: .error,
                 position: .bottomCenter
               )
               QuickAccessSound.failed.play()
-              return
             }
-            let captureDurationMs = Self.elapsedMilliseconds(since: captureStartTime)
-
-            let processingStartTime = CFAbsoluteTimeGetCurrent()
-            async let qrResultTask = self.detectQRCodes(in: image)
-            async let recognizedTextTask = self.recognizeOCRText(in: image)
-            let (qrResult, recognizedText) = await (qrResultTask, recognizedTextTask)
-            let processingDurationMs = Self.elapsedMilliseconds(since: processingStartTime)
-            let totalDurationMs = Self.elapsedMilliseconds(since: operationStartTime)
-
-            let clipboardText = OCRQRPayloadComposer.compose(
-              recognizedText: recognizedText,
-              qrDetections: qrResult.detections,
-              qrSectionTitle: L10n.OCR.qrCodesLabel
-            )
-            let performanceContext = [
-              "captureMs": captureDurationMs,
-              "processingMs": processingDurationMs,
-              "totalMs": totalDurationMs
-            ]
-
-            AppStatusBarController.shared.setProcessing(false)
-
-            guard let clipboardText else {
-              if qrResult.unsupportedPayloadCount > 0 {
-                var context = performanceContext
-                context["unsupportedQRCount"] = "\(qrResult.unsupportedPayloadCount)"
-                DiagnosticLogger.shared.log(.warning, .ocr, "OCR QR capture found unsupported QR payloads", context: context)
-                AppToastManager.shared.show(
-                  message: L10n.OCR.qrTextOnlyUnsupported,
-                  style: .warning,
-                  position: .bottomCenter
-                )
-              } else {
-                DiagnosticLogger.shared.log(.warning, .ocr, "OCR capture failed: no text or QR payload found", context: performanceContext)
-                AppToastManager.shared.show(
-                  message: L10n.OCR.noTextFound,
-                  style: .warning,
-                  position: .bottomCenter
-                )
-              }
-              QuickAccessSound.failed.play()
-              return
-            }
-
-            let pasteboard = NSPasteboard.general
-            pasteboard.clearContents()
-            pasteboard.setString(clipboardText, forType: .string)
-
-            var successContext = performanceContext
-            successContext["chars"] = "\(clipboardText.count)"
-            successContext["qrCount"] = "\(qrResult.detections.count)"
-            successContext["unsupportedQRCount"] = "\(qrResult.unsupportedPayloadCount)"
-            DiagnosticLogger.shared.log(.info, .ocr, "OCR text copied to clipboard", context: successContext)
-            let showOCRNotification = UserDefaults.standard.object(forKey: PreferencesKeys.ocrSuccessNotificationEnabled) as? Bool ?? false
-            if showOCRNotification {
-              AppToastManager.shared.show(
-                message: L10n.Common.copiedToClipboard,
-                style: .success,
-                position: .bottomCenter
-              )
-              QuickAccessSound.complete.play()
-            }
-
-          } catch {
-            // Error feedback
-            AppStatusBarController.shared.setProcessing(false)
-            DiagnosticLogger.shared.logError(.ocr, error, "OCR capture failed")
-            AppToastManager.shared.show(
-              message: error.localizedDescription,
-              style: .error,
-              position: .bottomCenter
-            )
-            QuickAccessSound.failed.play()
           }
         }
       }
-    }
   }
 
   private func detectQRCodes(in image: CGImage) async -> QRCodeDetectionResult {
@@ -1904,7 +1944,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
             "payloadTypes": result.detections
               .map(\.classification.diagnosticName)
               .joined(separator: ","),
-            "durationMs": Self.elapsedMilliseconds(since: startTime)
+            "durationMs": Self.elapsedMilliseconds(since: startTime),
           ]
         )
       } else {
@@ -1990,7 +2030,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
 
     guard
       let resolvedSaveDirectory = fileAccessManager.ensureExportDirectoryForOperation(
-        promptMessage: L10n.Recording.chooseSaveLocationMessage)
+        promptMessage: L10n.Recording.chooseSaveLocationMessage
+      )
     else {
       lastCaptureResult = .failure(.saveFailed(L10n.ScreenCapture.saveLocationPermissionRequired))
       return
@@ -2010,129 +2051,129 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     // Hide only normal-level app windows (not overlay panels)
     let hiddenWindowSession = hideVisibleNormalWindowsIfNeeded(!includesOwnAppInScreenshots)
 
-    DispatchQueue.main.asyncAfter(deadline: .now() + (hiddenWindowSession.didHideWindows ? windowHideSettleDelay : 0)) { [weak self] in
-      guard let self = self else {
-        DiagnosticLogger.shared.log(.warning, .capture, "captureObjectCutout: self deallocated")
-        hiddenWindowSession.restore()
-        AreaSelectionController.shared.cancelSelection()
-        return
-      }
-
-      AreaSelectionController.shared.startSelection { [weak self] rect in
-        guard let self = self else {
-          DiagnosticLogger.shared.log(.warning, .capture, "captureObjectCutout completion: self deallocated")
+    DispatchQueue.main
+      .asyncAfter(deadline: .now() + (hiddenWindowSession.didHideWindows ? windowHideSettleDelay : 0)) { [weak self] in
+        guard let self else {
+          DiagnosticLogger.shared.log(.warning, .capture, "captureObjectCutout: self deallocated")
           hiddenWindowSession.restore()
+          AreaSelectionController.shared.cancelSelection()
           return
         }
 
-        guard let selectedRect = rect else {
-          self.isAreaSelectionActive = false
-          hiddenWindowSession.restore()
-          DiagnosticLogger.shared.log(.info, .capture, "Object cutout capture cancelled")
-          self.lastCaptureResult = .failure(.cancelled)
-          return
-        }
-
-        Task { @MainActor in
-          defer {
-            self.isAreaSelectionActive = false
+        AreaSelectionController.shared.startSelection { [weak self] rect in
+          guard let self else {
+            DiagnosticLogger.shared.log(.warning, .capture, "captureObjectCutout completion: self deallocated")
             hiddenWindowSession.restore()
+            return
           }
 
-          self.isCapturing = true
-          await Task.yield()
+          guard let selectedRect = rect else {
+            isAreaSelectionActive = false
+            hiddenWindowSession.restore()
+            DiagnosticLogger.shared.log(.info, .capture, "Object cutout capture cancelled")
+            lastCaptureResult = .failure(.cancelled)
+            return
+          }
 
-          do {
-            guard let capturedImage = try await self.captureManager.captureAreaAsImage(
-              rect: selectedRect,
-              excludeDesktopIcons: excludeDesktopIcons,
-              excludeDesktopWidgets: excludeDesktopWidgets,
-              excludeOwnApplication: !self.includesOwnAppInScreenshots,
-              prefetchedContentTask: prefetchedContentTask
-            ) else {
-              self.isCapturing = false
-              self.lastCaptureResult = .failure(.captureFailed(L10n.ScreenCapture.unableToCaptureSelectedArea))
-              AppToastManager.shared.show(
-                message: L10n.ScreenCapture.unableToCaptureSelectedArea,
-                style: .error,
-                position: .bottomCenter
-              )
-              QuickAccessSound.failed.play()
-              return
+          Task { @MainActor in
+            defer {
+              self.isAreaSelectionActive = false
+              hiddenWindowSession.restore()
             }
 
-            let cutoutResult = try await ForegroundCutoutService.shared.extractForegroundResult(
-              from: capturedImage
-            )
-            let (outputImage, didAutoCrop) = self.resolveObjectCutoutOutputImage(
-              from: cutoutResult,
-              autoCropEnabled: self.isBackgroundCutoutAutoCropEnabled
-            )
-            DiagnosticLogger.shared.log(
-              .info,
-              .capture,
-              "Object cutout auto-crop evaluation",
-              context: [
-                "autoCropEnabled": "\(self.isBackgroundCutoutAutoCropEnabled)",
-                "decision": cutoutResult.autoCropDecision.rawValue,
-                "autoCropApplied": "\(didAutoCrop)"
-              ]
-            )
+            self.isCapturing = true
+            await Task.yield()
 
-            // Transparency cannot be stored in JPEG. For this mode we force alpha-capable output.
-            let output = self.resolvedCutoutOutputFormat()
-            if output.didOverrideFromJPEG {
+            do {
+              guard let capturedImage = try await self.captureManager.captureAreaAsImage(
+                rect: selectedRect,
+                excludeDesktopIcons: excludeDesktopIcons,
+                excludeDesktopWidgets: excludeDesktopWidgets,
+                excludeOwnApplication: !self.includesOwnAppInScreenshots,
+                prefetchedContentTask: prefetchedContentTask
+              ) else {
+                self.isCapturing = false
+                self.lastCaptureResult = .failure(.captureFailed(L10n.ScreenCapture.unableToCaptureSelectedArea))
+                AppToastManager.shared.show(
+                  message: L10n.ScreenCapture.unableToCaptureSelectedArea,
+                  style: .error,
+                  position: .bottomCenter
+                )
+                QuickAccessSound.failed.play()
+                return
+              }
+
+              let cutoutResult = try await ForegroundCutoutService.shared.extractForegroundResult(
+                from: capturedImage
+              )
+              let (outputImage, didAutoCrop) = self.resolveObjectCutoutOutputImage(
+                from: cutoutResult,
+                autoCropEnabled: self.isBackgroundCutoutAutoCropEnabled
+              )
               DiagnosticLogger.shared.log(
-                .warning,
+                .info,
                 .capture,
-                "Object cutout format overridden to PNG because JPEG does not support transparency"
+                "Object cutout auto-crop evaluation",
+                context: [
+                  "autoCropEnabled": "\(self.isBackgroundCutoutAutoCropEnabled)",
+                  "decision": cutoutResult.autoCropDecision.rawValue,
+                  "autoCropApplied": "\(didAutoCrop)",
+                ]
               )
-            }
 
-            let actualSaveDirectory = self.tempCaptureManager.resolveSaveDirectory(
-              for: .screenshot,
-              exportDirectory: resolvedSaveDirectory
-            )
-            let cutoutScaleFactor: CGFloat
-            if selectedRect.width > 0 {
-              cutoutScaleFactor = CGFloat(capturedImage.width) / selectedRect.width
-            } else if selectedRect.height > 0 {
-              cutoutScaleFactor = CGFloat(capturedImage.height) / selectedRect.height
-            } else {
-              cutoutScaleFactor = NSScreen.main?.backingScaleFactor ?? 2.0
-            }
+              // Transparency cannot be stored in JPEG. For this mode we force alpha-capable output.
+              let output = self.resolvedCutoutOutputFormat()
+              if output.didOverrideFromJPEG {
+                DiagnosticLogger.shared.log(
+                  .warning,
+                  .capture,
+                  "Object cutout format overridden to PNG because JPEG does not support transparency"
+                )
+              }
 
-            let result = await self.captureManager.saveProcessedImage(
-              outputImage,
-              to: actualSaveDirectory,
-              format: output.format,
-              scaleFactor: cutoutScaleFactor,
-              context: captureContext
-            )
-            self.lastCaptureResult = result
-            self.isCapturing = false
-
-            switch result {
-            case .success:
-              SoundManager.playScreenshotCapture()
-            case .failure(let error):
-              AppToastManager.shared.show(
-                message: error.localizedDescription,
-                style: .error,
-                position: .bottomCenter
+              let actualSaveDirectory = self.tempCaptureManager.resolveSaveDirectory(
+                for: .screenshot,
+                exportDirectory: resolvedSaveDirectory
               )
+              let cutoutScaleFactor: CGFloat = if selectedRect.width > 0 {
+                CGFloat(capturedImage.width) / selectedRect.width
+              } else if selectedRect.height > 0 {
+                CGFloat(capturedImage.height) / selectedRect.height
+              } else {
+                NSScreen.main?.backingScaleFactor ?? 2.0
+              }
+
+              let result = await self.captureManager.saveProcessedImage(
+                outputImage,
+                to: actualSaveDirectory,
+                format: output.format,
+                scaleFactor: cutoutScaleFactor,
+                context: captureContext
+              )
+              self.lastCaptureResult = result
+              self.isCapturing = false
+
+              switch result {
+              case .success:
+                SoundManager.playScreenshotCapture()
+              case .failure(let error):
+                AppToastManager.shared.show(
+                  message: error.localizedDescription,
+                  style: .error,
+                  position: .bottomCenter
+                )
+                QuickAccessSound.failed.play()
+              }
+            } catch {
+              self.isCapturing = false
+              self.lastCaptureResult = .failure(.captureFailed(error.localizedDescription))
+              self.showCutoutFailureToast(for: error)
+              DiagnosticLogger.shared.logError(.capture, error, "Object cutout capture failed")
               QuickAccessSound.failed.play()
             }
-          } catch {
-            self.isCapturing = false
-            self.lastCaptureResult = .failure(.captureFailed(error.localizedDescription))
-            self.showCutoutFailureToast(for: error)
-            DiagnosticLogger.shared.logError(.capture, error, "Object cutout capture failed")
-            QuickAccessSound.failed.play()
           }
         }
       }
-    }
   }
 
   private func resolveObjectCutoutOutputImage(

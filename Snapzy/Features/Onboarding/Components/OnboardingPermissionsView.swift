@@ -1,19 +1,19 @@
 //
-//  PermissionsView.swift
+//  OnboardingPermissionsView.swift
 //  Snapzy
 //
 //  Permissions grant screen for onboarding flow — dark/frosted theme
 //
 
-import AVFoundation
 import ApplicationServices
+import AVFoundation
 import SwiftUI
 
 struct PermissionsView: View {
   @ObservedObject var screenCaptureManager: ScreenCaptureManager
   @ObservedObject private var identityManager = AppIdentityManager.shared
   @EnvironmentObject private var onboardingLocalization: OnboardingLocalizationController
-  var onBack: (() -> Void)? = nil
+  var onBack: (() -> Void)?
   let onNext: () -> Void
 
   @State private var microphoneGranted = false
@@ -21,7 +21,7 @@ struct PermissionsView: View {
   @State private var exportFolderGranted = false
   private let fileAccessManager = SandboxFileAccessManager.shared
 
-  // System Settings URLs
+  /// System Settings URLs
   private let microphoneURL =
     "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone"
   private let accessibilityURL =
@@ -33,7 +33,6 @@ struct PermissionsView: View {
 
   var body: some View {
     OnboardingStepContainer(onBack: onBack) {
-
       // Header
       Image(systemName: "lock.shield")
         .font(.system(size: 48))
@@ -171,22 +170,22 @@ struct PermissionsView: View {
   private var screenRecordingDescription: String {
     switch screenCaptureManager.permissionStatus {
     case .granted:
-      return requiredForCapturesTitle
+      requiredForCapturesTitle
     case .notGranted:
-      return requiredForCapturesTitle
+      requiredForCapturesTitle
     case .grantedButUnavailableDueToAppIdentity:
-      return screenRecordingIdentityBlockedTitle
+      screenRecordingIdentityBlockedTitle
     }
   }
 
   private var screenRecordingStatus: PermissionRowStatus {
     switch screenCaptureManager.permissionStatus {
     case .granted:
-      return .granted
+      .granted
     case .notGranted:
-      return .needsAction(buttonTitle: grantAccessTitle)
+      .needsAction(buttonTitle: grantAccessTitle)
     case .grantedButUnavailableDueToAppIdentity:
-      return .blocked(label: unavailableTitle, buttonTitle: refreshStatusTitle)
+      .blocked(label: unavailableTitle, buttonTitle: refreshStatusTitle)
     }
   }
 
@@ -239,27 +238,27 @@ struct PermissionsView: View {
   private func localizedIdentityIssue(_ issue: AppIdentityIssue) -> String {
     switch issue {
     case .unexpectedBundleIdentifier(let bundleIdentifier):
-      return onboardingLocalization.format(
+      onboardingLocalization.format(
         "app-identity.unexpected-bundle-id",
         defaultValue: "Expected bundle ID %@, found %@.",
         comment: "Identity issue message. First %@ is expected bundle identifier. Second %@ is current bundle identifier.",
         arguments: [AppBundleIdentity.expected, bundleIdentifier ?? "missing"]
       )
     case .invalidBundleSignature:
-      return onboardingLocalization.string(
+      onboardingLocalization.string(
         "app-identity.invalid-signature",
         defaultValue: "This app bundle does not pass macOS code-signature validation.",
         comment: "Identity issue message when bundle signature validation fails"
       )
     case .outsideApplications(let bundleURL):
-      return onboardingLocalization.format(
+      onboardingLocalization.format(
         "app-identity.outside-applications",
         defaultValue: "Install Snapzy in /Applications before granting permissions. Current path: %@",
         comment: "Identity issue message. %@ is the current app bundle path.",
         arguments: [bundleURL.path]
       )
     case .quarantined:
-      return onboardingLocalization.string(
+      onboardingLocalization.string(
         "app-identity.quarantined",
         defaultValue: "This app still has the macOS quarantine flag. Reinstall with the installer script or remove quarantine before granting permissions.",
         comment: "Identity issue message when app is quarantined"
@@ -370,8 +369,6 @@ struct PermissionsView: View {
       comment: "Warning title when app identity health issues block permission usage"
     )
   }
-
-
 
   private var chooseFolderMessageTitle: String {
     onboardingLocalization.string(

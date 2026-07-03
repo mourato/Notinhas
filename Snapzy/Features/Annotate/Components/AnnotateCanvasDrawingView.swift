@@ -1,5 +1,5 @@
 //
-//  CanvasDrawingView.swift
+//  AnnotateCanvasDrawingView.swift
 //  Snapzy
 //
 //  NSViewRepresentable wrapper for the drawing canvas
@@ -15,14 +15,14 @@ struct CanvasDrawingView: NSViewRepresentable {
   var displayScale: CGFloat = 1.0
   var canvasBounds: CGRect
 
-  func makeNSView(context: Context) -> DrawingCanvasNSView {
+  func makeNSView(context _: Context) -> DrawingCanvasNSView {
     let view = DrawingCanvasNSView(state: state)
     view.displayScale = displayScale
     view.canvasBounds = canvasBounds
     return view
   }
 
-  func updateNSView(_ nsView: DrawingCanvasNSView, context: Context) {
+  func updateNSView(_ nsView: DrawingCanvasNSView, context _: Context) {
     if nsView.state !== state {
       nsView.state = state
     }
@@ -55,6 +55,7 @@ final class DrawingCanvasNSView: NSView {
       invalidateDrawing()
     }
   }
+
   var displayScale: CGFloat = 1.0
   var canvasBounds: CGRect = .zero
   private let shortcutManager = AnnotateShortcutManager.shared
@@ -66,10 +67,10 @@ final class DrawingCanvasNSView: NSView {
 
   // Selection and manipulation state
   private var isDraggingAnnotation = false
-  private var draggingAnnotationId: UUID?  // Local tracking to avoid async race
+  private var draggingAnnotationId: UUID? // Local tracking to avoid async race
   private var draggingAnnotationIds: Set<UUID> = []
   private var isResizingAnnotation = false
-  private var resizingAnnotationId: UUID?  // Local tracking to avoid async race
+  private var resizingAnnotationId: UUID? // Local tracking to avoid async race
   private var activeResizeHandle: ResizeHandle?
   private var dragOffset: CGPoint = .zero
   private var originalBounds: CGRect = .zero
@@ -103,7 +104,7 @@ final class DrawingCanvasNSView: NSView {
   }
 
   @available(*, unavailable)
-  required init?(coder: NSCoder) {
+  required init?(coder _: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
 
@@ -147,14 +148,16 @@ final class DrawingCanvasNSView: NSView {
 
     DispatchQueue.main.async { [weak self] in
       guard let self else { return }
-      self.isDisplayInvalidationScheduled = false
-      self.invalidateDrawing()
+      isDisplayInvalidationScheduled = false
+      invalidateDrawing()
     }
   }
 
   // MARK: - First Responder
 
-  override var acceptsFirstResponder: Bool { true }
+  override var acceptsFirstResponder: Bool {
+    true
+  }
 
   override func keyDown(with event: NSEvent) {
     let shift = event.modifierFlags.contains(.shift)
@@ -162,7 +165,7 @@ final class DrawingCanvasNSView: NSView {
 
     switch event.keyCode {
     case 51, 117: // Delete, Forward Delete
-      if state.hasSelectedAnnotations && state.editingTextAnnotationId == nil {
+      if state.hasSelectedAnnotations, state.editingTextAnnotationId == nil {
         Task { @MainActor in
           state.deleteSelectedAnnotation()
         }
@@ -193,7 +196,7 @@ final class DrawingCanvasNSView: NSView {
       }
 
     case 126: // Arrow Up
-      if state.hasSelectedAnnotations && state.editingTextAnnotationId == nil {
+      if state.hasSelectedAnnotations, state.editingTextAnnotationId == nil {
         Task { @MainActor in
           state.nudgeSelectedAnnotation(dx: 0, dy: nudgeAmount)
         }
@@ -201,7 +204,7 @@ final class DrawingCanvasNSView: NSView {
       }
 
     case 125: // Arrow Down
-      if state.hasSelectedAnnotations && state.editingTextAnnotationId == nil {
+      if state.hasSelectedAnnotations, state.editingTextAnnotationId == nil {
         Task { @MainActor in
           state.nudgeSelectedAnnotation(dx: 0, dy: -nudgeAmount)
         }
@@ -209,7 +212,7 @@ final class DrawingCanvasNSView: NSView {
       }
 
     case 123: // Arrow Left
-      if state.hasSelectedAnnotations && state.editingTextAnnotationId == nil {
+      if state.hasSelectedAnnotations, state.editingTextAnnotationId == nil {
         Task { @MainActor in
           state.nudgeSelectedAnnotation(dx: -nudgeAmount, dy: 0)
         }
@@ -217,7 +220,7 @@ final class DrawingCanvasNSView: NSView {
       }
 
     case 124: // Arrow Right
-      if state.hasSelectedAnnotations && state.editingTextAnnotationId == nil {
+      if state.hasSelectedAnnotations, state.editingTextAnnotationId == nil {
         Task { @MainActor in
           state.nudgeSelectedAnnotation(dx: nudgeAmount, dy: 0)
         }
@@ -339,7 +342,7 @@ final class DrawingCanvasNSView: NSView {
 
   /// Convert image point to display coordinates (for rendering)
   private func imageToDisplay(_ point: CGPoint) -> CGPoint {
-    return CGPoint(
+    CGPoint(
       x: (point.x - effectiveCanvasBounds.minX) * displayScale,
       y: (point.y - effectiveCanvasBounds.minY) * displayScale
     )
@@ -347,7 +350,7 @@ final class DrawingCanvasNSView: NSView {
 
   /// Convert image rect to display coordinates
   private func imageToDisplay(_ rect: CGRect) -> CGRect {
-    return CGRect(
+    CGRect(
       x: (rect.origin.x - effectiveCanvasBounds.minX) * displayScale,
       y: (rect.origin.y - effectiveCanvasBounds.minY) * displayScale,
       width: rect.width * displayScale,
@@ -393,7 +396,7 @@ final class DrawingCanvasNSView: NSView {
   override func mouseDown(with event: NSEvent) {
     let displayPoint = convert(event.locationInWindow, from: nil)
     let imagePoint = interactionPoint(from: displayPoint)
-    dragStart = imagePoint  // Store in image coords
+    dragStart = imagePoint // Store in image coords
 
     // Handle double-click on text annotations to enter edit mode
     if event.clickCount == 2 {
@@ -426,7 +429,7 @@ final class DrawingCanvasNSView: NSView {
         isResizingAnnotation = true
         resizingAnnotationId = selectedId
         activeResizeHandle = handle
-        originalBounds = annotation.resizeBounds  // Store in image coords
+        originalBounds = annotation.resizeBounds // Store in image coords
         return
       }
     }
@@ -494,11 +497,10 @@ final class DrawingCanvasNSView: NSView {
   }
 
   private func beginAnnotationDrag(anchor annotation: AnnotationItem, at imagePoint: CGPoint) {
-    let activeIds: Set<UUID>
-    if state.isAnnotationSelected(annotation.id), !state.selectedAnnotationIds.isEmpty {
-      activeIds = state.selectedAnnotationIds
+    let activeIds: Set<UUID> = if state.isAnnotationSelected(annotation.id), !state.selectedAnnotationIds.isEmpty {
+      state.selectedAnnotationIds
     } else {
-      activeIds = [annotation.id]
+      [annotation.id]
     }
 
     isDraggingAnnotation = true
@@ -812,7 +814,7 @@ final class DrawingCanvasNSView: NSView {
       path: path,
       state: state
     )
-    if let item = item {
+    if let item {
       state.saveState()
       state.annotations.append(item)
       if case .highlight = item.type {
@@ -841,7 +843,7 @@ final class DrawingCanvasNSView: NSView {
     let item = AnnotationItem(type: .text(""), bounds: bounds, properties: properties)
     state.annotations.append(item)
     state.selectedAnnotationId = item.id
-    state.beginTextEditing(id: item.id, recordsUndo: false)  // Enter edit mode immediately
+    state.beginTextEditing(id: item.id, recordsUndo: false) // Enter edit mode immediately
   }
 
   // MARK: - Drawing
@@ -883,18 +885,22 @@ final class DrawingCanvasNSView: NSView {
     let spotlightCreationProps = state.annotationCreationProperties(for: .spotlight)
     let spotlightRegions = state.annotations.compactMap { a -> SpotlightRegion? in
       guard case .spotlight = a.type else { return nil }
-      return SpotlightRegion(rect: a.bounds, cornerRadius: a.properties.cornerRadius, opacity: a.properties.spotlightOpacity)
+      return SpotlightRegion(
+        rect: a.bounds,
+        cornerRadius: a.properties.cornerRadius,
+        opacity: a.properties.spotlightOpacity
+      )
     }
     let spotlightPreview: SpotlightRegion? = (isDrawing && state.selectedTool == .spotlight)
       ? dragStart.flatMap { s in
-          currentPath.last.map {
-            SpotlightRegion(
-              rect: CGRect(x: min(s.x, $0.x), y: min(s.y, $0.y), width: abs($0.x - s.x), height: abs($0.y - s.y)),
-              cornerRadius: spotlightCreationProps.cornerRadius,
-              opacity: spotlightCreationProps.spotlightOpacity
-            )
-          }
+        currentPath.last.map {
+          SpotlightRegion(
+            rect: CGRect(x: min(s.x, $0.x), y: min(s.y, $0.y), width: abs($0.x - s.x), height: abs($0.y - s.y)),
+            cornerRadius: spotlightCreationProps.cornerRadius,
+            opacity: spotlightCreationProps.spotlightOpacity
+          )
         }
+      }
       : nil
     SpotlightCompositor.drawOverlay(
       regions: spotlightRegions,
@@ -956,15 +962,14 @@ final class DrawingCanvasNSView: NSView {
   }
 
   private func activeInteractiveBlurAnnotationIds() -> Set<UUID> {
-    let candidateIds: Set<UUID>
-    if isResizingAnnotation {
-      candidateIds = Set(resizingAnnotationId.map { [$0] } ?? [])
+    let candidateIds: Set<UUID> = if isResizingAnnotation {
+      Set(resizingAnnotationId.map { [$0] } ?? [])
     } else if isDraggingAnnotation {
-      candidateIds = draggingAnnotationIds.isEmpty
+      draggingAnnotationIds.isEmpty
         ? Set(draggingAnnotationId.map { [$0] } ?? [])
         : draggingAnnotationIds
     } else {
-      candidateIds = []
+      []
     }
 
     return Set(candidateIds.filter { id in
@@ -975,13 +980,12 @@ final class DrawingCanvasNSView: NSView {
   }
 
   private func activeInteractiveEmbeddedImageAnnotationId() -> UUID? {
-    let candidateId: UUID?
-    if isResizingAnnotation {
-      candidateId = resizingAnnotationId
+    let candidateId: UUID? = if isResizingAnnotation {
+      resizingAnnotationId
     } else if isDraggingAnnotation {
-      candidateId = draggingAnnotationId
+      draggingAnnotationId
     } else {
-      candidateId = nil
+      nil
     }
 
     guard let id = candidateId,
@@ -1304,14 +1308,13 @@ final class DrawingCanvasNSView: NSView {
     let minSize: CGFloat = 20
 
     // Determine target aspect ratio
-    let aspectRatio: CGFloat?
-    if shiftHeld {
+    let aspectRatio: CGFloat? = if shiftHeld {
       // Lock to current aspect ratio when Shift is held
-      aspectRatio = originalCropRect.width / originalCropRect.height
+      originalCropRect.width / originalCropRect.height
     } else if state.cropAspectRatio != .free {
-      aspectRatio = state.cropAspectRatio.effectiveRatio(isPortrait: state.isCropPortraitOrientation)
+      state.cropAspectRatio.effectiveRatio(isPortrait: state.isCropPortraitOrientation)
     } else {
-      aspectRatio = nil
+      nil
     }
 
     switch handle {

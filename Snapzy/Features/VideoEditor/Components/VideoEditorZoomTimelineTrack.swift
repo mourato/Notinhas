@@ -1,5 +1,5 @@
 //
-//  ZoomTimelineTrack.swift
+//  VideoEditorZoomTimelineTrack.swift
 //  Snapzy
 //
 //  Timeline track displaying zoom segments with interactive blocks
@@ -34,9 +34,9 @@ struct ZoomTimelineTrack: View {
 
   private enum DragMode {
     case none
-    case position    // Dragging entire segment
-    case startEdge   // Dragging left edge
-    case endEdge     // Dragging right edge
+    case position // Dragging entire segment
+    case startEdge // Dragging left edge
+    case endEdge // Dragging right edge
   }
 
   private struct SegmentLayout {
@@ -367,7 +367,7 @@ struct ZoomTimelineTrack: View {
   private func interactionSegment(atX x: CGFloat) -> (segment: ZoomSegment, layout: SegmentLayout)? {
     let containing = state.zoomSegments.compactMap { segment -> (segment: ZoomSegment, layout: SegmentLayout)? in
       let segmentLayout = layout(for: segment)
-      guard x >= segmentLayout.visualStartX && x <= segmentLayout.visualEndX else {
+      guard x >= segmentLayout.visualStartX, x <= segmentLayout.visualEndX else {
         return nil
       }
       return (segment: segment, layout: segmentLayout)
@@ -517,10 +517,7 @@ private struct ZoomPlaceholderView: View {
 
 #Preview {
   ZoomTimelineTrack(
-    state: {
-      let state = VideoEditorState(url: URL(fileURLWithPath: "/tmp/test.mov"))
-      return state
-    }(),
+    state: VideoEditorState(url: URL(fileURLWithPath: "/tmp/test.mov")),
     timelineWidth: 400
   )
   .padding()

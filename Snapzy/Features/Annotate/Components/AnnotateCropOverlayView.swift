@@ -1,5 +1,5 @@
 //
-//  CropOverlayView.swift
+//  AnnotateCropOverlayView.swift
 //  Snapzy
 //
 //  Crop overlay with dimming, border, grid, dimensions, and resize handles
@@ -123,15 +123,15 @@ struct CropOverlayView: View {
 
   private func handlePosition(for handle: CropHandle, in rect: CGRect) -> CGPoint {
     switch handle {
-    case .topLeft: return CGPoint(x: rect.minX, y: rect.minY)
-    case .top: return CGPoint(x: rect.midX, y: rect.minY)
-    case .topRight: return CGPoint(x: rect.maxX, y: rect.minY)
-    case .left: return CGPoint(x: rect.minX, y: rect.midY)
-    case .right: return CGPoint(x: rect.maxX, y: rect.midY)
-    case .bottomLeft: return CGPoint(x: rect.minX, y: rect.maxY)
-    case .bottom: return CGPoint(x: rect.midX, y: rect.maxY)
-    case .bottomRight: return CGPoint(x: rect.maxX, y: rect.maxY)
-    case .body: return CGPoint(x: rect.midX, y: rect.midY)
+    case .topLeft: CGPoint(x: rect.minX, y: rect.minY)
+    case .top: CGPoint(x: rect.midX, y: rect.minY)
+    case .topRight: CGPoint(x: rect.maxX, y: rect.minY)
+    case .left: CGPoint(x: rect.minX, y: rect.midY)
+    case .right: CGPoint(x: rect.maxX, y: rect.midY)
+    case .bottomLeft: CGPoint(x: rect.minX, y: rect.maxY)
+    case .bottom: CGPoint(x: rect.midX, y: rect.maxY)
+    case .bottomRight: CGPoint(x: rect.maxX, y: rect.maxY)
+    case .body: CGPoint(x: rect.midX, y: rect.midY)
     }
   }
 }
@@ -190,7 +190,7 @@ struct CropDimOverlay: View {
 struct CropSolidMask: View {
   let cropRect: CGRect
   let containerSize: CGSize
-  // Use canvas background color for seamless masking
+  /// Use canvas background color for seamless masking
   private let maskColor = Color(nsColor: .windowBackgroundColor)
 
   var body: some View {
@@ -226,7 +226,7 @@ struct CropGridOverlay: View {
   var body: some View {
     ZStack {
       // Vertical lines (2 lines dividing into thirds)
-      ForEach(1..<3, id: \.self) { i in
+      ForEach(1 ..< 3, id: \.self) { i in
         let x = cropRect.minX + cropRect.width * CGFloat(i) / 3
         Rectangle()
           .fill(Color.white.opacity(0.4))
@@ -235,7 +235,7 @@ struct CropGridOverlay: View {
       }
 
       // Horizontal lines (2 lines dividing into thirds)
-      ForEach(1..<3, id: \.self) { i in
+      ForEach(1 ..< 3, id: \.self) { i in
         let y = cropRect.minY + cropRect.height * CGFloat(i) / 3
         Rectangle()
           .fill(Color.white.opacity(0.4))
@@ -273,33 +273,33 @@ struct CropCornerHandle: View {
 
   private var horizontalOffset: CGFloat {
     switch handle {
-    case .topLeft, .bottomLeft: return length / 2
-    case .topRight, .bottomRight: return -length / 2
-    default: return 0
+    case .topLeft, .bottomLeft: length / 2
+    case .topRight, .bottomRight: -length / 2
+    default: 0
     }
   }
 
   private var verticalOffset: CGFloat {
     switch handle {
-    case .topLeft, .topRight: return length / 2
-    case .bottomLeft, .bottomRight: return -length / 2
-    default: return 0
+    case .topLeft, .topRight: length / 2
+    case .bottomLeft, .bottomRight: -length / 2
+    default: 0
     }
   }
 
   private var horizontalBarOffset: CGFloat {
     switch handle {
-    case .topLeft, .bottomLeft: return 0
-    case .topRight, .bottomRight: return 0
-    default: return 0
+    case .topLeft, .bottomLeft: 0
+    case .topRight, .bottomRight: 0
+    default: 0
     }
   }
 
   private var verticalBarOffset: CGFloat {
     switch handle {
-    case .topLeft, .topRight: return 0
-    case .bottomLeft, .bottomRight: return 0
-    default: return 0
+    case .topLeft, .topRight: 0
+    case .bottomLeft, .bottomRight: 0
+    default: 0
     }
   }
 }

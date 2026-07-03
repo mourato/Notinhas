@@ -1,5 +1,5 @@
 //
-//  ShortcutsSettingsView.swift
+//  PreferencesShortcutsSettingsView.swift
 //  Snapzy
 //
 //  Keyboard shortcuts configuration tab
@@ -257,7 +257,11 @@ struct ShortcutsSettingsView: View {
           .font(.caption)
           .foregroundColor(.secondary)
 
-        SettingRow(icon: "keyboard", title: L10n.PreferencesShortcuts.enableShortcutsTitle, description: L10n.PreferencesShortcuts.enableShortcutsDescription) {
+        SettingRow(
+          icon: "keyboard",
+          title: L10n.PreferencesShortcuts.enableShortcutsTitle,
+          description: L10n.PreferencesShortcuts.enableShortcutsDescription
+        ) {
           Toggle("", isOn: $shortcutsEnabled)
             .labelsHidden()
             .onChange(of: shortcutsEnabled) { newValue in
@@ -734,14 +738,26 @@ struct ShortcutsSettingsView: View {
             .foregroundColor(.secondary)
 
           ReadOnlyShortcutRow(icon: "square.and.arrow.down", label: L10n.ShortcutOverlay.saveDone, shortcut: "⌘ S")
-          ReadOnlyShortcutRow(icon: "square.and.arrow.down.on.square", label: L10n.ShortcutOverlay.saveAs, shortcut: "⌘ ⇧ S")
+          ReadOnlyShortcutRow(
+            icon: "square.and.arrow.down.on.square",
+            label: L10n.ShortcutOverlay.saveAs,
+            shortcut: "⌘ ⇧ S"
+          )
           ReadOnlyShortcutRow(icon: "arrow.uturn.backward", label: L10n.ShortcutOverlay.undo, shortcut: "⌘ Z")
           ReadOnlyShortcutRow(icon: "arrow.uturn.forward", label: L10n.ShortcutOverlay.redo, shortcut: "⌘ ⇧ Z")
           ReadOnlyShortcutRow(icon: "trash", label: L10n.ShortcutOverlay.deleteAnnotation, shortcut: "⌫")
           ReadOnlyShortcutRow(icon: "escape", label: L10n.ShortcutOverlay.cancelDeselect, shortcut: "⎋")
           ReadOnlyShortcutRow(icon: "return", label: L10n.ShortcutOverlay.confirmCrop, shortcut: "↩")
-          ReadOnlyShortcutRow(icon: "arrow.up.arrow.down.arrow.left.arrow.right", label: L10n.ShortcutOverlay.nudgeAnnotation, shortcut: "← → ↑ ↓")
-          ReadOnlyShortcutRow(icon: "arrow.up.arrow.down.arrow.left.arrow.right", label: L10n.ShortcutOverlay.nudgeTenPixels, shortcut: "⇧ ← → ↑ ↓")
+          ReadOnlyShortcutRow(
+            icon: "arrow.up.arrow.down.arrow.left.arrow.right",
+            label: L10n.ShortcutOverlay.nudgeAnnotation,
+            shortcut: "← → ↑ ↓"
+          )
+          ReadOnlyShortcutRow(
+            icon: "arrow.up.arrow.down.arrow.left.arrow.right",
+            label: L10n.ShortcutOverlay.nudgeTenPixels,
+            shortcut: "⇧ ← → ↑ ↓"
+          )
         }
       }
     }
@@ -773,7 +789,7 @@ struct ShortcutsSettingsView: View {
     smartElementShortcut = .defaultSmartElement
 
     let captureKinds: [GlobalShortcutKind] = [
-      .fullscreen, .area, .areaAnnotate, .activeWindow, .scrollingCapture, .objectCutout, .ocr, .smartElement
+      .fullscreen, .area, .areaAnnotate, .activeWindow, .scrollingCapture, .objectCutout, .ocr, .smartElement,
     ]
     for kind in captureKinds {
       globalShortcutEnabled[kind] = true
@@ -1182,7 +1198,7 @@ struct ShortcutsSettingsView: View {
   private func toolContext(for tool: AnnotationToolType) -> AnnotationToolContext {
     let inScreenshot = Self.screenshotTools.contains(tool)
     let inRecording = Self.recordingTools.contains(tool)
-    if inScreenshot && inRecording { return .both }
+    if inScreenshot, inRecording { return .both }
     if inRecording { return .recordingOnly }
     return .screenshotOnly
   }
@@ -1314,11 +1330,11 @@ private struct CaptureOverlayShortcutRecorderRow: View {
   private func isClearShortcutEvent(_ event: NSEvent) -> Bool {
     switch Int(event.keyCode) {
     case kVK_Delete, kVK_ForwardDelete:
-      return event.modifierFlags
+      event.modifierFlags
         .intersection([.command, .control, .option, .shift])
         .isEmpty
     default:
-      return false
+      false
     }
   }
 
@@ -1352,7 +1368,7 @@ private struct PreferencesGuideStep: View {
             .fill(Color.orange.opacity(0.15))
         )
 
-      Text(.init(text))  // Supports **bold** markdown
+      Text(.init(text)) // Supports **bold** markdown
         .font(.system(size: 12))
         .foregroundColor(.primary)
     }

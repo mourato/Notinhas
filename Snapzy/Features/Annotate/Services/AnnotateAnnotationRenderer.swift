@@ -1,5 +1,5 @@
 //
-//  AnnotationRenderer.swift
+//  AnnotateAnnotationRenderer.swift
 //  Snapzy
 //
 //  Handles rendering annotations to CGContext
@@ -283,7 +283,7 @@ struct AnnotationRenderer {
     let fontSize = min(max(rect.height * 0.5, 11), 56)
     let attributes: [NSAttributedString.Key: Any] = [
       .font: NSFont.systemFont(ofSize: fontSize, weight: .bold),
-      .foregroundColor: NSColor.white
+      .foregroundColor: NSColor.white,
     ]
     let text = "\(value)" as NSString
     let textSize = text.size(withAttributes: attributes)
@@ -317,7 +317,7 @@ struct AnnotationRenderer {
     let attributes: [NSAttributedString.Key: Any] = [
       .font: font,
       .foregroundColor: NSColor(properties.strokeColor),
-      .paragraphStyle: paragraphStyle
+      .paragraphStyle: paragraphStyle,
     ]
 
     let textBounds = bounds.standardized
@@ -353,13 +353,31 @@ struct AnnotationRenderer {
 
     switch properties.watermarkStyle {
     case .single:
-      drawCenteredWatermarkText(text, textSize: textSize, attributes: attributes, in: visibleBounds, rotationDegrees: properties.rotationDegrees)
+      drawCenteredWatermarkText(
+        text,
+        textSize: textSize,
+        attributes: attributes,
+        in: visibleBounds,
+        rotationDegrees: properties.rotationDegrees
+      )
 
     case .diagonal:
-      drawCenteredWatermarkText(text, textSize: textSize, attributes: attributes, in: visibleBounds, rotationDegrees: properties.rotationDegrees)
+      drawCenteredWatermarkText(
+        text,
+        textSize: textSize,
+        attributes: attributes,
+        in: visibleBounds,
+        rotationDegrees: properties.rotationDegrees
+      )
 
     case .tiled:
-      drawTiledWatermarkText(text, textSize: textSize, attributes: attributes, in: visibleBounds, rotationDegrees: properties.rotationDegrees)
+      drawTiledWatermarkText(
+        text,
+        textSize: textSize,
+        attributes: attributes,
+        in: visibleBounds,
+        rotationDegrees: properties.rotationDegrees
+      )
     }
 
     context.restoreGState()
@@ -375,7 +393,7 @@ struct AnnotationRenderer {
       .font: font,
       .foregroundColor: color,
       .kern: font.pointSize * 0.04,
-      .shadow: shadow
+      .shadow: shadow,
     ]
   }
 
@@ -462,7 +480,7 @@ struct AnnotationRenderer {
     let visibleBounds = bounds.standardized
     guard visibleBounds.width > 0, visibleBounds.height > 0 else { return }
 
-    guard let sourceImage = sourceImage else {
+    guard let sourceImage else {
       // Fallback when no source image available
       BlurEffectRenderer.drawBlurPreview(
         in: context,
@@ -609,7 +627,7 @@ struct AnnotationRenderer {
       return
     }
 
-    if let sourceImage = sourceImage {
+    if let sourceImage {
       let effectValue = blurEffectValue(for: blurType, controlValue: controlValue)
       // Show preview based on selected blur type
       switch blurType {
@@ -681,21 +699,21 @@ struct AnnotationRenderer {
   private func blurEffectValue(for blurType: BlurType, controlValue: CGFloat) -> CGFloat {
     switch blurType {
     case .pixelated:
-      return AnnotationProperties.pixelatedBlurSize(for: controlValue)
+      AnnotationProperties.pixelatedBlurSize(for: controlValue)
     case .gaussian:
-      return AnnotationProperties.gaussianBlurRadius(for: controlValue)
+      AnnotationProperties.gaussianBlurRadius(for: controlValue)
     case .hexagonal:
-      return AnnotationProperties.hexagonalScale(for: controlValue)
+      AnnotationProperties.hexagonalScale(for: controlValue)
     case .crystallized:
-      return AnnotationProperties.crystallizeRadius(for: controlValue)
+      AnnotationProperties.crystallizeRadius(for: controlValue)
     case .pointillism:
-      return AnnotationProperties.pointillismRadius(for: controlValue)
+      AnnotationProperties.pointillismRadius(for: controlValue)
     case .halftone:
-      return AnnotationProperties.halftoneWidth(for: controlValue)
+      AnnotationProperties.halftoneWidth(for: controlValue)
     case .tape:
-      return AnnotationProperties.tapePatternSpacing(for: controlValue)
+      AnnotationProperties.tapePatternSpacing(for: controlValue)
     case .washi:
-      return AnnotationProperties.washiPatternSpacing(for: controlValue)
+      AnnotationProperties.washiPatternSpacing(for: controlValue)
     }
   }
 }

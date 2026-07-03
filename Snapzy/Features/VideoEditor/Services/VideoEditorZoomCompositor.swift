@@ -1,5 +1,5 @@
 //
-//  ZoomCompositor.swift
+//  VideoEditorZoomCompositor.swift
 //  Snapzy
 //
 //  Applies zoom effects to video during export using AVVideoComposition
@@ -12,7 +12,6 @@ import SwiftUI
 
 /// Compositor that applies zoom effects during video export
 class ZoomCompositor {
-
   // MARK: - Properties
 
   private let zooms: [ZoomSegment]
@@ -39,7 +38,7 @@ class ZoomCompositor {
     backgroundPadding: CGFloat = 0,
     cornerRadius: CGFloat = 0
   ) {
-    self.zooms = zooms.filter { $0.isEnabled }
+    self.zooms = zooms.filter(\.isEnabled)
     self.autoFocusPaths = autoFocusPaths
     self.renderSize = renderSize
     self.frameDuration = frameDuration
@@ -49,13 +48,13 @@ class ZoomCompositor {
     self.cornerRadius = cornerRadius
 
     // Calculate padded render size
-    if backgroundStyle != .none && backgroundPadding > 0 {
-      self.paddedRenderSize = CGSize(
+    if backgroundStyle != .none, backgroundPadding > 0 {
+      paddedRenderSize = CGSize(
         width: renderSize.width + (backgroundPadding * 2),
         height: renderSize.height + (backgroundPadding * 2)
       )
     } else {
-      self.paddedRenderSize = renderSize
+      paddedRenderSize = renderSize
     }
   }
 
@@ -115,11 +114,11 @@ class ZoomCompositor {
     var errorDescription: String? {
       switch self {
       case .noVideoTrack:
-        return L10n.ZoomCompositor.noVideoTrack
+        L10n.ZoomCompositor.noVideoTrack
       case .compositionFailed:
-        return L10n.ZoomCompositor.compositionFailed
+        L10n.ZoomCompositor.compositionFailed
       case .trackMismatch(let expected, let available):
-        return L10n.ZoomCompositor.trackMismatch(
+        L10n.ZoomCompositor.trackMismatch(
           String(expected),
           available.map(String.init(describing:)).joined(separator: ", ")
         )
@@ -143,14 +142,23 @@ class ZoomVideoCompositionInstruction: NSObject, AVVideoCompositionInstructionPr
   let cornerRadius: CGFloat
   let paddedRenderSize: CGSize
 
-  var enablePostProcessing: Bool { true }
-  var containsTweening: Bool { true }
+  var enablePostProcessing: Bool {
+    true
+  }
+
+  var containsTweening: Bool {
+    true
+  }
+
   var requiredSourceTrackIDs: [NSValue]? {
     // Must return NSNumber (which is a subclass of NSValue) for track IDs
     // AVFoundation calls intValue on these objects
-    return [NSNumber(value: trackID)]
+    [NSNumber(value: trackID)]
   }
-  var passthroughTrackID: CMPersistentTrackID { kCMPersistentTrackID_Invalid }
+
+  var passthroughTrackID: CMPersistentTrackID {
+    kCMPersistentTrackID_Invalid
+  }
 
   init(
     timeRange: CMTimeRange,
@@ -173,9 +181,9 @@ class ZoomVideoCompositionInstruction: NSObject, AVVideoCompositionInstructionPr
     self.backgroundStyle = backgroundStyle
     switch backgroundStyle {
     case .none:
-      self.hasBackground = false
+      hasBackground = false
     default:
-      self.hasBackground = backgroundPadding > 0
+      hasBackground = backgroundPadding > 0
     }
     self.backgroundPadding = backgroundPadding
     self.cornerRadius = cornerRadius
@@ -189,23 +197,28 @@ class ZoomVideoCompositionInstruction: NSObject, AVVideoCompositionInstructionPr
 class ZoomVideoCompositorClass: NSObject, AVVideoCompositing {
   private let minimumRenderableZoomLevel: CGFloat = 1.0001
 
-  // Required properties
+  /// Required properties
   var sourcePixelBufferAttributes: [String: any Sendable]? {
     [
       kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-      kCVPixelBufferMetalCompatibilityKey as String: true
+      kCVPixelBufferMetalCompatibilityKey as String: true,
     ]
   }
 
   var requiredPixelBufferAttributesForRenderContext: [String: any Sendable] {
     [
       kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-      kCVPixelBufferMetalCompatibilityKey as String: true
+      kCVPixelBufferMetalCompatibilityKey as String: true,
     ]
   }
 
-  var supportsWideColorSourceFrames: Bool { false }
-  var supportsHDRSourceFrames: Bool { false }
+  var supportsWideColorSourceFrames: Bool {
+    false
+  }
+
+  var supportsHDRSourceFrames: Bool {
+    false
+  }
 
   private var renderContext: AVVideoCompositionRenderContext?
   private let ciContext = CIContext(options: [.useSoftwareRenderer: false])
@@ -316,7 +329,7 @@ class ZoomVideoCompositorClass: NSObject, AVVideoCompositing {
       || abs(sourceSize.height - instruction.renderSize.height) > 0.5
 
     // If no zoom and no background, pass through original frame
-    if zoomLevel <= minimumRenderableZoomLevel && !instruction.hasBackground && !needsCanvasFit {
+    if zoomLevel <= minimumRenderableZoomLevel, !instruction.hasBackground, !needsCanvasFit {
       request.finish(withComposedVideoFrame: sourceBuffer)
       return
     }
@@ -414,7 +427,7 @@ class ZoomVideoCompositorClass: NSObject, AVVideoCompositing {
     }
 
     // Create output buffer
-    guard let renderContext = renderContext else { return nil }
+    guard let renderContext else { return nil }
     guard let outputBuffer = renderContext.newPixelBuffer() else { return nil }
 
     // Render to output buffer
@@ -600,7 +613,7 @@ class ZoomVideoCompositorClass: NSObject, AVVideoCompositing {
     to sourceBuffer: CVPixelBuffer,
     zoomLevel: CGFloat,
     center: CGPoint,
-    renderSize: CGSize
+    renderSize _: CGSize
   ) -> CVPixelBuffer? {
     // Create CIImage from source buffer
     let sourceImage = CIImage(cvPixelBuffer: sourceBuffer)
@@ -624,7 +637,7 @@ class ZoomVideoCompositorClass: NSObject, AVVideoCompositing {
       .transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
 
     // Create output buffer
-    guard let renderContext = renderContext else { return nil }
+    guard let renderContext else { return nil }
     guard let outputBuffer = renderContext.newPixelBuffer() else { return nil }
 
     // Render to output buffer

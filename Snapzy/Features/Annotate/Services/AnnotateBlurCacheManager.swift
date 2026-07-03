@@ -1,5 +1,5 @@
 //
-//  BlurCacheManager.swift
+//  AnnotateBlurCacheManager.swift
 //  Snapzy
 //
 //  Manages cached blur images for performance optimization
@@ -217,21 +217,21 @@ final class BlurCacheManager {
 
       DispatchQueue.main.async { [weak self] in
         guard let self,
-              let current = self.inFlightRenders[request.annotationId],
+              let current = inFlightRenders[request.annotationId],
               current.token == token else { return }
-        self.inFlightRenders.removeValue(forKey: request.annotationId)
+        inFlightRenders.removeValue(forKey: request.annotationId)
 
         if let rendered {
-          self.store(
+          store(
             rendered,
             for: request.annotationId,
             descriptor: request.descriptor
           )
-          self.onRenderCompleted?(request.annotationId, request.descriptor.bounds)
+          onRenderCompleted?(request.annotationId, request.descriptor.bounds)
         }
 
-        if let pendingRequest = self.pendingRenders.removeValue(forKey: request.annotationId) {
-          self.startAsyncRender(pendingRequest)
+        if let pendingRequest = pendingRenders.removeValue(forKey: request.annotationId) {
+          startAsyncRender(pendingRequest)
         }
       }
     }
@@ -371,8 +371,8 @@ final class BlurCacheManager {
   private func trimCacheIfNeeded(protectedId: UUID) {
     while totalCacheCost > maxTotalCachedPixels,
           let victim = cache
-            .filter({ $0.key != protectedId })
-            .min(by: { $0.value.lastAccess < $1.value.lastAccess })?.key {
+          .filter({ $0.key != protectedId })
+          .min(by: { $0.value.lastAccess < $1.value.lastAccess })?.key {
       cache.removeValue(forKey: victim)
     }
   }

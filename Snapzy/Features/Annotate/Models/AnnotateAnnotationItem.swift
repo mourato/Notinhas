@@ -1,5 +1,5 @@
 //
-//  AnnotationItem.swift
+//  AnnotateAnnotationItem.swift
 //  Snapzy
 //
 //  Model representing a single annotation element
@@ -20,31 +20,33 @@ enum BlurType: String, CaseIterable, Identifiable, Equatable {
   case tape
   case washi
 
-  var id: String { rawValue }
+  var id: String {
+    rawValue
+  }
 
   var displayName: String {
     switch self {
-    case .pixelated: return L10n.AnnotateUI.pixelated
-    case .gaussian: return L10n.AnnotateUI.gaussian
-    case .hexagonal: return L10n.AnnotateUI.hexagonal
-    case .crystallized: return L10n.AnnotateUI.crystallized
-    case .pointillism: return L10n.AnnotateUI.pointillism
-    case .halftone: return L10n.AnnotateUI.halftone
-    case .tape: return L10n.AnnotateUI.tape
-    case .washi: return L10n.AnnotateUI.washi
+    case .pixelated: L10n.AnnotateUI.pixelated
+    case .gaussian: L10n.AnnotateUI.gaussian
+    case .hexagonal: L10n.AnnotateUI.hexagonal
+    case .crystallized: L10n.AnnotateUI.crystallized
+    case .pointillism: L10n.AnnotateUI.pointillism
+    case .halftone: L10n.AnnotateUI.halftone
+    case .tape: L10n.AnnotateUI.tape
+    case .washi: L10n.AnnotateUI.washi
     }
   }
 
   var icon: String {
     switch self {
-    case .pixelated: return "square.grid.3x3"
-    case .gaussian: return "drop.halffull"
-    case .hexagonal: return "hexagon"
-    case .crystallized: return "sparkles"
-    case .pointillism: return "circle.grid.3x3.fill"
-    case .halftone: return "checkerboard.rectangle"
-    case .tape: return "bandage"
-    case .washi: return "paintbrush"
+    case .pixelated: "square.grid.3x3"
+    case .gaussian: "drop.halffull"
+    case .hexagonal: "hexagon"
+    case .crystallized: "sparkles"
+    case .pointillism: "circle.grid.3x3.fill"
+    case .halftone: "checkerboard.rectangle"
+    case .tape: "bandage"
+    case .washi: "paintbrush"
     }
   }
 }
@@ -54,28 +56,30 @@ enum WatermarkStyle: String, CaseIterable, Identifiable, Equatable {
   case diagonal
   case tiled
 
-  var id: String { rawValue }
+  var id: String {
+    rawValue
+  }
 
   var displayName: String {
     switch self {
-    case .single: return L10n.AnnotateUI.watermarkSingle
-    case .diagonal: return L10n.AnnotateUI.watermarkDiagonal
-    case .tiled: return L10n.AnnotateUI.watermarkTiled
+    case .single: L10n.AnnotateUI.watermarkSingle
+    case .diagonal: L10n.AnnotateUI.watermarkDiagonal
+    case .tiled: L10n.AnnotateUI.watermarkTiled
     }
   }
 
   var icon: String {
     switch self {
-    case .single: return "text.aligncenter"
-    case .diagonal: return "line.diagonal"
-    case .tiled: return "square.grid.3x3"
+    case .single: "text.aligncenter"
+    case .diagonal: "line.diagonal"
+    case .tiled: "square.grid.3x3"
     }
   }
 
   var defaultRotationDegrees: CGFloat {
     switch self {
-    case .single: return 0
-    case .diagonal, .tiled: return -24
+    case .single: 0
+    case .diagonal, .tiled: -24
     }
   }
 }
@@ -85,36 +89,38 @@ enum ArrowStyle: String, CaseIterable, Identifiable, Equatable {
   case elbow
   case curve
 
-  var id: String { rawValue }
+  var id: String {
+    rawValue
+  }
 
   var supportsBendDirection: Bool {
     switch self {
-    case .straight: return false
-    case .elbow, .curve: return true
+    case .straight: false
+    case .elbow, .curve: true
     }
   }
 
   var displayName: String {
     switch self {
-    case .straight: return L10n.AnnotateUI.straight
-    case .elbow: return L10n.AnnotateUI.elbow
-    case .curve: return L10n.AnnotateUI.curve
+    case .straight: L10n.AnnotateUI.straight
+    case .elbow: L10n.AnnotateUI.elbow
+    case .curve: L10n.AnnotateUI.curve
     }
   }
 
   var icon: String {
     switch self {
-    case .straight: return "arrow.up.right"
-    case .elbow: return "arrow.turn.up.right"
-    case .curve: return "arrow.up.left.and.arrow.down.right"
+    case .straight: "arrow.up.right"
+    case .elbow: "arrow.turn.up.right"
+    case .curve: "arrow.up.left.and.arrow.down.right"
     }
   }
 
   var helperText: String {
     switch self {
-    case .straight: return L10n.AnnotateUI.straightArrowHelp
-    case .elbow: return L10n.AnnotateUI.elbowArrowHelp
-    case .curve: return L10n.AnnotateUI.curveArrowHelp
+    case .straight: L10n.AnnotateUI.straightArrowHelp
+    case .elbow: L10n.AnnotateUI.elbowArrowHelp
+    case .curve: L10n.AnnotateUI.curveArrowHelp
     }
   }
 }
@@ -123,26 +129,28 @@ enum ArrowBendDirection: String, CaseIterable, Identifiable, Equatable {
   case primary
   case alternate
 
-  var id: String { rawValue }
+  var id: String {
+    rawValue
+  }
 
   var displayName: String {
     switch self {
-    case .primary: return L10n.AnnotateUI.arrowBendNormal
-    case .alternate: return L10n.AnnotateUI.arrowBendReversed
+    case .primary: L10n.AnnotateUI.arrowBendNormal
+    case .alternate: L10n.AnnotateUI.arrowBendReversed
     }
   }
 
   var icon: String {
     switch self {
-    case .primary: return "arrow.uturn.right"
-    case .alternate: return "arrow.uturn.left"
+    case .primary: "arrow.uturn.right"
+    case .alternate: "arrow.uturn.left"
     }
   }
 
   var toggled: ArrowBendDirection {
     switch self {
-    case .primary: return .alternate
-    case .alternate: return .primary
+    case .primary: .alternate
+    case .alternate: .primary
     }
   }
 }
@@ -242,7 +250,7 @@ struct ArrowGeometry: Equatable {
       var points: [CGPoint] = []
       points.reserveCapacity(curveSegments + 1)
 
-      for segment in 0...curveSegments {
+      for segment in 0 ... curveSegments {
         let t = CGFloat(segment) / CGFloat(curveSegments)
         let oneMinusT = 1 - t
         let point = CGPoint(
@@ -356,11 +364,11 @@ struct ArrowGeometry: Equatable {
   ) -> CGPoint? {
     switch style {
     case .straight:
-      return nil
+      nil
     case .elbow:
-      return current ?? defaultElbowControlPoint(start: start, end: end, bendDirection: bendDirection)
+      current ?? defaultElbowControlPoint(start: start, end: end, bendDirection: bendDirection)
     case .curve:
-      return current ?? defaultCurveControlPoint(start: start, end: end, bendDirection: bendDirection)
+      current ?? defaultCurveControlPoint(start: start, end: end, bendDirection: bendDirection)
     }
   }
 
@@ -464,8 +472,20 @@ struct ArrowGeometry: Equatable {
 
   private static func remap(point: CGPoint, from oldBounds: CGRect, to newBounds: CGRect) -> CGPoint {
     CGPoint(
-      x: remapCoordinate(point.x, oldMin: oldBounds.minX, oldSize: oldBounds.width, newMin: newBounds.minX, newSize: newBounds.width),
-      y: remapCoordinate(point.y, oldMin: oldBounds.minY, oldSize: oldBounds.height, newMin: newBounds.minY, newSize: newBounds.height)
+      x: remapCoordinate(
+        point.x,
+        oldMin: oldBounds.minX,
+        oldSize: oldBounds.width,
+        newMin: newBounds.minX,
+        newSize: newBounds.width
+      ),
+      y: remapCoordinate(
+        point.y,
+        oldMin: oldBounds.minY,
+        oldSize: oldBounds.height,
+        newMin: newBounds.minY,
+        newSize: newBounds.height
+      )
     )
   }
 
@@ -534,19 +554,19 @@ enum AnnotationType: Equatable {
   /// Corresponding toolbar tool type for this annotation
   var toolType: AnnotationToolType {
     switch self {
-    case .path: return .pencil
-    case .rectangle: return .rectangle
-    case .filledRectangle: return .filledRectangle
-    case .oval: return .oval
-    case .arrow: return .arrow
-    case .line: return .line
-    case .text: return .text
-    case .highlight: return .highlighter
-    case .blur: return .blur
-    case .counter: return .counter
-    case .watermark: return .watermark
-    case .embeddedImage: return .selection
-    case .spotlight: return .spotlight
+    case .path: .pencil
+    case .rectangle: .rectangle
+    case .filledRectangle: .filledRectangle
+    case .oval: .oval
+    case .arrow: .arrow
+    case .line: .line
+    case .text: .text
+    case .highlight: .highlighter
+    case .blur: .blur
+    case .counter: .counter
+    case .watermark: .watermark
+    case .embeddedImage: .selection
+    case .spotlight: .spotlight
     }
   }
 
@@ -554,9 +574,9 @@ enum AnnotationType: Equatable {
   var supportsPropertyEditing: Bool {
     switch self {
     case .embeddedImage:
-      return false
+      false
     default:
-      return true
+      true
     }
   }
 
@@ -579,7 +599,7 @@ enum AnnotationType: Equatable {
 
 /// Visual properties for an annotation
 struct AnnotationProperties: Equatable {
-  static let controlValueRange: ClosedRange<CGFloat> = 1...20
+  static let controlValueRange: ClosedRange<CGFloat> = 1 ... 20
 
   var strokeColor: Color
   var fillColor: Color
@@ -679,9 +699,9 @@ extension AnnotationItem {
   var supportsResize: Bool {
     switch type {
     case .path, .highlight:
-      return false
+      false
     default:
-      return true
+      true
     }
   }
 
@@ -713,13 +733,13 @@ extension AnnotationItem {
   var selectionDecorationBounds: CGRect {
     switch type {
     case .highlight(let points):
-      return Self.highlighterSelectionBounds(
+      Self.highlighterSelectionBounds(
         containing: points,
         strokeWidth: properties.strokeWidth,
         fallback: resizeBounds
       )
     default:
-      return resizeBounds
+      resizeBounds
     }
   }
 
@@ -868,7 +888,7 @@ extension AnnotationItem {
     }
 
     var minDistance: CGFloat = .infinity
-    for i in 0..<(points.count - 1) {
+    for i in 0 ..< (points.count - 1) {
       let dist = distanceToSegment(point, from: points[i], to: points[i + 1])
       minDistance = min(minDistance, dist)
     }

@@ -1,5 +1,5 @@
 //
-//  SpeedTimelineTrack.swift
+//  VideoEditorSpeedTimelineTrack.swift
 //  Snapzy
 //
 //  Timeline track displaying speed (timelapse) segments with interactive blocks.
@@ -67,7 +67,9 @@ struct SpeedTimelineTrack: View {
     let visualEndX: CGFloat
     let visualWidth: CGFloat
 
-    var centerX: CGFloat { visualStartX + (visualWidth / 2) }
+    var centerX: CGFloat {
+      visualStartX + (visualWidth / 2)
+    }
   }
 
   // MARK: - Computed Properties
@@ -385,7 +387,7 @@ struct SpeedTimelineTrack: View {
   private func interactionSegment(atX x: CGFloat) -> (segment: SpeedSegment, layout: SegmentLayout)? {
     let containing = state.speedSegments.compactMap { segment -> (segment: SpeedSegment, layout: SegmentLayout)? in
       let segmentLayout = layout(for: segment)
-      guard x >= segmentLayout.visualStartX && x <= segmentLayout.visualEndX else { return nil }
+      guard x >= segmentLayout.visualStartX, x <= segmentLayout.visualEndX else { return nil }
       return (segment: segment, layout: segmentLayout)
     }
 
@@ -449,7 +451,7 @@ private struct SpeedBlockVisual: View {
 
         Spacer(minLength: 0)
 
-        if overlapsZoom && blockWidth >= 72 {
+        if overlapsZoom, blockWidth >= 72 {
           Image(systemName: "plus.magnifyingglass")
             .font(.system(size: 8, weight: .medium))
             .help(L10n.VideoEditor.speedZoomOverlapHint)

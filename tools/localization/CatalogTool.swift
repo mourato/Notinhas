@@ -1,4 +1,10 @@
 #!/usr/bin/env swift
+//
+//  CatalogTool.swift
+//  tools
+//
+//  Command-line utility for localization catalog manipulation and sync.
+//
 
 import Foundation
 
@@ -193,7 +199,10 @@ func mergedCatalog(from manifest: Manifest) throws -> Catalog {
 
     let catalog = try catalog(from: url)
     guard catalog.sourceLanguage == manifest.sourceLanguage else {
-      throw ToolError.invalidManifest("\(fragment.file) has sourceLanguage \(catalog.sourceLanguage), expected \(manifest.sourceLanguage)")
+      throw ToolError
+        .invalidManifest(
+          "\(fragment.file) has sourceLanguage \(catalog.sourceLanguage), expected \(manifest.sourceLanguage)"
+        )
     }
     guard catalog.version == manifest.version else {
       throw ToolError.invalidManifest("\(fragment.file) has version \(catalog.version), expected \(manifest.version)")
@@ -230,7 +239,7 @@ func extractL10nKeys() throws -> Set<String> {
     guard fileURL.lastPathComponent.hasPrefix("L10n") else { continue }
 
     let content = try String(contentsOf: fileURL, encoding: .utf8)
-    let range = NSRange(content.startIndex..<content.endIndex, in: content)
+    let range = NSRange(content.startIndex ..< content.endIndex, in: content)
     for match in regex.matches(in: content, range: range) {
       guard let range = Range(match.range(at: 1), in: content) else { continue }
       keys.insert(String(content[range]))
@@ -258,7 +267,7 @@ func extractL10nTableMappings() throws -> [String: String] {
       break
     }
 
-    let range = NSRange(lineString.startIndex..<lineString.endIndex, in: lineString)
+    let range = NSRange(lineString.startIndex ..< lineString.endIndex, in: lineString)
     guard let match = pattern.firstMatch(in: lineString, range: range) else { continue }
     guard
       let prefixRange = Range(match.range(at: 1), in: lineString),
@@ -329,7 +338,7 @@ func verify(manifest: Manifest) throws {
   let l10nKeys = try extractL10nKeys()
   let missing = l10nKeys.subtracting(catalogKeys).sorted()
   let extra = catalogKeys.subtracting(l10nKeys).sorted()
-  guard missing.isEmpty && extra.isEmpty else {
+  guard missing.isEmpty, extra.isEmpty else {
     throw ToolError.l10nDrift(missing: missing, extra: extra)
   }
 
@@ -343,7 +352,7 @@ func verify(manifest: Manifest) throws {
     guard actualTableName != expectedTableName else { return nil }
     return "\(prefix): expected \(expectedTableName ?? "<missing>"), got \(actualTableName)"
   }
-  guard missingMappings.isEmpty && mismatchedMappings.isEmpty && extraMappings.isEmpty else {
+  guard missingMappings.isEmpty, mismatchedMappings.isEmpty, extraMappings.isEmpty else {
     throw ToolError.tableMappingDrift(
       missing: missingMappings,
       mismatched: mismatchedMappings,
