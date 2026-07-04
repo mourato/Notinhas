@@ -10,6 +10,23 @@ import XCTest
 
 @MainActor
 final class SnapzyConfigurationServiceTests: XCTestCase {
+  private var originalUserLayerEnabled: Any?
+
+  override func setUpWithError() throws {
+    try super.setUpWithError()
+    originalUserLayerEnabled = UserDefaults.standard.object(forKey: PreferencesKeys.configurationUserLayerEnabled)
+    UserDefaults.standard.set(false, forKey: PreferencesKeys.configurationUserLayerEnabled)
+  }
+
+  override func tearDownWithError() throws {
+    if let original = originalUserLayerEnabled {
+      UserDefaults.standard.set(original, forKey: PreferencesKeys.configurationUserLayerEnabled)
+    } else {
+      UserDefaults.standard.removeObject(forKey: PreferencesKeys.configurationUserLayerEnabled)
+    }
+    try super.tearDownWithError()
+  }
+
   func testConfigFileURLAppendsConfigTomlToSelectedDirectory() {
     let directory = URL(fileURLWithPath: "/Users/example/.config/snapzy", isDirectory: true)
 
@@ -316,6 +333,63 @@ final class SnapzyConfigurationServiceTests: XCTestCase {
   private func temporaryHomeDirectory() -> URL {
     FileManager.default.temporaryDirectory
       .appendingPathComponent("snapzy-config-service-\(UUID().uuidString)", isDirectory: true)
+  }
+
+  func testImportTOMLRespectsUserConfigPriority() throws {
+    let defaults = UserDefaults.standard
+    let originalUserLayerEnabled = defaults.object(forKey: PreferencesKeys.configurationUserLayerEnabled)
+    let originalUserLayerFilePath = defaults.object(forKey: PreferencesKeys.configurationUserLayerFilePath)
+
+    let homeDir = temporaryHomeDirectory()
+    defer {
+      try? FileManager.default.removeItem(at: homeDir)
+      if let originalUserLayerEnabled {
+        defaults.set(originalUserLayerEnabled, forKey: PreferencesKeys.configurationUserLayerEnabled)
+      } else {
+        defaults.removeObject(forKey: PreferencesKeys.configurationUserLayerEnabled)
+      }
+      if let originalUserLayerFilePath {
+        defaults.set(originalUserLayerFilePath, forKey: PreferencesKeys.configurationUserLayerFilePath)
+      } else {
+        defaults.removeObject(forKey: PreferencesKeys.configurationUserLayerFilePath)
+      }
+    }
+
+    try FileManager.default.createDirectory(at: homeDir, withIntermediateDirectories: true)
+    let userURL = homeDir.appendingPathComponent("user-config.toml")
+
+    // Configure user layer override
+    defaults.set(true, forKey: PreferencesKeys.configurationUserLayerEnabled)
+    defaults.set(userURL.path, forKey: PreferencesKeys.configurationUserLayerFilePath)
+
+    // Write user override (sets format = "webp", language = "vi")
+    let userConfig = """
+    schema_version = 1
+    [general]
+    language = "vi"
+    [capture.screenshot]
+    format = "webp"
+    """
+    try userConfig.write(to: userURL, atomically: true, encoding: .utf8)
+
+    // Import a base config with conflicting values (format = "png", language = "en")
+    let baseConfig = """
+    schema_version = 1
+    [general]
+    language = "en"
+    [capture.screenshot]
+    format = "png"
+    """
+
+    let result = SnapzyConfigurationService.shared.importTOML(baseConfig)
+    XCTAssertFalse(result.hasErrors)
+
+    // Assert that the override config value took priority!
+    XCTAssertEqual(defaults.string(forKey: PreferencesKeys.screenshotFormat), "webp", "User override priority failed for screenshot format")
+    
+    // Test language code "vi" is normalized in UserDefaults AppleLanguages
+    let languages = defaults.array(forKey: "AppleLanguages") as? [String]
+    XCTAssertEqual(languages?.first, "vi", "User override priority failed for language setting")
   }
 
   private func withRestoredLastAppliedSignature(_ body: () throws -> Void) rethrows {

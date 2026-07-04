@@ -3,6 +3,7 @@
 //  Snapzy
 //
 //  Applies user-edited TOML configuration on app launch when the file changes.
+//  Merged user-layer logic lives in SnapzyConfigurationAutoImporter+MergedApply.swift.
 //
 
 import CryptoKit
@@ -38,14 +39,16 @@ struct SnapzyConfigurationAutoImportResult {
 @MainActor
 enum SnapzyConfigurationAutoImporter {
   static func applyIfNeededOnLaunch(
-    defaults: UserDefaults = .standard
+    defaults: UserDefaults = .standard,
+    force: Bool = false
   ) -> SnapzyConfigurationAutoImportResult {
-    applyIfNeededOnLaunch(service: .shared, defaults: defaults)
+    applyIfNeededOnLaunch(service: .shared, defaults: defaults, force: force)
   }
 
   static func applyIfNeededOnLaunch(
     service: SnapzyConfigurationService,
-    defaults: UserDefaults = .standard
+    defaults: UserDefaults = .standard,
+    force: Bool = false
   ) -> SnapzyConfigurationAutoImportResult {
     if service.needsUserSelectedConfigAccess {
       return SnapzyConfigurationAutoImportResult(
@@ -59,12 +62,23 @@ enum SnapzyConfigurationAutoImporter {
     let access = service.beginAccessingConfigFile()
     defer { access.stop() }
 
-    return applyIfNeeded(from: access.url, defaults: defaults)
+    let userLayer = service.userLayerState
+    guard userLayer.isEnabled else {
+      return applyIfNeeded(from: access.url, defaults: defaults, force: force)
+    }
+
+    return applyMergedIfNeeded(
+      builtInURL: access.url,
+      userURL: userLayer.resolvedFileURL,
+      defaults: defaults,
+      force: force
+    )
   }
 
   static func applyIfNeeded(
     from fileURL: URL,
-    defaults: UserDefaults = .standard
+    defaults: UserDefaults = .standard,
+    force: Bool = false
   ) -> SnapzyConfigurationAutoImportResult {
     let fileManager = FileManager.default
     guard fileManager.fileExists(atPath: fileURL.path) else {
@@ -89,7 +103,7 @@ enum SnapzyConfigurationAutoImporter {
     }
 
     let signature = contentSignature(for: source)
-    if defaults.string(forKey: PreferencesKeys.configurationLastAppliedSignature) == signature {
+    if !force && defaults.string(forKey: PreferencesKeys.configurationLastAppliedSignature) == signature {
       return SnapzyConfigurationAutoImportResult(
         status: .skippedUnchanged,
         fileURL: fileURL,

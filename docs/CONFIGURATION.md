@@ -246,6 +246,52 @@ Clicking the warning row or the Grant Access button opens the same folder grant
 flow. Completed backup actions show a toast instead of a persistent Last Result
 log section.
 
+## User Config Override Layer
+
+Settings → Advanced → User Config Override lets you maintain a lean
+`user-config.toml` that overrides individual keys in `config.toml` without
+touching the built-in file.
+
+Default user-config path (no sandbox bookmark required):
+
+```text
+~/.config/snapzy/user-config.toml
+```
+
+### How it works
+
+- **Deep key-level merge.** Snapzy loads `config.toml` first, then applies
+  `user-config.toml` on top. Only keys present in the user file override their
+  built-in counterparts; absent keys inherit from `config.toml`.
+- **User-config is always lean.** It starts empty and never holds a full copy of
+  all settings — only keys the user intentionally overrides.
+- **Dual signatures.** Each file has its own SHA-256 signature. On launch
+  Snapzy applies `config.toml` first, then `user-config.toml`; only the
+  relevant file is re-applied when its hash changes.
+
+### Write-back modes
+
+Enable the layer and choose how in-app setting changes are persisted:
+
+| Mode | Behaviour |
+|------|-----------|
+| **Per-key** (default) | A changed key writes to `user-config.toml` only if that dotted key already exists there; otherwise it goes to `config.toml`. User-config never grows by itself. |
+| **Primary** | Every changed key is written to `user-config.toml`, growing the overrides set incrementally. `config.toml` becomes a read-only base. |
+
+### Promote overrides to config.toml
+
+Settings → Advanced → User Config Override → Sync to config.toml… opens a diff
+sheet listing keys that differ between the two files. Select any subset and
+confirm to copy those values into `config.toml`. The user-config file is **not**
+modified; the effective value continues to come from the user layer.
+
+### Import
+
+Use the Import button to load any valid `.toml` file as the new user-config.
+Snapzy validates the file with the same schema rules used for `config.toml` and
+writes it to the configured user-config path, then re-applies the merged
+effective config immediately.
+
 ## Implementation Notes
 
 - `SnapzyConfigurationService` is the facade used by Settings.
@@ -273,10 +319,17 @@ log section.
   TOML document and applies it after confirmation.
 - `SnapzyConfigurationAutoImporter` runs during app launch, hashes the current
   file contents, and imports only when `config.toml` changed since the last
-  successful launch-time apply.
+  successful launch-time apply. When the user-config layer is enabled, a second
+  pass applies `user-config.toml` on top using `applyMergedIfNeeded`.
+- `SnapzyConfigurationWriteRouter` is a pure stateless function that, given the
+  current in-memory document, the on-disk built-in document, the on-disk
+  user-config document, and the active write mode, returns exactly which files
+  to write and what content to write to each.
 - `SnapzyConfigurationExporter` and its shortcut extension build deterministic
   TOML so exported files are diff-friendly.
 - `SnapzyConfigurationImporter` parses, validates, then applies mutations only
   after validation succeeds.
 - `SimpleTOMLParser` is intentionally focused on Snapzy's schema surface:
   strings, booleans, integers, doubles, arrays, dotted keys, and nested tables.
+- `SimpleTOMLSerializer` serializes a `SimpleTOMLDocument` back to TOML text
+  for writing lean user-config subsets to disk.

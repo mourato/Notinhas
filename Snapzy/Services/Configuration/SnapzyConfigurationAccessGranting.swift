@@ -7,6 +7,7 @@
 
 import AppKit
 import Foundation
+import UniformTypeIdentifiers
 
 struct SnapzyConfigurationAccessGrantResult {
   let configURL: URL
@@ -99,6 +100,38 @@ enum SnapzyConfigurationAccessGranting {
     }
 
     return service.suggestedConfigRootDirectoryURL
+  }
+
+  /// Presents an NSOpenPanel to let the user pick a path for the user-config.toml
+  /// override file. No bookmark stored — sandbox is OFF, direct path only.
+  /// Calls `completion` with the chosen URL, or nil if cancelled.
+  static func chooseUserConfigPath(completion: @MainActor @escaping (URL?) -> Void) {
+    let panel = NSOpenPanel()
+    panel.title = L10n.PreferencesAdvanced.userConfigFilePanelTitle
+    panel.message = L10n.PreferencesAdvanced.userConfigFilePanelMessage
+    panel.prompt = L10n.PreferencesAdvanced.userConfigFilePanelPrompt
+    panel.directoryURL = SnapzyConfigurationPaths.suggestedConfigDirectoryURL
+    panel.canChooseFiles = true
+    panel.canChooseDirectories = false
+    panel.canCreateDirectories = false
+    panel.allowsMultipleSelection = false
+    panel.allowedContentTypes = [.init(filenameExtension: "toml")].compactMap { $0 }
+    panel.showsHiddenFiles = true
+
+    panel.begin { response in
+      Task { @MainActor in
+        guard response == .OK, let url = panel.url?.standardizedFileURL else {
+          completion(nil)
+          return
+        }
+        let collapsed = SnapzyConfigurationPaths.collapsingHomePath(url.path)
+        UserDefaults.standard.set(
+          collapsed,
+          forKey: PreferencesKeys.configurationUserLayerFilePath
+        )
+        completion(url)
+      }
+    }
   }
 
   private static func resolvedConfigDirectory(

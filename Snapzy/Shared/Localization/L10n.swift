@@ -198,7 +198,7 @@ enum L10n {
   enum PreferencesAdvanced {
     static let backupSection = string(
       "preferences-advanced.backup-section",
-      defaultValue: "Backup",
+      defaultValue: "Snapzy config",
       comment: "Advanced preferences backup section title"
     )
     static let integrationSection = string(
@@ -490,6 +490,159 @@ enum L10n {
         path
       )
     }
+    static let userConfigFilePanelTitle = string(
+      "preferences-advanced.user-config-file-panel-title",
+      defaultValue: "Choose User Config File",
+      comment: "User-config.toml file picker panel title"
+    )
+    static let userConfigFilePanelMessage = string(
+      "preferences-advanced.user-config-file-panel-message",
+      defaultValue: "Select an existing user-config.toml, or choose where to create one.",
+      comment: "User-config.toml file picker panel message"
+    )
+    static let userConfigFilePanelPrompt = string(
+      "preferences-advanced.user-config-file-panel-prompt",
+      defaultValue: "Select",
+      comment: "User-config.toml file picker panel confirmation button"
+    )
+
+    // MARK: User Config Override section (Phase 05)
+    static let userConfigOverrideSection = string(
+      "preferences-advanced.user-config-override-section",
+      defaultValue: "User Config",
+      comment: "Advanced preferences user-config override section title"
+    )
+    static let userConfigOverrideEnabledTitle = string(
+      "preferences-advanced.user-config-override-enabled-title",
+      defaultValue: "Enable user config override",
+      comment: "User-config override enable toggle title"
+    )
+    static let userConfigOverrideEnabledDescription = string(
+      "preferences-advanced.user-config-override-enabled-description",
+      defaultValue: "Merge user-config.toml on top of built-in config on launch",
+      comment: "User-config override enable toggle description"
+    )
+    static let userConfigOverridePathTitle = string(
+      "preferences-advanced.user-config-override-path-title",
+      defaultValue: "Override file",
+      comment: "User-config override file path row title"
+    )
+    static let userConfigOverrideChangeButton = string(
+      "preferences-advanced.user-config-override-change-button",
+      defaultValue: "Change…",
+      comment: "Button to choose a different user-config.toml path"
+    )
+    static let userConfigOverrideImportTitle = string(
+      "preferences-advanced.user-config-override-import-title",
+      defaultValue: "Import user config",
+      comment: "User-config override import row title"
+    )
+    static let userConfigOverrideImportDescription = string(
+      "preferences-advanced.user-config-override-import-description",
+      defaultValue: "Load a .toml file as the user config override",
+      comment: "User-config override import row description"
+    )
+    static let userConfigOverrideImportButton = string(
+      "preferences-advanced.user-config-override-import-button",
+      defaultValue: "Import…",
+      comment: "Button to import a user-config.toml file"
+    )
+    static let userConfigOverrideOpenButton = string(
+      "preferences-advanced.user-config-override-open-button",
+      defaultValue: "Open user-config.toml",
+      comment: "Button to open user-config.toml for editing"
+    )
+    static let userConfigOverrideWriteModeTitle = string(
+      "preferences-advanced.user-config-override-write-mode-title",
+      defaultValue: "Write-back mode",
+      comment: "User-config override write-back mode row title"
+    )
+    static let userConfigOverrideWriteModeDescription = string(
+      "preferences-advanced.user-config-override-write-mode-description",
+      defaultValue: "Where changed settings are written",
+      comment: "User-config override write-back mode row description"
+    )
+    static let userConfigOverrideWriteModePerKey = string(
+      "preferences-advanced.user-config-override-write-mode-per-key",
+      defaultValue: "Per-key",
+      comment: "Write-back mode: per-key option label"
+    )
+    static let userConfigOverrideWriteModePrimary = string(
+      "preferences-advanced.user-config-override-write-mode-primary",
+      defaultValue: "User config first",
+      comment: "Write-back mode: primary option label"
+    )
+    static let userConfigOverridePromoteButton = string(
+      "preferences-advanced.user-config-override-promote-button",
+      defaultValue: "Sync to config.toml…",
+      comment: "Button to open promote-diff sheet"
+    )
+    static let userConfigOverridePromoteTitle = string(
+      "preferences-advanced.user-config-override-promote-title",
+      defaultValue: "Promote overrides",
+      comment: "User-config promote row title"
+    )
+    static let userConfigOverridePromoteDescription = string(
+      "preferences-advanced.user-config-override-promote-description",
+      defaultValue: "Copy selected overrides into the built-in config.toml",
+      comment: "User-config promote row description"
+    )
+    static let userConfigImportSucceeded = string(
+      "preferences-advanced.user-config-import-succeeded",
+      defaultValue: "User config imported",
+      comment: "User-config import success toast"
+    )
+    static let userConfigImportFailed = string(
+      "preferences-advanced.user-config-import-failed",
+      defaultValue: "User config import failed",
+      comment: "User-config import failure toast"
+    )
+    static let userConfigOpenSucceeded = string(
+      "preferences-advanced.user-config-open-succeeded",
+      defaultValue: "User config opened",
+      comment: "User-config open success toast"
+    )
+    static let userConfigOpenUnavailable = string(
+      "preferences-advanced.user-config-open-unavailable",
+      defaultValue: "Could not open user-config.toml",
+      comment: "User-config open failure toast"
+    )
+    static let userConfigPromoteSheetTitle = string(
+      "preferences-advanced.user-config-promote-sheet-title",
+      defaultValue: "Sync Overrides to config.toml",
+      comment: "Promote diff sheet title"
+    )
+    static let userConfigPromoteSelectAll = string(
+      "preferences-advanced.user-config-promote-select-all",
+      defaultValue: "Select All",
+      comment: "Select-all button in promote sheet"
+    )
+    static let userConfigPromoteDeselectAll = string(
+      "preferences-advanced.user-config-promote-deselect-all",
+      defaultValue: "Deselect All",
+      comment: "Deselect-all button in promote sheet"
+    )
+    static let userConfigPromoteConfirmButton = string(
+      "preferences-advanced.user-config-promote-confirm",
+      defaultValue: "Sync Selected",
+      comment: "Promote sheet confirm button"
+    )
+    static let userConfigPromoteSucceeded = string(
+      "preferences-advanced.user-config-promote-succeeded",
+      defaultValue: "Overrides synced to config.toml",
+      comment: "Promote success toast"
+    )
+    static let userConfigPromoteFailed = string(
+      "preferences-advanced.user-config-promote-failed",
+      defaultValue: "Sync failed",
+      comment: "Promote failure toast"
+    )
+    static let userConfigPromoteNoChanges = string(
+      "preferences-advanced.user-config-promote-no-changes",
+      defaultValue: "User config matches built-in — nothing to sync",
+      comment: "Promote sheet empty state message"
+    )
+
     static func exported(_ path: String) -> String {
       format(
         "preferences-advanced.exported",

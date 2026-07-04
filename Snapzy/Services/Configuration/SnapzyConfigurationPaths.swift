@@ -22,6 +22,11 @@ nonisolated enum SnapzyConfigurationPaths {
       .appendingPathComponent("config.toml")
   }
 
+  static var suggestedUserConfigURL: URL {
+    suggestedConfigDirectoryURL
+      .appendingPathComponent("user-config.toml")
+  }
+
   static var suggestedConfigDirectoryURL: URL {
     suggestedConfigDirectoryURL(homeDirectory: userHomeDirectory)
   }

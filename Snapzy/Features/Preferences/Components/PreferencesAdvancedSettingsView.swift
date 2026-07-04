@@ -111,6 +111,8 @@ struct AdvancedSettingsView: View {
         }
       }
 
+      PreferencesUserConfigOverrideView()
+
       Section(L10n.PreferencesAdvanced.integrationSection) {
         SettingRow(
           icon: "link",

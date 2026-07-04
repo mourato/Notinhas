@@ -27,6 +27,12 @@ enum PreferencesKeys {
   static let configurationDirectoryBookmark = "configuration.directoryBookmark"
   static let configurationLastAppliedSignature = "configuration.lastAppliedSignature"
   static let configurationAccessOnboardingPrompted = "configuration.accessOnboardingPrompted"
+
+  // User-config override layer
+  static let configurationUserLayerEnabled = "configuration.userLayer.enabled"
+  static let configurationUserLayerFilePath = "configuration.userLayer.filePath"
+  static let configurationUserLayerLastAppliedSignature = "configuration.userLayer.lastAppliedSignature"
+  static let configurationUserLayerWriteMode = "configuration.userLayer.writeMode"
   static let hideDesktopIcons = "hideDesktopIcons"
   static let hideDesktopWidgets = "hideDesktopWidgets"
   static let wallpaperDirectoryBookmark = "wallpaper.directoryBookmark"

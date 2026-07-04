@@ -184,16 +184,17 @@ final class SnapzyConfigurationSyncCoordinator: ObservableObject {
   @discardableResult
   func syncNow(reason: Reason = .manual) throws -> SnapzyConfigurationSyncResult {
     cancelPendingSync()
+    let startSig = currentSettingsSignature()
     let sequence = beginSync()
     var syncResult: SnapzyConfigurationSyncResult?
     defer {
-      finishSyncing(after: syncResult, sequence: sequence)
+      finishSyncing(after: syncResult, sequence: sequence, startSettingsSignature: startSig)
     }
 
     do {
       let result = try syncManagedConfigIfSafe()
       syncResult = result
-      updateStatus(for: result, sequence: sequence)
+      updateStatus(for: result, sequence: sequence, startSettingsSignature: startSig)
       log(result, reason: reason)
       return result
     } catch {
@@ -205,17 +206,18 @@ final class SnapzyConfigurationSyncCoordinator: ObservableObject {
   @discardableResult
   func syncNowInBackground(reason: Reason = .manual) async throws -> SnapzyConfigurationSyncResult {
     cancelPendingSync()
+    let startSig = currentSettingsSignature()
     let sequence = beginSync()
 
     do {
       let result = try await syncManagedConfigIfSafeInBackground()
-      updateStatus(for: result, sequence: sequence)
+      updateStatus(for: result, sequence: sequence, startSettingsSignature: startSig)
       log(result, reason: reason)
-      finishSyncing(after: result, sequence: sequence)
+      finishSyncing(after: result, sequence: sequence, startSettingsSignature: startSig)
       return result
     } catch {
       updateFailureStatus(error, sequence: sequence)
-      finishSyncing(after: nil, sequence: sequence)
+      finishSyncing(after: nil, sequence: sequence, startSettingsSignature: startSig)
       throw error
     }
   }
@@ -226,10 +228,11 @@ final class SnapzyConfigurationSyncCoordinator: ObservableObject {
     expectedFileSignature: String? = nil
   ) throws -> URL {
     cancelPendingSync()
+    let startSig = currentSettingsSignature()
     let sequence = beginSync()
     var syncResult: SnapzyConfigurationSyncResult?
     defer {
-      finishSyncing(after: syncResult, sequence: sequence)
+      finishSyncing(after: syncResult, sequence: sequence, startSettingsSignature: startSig)
     }
 
     do {
@@ -241,8 +244,7 @@ final class SnapzyConfigurationSyncCoordinator: ObservableObject {
         exportedSettingsSignature: settingsSignature
       )
       syncResult = result
-      lastAttemptedSettingsSignature = settingsSignature
-      updateStatus(for: result, sequence: sequence)
+      updateStatus(for: result, sequence: sequence, startSettingsSignature: startSig)
       DiagnosticLogger.shared.log(
         .info,
         .preferences,
@@ -267,10 +269,10 @@ final class SnapzyConfigurationSyncCoordinator: ObservableObject {
     return nextSyncSequence
   }
 
-  private func updateStatus(for result: SnapzyConfigurationSyncResult, sequence: Int) {
+  private func updateStatus(for result: SnapzyConfigurationSyncResult, sequence: Int, startSettingsSignature: String) {
     guard sequence >= latestStatusSequence else { return }
     latestStatusSequence = sequence
-    lastAttemptedSettingsSignature = result.exportedSettingsSignature
+    lastAttemptedSettingsSignature = startSettingsSignature
     let now = Date()
     switch result.status {
     case .alreadyCurrent:
@@ -294,12 +296,11 @@ final class SnapzyConfigurationSyncCoordinator: ObservableObject {
     status = .failed(error.localizedDescription)
   }
 
-  private func finishSyncing(after result: SnapzyConfigurationSyncResult?, sequence: Int) {
+  private func finishSyncing(after result: SnapzyConfigurationSyncResult?, sequence: Int, startSettingsSignature: String) {
     activeSyncCount = max(0, activeSyncCount - 1)
     guard activeSyncCount == 0, needsFollowUpSync else { return }
 
-    let syncedSignature = result?.exportedSettingsSignature
-    let needsSync = syncedSignature == nil || currentSettingsSignature() != syncedSignature
+    let needsSync = currentSettingsSignature() != startSettingsSignature
     needsFollowUpSync = false
     if needsSync {
       scheduleSync(reason: .defaultsChanged)

@@ -61,6 +61,12 @@ enum SimpleTOMLValue: Equatable {
 struct SimpleTOMLDocument {
   private(set) var root: [String: SimpleTOMLValue] = [:]
 
+  init() {}
+
+  init(root: [String: SimpleTOMLValue]) {
+    self.root = root
+  }
+
   func value(at path: String...) -> SimpleTOMLValue? {
     value(at: path)
   }

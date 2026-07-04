@@ -22,7 +22,17 @@ enum SnapzyConfigurationImporter {
 
   static func importTOML(_ source: String, defaults: UserDefaults = .standard) -> SnapzyConfigurationImportResult {
     let preparedImport = prepareImport(source, defaults: defaults)
+    return applyPreparedImport(preparedImport, defaults: defaults)
+  }
 
+  /// Import from a pre-parsed/merged document directly (skips the parse step).
+  /// Used by the user-config override layer to import the merged built-in ⊕ user doc.
+  static func importDocument(_ document: SimpleTOMLDocument, defaults: UserDefaults = .standard) -> SnapzyConfigurationImportResult {
+    let preparedImport = prepareImportFrom(document: document, defaults: defaults)
+    return applyPreparedImport(preparedImport, defaults: defaults)
+  }
+
+  private static func applyPreparedImport(_ preparedImport: PreparedImport, defaults: UserDefaults) -> SnapzyConfigurationImportResult {
     guard !preparedImport.issues.contains(where: { $0.severity == .error }) else {
       return SnapzyConfigurationImportResult(appliedChangeCount: 0, issues: preparedImport.issues)
     }
@@ -48,7 +58,10 @@ enum SnapzyConfigurationImporter {
         mutations: []
       )
     }
+    return prepareImportFrom(document: document, defaults: defaults)
+  }
 
+  private static func prepareImportFrom(document: SimpleTOMLDocument, defaults: UserDefaults) -> PreparedImport {
     var reader = SnapzyConfigurationReader(document: document)
     var mutations: [() -> Void] = []
 
