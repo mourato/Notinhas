@@ -98,6 +98,12 @@ enum SnapzyConfigurationImporter {
     collectBool(&reader, "general", "url_scheme_enabled", mutations: &mutations) {
       defaults.set($0, forKey: PreferencesKeys.urlSchemeEnabled)
     }
+    collectBool(&reader, "general", "show_menu_bar_icon", mutations: &mutations) {
+      defaults.set($0, forKey: PreferencesKeys.showMenuBarIcon)
+      if defaults == UserDefaults.standard {
+        AppStatusBarController.shared.setMenuBarIconVisible($0)
+      }
+    }
     if let startAtLogin = reader.bool("general", "start_at_login") {
       mutations.append { LoginItemManager.setEnabled(startAtLogin) }
     }
@@ -147,6 +153,15 @@ enum SnapzyConfigurationImporter {
     }
     collectBool(&reader, "capture", "screenshot", "show_cursor", mutations: &mutations) {
       defaults.set($0, forKey: PreferencesKeys.screenshotShowCursor)
+    }
+    collectBool(&reader, "capture", "screenshot", "freeze_area", mutations: &mutations) {
+      defaults.set($0, forKey: PreferencesKeys.screenshotFreezeArea)
+    }
+    collectBool(&reader, "capture", "screenshot", "show_selection_area_overlay", mutations: &mutations) {
+      defaults.set($0, forKey: PreferencesKeys.screenshotShowSelectionAreaOverlay)
+    }
+    collectBool(&reader, "capture", "screenshot", "reverse_magnifier_zoom_direction", mutations: &mutations) {
+      defaults.set($0, forKey: PreferencesKeys.screenshotReverseMagnifierZoomDirection)
     }
     collectBool(&reader, "capture", "scrolling", "show_hints", mutations: &mutations) {
       defaults.set($0, forKey: PreferencesKeys.scrollingCaptureShowHints)
@@ -242,6 +257,9 @@ enum SnapzyConfigurationImporter {
       defaults.set($0, forKey: PreferencesKeys.annotationShortcutHoldDuration)
       RecordingAnnotationShortcutConfig.shared.holdDuration = $0
     }
+    collectDouble(&reader, "recording", "video_editor_zoom_transition_duration", range: 0.15...0.75, mutations: &mutations) {
+      defaults.set($0, forKey: PreferencesKeys.videoEditorZoomTransitionDuration)
+    }
   }
 
   private static func collectQuickAccess(
@@ -264,6 +282,58 @@ enum SnapzyConfigurationImporter {
     collectBool(&reader, "quick_access", "drag_drop", mutations: &mutations) { manager.dragDropEnabled = $0 }
     collectBool(&reader, "quick_access", "two_finger_swipe_to_dismiss", mutations: &mutations) { manager.twoFingerSwipeToDismissEnabled = $0 }
     collectDouble(&reader, "quick_access", "swipe_sensitivity", range: 0.5...3.0, mutations: &mutations) { manager.swipeSensitivity = $0 }
+
+    if let swipeModeStr = reader.string("quick_access", "trackpad_swipe_mode") {
+      guard let mode = QuickAccessTrackpadSwipeMode(rawValue: swipeModeStr) else {
+        reader.error("quick_access.trackpad_swipe_mode must be natural or inverted")
+        return
+      }
+      mutations.append {
+        QuickAccessTrackpadSwipeModeStore.shared.setMode(mode)
+      }
+    }
+
+    if let actionStr = reader.string("quick_access", "swipe_left_action") {
+      if actionStr == "none" {
+        mutations.append {
+          QuickAccessSwipeActionStore.shared.setAction(.left, action: nil)
+        }
+      } else if let action = QuickAccessActionKind(rawValue: actionStr) {
+        mutations.append {
+          QuickAccessSwipeActionStore.shared.setAction(.left, action: action)
+        }
+      } else {
+        reader.error("quick_access.swipe_left_action is invalid")
+      }
+    }
+
+    if let actionStr = reader.string("quick_access", "swipe_right_action") {
+      if actionStr == "none" {
+        mutations.append {
+          QuickAccessSwipeActionStore.shared.setAction(.right, action: nil)
+        }
+      } else if let action = QuickAccessActionKind(rawValue: actionStr) {
+        mutations.append {
+          QuickAccessSwipeActionStore.shared.setAction(.right, action: action)
+        }
+      } else {
+        reader.error("quick_access.swipe_right_action is invalid")
+      }
+    }
+
+    collectBool(&reader, "quick_access", "hide_card_when_window_open", mutations: &mutations) {
+      manager.hideCardWhenWindowOpen = $0
+    }
+
+    if let styleStr = reader.string("quick_access", "animation_style") {
+      guard let style = QuickAccessAnimationStyle(rawValue: styleStr) else {
+        reader.error("quick_access.animation_style must be slide or scale")
+        return
+      }
+      mutations.append {
+        manager.animationStyle = style
+      }
+    }
 
     let order = reader.stringArray("quick_access", "actions_order")?.compactMap(QuickAccessActionKind.init(rawValue:))
     let enabled = reader.stringArray("quick_access", "enabled_actions")?.compactMap(QuickAccessActionKind.init(rawValue:))

@@ -33,6 +33,7 @@ enum SnapzyConfigurationDefaultDocument {
     writer.value("appearance", "system")
     writer.value("play_sounds", true)
     writer.value("url_scheme_enabled", true)
+    writer.value("show_menu_bar_icon", true)
     writer.value("start_at_login", false)
     writer.value("export_location", SandboxFileAccessManager.shared.defaultExportDirectory.path)
 
@@ -58,6 +59,9 @@ enum SnapzyConfigurationDefaultDocument {
     writer.value("format", ImageFormatOption.png.rawValue)
     writer.value("include_snapzy", false)
     writer.value("show_cursor", false)
+    writer.value("freeze_area", false)
+    writer.value("show_selection_area_overlay", true)
+    writer.value("reverse_magnifier_zoom_direction", false)
 
     writer.section("capture.scrolling")
     writer.value("show_hints", true)
@@ -86,6 +90,7 @@ enum SnapzyConfigurationDefaultDocument {
     writer.value("show_cursor", true)
     writer.value("highlight_clicks", false)
     writer.value("show_keystrokes", false)
+    writer.value("video_editor_zoom_transition_duration", 0.4)
 
     writer.section("recording.mouse_highlight")
     writer.value("size", 50)
@@ -115,6 +120,11 @@ enum SnapzyConfigurationDefaultDocument {
     writer.value("drag_drop", true)
     writer.value("two_finger_swipe_to_dismiss", true)
     writer.value("swipe_sensitivity", 1.0)
+    writer.value("trackpad_swipe_mode", QuickAccessTrackpadSwipeMode.inverted.rawValue)
+    writer.value("swipe_left_action", "dismiss")
+    writer.value("swipe_right_action", "dismiss")
+    writer.value("hide_card_when_window_open", true)
+    writer.value("animation_style", "slide")
     writer.stringArray("actions_order", QuickAccessActionKind.defaultOrder.map(\.rawValue))
     writer.stringArray("enabled_actions", QuickAccessActionKind.defaultEnabledActions.map(\.rawValue).sorted())
 

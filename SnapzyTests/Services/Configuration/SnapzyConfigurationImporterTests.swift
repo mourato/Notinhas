@@ -284,4 +284,109 @@ final class SnapzyConfigurationImporterTests: XCTestCase {
     XCTAssertNotNil(manager.shortcut(for: .autoRedactSensitiveData))
     XCTAssertTrue(manager.isActionShortcutEnabled(for: .autoRedactSensitiveData))
   }
+
+  func testImportAppliesNewConfigurationFields() {
+    let defaults = UserDefaultsFactory.make()
+    let manager = QuickAccessManager.shared
+    
+    let originalHide = manager.hideCardWhenWindowOpen
+    let originalStyle = manager.animationStyle
+    let originalLeftAction = QuickAccessSwipeActionStore.shared.swipeLeftAction
+    let originalRightAction = QuickAccessSwipeActionStore.shared.swipeRightAction
+    let originalTrackpadMode = QuickAccessTrackpadSwipeModeStore.shared.mode
+    
+    defer {
+      manager.hideCardWhenWindowOpen = originalHide
+      manager.animationStyle = originalStyle
+      QuickAccessSwipeActionStore.shared.setAction(.left, action: originalLeftAction)
+      QuickAccessSwipeActionStore.shared.setAction(.right, action: originalRightAction)
+      QuickAccessTrackpadSwipeModeStore.shared.setMode(originalTrackpadMode)
+    }
+
+    let source = """
+    schema_version = 1
+
+    [general]
+    show_menu_bar_icon = false
+
+    [capture.screenshot]
+    freeze_area = true
+    show_selection_area_overlay = false
+    reverse_magnifier_zoom_direction = true
+
+    [recording]
+    video_editor_zoom_transition_duration = 0.55
+
+    [quick_access]
+    trackpad_swipe_mode = "natural"
+    swipe_left_action = "pinToScreen"
+    swipe_right_action = "none"
+    hide_card_when_window_open = false
+    animation_style = "scale"
+    """
+
+    let result = SnapzyConfigurationImporter.importTOML(source, defaults: defaults)
+
+    XCTAssertFalse(result.hasErrors)
+    
+    // general
+    XCTAssertEqual(defaults.object(forKey: PreferencesKeys.showMenuBarIcon) as? Bool, false)
+    
+    // capture.screenshot
+    XCTAssertEqual(defaults.object(forKey: PreferencesKeys.screenshotFreezeArea) as? Bool, true)
+    XCTAssertEqual(defaults.object(forKey: PreferencesKeys.screenshotShowSelectionAreaOverlay) as? Bool, false)
+    XCTAssertEqual(defaults.object(forKey: PreferencesKeys.screenshotReverseMagnifierZoomDirection) as? Bool, true)
+    
+    // recording
+    XCTAssertEqual(defaults.object(forKey: PreferencesKeys.videoEditorZoomTransitionDuration) as? Double, 0.55)
+    
+    // quick access
+    XCTAssertEqual(QuickAccessTrackpadSwipeModeStore.shared.mode, .natural)
+    XCTAssertEqual(QuickAccessSwipeActionStore.shared.swipeLeftAction, .pinToScreen)
+    XCTAssertNil(QuickAccessSwipeActionStore.shared.swipeRightAction)
+    XCTAssertFalse(manager.hideCardWhenWindowOpen)
+    XCTAssertEqual(manager.animationStyle, .scale)
+  }
+
+  func testImportRejectsOutOfRangeVideoEditorZoomTransitionDuration() {
+    let defaults = UserDefaultsFactory.make()
+    let source = """
+    schema_version = 1
+
+    [recording]
+    video_editor_zoom_transition_duration = 10.0
+    """
+
+    let result = SnapzyConfigurationImporter.importTOML(source, defaults: defaults)
+    XCTAssertTrue(result.hasErrors)
+    XCTAssertNil(defaults.object(forKey: PreferencesKeys.videoEditorZoomTransitionDuration))
+  }
+
+  func testImportRejectsInvalidEnumValues() {
+    let defaults = UserDefaultsFactory.make()
+    
+    let sourceInvalidTrackpad = """
+    schema_version = 1
+    [quick_access]
+    trackpad_swipe_mode = "invalid_mode"
+    """
+    let result1 = SnapzyConfigurationImporter.importTOML(sourceInvalidTrackpad, defaults: defaults)
+    XCTAssertTrue(result1.hasErrors)
+
+    let sourceInvalidLeftAction = """
+    schema_version = 1
+    [quick_access]
+    swipe_left_action = "invalid_action"
+    """
+    let result2 = SnapzyConfigurationImporter.importTOML(sourceInvalidLeftAction, defaults: defaults)
+    XCTAssertTrue(result2.hasErrors)
+
+    let sourceInvalidAnim = """
+    schema_version = 1
+    [quick_access]
+    animation_style = "invalid_style"
+    """
+    let result3 = SnapzyConfigurationImporter.importTOML(sourceInvalidAnim, defaults: defaults)
+    XCTAssertTrue(result3.hasErrors)
+  }
 }

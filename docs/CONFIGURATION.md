@@ -45,17 +45,13 @@ step and grant access later from Settings -> Advanced.
 
 The TOML file covers portable app preferences:
 
-- General settings: language, appearance, sounds, URL scheme integration, login item, export folder path.
-- Capture settings: naming templates, screenshot format, cursor/app inclusion,
-  scrolling hints, OCR notification, object cutout auto-crop.
+- General settings: language, appearance, sounds, URL scheme integration, show menu bar icon, login item, export folder path.
+- Capture settings: naming templates, screenshot format, cursor/app inclusion, freeze area, show selection area overlay, reverse magnifier zoom direction, scrolling hints, OCR notification, object cutout auto-crop.
 - After-capture actions for screenshot and recording.
-- Recording settings: format, quality, FPS, audio, microphone device id, cursor,
-  click highlights, keystroke overlay, live annotation shortcuts.
-- Quick Access: visibility, position, countdown behavior, gesture toggles, action order,
-  enabled actions, card slots.
+- Recording settings: format, quality, FPS, audio, microphone device id, cursor, click highlights, keystroke overlay, live annotation shortcuts, video editor zoom transition duration.
+- Quick Access: visibility, position, countdown behavior, gesture toggles, trackpad swipe mode, swipe left/right actions, hide card when window open, animation style, action order, enabled actions, card slots.
 - History: retention, maximum count, floating panel layout and filter.
-- Cloud metadata: provider, bucket, region, endpoint, custom domain, expiration,
-  and upload window position.
+- Cloud metadata: provider, bucket, region, endpoint, custom domain, expiration, and upload window position.
 - Annotate preferences.
 - Global, overlay, Annotate tool, and Annotate action shortcuts.
 
@@ -107,6 +103,7 @@ language = "system"
 appearance = "system"
 play_sounds = true
 url_scheme_enabled = true
+show_menu_bar_icon = true
 start_at_login = false
 export_location = "~/Desktop"
 
@@ -122,6 +119,9 @@ recording_template = "Recordings/{appName}/{year}/{monthShort}/Snapzy_Recording_
 format = "png"
 include_snapzy = false
 show_cursor = false
+freeze_area = false
+show_selection_area_overlay = true
+reverse_magnifier_zoom_direction = false
 
 [capture.after.screenshot]
 save = true
@@ -139,6 +139,7 @@ capture_microphone = false
 show_cursor = true
 highlight_clicks = false
 show_keystrokes = false
+video_editor_zoom_transition_duration = 0.4
 
 [quick_access]
 enabled = true
@@ -149,6 +150,11 @@ pause_countdown_on_hover = true
 overlay_scale = 1.0
 drag_drop = true
 two_finger_swipe_to_dismiss = true
+trackpad_swipe_mode = "inverted"
+swipe_left_action = "dismiss"
+swipe_right_action = "dismiss"
+hide_card_when_window_open = true
+animation_style = "slide"
 actions_order = ["copy", "saveOrOpen", "edit", "uploadToCloud", "pinToScreen", "dismiss", "delete"]
 enabled_actions = ["copy", "delete", "dismiss", "edit", "pinToScreen", "saveOrOpen", "uploadToCloud"]
 

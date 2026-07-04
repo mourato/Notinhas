@@ -34,6 +34,7 @@ enum SnapzyConfigurationExporter {
     writer.value("appearance", appearance(defaults: defaults))
     writer.value("play_sounds", defaults.object(forKey: PreferencesKeys.playSounds) as? Bool ?? true)
     writer.value("url_scheme_enabled", defaults.object(forKey: PreferencesKeys.urlSchemeEnabled) as? Bool ?? true)
+    writer.value("show_menu_bar_icon", defaults.object(forKey: PreferencesKeys.showMenuBarIcon) as? Bool ?? true)
     writer.value("start_at_login", LoginItemManager.isEnabled)
     writer.value("export_location", SnapzyConfigurationPaths.collapsingHomePath(SandboxFileAccessManager.shared.exportLocationPath))
 
@@ -64,6 +65,9 @@ enum SnapzyConfigurationExporter {
     writer.value("format", defaults.string(forKey: PreferencesKeys.screenshotFormat) ?? ImageFormatOption.png.rawValue)
     writer.value("include_snapzy", defaults.boolValue(PreferencesKeys.screenshotIncludeOwnApp, default: false))
     writer.value("show_cursor", defaults.boolValue(PreferencesKeys.screenshotShowCursor, default: false))
+    writer.value("freeze_area", defaults.boolValue(PreferencesKeys.screenshotFreezeArea, default: false))
+    writer.value("show_selection_area_overlay", defaults.boolValue(PreferencesKeys.screenshotShowSelectionAreaOverlay, default: true))
+    writer.value("reverse_magnifier_zoom_direction", defaults.boolValue(PreferencesKeys.screenshotReverseMagnifierZoomDirection, default: false))
 
     writer.section("capture.scrolling")
     writer.value("show_hints", defaults.boolValue(PreferencesKeys.scrollingCaptureShowHints, default: true))
@@ -92,6 +96,7 @@ enum SnapzyConfigurationExporter {
     writer.value("show_cursor", RecordingToolbarPreferences.showCursor(defaults: defaults))
     writer.value("highlight_clicks", RecordingToolbarPreferences.highlightClicks(defaults: defaults))
     writer.value("show_keystrokes", RecordingToolbarPreferences.showKeystrokes(defaults: defaults))
+    writer.value("video_editor_zoom_transition_duration", defaults.doubleValue(PreferencesKeys.videoEditorZoomTransitionDuration, default: 0.4))
 
     writer.section("recording.mouse_highlight")
     let color = storedMouseColor(defaults: defaults)
@@ -129,6 +134,11 @@ enum SnapzyConfigurationExporter {
     writer.value("drag_drop", manager.dragDropEnabled)
     writer.value("two_finger_swipe_to_dismiss", manager.twoFingerSwipeToDismissEnabled)
     writer.value("swipe_sensitivity", manager.swipeSensitivity)
+    writer.value("trackpad_swipe_mode", QuickAccessTrackpadSwipeModeStore.shared.mode.rawValue)
+    writer.value("swipe_left_action", QuickAccessSwipeActionStore.shared.swipeLeftAction?.rawValue ?? "none")
+    writer.value("swipe_right_action", QuickAccessSwipeActionStore.shared.swipeRightAction?.rawValue ?? "none")
+    writer.value("hide_card_when_window_open", manager.hideCardWhenWindowOpen)
+    writer.value("animation_style", manager.animationStyle.rawValue)
     writer.stringArray("actions_order", actionStore.actionOrder.map(\.rawValue))
     writer.stringArray("enabled_actions", actionStore.enabledActions.map(\.rawValue).sorted())
 

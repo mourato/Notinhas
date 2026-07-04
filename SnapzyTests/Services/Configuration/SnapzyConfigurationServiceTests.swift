@@ -313,6 +313,50 @@ final class SnapzyConfigurationServiceTests: XCTestCase {
     }
   }
 
+  func testExportIncludesNewConfigurationFields() throws {
+    let defaults = UserDefaultsFactory.make()
+    defaults.set(false, forKey: PreferencesKeys.showMenuBarIcon)
+    defaults.set(true, forKey: PreferencesKeys.screenshotFreezeArea)
+    defaults.set(false, forKey: PreferencesKeys.screenshotShowSelectionAreaOverlay)
+    defaults.set(true, forKey: PreferencesKeys.screenshotReverseMagnifierZoomDirection)
+    defaults.set(0.65, forKey: PreferencesKeys.videoEditorZoomTransitionDuration)
+
+    let manager = QuickAccessManager.shared
+    let originalHide = manager.hideCardWhenWindowOpen
+    let originalStyle = manager.animationStyle
+    let originalLeftAction = QuickAccessSwipeActionStore.shared.swipeLeftAction
+    let originalRightAction = QuickAccessSwipeActionStore.shared.swipeRightAction
+    let originalTrackpadMode = QuickAccessTrackpadSwipeModeStore.shared.mode
+
+    manager.hideCardWhenWindowOpen = false
+    manager.animationStyle = .scale
+    QuickAccessSwipeActionStore.shared.setAction(.left, action: .pinToScreen)
+    QuickAccessSwipeActionStore.shared.setAction(.right, action: nil)
+    QuickAccessTrackpadSwipeModeStore.shared.setMode(.natural)
+
+    defer {
+      manager.hideCardWhenWindowOpen = originalHide
+      manager.animationStyle = originalStyle
+      QuickAccessSwipeActionStore.shared.setAction(.left, action: originalLeftAction)
+      QuickAccessSwipeActionStore.shared.setAction(.right, action: originalRightAction)
+      QuickAccessTrackpadSwipeModeStore.shared.setMode(originalTrackpadMode)
+    }
+
+    let source = SnapzyConfigurationExporter.exportTOML(defaults: defaults)
+    let document = try SimpleTOMLParser.parse(source)
+
+    XCTAssertEqual(document.value(at: "general", "show_menu_bar_icon")?.boolValue, false)
+    XCTAssertEqual(document.value(at: "capture", "screenshot", "freeze_area")?.boolValue, true)
+    XCTAssertEqual(document.value(at: "capture", "screenshot", "show_selection_area_overlay")?.boolValue, false)
+    XCTAssertEqual(document.value(at: "capture", "screenshot", "reverse_magnifier_zoom_direction")?.boolValue, true)
+    XCTAssertEqual(document.value(at: "recording", "video_editor_zoom_transition_duration")?.doubleValue, 0.65)
+    XCTAssertEqual(document.value(at: "quick_access", "trackpad_swipe_mode")?.stringValue, "natural")
+    XCTAssertEqual(document.value(at: "quick_access", "swipe_left_action")?.stringValue, "pinToScreen")
+    XCTAssertEqual(document.value(at: "quick_access", "swipe_right_action")?.stringValue, "none")
+    XCTAssertEqual(document.value(at: "quick_access", "hide_card_when_window_open")?.boolValue, false)
+    XCTAssertEqual(document.value(at: "quick_access", "animation_style")?.stringValue, "scale")
+  }
+
   private func temporaryHomeDirectory() -> URL {
     FileManager.default.temporaryDirectory
       .appendingPathComponent("snapzy-config-service-\(UUID().uuidString)", isDirectory: true)
