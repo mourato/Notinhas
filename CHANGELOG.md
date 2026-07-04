@@ -82,6 +82,57 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.28.0] - 2026-07-04
+
+### Features
+-  Integrate AreaSelectionMagnifier for enhanced zoom functionality in AreaSelectionOverlayView (b7c764b)
+-  Add reverse magnifier zoom direction preference and implement functionality in AreaSelectionOverlayView (#204) (2312952)
+-  Implement dynamic backdrop capture for live-mode luma calculations and enhance overlay behavior (7df98da)
+-  Add selection area overlay feature with localization and tests (#204) (b7be89f)
+-  Add history and quick access sections to shortcut overlay (d53ff1f)
+-  Add Cmd+A shortcut handling for selecting all records in HistoryFloatingPanel and HistoryMainView (f4d11df)
+-  Implement toggle mode shortcut for history panel (74f73db)
+-  Add GPU-cached drop shadow for Quick Access cards and corresponding unit tests (13d317e)
+-  Enhance microphone audio capture settings to ensure proper resampling and prevent spectral imaging artifacts (cabccfc)
+-  Refine audio level meter and waveform rendering for improved responsiveness (#313) (fa6a23b)
+-  Implement audio level metering for recording status bar waveform (#313) (566b1d4)
+-  Enhance capture context handling for filename templates (#314) (19bbbe1)
+-  Add speed segment functionality to Video Editor (#316) (b242b50)
+
+### Bug Fixes
+-  Update localization for "Annotate" and add open history description (8645fa6)
+-  Update translations for "Annotate" in multiple languages (c975f13)
+-  Add history shortcuts section and description to localization files (ff8d611)
+-  Integrate RecordingToolbarState into RecordingStatusBarView and RecordingToolbarWindow for improved state management (b0594a3)
+-  Implement Escape key handling for topmost capture-area overlay in RecordingCoordinator (1224976)
+-  Update CI handling in test scripts to improve package caching and directory creation (ec994e8)
+-  Add debug hooks for synthetic mouse events and adjust publish interval for testing in audio level meter (b8b9f5a)
+-  Implement mouse monitor suspension and resumption for quick access panels during capture operations (c709159)
+-  Update localization strings for Spanish and French (#321) (a03c540)
+-  Settings capture interaction block and cursor drop (2066ba9)
+
+### Chore
+- refactor: Add new configuration fields for menu bar icon, screenshot options, and quick access actions (b898080)
+- refactor: Enhance cursor appearance with custom application window cursor (c54f669)
+- refactor: Remove toggle mode shortcut settings from HistorySettingsView (b6cd5e1)
+- refactor: Implement transition re-freeze functionality for frozen sessions and add related tests (a5f0128)
+- refactor: Implement dynamic backdrop capture for magnifier zoom in backdrop-less sessions (430cf97)
+- refactor: Add cursor refresh functionality during selection phase and improve cursor handling in InlineAreaAnnotateSession (41ff375)
+- refactor: Improve luma sampling accuracy by deriving scale from image dimensions and add related tests (94fb7c4)
+- refactor: Enhance cursor rendering with improved shadow effects and color adjustments (24f3c56)
+- refactor: Add scripts for generating and testing DMG layout with custom background (e8b2b36)
+- refactor: Refactor and rename video editor components for clarity (c424708)
+- refactor: Remove DEBUG conditional compilation for synthetic mouse event handling and improve audio format handling in tests (fee5c75)
+- chore: automate minimum macOS version detection in appcast update (6f92993)
+- chore: update appcast, cask, and readme for v1.27.0 (0144134)
+
+### Contributors
+- @duongductrong
+- @github-actions[bot]
+- @jmcubel
+- @singularitti
+
 ## [1.27.0] - 2026-06-29
 
 ### Features
