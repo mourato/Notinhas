@@ -1014,33 +1014,35 @@ final class AreaSelectionController: NSObject {
     }
     keyboardOwnerDisplayID = displayID
     window.setReceivesKeyboardInput(true)
-    window.activateKeyboardInputIfNeeded()  // makeKey + makeFirstResponder (nonactivating; no app activation)
+    window.makeKeyAndOrderFront(nil)
+    window.makeFirstResponder(window.overlayView)
     
-    // Explicitly order the newly-key window front to ensure the Window Server
-    // registers the key status change for this inactive application's panel.
-    window.orderFrontRegardless()
+    // macOS WindowServer is notoriously stubborn about applying cursor rects for newly-key
+    // windows of inactive applications if the mouse was already inside the window.
+    // By explicitly removing and re-adding the tracking area here, AppKit generates
+    // immediate mouseEntered and cursorUpdate events for the new key window.
+    window.overlayView.updateTrackingAreas()
     
     // Invalidate cursor rects before the next event
     window.overlayView.refreshCursor()
     
-    // Post a synthetic mouse-moved event directly to the newly key window.
-    // Since the app is inactive, macOS only evaluates cursor rects if the top window
-    // is the key window and receives a mouse event. The physical mouse movement that
-    // brought us here was already routed to the window beneath us. This synthetic event
-    // forces an immediate re-evaluation using our key window's cursor rects.
-    let mouseLocation = NSEvent.mouseLocation
-    if let syntheticEvent = NSEvent.mouseEvent(
-      with: .mouseMoved,
-      location: mouseLocation,
-      modifierFlags: [],
-      timestamp: ProcessInfo.processInfo.systemUptime,
-      windowNumber: window.windowNumber,
-      context: nil,
-      eventNumber: 0,
-      clickCount: 0,
-      pressure: 0
-    ) {
-      NSApp.postEvent(syntheticEvent, atStart: false)
+    // WindowServer fundamentally refuses to assign native cursor ownership to a newly-key window
+    // of an inactive application unless a hardware click occurs. We bypass this by posting a
+    // synthetic hardware click via CGEvent exactly at the current mouse position.
+    window.overlayView.ignoreNextSyntheticClick = true
+    window.overlayView.ignoreNextSyntheticMouseUp = true
+    
+    if let source = CGEventSource(stateID: .hidSystemState),
+       let currentEvent = CGEvent(source: nil) {
+      let cgMousePos = currentEvent.location
+      
+      let mouseDown = CGEvent(mouseEventSource: source, mouseType: .leftMouseDown, mouseCursorPosition: cgMousePos, mouseButton: .left)
+      let mouseUp = CGEvent(mouseEventSource: source, mouseType: .leftMouseUp, mouseCursorPosition: cgMousePos, mouseButton: .left)
+      
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+        mouseDown?.post(tap: .cghidEventTap)
+        mouseUp?.post(tap: .cghidEventTap)
+      }
     }
 
     DiagnosticLogger.shared.log(
@@ -2799,7 +2801,14 @@ final class AreaSelectionOverlayView: NSView {
 
   // MARK: - Mouse Events
 
+  var ignoreNextSyntheticClick = false
+
   override func mouseDown(with event: NSEvent) {
+    if ignoreNextSyntheticClick {
+      ignoreNextSyntheticClick = false
+      return
+    }
+    
     let point = convert(event.locationInWindow, from: nil)
     currentMousePosition = point
     if let areaWindow = self.window as? AreaSelectionWindow {
@@ -2859,7 +2868,14 @@ final class AreaSelectionOverlayView: NSView {
   }
 
 
+  var ignoreNextSyntheticMouseUp = false
+
   override func mouseUp(with event: NSEvent) {
+    if ignoreNextSyntheticMouseUp {
+      ignoreNextSyntheticMouseUp = false
+      return
+    }
+    
     let point = convert(event.locationInWindow, from: nil)
     currentMousePosition = point
     delegate?.overlayViewDidRequestDisplayActivation(self)
@@ -2886,8 +2902,8 @@ final class AreaSelectionOverlayView: NSView {
     let point = convert(event.locationInWindow, from: nil)
     currentMousePosition = point
     delegate?.overlayViewDidRequestDisplayActivation(self)
-    guard selectionEnabled else { return }
     activeCursor.set()
+    guard selectionEnabled else { return }
     switch interactionMode {
     case .manualRegion:
       if !isSelecting {
@@ -2905,11 +2921,11 @@ final class AreaSelectionOverlayView: NSView {
   }
 
   private var activeCursor: NSCursor {
-    guard selectionEnabled else { return .arrow }
     switch interactionMode {
     case .manualRegion:
       return showSelectionAreaOverlay ? NSCursor.vectorScreenshotCrosshairLight : NSCursor.vectorScreenshotCrosshairHighContrast
     case .applicationWindow:
+      guard selectionEnabled else { return .arrow }
       return NSCursor.applicationWindowCursor
     }
   }
