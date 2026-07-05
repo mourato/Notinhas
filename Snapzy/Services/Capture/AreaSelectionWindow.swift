@@ -1875,10 +1875,13 @@ final class AreaSelectionOverlayView: NSView {
     crosshairIndicatorLayer.lineWidth = crosshairIndicatorLineWidth
     crosshairIndicatorLayer.lineCap = .round
     crosshairIndicatorLayer.actions = disabledActions
-    crosshairIndicatorLayer.shadowColor = NSColor.black.cgColor
-    crosshairIndicatorLayer.shadowOffset = .zero
-    crosshairIndicatorLayer.shadowRadius = 2
-    crosshairIndicatorLayer.shadowOpacity = 0.5
+    configureShadow(
+      for: crosshairIndicatorLayer,
+      color: .black,
+      offset: .zero,
+      radius: 2,
+      opacity: 0.5
+    )
     rootLayer.addSublayer(crosshairIndicatorLayer)
 
     sizeIndicatorBackgroundLayer = CALayer()
@@ -1893,10 +1896,13 @@ final class AreaSelectionOverlayView: NSView {
     sizeIndicatorTextLayer.font = coordinateIndicatorFont as CTFont
     sizeIndicatorTextLayer.fontSize = coordinateIndicatorFont.pointSize
     sizeIndicatorTextLayer.foregroundColor = NSColor(white: 0.05, alpha: 1.0).cgColor
-    sizeIndicatorTextLayer.shadowColor = NSColor.white.cgColor
-    sizeIndicatorTextLayer.shadowOffset = CGSize(width: 0.5, height: -0.5)
-    sizeIndicatorTextLayer.shadowRadius = 0.1
-    sizeIndicatorTextLayer.shadowOpacity = 1
+    configureShadow(
+      for: sizeIndicatorTextLayer,
+      color: .white,
+      offset: CGSize(width: 0.5, height: -0.5),
+      radius: 0.1,
+      opacity: 1.0
+    )
     rootLayer.addSublayer(sizeIndicatorTextLayer)
 
     modeHintBackgroundLayer = CALayer()
@@ -2457,6 +2463,19 @@ final class AreaSelectionOverlayView: NSView {
     let lineHeight = "0".size(withAttributes: attributes).height
     let totalHeight = lineHeight * CGFloat(lines.count) + 2.0
     return CGSize(width: maxWidth, height: totalHeight)
+  }
+
+  private func configureShadow(
+    for layer: CALayer,
+    color: NSColor,
+    offset: CGSize,
+    radius: CGFloat,
+    opacity: Float
+  ) {
+    layer.shadowColor = color.cgColor
+    layer.shadowOffset = offset
+    layer.shadowRadius = radius
+    layer.shadowOpacity = opacity
   }
 
   private func configureOverlayTextLayer(_ textLayer: CATextLayer) {
