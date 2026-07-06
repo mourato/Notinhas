@@ -328,6 +328,8 @@ final class PostCaptureActionHandler {
     // generation, Quick Access animations, or editor opening.
     if preferences.isActionEnabled(.copyFile, for: captureType) {
       copyToClipboard(url: url, isVideo: captureType == .recording)
+      CaptureSignposts.executeEvent("clipboard-set")
+      CaptureSignposts.endExecute()
       let label = captureType == .screenshot ? "screenshot" : "recording"
       logger.debug("Clipboard copy executed for \(url.lastPathComponent)")
       DiagnosticLogger.shared.log(

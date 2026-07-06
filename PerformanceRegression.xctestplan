@@ -1,0 +1,37 @@
+{
+  "configurations" : [
+    {
+      "id" : "D0011001-PERF-4000-9000-000000000001",
+      "name" : "Performance",
+      "options" : {
+        "environmentVariableEntries" : [
+          {
+            "key" : "SNAPZY_PERF_SIGNPOSTS",
+            "value" : "1"
+          }
+        ]
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Snapzy.xcodeproj",
+      "identifier" : "A36462A22F18EEDA0003453D",
+      "name" : "Snapzy"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:Snapzy.xcodeproj",
+        "identifier" : "D00100072F9F000000000007",
+        "name" : "SnapzyTests"
+      },
+      "selectedTests" : [
+        "SnapzyTests/CaptureActivationPerformanceTests"
+      ]
+    }
+  ],
+  "version" : 1
+}

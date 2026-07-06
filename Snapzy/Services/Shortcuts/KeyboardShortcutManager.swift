@@ -1228,6 +1228,7 @@ final class KeyboardShortcutManager {
     case areaHotkeyID.id:
       actionName = "area"
       action = .captureArea
+      CaptureSignposts.beginActivation()
     case areaAnnotateHotkeyID.id:
       actionName = "area-annotate"
       action = .captureAreaAnnotate

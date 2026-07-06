@@ -91,6 +91,15 @@ final class AreaSelectionController: NSObject {
   /// teardown via `resetCallbacks`). Read cross-actor by other overlays (e.g. `RecordingCoordinator`)
   /// to yield Escape to this topmost overlay. Deterministic — does not depend on window-key timing.
   private(set) var isPresenting = false
+  /// Explicit frozen-session marker. Frozen sessions may now START with empty backdrops
+  /// (reordered flow: overlay first, snapshot in parallel), so "frozen" can no longer be
+  /// inferred from `!selectionBackdrops.isEmpty` at session start.
+  private var isFrozenSession = false
+  /// Whether the frozen-session app activation (NSApp.activate + key assignment) has run.
+  /// For backdrop-pending frozen sessions it is deferred until the first backdrop applies,
+  /// so the pre-activation snapshot captures the previous app in its ACTIVE state — pixel
+  /// parity with the legacy serial flow, where activation always followed the snapshot.
+  private var hasPerformedFrozenActivation = false
   private var localEscapeMonitor: Any?
   private var globalEscapeMonitor: Any?
   /// Drives "key-follows-pointer" for non-activated live sessions. Backdrop-less sessions (live
@@ -359,6 +368,7 @@ final class AreaSelectionController: NSObject {
     backdrops: [CGDirectDisplayID: AreaSelectionBackdrop],
     applicationConfiguration: AreaSelectionApplicationConfiguration?,
     initialInteractionMode: AreaSelectionInteractionMode = .manualRegion,
+    expectsFrozenBackdrops: Bool = false,
     onDisplayActivationRequested: AreaSelectionDisplayActivationHandler? = nil,
     onTransitionRecapture: AreaSelectionTransitionRecaptureHandler? = nil,
     completion: @escaping AreaSelectionResultCompletion
@@ -371,6 +381,7 @@ final class AreaSelectionController: NSObject {
       backdrops: backdrops,
       applicationConfiguration: applicationConfiguration,
       initialInteractionMode: initialInteractionMode,
+      expectsFrozenBackdrops: expectsFrozenBackdrops,
       onDisplayActivationRequested: onDisplayActivationRequested,
       onTransitionRecapture: onTransitionRecapture
     )
@@ -381,6 +392,7 @@ final class AreaSelectionController: NSObject {
     backdrops: [CGDirectDisplayID: AreaSelectionBackdrop],
     applicationConfiguration: AreaSelectionApplicationConfiguration? = nil,
     initialInteractionMode: AreaSelectionInteractionMode = .manualRegion,
+    expectsFrozenBackdrops: Bool = false,
     onDisplayActivationRequested: AreaSelectionDisplayActivationHandler? = nil,
     onTransitionRecapture: AreaSelectionTransitionRecaptureHandler? = nil
   ) {
@@ -403,6 +415,8 @@ final class AreaSelectionController: NSObject {
 
     selectionMode = mode
     selectionBackdrops = backdrops
+    isFrozenSession = expectsFrozenBackdrops || !backdrops.isEmpty
+    hasPerformedFrozenActivation = false
     liveFallbackDisplayIDs.removeAll()
     self.applicationConfiguration = applicationConfiguration
     displayActivationHandler = onDisplayActivationRequested
@@ -451,6 +465,11 @@ final class AreaSelectionController: NSObject {
 
     // Activate pooled windows (instant show)
     activatePooledWindows()
+    // End "hotkey-to-overlay" interval: next runloop turn is our closest proxy
+    // for "windows ordered front" before CA compositor picks them up.
+    DispatchQueue.main.async {
+      CaptureSignposts.endActivation()
+    }
 
     // Bring Snapzy forward so the overlay's transparent crosshair cursor takes effect immediately.
     // The overlay is a non-activating panel, so when the session is triggered from a global
@@ -464,6 +483,7 @@ final class AreaSelectionController: NSObject {
     // activating would deactivate/dim them and leave Snapzy frontmost afterward; those keep the
     // non-activating behavior this window class is built around.
     if !selectionBackdrops.isEmpty {
+      hasPerformedFrozenActivation = true
       previouslyActiveApplication = NSWorkspace.shared.frontmostApplication
       NSApp.activate(ignoringOtherApps: true)
 
@@ -496,7 +516,10 @@ final class AreaSelectionController: NSObject {
 
     startWindowSelectionPreparationIfNeeded()
 
-    if selectionBackdrops.isEmpty {
+    // Magnifier backdrop for backdrop-less sessions (recording, OCR, cutout). Skipped for
+    // backdrop-pending frozen sessions: their real snapshot arrives via `applyBackdrop`
+    // momentarily, and this invisible capture would race it.
+    if selectionBackdrops.isEmpty && !isFrozenSession {
       let targetDisplayID = ScreenUtility.activeDisplayID()
       if let screen = NSScreen.screens.first(where: { $0.displayID == targetDisplayID }) {
         let captureRect = CGDisplayBounds(targetDisplayID)
@@ -669,6 +692,30 @@ final class AreaSelectionController: NSObject {
     window.overlayView.activatePendingSelectionIfNeeded()
     window.overlayView.refreshCursor()
     renderManualSelectionIfNeeded()
+    performDeferredFrozenActivationIfNeeded()
+  }
+
+  /// Backdrop-pending frozen sessions start without activating the app so the parallel
+  /// snapshot captures the previous app in its ACTIVE state (pixel parity with the legacy
+  /// serial flow). Once the first backdrop lands, perform the activation the serial flow
+  /// did at session start: cursor rects evaluate immediately and the overlay takes key.
+  /// Skipped mid-drag — activation would disturb event routing, and the user is already
+  /// interacting (crosshair/key handled by the pointer-tracking path).
+  private func performDeferredFrozenActivationIfNeeded() {
+    guard isFrozenSession, !hasPerformedFrozenActivation, isPresenting else { return }
+    guard manualSelectionStartPoint == nil else { return }
+    hasPerformedFrozenActivation = true
+    stopPointerTracking()
+    previouslyActiveApplication = NSWorkspace.shared.frontmostApplication
+    NSApp.activate(ignoringOtherApps: true)
+    if let keyboardDisplay = keyboardOwnerDisplayID,
+       let keyWindow = windowPool[keyboardDisplay] {
+      DispatchQueue.main.async { [weak keyWindow] in
+        guard let keyWindow, keyWindow.isVisible else { return }
+        keyWindow.makeKey()
+        keyWindow.makeFirstResponder(keyWindow.overlayView)
+      }
+    }
   }
 
   func enableLiveFallbackSelection(for displayID: CGDirectDisplayID) {
@@ -872,6 +919,7 @@ final class AreaSelectionController: NSObject {
   }
 
   private func completeSelection(target: AreaSelectionTarget, from window: AreaSelectionWindow) {
+    CaptureSignposts.beginExecute()
     QuickAccessManager.shared.resumeAfterCapture()
     let rect = target.rect
     let intersectingDisplayIDs = displayIDsIntersecting(rect)
@@ -1104,6 +1152,8 @@ final class AreaSelectionController: NSObject {
     interactionMode = .manualRegion
     windowSelectionSnapshot = nil
     keyboardOwnerDisplayID = nil
+    isFrozenSession = false
+    hasPerformedFrozenActivation = false
   }
 
   private func beginManualSelection(at screenPoint: CGPoint, from window: AreaSelectionWindow) {
@@ -2697,6 +2747,7 @@ final class AreaSelectionOverlayView: NSView {
 
   func renderManualSelection(screenRect: CGRect?, currentScreenPoint: CGPoint?) {
     guard interactionMode == .manualRegion else { return }
+    let _renderStart = CaptureSignposts.renderFrameStart()
 
     let localCurrentPoint: CGPoint?
     if let currentScreenPoint, let window = self.window {
@@ -2725,6 +2776,7 @@ final class AreaSelectionOverlayView: NSView {
         hideSizeIndicator()
       }
       CATransaction.commit()
+      CaptureSignposts.renderFrameCommit(startTime: _renderStart)
       return
     }
 
@@ -2761,6 +2813,7 @@ final class AreaSelectionOverlayView: NSView {
       }
     }
     CATransaction.commit()
+    CaptureSignposts.renderFrameCommit(startTime: _renderStart)
   }
 
   func setWindowSelectionSnapshot(_ windowSelectionSnapshot: WindowSelectionSnapshot?) {

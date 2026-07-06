@@ -173,6 +173,11 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
   private let windowHideSettleDelay: TimeInterval = 1.0 / 60.0
   private let frozenSnapshotWindowHideSettleDelay: TimeInterval = 1.0 / 60.0
 
+  /// Debug kill-switch: when set, frozen area capture uses the legacy serial flow
+  /// (snapshot blocks overlay). Kept for one release cycle as the rollback path for
+  /// the reordered overlay-first frozen activation.
+  static let frozenSerialActivationKillSwitchKey = "snapzy.frozen.serialActivation"
+
   @MainActor
   final class HiddenWindowSession {
     static var onPostSyntheticMouseEvent: ((NSEvent) -> Void)?
@@ -559,6 +564,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       return
     }
     saveDirectory = resolvedSaveDirectory
+    CaptureSignposts.activationEvent("save-dir-resolved")
 
     let captureContext = CaptureContext.fromFrontmostApp()
     // Set flag BEFORE delay to close the race window
@@ -579,6 +585,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
 
     // Hide only normal-level app windows (not overlay panels) to avoid hiding pooled overlay windows
     let hiddenWindowSession = hideVisibleNormalWindowsIfNeeded(shouldHideOwnWindows)
+    CaptureSignposts.activationEvent("windows-hidden")
 
     // Live mode: skip the frozen snapshot so on-screen content keeps playing during selection,
     // then capture the chosen region at completion time.
@@ -597,6 +604,46 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       return
     }
 
+    // Frozen mode, reordered flow (default): show the overlay IMMEDIATELY and acquire the
+    // backdrop in parallel, reusing the lazy-display snapshot machinery. The settle delay
+    // (needed only when own windows were hidden) still precedes the snapshot for pixel
+    // correctness, but no longer delays the overlay. Kill-switch restores the legacy
+    // serial flow (snapshot → overlay) for one release cycle.
+    if !UserDefaults.standard.bool(forKey: Self.frozenSerialActivationKillSwitchKey) {
+      let frozenSession = FrozenAreaCaptureSession.fromSnapshots([])
+      startFrozenAreaSelection(
+        with: frozenSession,
+        saveDirectory: resolvedSaveDirectory,
+        prefetchedContentTask: prefetchedContentTask,
+        showCursor: showCursor,
+        excludeDesktopIcons: excludeDesktopIcons,
+        excludeDesktopWidgets: excludeDesktopWidgets,
+        excludeOwnApplication: excludeOwnApplication,
+        initialInteractionMode: initialInteractionMode,
+        hiddenWindowSession: hiddenWindowSession,
+        context: captureContext,
+        hasPendingInitialBackdrop: true
+      )
+      let snapshotDelay = hiddenWindowSession.didHideWindows ? frozenSnapshotWindowHideSettleDelay : 0
+      let sessionID = activeAreaSelectionSessionID
+      DispatchQueue.main.asyncAfter(deadline: .now() + snapshotDelay) { [weak self] in
+        guard let self, let sessionID, self.activeAreaSelectionSessionID == sessionID else { return }
+        // Snapshot duration is logged by `applyLazyFrozenSnapshot` (duration_ms context).
+        self.prepareLazyFrozenDisplay(
+          targetDisplayID,
+          sessionID: sessionID,
+          frozenSession: frozenSession,
+          prefetchedContentTask: prefetchedContentTask,
+          showCursor: showCursor,
+          excludeDesktopIcons: excludeDesktopIcons,
+          excludeDesktopWidgets: excludeDesktopWidgets,
+          excludeOwnApplication: excludeOwnApplication
+        )
+      }
+      return
+    }
+
+    // Legacy serial flow (kill-switch `snapzy.frozen.serialActivation`).
     // Give WindowServer enough time to fully remove hidden app windows before
     // the frozen backdrop is prepared.
     let snapshotDelay = hiddenWindowSession.didHideWindows ? frozenSnapshotWindowHideSettleDelay : 0
@@ -612,6 +659,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
         let frozenSession: FrozenAreaCaptureSession
         do {
           self.isCapturing = true
+          CaptureSignposts.beginFrozenSnapshot()
           let snapshotStartedAt = Date()
           let captureMode: String
           if let fastSnapshot = self.captureManager.captureFastDisplaySnapshot(
@@ -638,6 +686,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
             captureMode = "screencapturekit"
           }
           let snapshotDurationMs = Int(Date().timeIntervalSince(snapshotStartedAt) * 1000)
+          CaptureSignposts.endFrozenSnapshot()
           DiagnosticLogger.shared.log(
             .info,
             .capture,
@@ -869,7 +918,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     excludeOwnApplication: Bool,
     initialInteractionMode: AreaSelectionInteractionMode = .manualRegion,
     hiddenWindowSession: HiddenWindowSession,
-    context: CaptureContext = .empty
+    context: CaptureContext = .empty,
+    hasPendingInitialBackdrop: Bool = false
   ) {
     cancelLazyAreaSnapshotTasks()
     let sessionID = UUID()
@@ -883,6 +933,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
         excludeOwnApplication: excludeOwnApplication
       ),
       initialInteractionMode: initialInteractionMode,
+      expectsFrozenBackdrops: hasPendingInitialBackdrop,
       onDisplayActivationRequested: { [weak self] displayID in
         self?.prepareLazyFrozenDisplay(
           displayID,
@@ -932,14 +983,21 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
         context
       }
 
-      cancelLazyAreaSnapshotTasks(clearFailures: false)
-
       Task { @MainActor in
         defer {
           self.lazyAreaSnapshotFailedDisplayIDs.removeAll()
           hiddenWindowSession.restore()
         }
         self.isCapturing = true
+        // Reordered frozen flow: the initial display's snapshot may still be in flight if the
+        // user finished extremely fast. Await the tasks this selection depends on, THEN cancel
+        // the rest — cancelling first would leave the crop without a source snapshot.
+        for displayID in selection.displayIDs.union([selection.displayID]) {
+          if let pendingSnapshotTask = self.lazyAreaSnapshotTasks[displayID] {
+            await pendingSnapshotTask.value
+          }
+        }
+        self.cancelLazyAreaSnapshotTasks(clearFailures: false)
         await Task.yield()
 
         let actualSaveDirectory = self.tempCaptureManager.resolveSaveDirectory(
