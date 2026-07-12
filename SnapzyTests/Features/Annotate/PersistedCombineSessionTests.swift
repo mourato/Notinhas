@@ -63,6 +63,9 @@ final class PersistedCombineSessionTests: XCTestCase {
 
     // 4. Commit the render to the source file (what saveToFile does on close).
     XCTAssertTrue(AnnotateExporter.save(state: state, to: sourceURL))
+    
+    // Give file system time to flush attributes to prevent signature mismatch on slow CI runners
+    Thread.sleep(forTimeInterval: 0.5)
 
     // 5. Snapshot from the LIVE state (what makeSessionSnapshot does) + persist.
     let baseData = try XCTUnwrap(AnnotateExporter.imageData(from: baseImage, for: "png"))
