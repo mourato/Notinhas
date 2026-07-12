@@ -88,6 +88,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.29.1] - 2026-07-12
+
+### Features
+-  Implement live area capture with mouse-up snapshots and add unit tests (#348) (cba47af)
+
+### Bug Fixes
+-  Prevent area selection dismissal after capturing a screenshot (#352) (8b7a8f3)
+-  Update Russian localization strings in Menubar (#345) (71e3658)
+
+### Chore
+- chore: update appcast for v1.29.1-beta.2 (670545c)
+- chore: bump version to v1.29.1-beta.2 (#353) (d4b1216)
+- chore: update appcast for v1.29.1-beta.1 (fac1a62)
+- chore: bump version to v1.29.1-beta.1 (#349) (765738f)
+- refactor: Remove unnecessary drawingGroup modifier from HistoryCardView and HistoryExpandedCaptureCardView (308ae6d)
+- chore: update appcast, cask, and readme for v1.29.0 (b2bef32)
+
+### Contributors
+- @5e3ru4o
+- @duongductrong
+- @github-actions[bot]
+
 ## [1.29.1-beta.2] - 2026-07-11
 
 ### Bug Fixes
