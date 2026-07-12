@@ -2146,6 +2146,71 @@
         }
       }
     },
+    "cloud-provider.google-drive": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google Drive"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google Drive"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google Drive"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google Drive"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google Drive"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google Drive"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google Drive"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google Drive"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google Drive"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google Drive"
+          }
+        }
+      }
+    },
     "cloud-settings.access-key": {
       "extractionState": "stale",
       "localizations": {
@@ -3769,6 +3834,186 @@
             "value": "忘記密碼？重置配置"
           }
         }
+      }
+    },
+    "cloud-settings.google-auth-section": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Google Authorization" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Google Authorization" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Google Authorization" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Google Authorization" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Google Authorization" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "Google Authorization" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Google Authorization" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Ủy quyền Google" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "Google Authorization" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "Google Authorization" } }
+      }
+    },
+    "cloud-settings.google-authorize": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Authorize with Google" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Authorize with Google" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Authorize with Google" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Authorize with Google" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Authorize with Google" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "Authorize with Google" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Authorize with Google" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Ủy quyền với Google" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "Authorize with Google" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "Authorize with Google" } }
+      }
+    },
+    "cloud-settings.google-authorized": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Authorized" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Authorized" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Authorized" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Authorized" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Authorized" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "Authorized" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Authorized" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Đã ủy quyền" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "Authorized" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "Authorized" } }
+      }
+    },
+    "cloud-settings.google-authorizing": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Authorizing…" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Authorizing…" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Authorizing…" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Authorizing…" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Authorizing…" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "Authorizing…" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Authorizing…" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Đang ủy quyền…" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "Authorizing…" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "Authorizing…" } }
+      }
+    },
+    "cloud-settings.google-client-id": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Client ID" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Client ID" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Client ID" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Client ID" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Client ID" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "Client ID" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Client ID" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Client ID" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "Client ID" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "Client ID" } }
+      }
+    },
+    "cloud-settings.google-client-secret": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Client Secret" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Client Secret" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Client Secret" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Client Secret" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Client Secret" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "Client Secret" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Client Secret" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Client Secret" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "Client Secret" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "Client Secret" } }
+      }
+    },
+    "cloud-settings.google-connected-as": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Connected as: %@" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Connected as: %@" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Connected as: %@" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Connected as: %@" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Connected as: %@" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "Connected as: %@" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Connected as: %@" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Đã kết nối: %@" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "Connected as: %@" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "Connected as: %@" } }
+      }
+    },
+    "cloud-settings.google-credentials-section": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Google Drive Credentials" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Google Drive Credentials" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Google Drive Credentials" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Google Drive Credentials" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Google Drive Credentials" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "Google Drive Credentials" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Google Drive Credentials" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Thông tin cấu hình Google Drive" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "Google Drive Credentials" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "Google Drive Credentials" } }
+      }
+    },
+    "cloud-settings.google-folder-description": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)." } },
+        "es": { "stringUnit": { "state": "translated", "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)." } },
+        "ko": { "stringUnit": { "state": "translated", "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)." } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)." } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Ảnh chụp màn hình và video sẽ được lưu dưới thư mục này trong Google Drive của bạn (mặc định: Snapzy)." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)." } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "Screenshots and videos will be saved under this folder in your Google Drive (default: Snapzy)." } }
+      }
+    },
+    "cloud-settings.google-folder-name": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Folder Name" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Folder Name" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Folder Name" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Folder Name" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Folder Name" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "Folder Name" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Folder Name" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Tên thư mục" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "Folder Name" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "Folder Name" } }
+      }
+    },
+    "cloud-settings.google-folder-section": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Google Drive Folder" } },
+        "en": { "stringUnit": { "state": "translated", "value": "Google Drive Folder" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Google Drive Folder" } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Google Drive Folder" } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Google Drive Folder" } },
+        "ko": { "stringUnit": { "state": "translated", "value": "Google Drive Folder" } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Google Drive Folder" } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Thư mục Google Drive" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "Google Drive Folder" } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "Google Drive Folder" } }
+      }
+    },
+    "cloud-settings.google-setup-guide": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": { "stringUnit": { "state": "translated", "value": "Bring your own credentials to protect privacy. Create a Desktop App OAuth Client ID in your Google Cloud Console." } },
+        "en": { "stringUnit": { "state": "translated", "value": "Bring your own credentials to protect privacy. Create a Desktop App OAuth Client ID in your Google Cloud Console." } },
+        "es": { "stringUnit": { "state": "translated", "value": "Bring your own credentials to protect privacy. Create a Desktop App OAuth Client ID in your Google Cloud Console." } },
+        "fr": { "stringUnit": { "state": "translated", "value": "Bring your own credentials to protect privacy. Create a Desktop App OAuth Client ID in your Google Cloud Console." } },
+        "ja": { "stringUnit": { "state": "translated", "value": "Bring your own credentials to protect privacy. Create a Desktop App OAuth Client ID in your Google Cloud Console." } },
+        "ko": { "stringUnit": { "state": "translated", "value": "Bring your own credentials to protect privacy. Create a Desktop App OAuth Client ID in your Google Cloud Console." } },
+        "ru": { "stringUnit": { "state": "translated", "value": "Bring your own credentials to protect privacy. Create a Desktop App OAuth Client ID in your Google Cloud Console." } },
+        "vi": { "stringUnit": { "state": "translated", "value": "Sử dụng thông tin cấu hình của riêng bạn để bảo vệ quyền riêng tư. Tạo một Desktop App OAuth Client ID trong Google Cloud Console của bạn." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "Bring your own credentials to protect privacy. Create a Desktop App OAuth Client ID in your Google Cloud Console." } },
+        "zh-Hant": { "stringUnit": { "state": "translated", "value": "Bring your own credentials to protect privacy. Create a Desktop App OAuth Client ID in your Google Cloud Console." } }
       }
     },
     "cloud-settings.import-credentials-message": {
