@@ -9,6 +9,8 @@ import AppKit
 import Combine
 import Foundation
 import os.log
+import AVFoundation
+import CoreMedia
 
 private let logger = Logger(subsystem: "Snapzy", category: "CloudManager")
 
@@ -651,9 +653,11 @@ final class CloudManager: ObservableObject {
       )
       CloudUploadHistoryStore.shared.add(record)
 
-      // Generate thumbnail for image uploads
+      // Generate thumbnail for image or video uploads
       if contentType.hasPrefix("image/") {
         saveThumbnail(from: fileURL, recordId: recordId)
+      } else if contentType.hasPrefix("video/") {
+        saveVideoThumbnail(from: fileURL, recordId: recordId)
       }
 
       logger.info("Upload completed: \(result.publicURL.absoluteString)")
@@ -887,6 +891,59 @@ final class CloudManager: ObservableObject {
         "Cloud upload thumbnail write failed",
         context: ["fileName": fileURL.lastPathComponent]
       )
+    }
+  }
+
+  /// Generate a 200px max-dimension JPEG thumbnail for video uploads
+  private func saveVideoThumbnail(from fileURL: URL, recordId: UUID) {
+    let asset = AVAsset(url: fileURL)
+    let generator = AVAssetImageGenerator(asset: asset)
+    generator.appliesPreferredTrackTransform = true
+    generator.requestedTimeToleranceBefore = .zero
+    generator.requestedTimeToleranceAfter = .zero
+
+    let time = CMTime(seconds: 0.0, preferredTimescale: 600)
+
+    DispatchQueue.global(qos: .background).async {
+      do {
+        var actualTime = CMTime.zero
+        let cgImage = try generator.copyCGImage(at: time, actualTime: &actualTime)
+        let nsImage = NSImage(cgImage: cgImage, size: NSSize(width: cgImage.width, height: cgImage.height))
+
+        let maxDimension: CGFloat = 200
+        let size = nsImage.size
+        let scale = min(maxDimension / size.width, maxDimension / size.height, 1.0)
+        let newSize = NSSize(width: size.width * scale, height: size.height * scale)
+
+        let thumbImage = NSImage(size: newSize)
+        thumbImage.lockFocus()
+        nsImage.draw(
+          in: NSRect(origin: .zero, size: newSize),
+          from: NSRect(origin: .zero, size: size),
+          operation: .copy,
+          fraction: 1.0
+        )
+        thumbImage.unlockFocus()
+
+        guard let tiffData = thumbImage.tiffRepresentation,
+              let bitmap = NSBitmapImageRep(data: tiffData),
+              let jpegData = bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.7])
+        else {
+          return
+        }
+
+        let dir = self.thumbnailsDirectory
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let thumbURL = dir.appendingPathComponent("\(recordId.uuidString).jpg")
+        try jpegData.write(to: thumbURL, options: .atomic)
+      } catch {
+        DiagnosticLogger.shared.logError(
+          .cloud,
+          error,
+          "Cloud upload video thumbnail extraction failed",
+          context: ["fileName": fileURL.lastPathComponent]
+        )
+      }
     }
   }
 

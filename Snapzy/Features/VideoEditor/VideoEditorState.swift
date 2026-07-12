@@ -285,6 +285,11 @@ final class VideoEditorState: ObservableObject {
   private var initialBackgroundCornerRadius: CGFloat = 0
   private var initialExportSettings: ExportSettings = ExportSettings()
 
+  // MARK: - Cloud State
+  @Published var cloudURL: URL?
+  @Published var cloudKey: String?
+  @Published var quickAccessItemId: UUID?
+
   // MARK: - Undo/Redo
 
   @Published private(set) var canUndo: Bool = false

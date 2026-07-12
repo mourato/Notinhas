@@ -21,6 +21,7 @@ final class S3CloudProvider: CloudProvider {
   private let endpoint: URL
   private let customDomain: String?
   private let session: URLSessionProtocol
+  private let multipartUploader: S3MultipartUploader
 
   init(config: CloudConfiguration, accessKey: String, secretKey: String, session: URLSessionProtocol = URLSession.shared) {
     self.session = session
@@ -36,6 +37,15 @@ final class S3CloudProvider: CloudProvider {
       // Default S3 endpoint (path-style)
       self.endpoint = URL(string: "https://s3.\(self.region).amazonaws.com")!
     }
+
+    self.multipartUploader = S3MultipartUploader(
+      accessKey: accessKey,
+      secretKey: secretKey,
+      region: self.region,
+      endpoint: self.endpoint,
+      bucket: self.bucket,
+      session: session
+    )
   }
 
   // MARK: - Upload
@@ -51,9 +61,22 @@ final class S3CloudProvider: CloudProvider {
       throw CloudError.fileNotFound(fileURL)
     }
 
-    let fileData = try Data(contentsOf: fileURL)
-    let fileSize = Int64(fileData.count)
+    let fileAttributes = try? FileManager.default.attributesOfItem(atPath: fileURL.path)
+    let fileSize = fileAttributes?[.size] as? Int64 ?? 0
     let key = existingKey ?? generateObjectKey(fileName: fileURL.lastPathComponent)
+
+    // Route to multipart uploader if file size exceeds threshold
+    if fileSize > S3MultipartUploader.multipartThreshold {
+      return try await multipartUploader.upload(
+        fileURL: fileURL,
+        key: key,
+        contentType: contentType,
+        expireTime: expireTime,
+        progress: progress
+      )
+    }
+
+    let fileData = try Data(contentsOf: fileURL)
 
     // Build PUT request
     let objectURL = buildObjectURL(key: key)

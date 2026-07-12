@@ -7,6 +7,12 @@
 
 import AppKit
 
+// MARK: - Notifications
+
+extension Notification.Name {
+  static let videoEditorCloudUpload = Notification.Name("videoEditorCloudUpload")
+}
+
 /// Custom NSWindow for video editing with dark mode appearance
 class VideoEditorWindow: NSWindow {
   private static let activeEditorLevel = NSWindow.Level(rawValue: NSWindow.Level.floating.rawValue + 1)

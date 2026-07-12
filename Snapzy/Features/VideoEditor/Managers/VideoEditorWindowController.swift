@@ -33,7 +33,11 @@ final class VideoEditorWindowController: NSWindowController, NSWindowDelegate {
     self.quickAccessItemID = item.id
     self.sourceFileAccess = fileAccessManager.beginAccessingURL(item.url)
     self.sourceURL = item.url
-    self.state = VideoEditorState(url: item.url)
+    let state = VideoEditorState(url: item.url)
+    state.quickAccessItemId = item.id
+    state.cloudURL = item.cloudURL
+    state.cloudKey = item.cloudKey
+    self.state = state
     self.isEmptyState = false
 
     super.init(window: Self.createWindow())
@@ -420,6 +424,8 @@ final class VideoEditorWindowController: NSWindowController, NSWindowDelegate {
 
   private func finalizeTempSave(destinationURL: URL, sourceURL: URL) {
     state?.isExporting = false
+    state?.cloudURL = nil
+    state?.cloudKey = nil
     state?.markAsSaved()
 
     CaptureHistoryStore.shared.updateFilePath(
@@ -438,7 +444,9 @@ final class VideoEditorWindowController: NSWindowController, NSWindowDelegate {
     }
 
     NSWorkspace.shared.activateFileViewerSelecting([destinationURL])
-    forceClose()
+    self.offerPostExportUpload(for: destinationURL) { [weak self] in
+      self?.forceClose()
+    }
   }
 
   private func cleanupTempSourceFile(at sourceURL: URL) {
@@ -622,6 +630,8 @@ final class VideoEditorWindowController: NSWindowController, NSWindowDelegate {
           }
         }
         state.isExporting = false
+        state.cloudURL = nil
+        state.cloudKey = nil
         state.markAsSaved()
         if let quickAccessItemID {
           await QuickAccessManager.shared.refreshItemThumbnail(id: quickAccessItemID)
@@ -630,7 +640,9 @@ final class VideoEditorWindowController: NSWindowController, NSWindowDelegate {
           for: .recording,
           url: state.originalURL
         )
-        forceClose()
+        self.offerPostExportUpload(for: state.originalURL) { [weak self] in
+          self?.forceClose()
+        }
       } catch {
         DiagnosticLogger.shared.logError(.export, error, "Video replace original failed")
         state.isExporting = false
@@ -677,10 +689,13 @@ final class VideoEditorWindowController: NSWindowController, NSWindowDelegate {
           }
         }
         state.isExporting = false
+        state.cloudURL = nil
+        state.cloudKey = nil
         state.markAsSaved()
 
         // Show exported file in Finder
         NSWorkspace.shared.activateFileViewerSelecting([outputURL])
+        self.offerPostExportUpload(for: outputURL) {}
       } catch {
         DiagnosticLogger.shared.logError(.export, error, "Video save as copy failed")
         state.isExporting = false
@@ -732,6 +747,78 @@ final class VideoEditorWindowController: NSWindowController, NSWindowDelegate {
       guard let self = self else { return }
       if response == .alertFirstButtonReturn {
         self.performSaveAsCopy()
+      }
+    }
+  }
+
+  // MARK: - Post-Export Cloud Upload Offer
+
+  private func offerPostExportUpload(for fileURL: URL, completion: @escaping () -> Void) {
+    guard CloudManager.shared.isConfigured,
+          PreferencesManager.shared.isActionEnabled(.uploadToCloud, for: .recording),
+          let window = self.window,
+          let state = state
+    else {
+      completion()
+      return
+    }
+
+    let alert = NSAlert()
+    alert.messageText = L10n.AnnotateUI.uploadToCloud
+    alert.informativeText = "Would you like to upload the exported video to cloud?"
+    alert.alertStyle = .informational
+    alert.addButton(withTitle: L10n.AnnotateUI.uploadToCloud)
+    alert.addButton(withTitle: L10n.Common.cancel)
+
+    alert.beginSheetModal(for: window) { [weak self] response in
+      guard let self = self else {
+        completion()
+        return
+      }
+
+      if response == .alertFirstButtonReturn {
+        self.performPostExportUpload(fileURL: fileURL, completion: completion)
+      } else {
+        completion()
+      }
+    }
+  }
+
+  private func performPostExportUpload(fileURL: URL, completion: @escaping () -> Void) {
+    guard let state = state else {
+      completion()
+      return
+    }
+
+    state.isExporting = true
+    state.exportProgress = 0.8
+    state.exportStatusMessage = "Uploading to cloud..."
+
+    Task {
+      do {
+        let fileAccess = SandboxFileAccessManager.shared.beginAccessingURL(fileURL)
+        defer { fileAccess.stop() }
+
+        let result = try await CloudManager.shared.upload(fileURL: fileURL)
+
+        // Store cloud link on pasteboard
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(result.publicURL.absoluteString, forType: .string)
+
+        SoundManager.play("Pop")
+
+        // Sync with Quick Access item if linked
+        if let itemId = self.quickAccessItemID {
+          QuickAccessManager.shared.setCloudURL(id: itemId, url: result.publicURL, key: result.key)
+        }
+
+        state.isExporting = false
+        completion()
+      } catch {
+        state.isExporting = false
+        self.showExportError(error)
+        completion()
       }
     }
   }

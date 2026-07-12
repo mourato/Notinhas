@@ -41,13 +41,22 @@ struct VideoEditorMainView: View {
 
       // Bottom bar with Cancel/Save
       VideoEditorBottomBar(
+        state: state,
         primaryActionTitle: primaryActionTitle,
         onCancel: { onCancel?() },
         onConvert: { onSave?() }
       )
     }
-    // Keyboard shortcuts for zoom operations (video only)
+    // Keyboard shortcuts
     .background {
+      // Cloud upload shortcut (⌘U)
+      Button("") {
+        NotificationCenter.default.post(name: .videoEditorCloudUpload, object: nil)
+      }
+      .keyboardShortcut("u", modifiers: [.command])
+      .opacity(0)
+      .frame(width: 0, height: 0)
+
       if !state.isGIF {
         // Add zoom at playhead (Z key)
         Button("") {

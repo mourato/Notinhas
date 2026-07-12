@@ -229,7 +229,7 @@ enum AWSV4Signer {
 
   // MARK: - Crypto Helpers
 
-  private static func deriveSigningKey(
+  static func deriveSigningKey(
     secretKey: String,
     dateStamp: String,
     region: String,
@@ -243,7 +243,7 @@ enum AWSV4Signer {
     return kSigning
   }
 
-  private static func hmacSHA256(key: Data, data: String) -> Data {
+  static func hmacSHA256(key: Data, data: String) -> Data {
     let dataBytes = data.data(using: .utf8)!
     var result = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
     key.withUnsafeBytes { keyPtr in
@@ -261,7 +261,7 @@ enum AWSV4Signer {
     return Data(result)
   }
 
-  private static func hmacSHA256Hex(key: Data, data: String) -> String {
+  static func hmacSHA256Hex(key: Data, data: String) -> String {
     let hash = hmacSHA256(key: key, data: data)
     return hash.map { String(format: "%02x", $0) }.joined()
   }
