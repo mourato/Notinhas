@@ -54,6 +54,7 @@ jobs:
             SnapzyTests/AnnotateMockupTests/testMockupExporterRenderProducesImageWithSourceImage
             SnapzyTests/AreaSelectionMultiMonitorReconciliationTests/testMouseExited_hidesCoordinateIndicatorAndMagnifier
             SnapzyTests/AreaSelectionMultiMonitorReconciliationTests/testIsMouseOver_evaluatesFrameAndVisibility
+            SnapzyTests/PersistedCombineSessionTests/testCaptureStitchSaveReopen_persistsStitchEverywhere
         run: |
           set -euo pipefail
           mkdir -p build
