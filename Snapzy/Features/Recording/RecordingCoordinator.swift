@@ -123,6 +123,12 @@ final class RecordingCoordinator: ObservableObject {
     return false
   }
 
+  /// Whether the floating recording controls bar should be shown during recording.
+  /// Shared source of truth with `AppStatusBarController` via `RecordingToolbarPreferences`.
+  private var isHoverBarVisiblePreference: Bool {
+    RecordingToolbarPreferences.hoverBarVisible()
+  }
+
   // MARK: - Public API
 
   func stopFromStatusItem() {
@@ -716,7 +722,7 @@ final class RecordingCoordinator: ObservableObject {
         setupKeystrokeOverlay(for: rect)
 
         // Switch to status bar
-        window.showRecordingStatusBar(recorder: recorder)
+        window.showRecordingStatusBar(recorder: recorder, visible: isHoverBarVisiblePreference)
         finishRecordingStartAttempt()
 
       } catch let error as RecordingError {
@@ -832,7 +838,7 @@ final class RecordingCoordinator: ObservableObject {
           overlay.hideBorder()
           overlay.setInteractionEnabled(false)
         }
-        window.showRecordingStatusBar(recorder: recorder)
+        window.showRecordingStatusBar(recorder: recorder, visible: isHoverBarVisiblePreference)
         finishRecordingStartAttempt()
         DiagnosticLogger.shared.log(.info, .recording, "Microphone retry recording started")
       } catch let error as RecordingError {

@@ -21,6 +21,7 @@ final class AppStatusBarController: ObservableObject {
   private var cancellables = Set<AnyCancellable>()
   private let recorder = ScreenRecordingManager.shared
   private lazy var idleStatusImage = makeIdleStatusImage()
+  private lazy var recordingStopImage = makeRecordingStopImage()
   private var menu: NSMenu?
   private var didDetectCrash = false
 
@@ -167,13 +168,18 @@ final class AppStatusBarController: ObservableObject {
   @objc private func statusBarButtonClicked(_ sender: NSStatusBarButton) {
     guard let event = NSApp.currentEvent else { return }
     switch event.type {
-    case .leftMouseUp, .rightMouseUp:
-      DiagnosticLogger.shared.log(
-        .debug,
-        .ui,
-        "Status bar menu opened",
-        context: ["event": event.type == .leftMouseUp ? "leftMouseUp" : "rightMouseUp"]
-      )
+    case .leftMouseUp:
+      // With the hover bar hidden during recording, a left-click stops immediately
+      // (macOS ⌘⇧5 parity). Right-click still opens the full menu.
+      if isMenuBarActingAsStopControl {
+        DiagnosticLogger.shared.log(.debug, .ui, "Status bar direct stop (hover bar hidden)")
+        stopRecording()
+        return
+      }
+      DiagnosticLogger.shared.log(.debug, .ui, "Status bar menu opened", context: ["event": "leftMouseUp"])
+      showMenu()
+    case .rightMouseUp:
+      DiagnosticLogger.shared.log(.debug, .ui, "Status bar menu opened", context: ["event": "rightMouseUp"])
       showMenu()
     default:
       break
@@ -186,6 +192,26 @@ final class AppStatusBarController: ObservableObject {
     statusItem?.menu = menu
     button.performClick(nil)
     statusItem?.menu = nil  // Reset to allow custom click handling
+  }
+
+  // MARK: - Recording UI Preferences
+
+  /// Whether the floating recording controls bar is shown during recording.
+  /// When hidden, the menu bar becomes the primary stop control (macOS ⌘⇧5 parity).
+  /// Shared source of truth with `RecordingCoordinator` via `RecordingToolbarPreferences`.
+  private var isHoverBarVisible: Bool {
+    RecordingToolbarPreferences.hoverBarVisible()
+  }
+
+  /// Whether the elapsed recording time is shown next to the menu bar icon. Defaults to `true`.
+  private var showsRecordingTimeOnMenuBar: Bool {
+    RecordingToolbarPreferences.showTimeOnMenuBar()
+  }
+
+  /// True while the menu bar item acts as the direct stop control
+  /// (recording/paused AND the hover bar is hidden).
+  private var isMenuBarActingAsStopControl: Bool {
+    (recorder.state == .recording || recorder.state == .paused) && !isHoverBarVisible
   }
 
   // MARK: - State Observation
@@ -205,26 +231,50 @@ final class AppStatusBarController: ObservableObject {
         self?.renderStatusItem()
       }
       .store(in: &cancellables)
+
+    // Re-render when recording UI preferences change (e.g. toggled in Settings mid-recording).
+    NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+      .receive(on: RunLoop.main)
+      .sink { [weak self] _ in
+        self?.renderStatusItem()
+      }
+      .store(in: &cancellables)
   }
 
   private func renderStatusItem() {
     guard let button = statusItem?.button else { return }
-    button.image = idleStatusImage
+    // When the hover bar is hidden during recording, the menu bar item becomes the stop
+    // control and shows a distinct stop glyph (macOS ⌘⇧5 parity). Otherwise use the app icon.
+    button.image = isMenuBarActingAsStopControl ? (recordingStopImage ?? idleStatusImage) : idleStatusImage
     button.contentTintColor = nil
     button.attributedTitle = statusItemAttributedTitle(for: recorder.state)
     button.toolTip = statusItemTooltip(for: recorder.state)
   }
 
-  private func statusItemAttributedTitle(for state: RecordingState) -> NSAttributedString {
-    let title: String
+  /// Pure decision for the menu bar title text. Empty when the time display is off or there is
+  /// nothing to show. Extracted for deterministic testing of the optional-time gating.
+  nonisolated static func menuBarTitleString(
+    for state: RecordingState,
+    duration: String,
+    showTime: Bool
+  ) -> String {
+    guard showTime else { return "" }
     switch state {
     case .recording:
-      title = recorder.formattedDuration
+      return duration
     case .paused:
-      title = "|| \(recorder.formattedDuration)"
+      return "|| \(duration)"
     case .idle, .preparing, .stopping:
-      title = ""
+      return ""
     }
+  }
+
+  private func statusItemAttributedTitle(for state: RecordingState) -> NSAttributedString {
+    let title = Self.menuBarTitleString(
+      for: state,
+      duration: recorder.formattedDuration,
+      showTime: showsRecordingTimeOnMenuBar
+    )
 
     guard !title.isEmpty else {
       return NSAttributedString(string: "")
@@ -246,6 +296,10 @@ final class AppStatusBarController: ObservableObject {
   }
 
   private func statusItemTooltip(for state: RecordingState) -> String {
+    // When the menu bar is the stop control, tell the user a click stops the recording.
+    if isMenuBarActingAsStopControl {
+      return L10n.RecordingToolbar.clickToStop(recorder.formattedDuration)
+    }
     switch state {
     case .recording:
       return "\(L10n.RecordingToolbar.recordingInProgress) (\(recorder.formattedDuration))"
@@ -290,6 +344,19 @@ final class AppStatusBarController: ObservableObject {
     // Template images let AppKit adapt the glyph color to the current menu bar material.
     resizedIcon.isTemplate = true
     return resizedIcon
+  }
+
+  /// Distinct "stop" glyph shown on the menu bar item while recording with the hover bar hidden.
+  /// Signals that a click stops the recording (macOS ⌘⇧5 parity).
+  private func makeRecordingStopImage() -> NSImage? {
+    let config = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
+    // Actionable a11y cue matching the icon's behavior (a click stops the recording).
+    let image = NSImage(
+      systemSymbolName: "stop.circle.fill",
+      accessibilityDescription: L10n.RecordingToolbar.stopRecordingHint
+    )?.withSymbolConfiguration(config)
+    image?.isTemplate = true
+    return image
   }
 
   // MARK: - Menu Building
@@ -1040,5 +1107,8 @@ final class AppStatusBarController: ObservableObject {
     func simulateWindowDidClose(notification: Notification) {
       windowDidClose(notification)
     }
+
+    var isHoverBarVisibleForTesting: Bool { isHoverBarVisible }
+    var showsRecordingTimeOnMenuBarForTesting: Bool { showsRecordingTimeOnMenuBar }
   #endif
 }

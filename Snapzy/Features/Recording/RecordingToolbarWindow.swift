@@ -86,6 +86,17 @@ enum RecordingToolbarPreferences {
   static func showCursor(defaults: UserDefaults = .standard) -> Bool {
     defaults.object(forKey: PreferencesKeys.recordingShowCursor) as? Bool ?? true
   }
+
+  /// Whether the floating recording controls bar is shown during recording.
+  /// Defaults to `true` (visible) to preserve prior behavior when unset.
+  static func hoverBarVisible(defaults: UserDefaults = .standard) -> Bool {
+    defaults.object(forKey: PreferencesKeys.recordingHoverBarVisible) as? Bool ?? true
+  }
+
+  /// Whether the elapsed recording time is shown next to the menu bar icon. Defaults to `true`.
+  static func showTimeOnMenuBar(defaults: UserDefaults = .standard) -> Bool {
+    defaults.object(forKey: PreferencesKeys.recordingShowTimeOnMenuBar) as? Bool ?? true
+  }
 }
 
 enum RecordingToolbarPlacement {
@@ -226,6 +237,10 @@ final class RecordingToolbarWindow: NSWindow {
     showPreRecordToolbar()
   }
 
+  deinit {
+    NotificationCenter.default.removeObserver(self)
+  }
+
   private func configureWindow() {
     isOpaque = false
     backgroundColor = .clear
@@ -254,7 +269,12 @@ final class RecordingToolbarWindow: NSWindow {
     showBelowRect(anchorRect)
   }
 
-  func showRecordingStatusBar(recorder: ScreenRecordingManager) {
+  /// Present the recording status bar.
+  /// - Parameter visible: initial visibility. When `false`, the bar's content/state/callbacks stay
+  ///   wired but the window is not displayed (hover bar hidden — stop/pause/annotate remain reachable
+  ///   from the menu bar and global shortcuts). Visibility also tracks the preference live so toggling
+  ///   it mid-recording stays in sync with the menu bar stop control.
+  func showRecordingStatusBar(recorder: ScreenRecordingManager, visible: Bool = true) {
     mode = .recording
 
     let view = RecordingStatusBarView(
@@ -275,10 +295,115 @@ final class RecordingToolbarWindow: NSWindow {
     )
 
     setContent(AnyView(view))
-    showBelowRect(anchorRect)
+    applyRecordingBarVisibility(visible)
+
+    // Track live preference toggles during recording so the on-screen bar and the menu bar stop
+    // control never disagree (both derive from `recording.hoverBarVisible`).
+    NotificationCenter.default.removeObserver(self, name: UserDefaults.didChangeNotification, object: nil)
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(hoverBarVisibilityPreferenceChanged),
+      name: UserDefaults.didChangeNotification,
+      object: nil
+    )
+  }
+
+  // MARK: - Visibility
+
+  @objc private func hoverBarVisibilityPreferenceChanged() {
+    guard mode == .recording else { return }
+    applyRecordingBarVisibility(RecordingToolbarPreferences.hoverBarVisible())
+  }
+
+  /// Show or hide the recording bar without rebuilding content. Idempotent so repeated
+  /// `UserDefaults.didChangeNotification` ticks don't reposition an already-visible bar.
+  private func applyRecordingBarVisibility(_ visible: Bool) {
+    guard visible else {
+      NotificationCenter.default.removeObserver(self, name: NSWindow.didMoveNotification, object: self)
+      orderOut(nil)
+      return
+    }
+
+    guard !isVisible else { return }
 
     // Enable dragging in recording mode
     isMovableByWindowBackground = true
+
+    // Restore a previously dragged position (clamped on-screen), else anchor below the selection.
+    if let origin = persistedOrigin(), let size = cachedContentSize {
+      setFrameOrigin(clampOriginToVisibleScreens(origin, size: size))
+      orderFrontRegardless()
+    } else {
+      showBelowRect(anchorRect)
+    }
+
+    // Persist future drags. Added after the initial placement so restore doesn't re-save.
+    NotificationCenter.default.removeObserver(self, name: NSWindow.didMoveNotification, object: self)
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(recordingToolbarDidMove(_:)),
+      name: NSWindow.didMoveNotification,
+      object: self
+    )
+  }
+
+  // MARK: - Drag Position Persistence
+
+  private var pendingOriginSaveWorkItem: DispatchWorkItem?
+
+  private func persistedOrigin() -> CGPoint? {
+    // We are the only writer (always via NSStringFromPoint), so any present, non-empty value is
+    // valid — including a legitimate {0, 0}. Absent key => unset.
+    guard let stored = UserDefaults.standard.string(forKey: PreferencesKeys.recordingHoverBarFrameOrigin),
+          !stored.isEmpty
+    else {
+      return nil
+    }
+    return NSPointFromString(stored)
+  }
+
+  @objc private func recordingToolbarDidMove(_ notification: Notification) {
+    guard mode == .recording, isVisible else { return }
+    // `didMoveNotification` fires continuously through a drag; debounce so we persist once at rest.
+    pendingOriginSaveWorkItem?.cancel()
+    let origin = frame.origin
+    let workItem = DispatchWorkItem {
+      UserDefaults.standard.set(NSStringFromPoint(origin), forKey: PreferencesKeys.recordingHoverBarFrameOrigin)
+    }
+    pendingOriginSaveWorkItem = workItem
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: workItem)
+  }
+
+  /// Keep the given origin on a real screen. Picks the screen that contains the origin (or overlaps
+  /// the window most, else the first) and clamps within *that* screen's visible frame — avoids the
+  /// dead zones that a bounding-box union produces on non-aligned multi-monitor layouts.
+  private func clampOriginToVisibleScreens(_ origin: CGPoint, size: CGSize) -> CGPoint {
+    let screens = NSScreen.screens
+    guard !screens.isEmpty else { return origin }
+
+    let windowRect = CGRect(origin: origin, size: size)
+    let target = screens.first(where: { $0.visibleFrame.contains(origin) })
+      ?? screens.max(by: { overlapArea($0.visibleFrame, windowRect) < overlapArea($1.visibleFrame, windowRect) })
+      ?? screens[0]
+
+    return Self.clampedOrigin(origin, size: size, within: target.visibleFrame)
+  }
+
+  private func overlapArea(_ a: CGRect, _ b: CGRect) -> CGFloat {
+    let intersection = a.intersection(b)
+    return intersection.isNull ? 0 : intersection.width * intersection.height
+  }
+
+  /// Pure clamp of a window origin so a `size`-sized window stays fully inside `bounds`.
+  /// Returns `origin` unchanged when `bounds` is null. Extracted for deterministic testing.
+  nonisolated static func clampedOrigin(_ origin: CGPoint, size: CGSize, within bounds: CGRect) -> CGPoint {
+    guard !bounds.isNull else { return origin }
+    let maxX = max(bounds.minX, bounds.maxX - size.width)
+    let maxY = max(bounds.minY, bounds.maxY - size.height)
+    return CGPoint(
+      x: min(max(origin.x, bounds.minX), maxX),
+      y: min(max(origin.y, bounds.minY), maxY)
+    )
   }
 
   private func setContent(_ view: AnyView) {

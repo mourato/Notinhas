@@ -60,6 +60,8 @@ struct CaptureSettingsView: View {
   @AppStorage(PreferencesKeys.recordingRememberLastArea) private var rememberLastArea = true
   @AppStorage(PreferencesKeys.recordingIncludeOwnApp) private var includeOwnAppInRecordings = false
   @AppStorage(PreferencesKeys.recordingShowCursor) private var recordingShowCursor = true
+  @AppStorage(PreferencesKeys.recordingHoverBarVisible) private var recordingHoverBarVisible = true
+  @AppStorage(PreferencesKeys.recordingShowTimeOnMenuBar) private var recordingShowTimeOnMenuBar = true
 
   // Mouse Highlight settings
   @AppStorage(PreferencesKeys.mouseHighlightSize) private var mouseHighlightSize: Double = 50
@@ -427,6 +429,30 @@ struct CaptureSettingsView: View {
               description: L10n.PreferencesCapture.rememberLastAreaDescription
             ) {
               Toggle("", isOn: $rememberLastArea)
+                .labelsHidden()
+            }
+          }
+        }
+
+        // MARK: - Recording Controls
+
+        if selectedPane == .recording {
+          Section(L10n.PreferencesCapture.recordingControlsSection) {
+            SettingRow(
+              icon: "menubar.rectangle",
+              title: L10n.PreferencesCapture.hoverBarVisibleTitle,
+              description: L10n.PreferencesCapture.hoverBarVisibleDescription
+            ) {
+              Toggle("", isOn: $recordingHoverBarVisible)
+                .labelsHidden()
+            }
+
+            SettingRow(
+              icon: "timer",
+              title: L10n.PreferencesCapture.menuBarTimeTitle,
+              description: L10n.PreferencesCapture.menuBarTimeDescription
+            ) {
+              Toggle("", isOn: $recordingShowTimeOnMenuBar)
                 .labelsHidden()
             }
           }

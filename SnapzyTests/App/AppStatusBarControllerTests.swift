@@ -25,7 +25,61 @@ final class AppStatusBarControllerTests: XCTestCase {
     NSApp.setActivationPolicy(initialPolicy)
     controller.didElevateForSettingsForTesting = false
     controller.trackedPreferencesWindowForTesting = nil
+    UserDefaults.standard.removeObject(forKey: PreferencesKeys.recordingHoverBarVisible)
+    UserDefaults.standard.removeObject(forKey: PreferencesKeys.recordingShowTimeOnMenuBar)
     super.tearDown()
+  }
+
+  // MARK: - Recording UI preference defaults (issue #351)
+
+  func testRecordingUIPreferences_defaultToTrueWhenUnset() {
+    UserDefaults.standard.removeObject(forKey: PreferencesKeys.recordingHoverBarVisible)
+    UserDefaults.standard.removeObject(forKey: PreferencesKeys.recordingShowTimeOnMenuBar)
+
+    // Defaults must preserve prior behavior: hover bar visible, time shown.
+    XCTAssertTrue(controller.isHoverBarVisibleForTesting)
+    XCTAssertTrue(controller.showsRecordingTimeOnMenuBarForTesting)
+  }
+
+  func testRecordingUIPreferences_reflectStoredFalseValues() {
+    UserDefaults.standard.set(false, forKey: PreferencesKeys.recordingHoverBarVisible)
+    UserDefaults.standard.set(false, forKey: PreferencesKeys.recordingShowTimeOnMenuBar)
+
+    XCTAssertFalse(controller.isHoverBarVisibleForTesting)
+    XCTAssertFalse(controller.showsRecordingTimeOnMenuBarForTesting)
+  }
+
+  // MARK: - Menu bar title gating (issue #351)
+
+  func testMenuBarTitle_hiddenWhenTimeDisplayOff_forAllStates() {
+    for state in [RecordingState.recording, .paused, .idle, .preparing, .stopping] {
+      let title = AppStatusBarController.menuBarTitleString(for: state, duration: "01:23", showTime: false)
+      XCTAssertEqual(title, "", "expected empty title for \(state) when time display off")
+    }
+  }
+
+  func testMenuBarTitle_showsDurationWhileRecording() {
+    XCTAssertEqual(
+      AppStatusBarController.menuBarTitleString(for: .recording, duration: "01:23", showTime: true),
+      "01:23"
+    )
+  }
+
+  func testMenuBarTitle_prefixesPauseMarkerWhilePaused() {
+    XCTAssertEqual(
+      AppStatusBarController.menuBarTitleString(for: .paused, duration: "01:23", showTime: true),
+      "|| 01:23"
+    )
+  }
+
+  func testMenuBarTitle_emptyWhenIdleEvenWithTimeOn() {
+    for state in [RecordingState.idle, .preparing, .stopping] {
+      XCTAssertEqual(
+        AppStatusBarController.menuBarTitleString(for: state, duration: "01:23", showTime: true),
+        "",
+        "expected empty title for non-active state \(state)"
+      )
+    }
   }
 
   func testWindowDidClose_revertsActivationPolicyWhenNoOtherVisibleWindows() {

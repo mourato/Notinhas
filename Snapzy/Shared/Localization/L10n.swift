@@ -2462,6 +2462,11 @@ enum L10n {
       defaultValue: "Recording Behavior",
       comment: "Capture preferences section title"
     )
+    static let recordingControlsSection = string(
+      "preferences-capture.section-recording-controls",
+      defaultValue: "Recording Controls",
+      comment: "Capture preferences section title"
+    )
     static let mouseHighlightSection = string(
       "preferences-capture.section-mouse-highlight",
       defaultValue: "Mouse Highlight",
@@ -2708,6 +2713,26 @@ enum L10n {
     static let rememberLastAreaDescription = string(
       "preferences-capture.remember-last-area-description",
       defaultValue: "Restore previous recording area on next capture",
+      comment: "Capture preferences setting description"
+    )
+    static let hoverBarVisibleTitle = string(
+      "preferences-capture.hover-bar-visible-title",
+      defaultValue: "Show Floating Controls",
+      comment: "Capture preferences setting title"
+    )
+    static let hoverBarVisibleDescription = string(
+      "preferences-capture.hover-bar-visible-description",
+      defaultValue: "Display controls on screen during recording. When hidden, use the menu bar icon to stop.",
+      comment: "Capture preferences setting description"
+    )
+    static let menuBarTimeTitle = string(
+      "preferences-capture.menu-bar-time-title",
+      defaultValue: "Show Timer in Menu Bar",
+      comment: "Capture preferences setting title"
+    )
+    static let menuBarTimeDescription = string(
+      "preferences-capture.menu-bar-time-description",
+      defaultValue: "Display elapsed duration next to the status icon.",
       comment: "Capture preferences setting description"
     )
     static let highlightSizeTitle = string(
@@ -6369,6 +6394,14 @@ enum L10n {
       defaultValue: "Stops and saves the recording",
       comment: "Accessibility hint for stop recording button"
     )
+    static func clickToStop(_ duration: String) -> String {
+      format(
+        "recording-toolbar.click-to-stop",
+        defaultValue: "Click to stop recording (%@)",
+        comment: "Menu bar tooltip when the recording controls bar is hidden. %@ is the formatted duration.",
+        duration
+      )
+    }
     static let statusBarAccessibility = string(
       "recording-toolbar.status-bar-accessibility",
       defaultValue: "Recording status bar",
