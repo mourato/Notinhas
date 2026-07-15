@@ -299,31 +299,39 @@ struct AnnotationRenderer {
       context.restoreGState()
 
     case .tapered, .outlined:
+      let metrics = geometry.taperedMetrics(strokeWidth: strokeWidth)
       let arrowPath = geometry.taperedArrowPath(strokeWidth: strokeWidth)
+      let fillColor = NSColor(strokeColor).cgColor
 
       context.saveGState()
+      context.setLineJoin(.round)
+      context.setLineCap(.round)
 
-      // 1. Set up a subtle drop shadow
+      // Soft solid-body shadow (both display types share the same silhouette).
       context.setShadow(
-        offset: CGSize(width: 0, height: -2.0),
-        blur: 4.5,
-        color: NSColor.black.withAlphaComponent(0.30).cgColor
+        offset: CGSize(width: 0, height: -1.5),
+        blur: 3.5,
+        color: NSColor.black.withAlphaComponent(geometry.arrowType == .outlined ? 0.22 : 0.25).cgColor
       )
+      context.addPath(arrowPath)
+      context.setFillColor(fillColor)
+      context.fillPath()
 
       if geometry.arrowType == .outlined {
-        // 2. Draw the white outline
+        // Reference style: thick white outer border around the filled body.
+        // Stroke at 2× outlineWidth so the second fill covers the inner half and
+        // the visible outer rim equals metrics.outlineWidth exactly.
+        context.setShadow(offset: .zero, blur: 0, color: nil)
         context.addPath(arrowPath)
         context.setStrokeColor(NSColor.white.cgColor)
-        context.setLineWidth(1.8 + strokeWidth * 0.3)
-        context.setLineJoin(.round)
-        context.setLineCap(.round)
+        context.setLineWidth(metrics.outlineWidth * 2)
         context.strokePath()
-      }
 
-      // 3. Draw the solid body filled with the arrow's main color
-      context.addPath(arrowPath)
-      context.setFillColor(NSColor(strokeColor).cgColor)
-      context.fillPath()
+        // Re-fill body so the outline sits cleanly outside the color.
+        context.addPath(arrowPath)
+        context.setFillColor(fillColor)
+        context.fillPath()
+      }
 
       context.restoreGState()
     }

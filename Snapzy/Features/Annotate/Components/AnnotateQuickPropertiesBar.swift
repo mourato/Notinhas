@@ -1668,6 +1668,7 @@ private struct QuickArrowStyleControl: View {
             } label: {
               Image(systemName: style.icon)
                 .font(.system(size: 12, weight: .semibold))
+                .scaleEffect(x: 1, y: style == .curvedRight ? -1 : 1)
                 .foregroundColor(selectedStyle == style ? .accentColor : .secondary)
                 .frame(width: buttonWidth, height: 24)
                 .background(
@@ -1729,8 +1730,9 @@ private struct QuickArrowStyleControl: View {
             Button {
               selectedType = type
             } label: {
-              Image(systemName: type.icon)
+              Image(systemName: type.icon(for: selectedStyle))
                 .font(.system(size: 12, weight: .semibold))
+                .scaleEffect(x: 1, y: selectedStyle == .curvedRight ? -1 : 1)
                 .foregroundColor(selectedType == type ? .accentColor : .secondary)
                 .frame(width: buttonWidth, height: 24)
                 .background(

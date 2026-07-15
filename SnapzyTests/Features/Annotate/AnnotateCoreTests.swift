@@ -1744,6 +1744,23 @@ final class AnnotateCoreTests: XCTestCase {
   }
 
   @MainActor
+  func testArrowPreferencesPersistAcrossAnnotateStateInstances() {
+    let defaults = UserDefaultsFactory.make()
+    let firstState = makeAnnotateState(defaults: defaults)
+
+    firstState.activateTool(.arrow)
+    firstState.quickArrowStyleBinding.wrappedValue = .curvedRight
+    firstState.quickArrowTypeBinding.wrappedValue = .outlined
+    firstState.quickArrowBendDirectionBinding.wrappedValue = .alternate
+
+    let reloadedState = makeAnnotateState(defaults: defaults)
+
+    XCTAssertEqual(reloadedState.arrowStyle, .curvedRight)
+    XCTAssertEqual(reloadedState.arrowType, .outlined)
+    XCTAssertEqual(reloadedState.arrowBendDirection, .alternate)
+  }
+
+  @MainActor
   func testQuickPropertiesSyncOffKeepsShapeDefaultsIndependent() {
     let defaults = UserDefaultsFactory.make()
     defaults.set(false, forKey: PreferencesKeys.annotateQuickPropertiesSyncEnabled)

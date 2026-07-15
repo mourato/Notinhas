@@ -1697,7 +1697,7 @@ private struct InlineAreaPropertiesBar: View {
               title: L10n.AnnotateUI.blurType,
               items: BlurType.allCases,
               selection: state.quickBlurTypeBinding,
-              icon: \.icon,
+              icon: { $0.icon },
               label: \.displayName
             )
           }
@@ -1707,7 +1707,8 @@ private struct InlineAreaPropertiesBar: View {
               title: L10n.Common.style,
               items: ArrowStyle.allCases,
               selection: state.quickArrowStyleBinding,
-              icon: \.icon,
+              icon: { $0.icon },
+              isFlipped: { $0 == .curvedRight },
               label: \.displayName
             )
 
@@ -1715,7 +1716,8 @@ private struct InlineAreaPropertiesBar: View {
               title: L10n.Common.display,
               items: ArrowType.allCases,
               selection: state.quickArrowTypeBinding,
-              icon: \.icon,
+              icon: { $0.icon(for: state.arrowStyle) },
+              isFlipped: { _ in state.arrowStyle == .curvedRight },
               label: \.displayName
             )
 
@@ -1733,7 +1735,7 @@ private struct InlineAreaPropertiesBar: View {
               title: L10n.Common.style,
               items: WatermarkStyle.allCases,
               selection: state.quickWatermarkStyleBinding,
-              icon: \.icon,
+              icon: { $0.icon },
               label: \.displayName
             )
           }
@@ -2522,12 +2524,12 @@ private struct InlineAreaColorSwatch: View {
     }
   }
 }
-
 private struct InlineAreaSegmentedPicker<Item: Identifiable & Equatable>: View {
   let title: String
   let items: [Item]
   @Binding var selection: Item
-  let icon: KeyPath<Item, String>
+  let icon: (Item) -> String
+  var isFlipped: ((Item) -> Bool)? = nil
   let label: KeyPath<Item, String>
 
   var body: some View {
@@ -2537,8 +2539,9 @@ private struct InlineAreaSegmentedPicker<Item: Identifiable & Equatable>: View {
           Button {
             selection = item
           } label: {
-            Image(systemName: item[keyPath: icon])
+            Image(systemName: icon(item))
               .font(.system(size: 12, weight: .medium))
+              .scaleEffect(x: 1, y: isFlipped?(item) == true ? -1 : 1)
               .foregroundColor(selection == item ? InlineAreaChrome.itemSelectedForeground : InlineAreaChrome.secondaryText)
               .frame(width: 25, height: InlineAreaChrome.propertyControlHeight)
               .background(
@@ -2557,6 +2560,7 @@ private struct InlineAreaSegmentedPicker<Item: Identifiable & Equatable>: View {
     }
   }
 }
+
 
 private struct InlineAreaArrowBendControl: View {
   @Binding var bendDirection: ArrowBendDirection
