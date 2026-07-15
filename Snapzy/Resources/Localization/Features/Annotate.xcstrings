@@ -781,6 +781,201 @@
         }
       }
     },
+    "annotate.arrow-type-classic": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klassisch"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Classic"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clásico"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Classique"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クラシック"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "클래식"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Классический"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cổ điển"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "经典"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "經典"
+          }
+        }
+      }
+    },
+    "annotate.arrow-type-outlined": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umrandet"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outlined"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contorneado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contour"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アウトライン"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아웃라인"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "С контуром"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Có viền"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "描边"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "描邊"
+          }
+        }
+      }
+    },
+    "annotate.arrow-type-tapered": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verjüngt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tapered"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cónico"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effilé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "テーパード"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "테이퍼드"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сужающийся"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thuôn nhọn"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "渐细"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "漸細"
+          }
+        }
+      }
+    },
     "annotate.auto-balance": {
       "extractionState": "stale",
       "localizations": {
@@ -2344,34 +2539,28 @@
     "annotate.crystallized": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kristallisiert"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Starry"
           }
         },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Băng dính sao"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "星点胶带"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "星點膠帶"
-          }
-        },
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Cristalizado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cristallisé"
           }
         },
         "ja": {
@@ -2392,16 +2581,22 @@
             "value": "Кристаллизация"
           }
         },
-        "fr": {
+        "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cristallisé"
+            "value": "Băng dính sao"
           }
         },
-        "de": {
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kristallisiert"
+            "value": "星点胶带"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "星點膠帶"
           }
         }
       }
@@ -2409,34 +2604,28 @@
     "annotate.crystallized-blur-description": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sensible Informationen mit einem kristallisierten Mustereffekt verdecken"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Lavender paper tape with a starry pattern"
           }
         },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Băng keo giấy màu oải hương với họa tiết ngôi sao"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "薰衣草色星点纸胶带"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "薰衣草色星點紙膠帶"
-          }
-        },
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Enmascarar información sensible con un efecto de patrón cristalizado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masquer les informations sensibles avec un effet de motif cristallisé"
           }
         },
         "ja": {
@@ -2457,146 +2646,152 @@
             "value": "Скрыть конфиденциальную информацию эффектом кристаллизованного узора"
           }
         },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Masquer les informations sensibles avec un effet de motif cristallisé"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sensible Informationen mit einem kristallisierten Mustereffekt verdecken"
-          }
-        }
-      }
-    },
-    "annotate.curve": {
-      "extractionState": "stale",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kurve"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Curve"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Curva"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Courbe"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "曲線"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "곡선"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Кривая"
-          }
-        },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cong"
+            "value": "Băng keo giấy màu oải hương với họa tiết ngôi sao"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "曲线"
+            "value": "薰衣草色星点纸胶带"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "曲線"
+            "value": "薰衣草色星點紙膠帶"
           }
         }
       }
     },
-    "annotate.curve-arrow-help": {
-      "extractionState": "stale",
+    "annotate.curved-left-arrow-help": {
+      "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Glatter, gebogener Beschriftungspfeil"
+            "value": "Pfeil nach links gebogen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Smooth curved callout arrow"
+            "value": "Arrow curving to the left"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Flecha de llamada curva suave"
+            "value": "Flecha curvada a la izquierda"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Flèche de légende incurvée et lisse"
+            "value": "Flèche incurvée vers la gauche"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "滑らかな曲線の吹き出し矢印"
+            "value": "左に曲がる矢印"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "부드러운 곡선 설명선 화살표"
+            "value": "왼쪽으로 휘어지는 화살표"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Гладкая изогнутая стрелка-выноска"
+            "value": "Стрелка, изогнутая влево"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mũi tên chú thích cong mềm"
+            "value": "Mũi tên cong sang trái"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "平滑弯曲标注箭头"
+            "value": "向左弯曲的箭头"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "平滑彎曲標注箭頭"
+            "value": "向左彎曲的箭頭"
+          }
+        }
+      }
+    },
+    "annotate.curved-right-arrow-help": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pfeil nach rechts gebogen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrow curving to the right"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flecha curvada a la derecha"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Flèche incurvée vers la droite"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "右に曲がる矢印"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오른쪽으로 휘어지는 화살표"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Стрелка, изогнутая вправо"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mũi tên cong sang phải"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "向右弯曲的箭头"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "向右彎曲的箭頭"
           }
         }
       }
@@ -3381,136 +3576,6 @@
         }
       }
     },
-    "annotate.elbow": {
-      "extractionState": "stale",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ellenbogen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elbow"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Codo"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coude"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "肘"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "팔꿈치"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Локоть"
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gấp khúc"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "折线"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "折線"
-          }
-        }
-      }
-    },
-    "annotate.elbow-arrow-help": {
-      "extractionState": "stale",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rechtwinkliger Beschriftungspfeil"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Right-angle callout arrow"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Flecha de indicación en ángulo recto"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Flèche de légende à angle droit"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "直角吹き出し矢印"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "직각 설명선 화살표"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Прямоугольная стрелка-выноска"
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mũi tên chú thích góc vuông"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "直角标注箭头"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "直角標注箭頭"
-          }
-        }
-      }
-    },
     "annotate.fit-with-shortcut": {
       "extractionState": "stale",
       "localizations": {
@@ -3774,34 +3839,28 @@
     "annotate.halftone": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halbton"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Gingham"
           }
         },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Băng dính caro"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "格纹胶带"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "格紋膠帶"
-          }
-        },
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Semitono"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demi-teinte"
           }
         },
         "ja": {
@@ -3822,16 +3881,22 @@
             "value": "Полутон"
           }
         },
-        "fr": {
+        "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Demi-teinte"
+            "value": "Băng dính caro"
           }
         },
-        "de": {
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halbton"
+            "value": "格纹胶带"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "格紋膠帶"
           }
         }
       }
@@ -3839,34 +3904,28 @@
     "annotate.halftone-blur-description": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sensible Informationen mit klassischen Halbtonpunkten im Comic-Stil verdecken"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Cream paper tape with a gingham check pattern"
           }
         },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Băng keo giấy màu kem với họa tiết kẻ ô gingham"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "奶油色格纹纸胶带"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "奶油色格紋紙膠帶"
-          }
-        },
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Enmascarar información sensible con puntos de semitono estilo cómic clásico"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masquer les informations sensibles avec des points en demi-teinte de style bande dessinée classique"
           }
         },
         "ja": {
@@ -3887,16 +3946,22 @@
             "value": "Скрыть конфиденциальную информацию классическими полутоновыми точками в стиле комиксов"
           }
         },
-        "fr": {
+        "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Masquer les informations sensibles avec des points en demi-teinte de style bande dessinée classique"
+            "value": "Băng keo giấy màu kem với họa tiết kẻ ô gingham"
           }
         },
-        "de": {
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sensible Informationen mit klassischen Halbtonpunkten im Comic-Stil verdecken"
+            "value": "奶油色格纹纸胶带"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "奶油色格紋紙膠帶"
           }
         }
       }
@@ -3904,31 +3969,25 @@
     "annotate.hexagonal": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hexagonal"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Hexagonal"
           }
         },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lục giác"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "六边形"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "六邊形"
-          }
-        },
         "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hexagonal"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Hexagonal"
@@ -3952,16 +4011,22 @@
             "value": "Гексагональный"
           }
         },
-        "fr": {
+        "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hexagonal"
+            "value": "Lục giác"
           }
         },
-        "de": {
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hexagonal"
+            "value": "六边形"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "六邊形"
           }
         }
       }
@@ -3969,34 +4034,28 @@
     "annotate.hexagonal-blur-description": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sensible Details mit wabenförmiger hexagonaler Verpixelung verdecken"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Artistic hexagonal pixelation effect"
           }
         },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hiệu ứng điểm ảnh lục giác nghệ thuật"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "使用蜂窝状六边形像素化遮盖敏感细节"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "使用蜂窩狀六邊形像素化遮蓋敏感細節"
-          }
-        },
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Enmascarar detalles sensibles con pixelación hexagonal en forma de panal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masquer les détails sensibles avec une pixellisation hexagonale en nid d'abeille"
           }
         },
         "ja": {
@@ -4017,16 +4076,22 @@
             "value": "Скрыть конфиденциальные детали гексагональной пикселизацией в виде сот"
           }
         },
-        "fr": {
+        "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Masquer les détails sensibles avec une pixellisation hexagonale en nid d'abeille"
+            "value": "Hiệu ứng điểm ảnh lục giác nghệ thuật"
           }
         },
-        "de": {
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sensible Details mit wabenförmiger hexagonaler Verpixelung verdecken"
+            "value": "使用蜂窝状六边形像素化遮盖敏感细节"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用蜂窩狀六邊形像素化遮蓋敏感細節"
           }
         }
       }
@@ -5269,34 +5334,28 @@
     "annotate.pointillism": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pointillismus"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Grid"
           }
         },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Băng dính ô ly"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "网格胶带"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "網格膠帶"
-          }
-        },
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Puntillismo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pointillisme"
           }
         },
         "ja": {
@@ -5317,16 +5376,22 @@
             "value": "Пуантилизм"
           }
         },
-        "fr": {
+        "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pointillisme"
+            "value": "Băng dính ô ly"
           }
         },
-        "de": {
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pointillismus"
+            "value": "网格胶带"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "網格膠帶"
           }
         }
       }
@@ -5334,34 +5399,28 @@
     "annotate.pointillism-blur-description": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sensible Inhalte mit einem künstlerischen Pointillismus-Effekt aus winzigen Punkten verdecken"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Peach paper tape with a grid line pattern"
           }
         },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Băng keo giấy màu đào với họa tiết ô vuông tối giản"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "蜜桃色网格纸胶带"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "蜜桃色網格紙膠帶"
-          }
-        },
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Enmascarar contenido sensible con un efecto artístico de puntillismo compuesto de pequeños puntos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masquer le contenu sensible avec un effet de pointillisme artistique composé de minuscules points"
           }
         },
         "ja": {
@@ -5382,16 +5441,22 @@
             "value": "Скрыть конфиденциальное содержимое художественным эффектом пуантилизма из крошечных точек"
           }
         },
-        "fr": {
+        "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Masquer le contenu sensible avec un effet de pointillisme artistique composé de minuscules points"
+            "value": "Băng keo giấy màu đào với họa tiết ô vuông tối giản"
           }
         },
-        "de": {
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sensible Inhalte mit einem künstlerischen Pointillismus-Effekt aus winzigen Punkten verdecken"
+            "value": "蜜桃色网格纸胶带"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "蜜桃色網格紙膠帶"
           }
         }
       }
@@ -6761,6 +6826,71 @@
         }
       }
     },
+    "annotate.spotlight-opacity": {
+      "extractionState": "stale",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dunkelheit"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Darkness"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oscuridad"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obscurité"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暗さ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어둡기"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Затемнение"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Độ tối"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暗度"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暗度"
+          }
+        }
+      }
+    },
     "annotate.straight": {
       "extractionState": "stale",
       "localizations": {
@@ -6894,34 +7024,28 @@
     "annotate.tape": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klebeband"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Tape"
           }
         },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bút xóa giấy"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "胶带"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "膠帶"
-          }
-        },
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Cinta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ruban"
           }
         },
         "ja": {
@@ -6942,16 +7066,22 @@
             "value": "Лента"
           }
         },
-        "fr": {
+        "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ruban"
+            "value": "Bút xóa giấy"
           }
         },
-        "de": {
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Klebeband"
+            "value": "胶带"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "膠帶"
           }
         }
       }
@@ -6959,34 +7089,28 @@
     "annotate.tape-blur-description": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sensible Informationen mit einem dezenten Klebeband-Effekt schwärzen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Off-white paper tape with diagonal patterns"
           }
         },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Băng xóa giấy màu trắng nhạt với hoa văn sọc chéo"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "使用微妙的胶带效果遮盖敏感信息"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "使用微妙的膠帶效果遮蓋敏感資訊"
-          }
-        },
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Redactar información sensible con un sutil efecto de cinta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caviarder les informations sensibles avec un effet de ruban adhésif"
           }
         },
         "ja": {
@@ -7007,16 +7131,22 @@
             "value": "Скрыть конфиденциальную информацию эффектом ленты"
           }
         },
-        "fr": {
+        "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Caviarder les informations sensibles avec un effet de ruban adhésif"
+            "value": "Băng xóa giấy màu trắng nhạt với hoa văn sọc chéo"
           }
         },
-        "de": {
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sensible Informationen mit einem dezenten Klebeband-Effekt schwärzen"
+            "value": "使用微妙的胶带效果遮盖敏感信息"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用微妙的膠帶效果遮蓋敏感資訊"
           }
         }
       }
@@ -7537,71 +7667,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "模糊"
-          }
-        }
-      }
-    },
-    "annotate.tool.spotlight": {
-      "extractionState": "stale",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scheinwerfer"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spotlight"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Foco"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Projecteur"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "スポットライト"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "스포트라이트"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Прожектор"
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Đèn rọi"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "聚光灯"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "聚光燈"
           }
         }
       }
@@ -8252,6 +8317,71 @@
           "stringUnit": {
             "state": "translated",
             "value": "選擇"
+          }
+        }
+      }
+    },
+    "annotate.tool.spotlight": {
+      "extractionState": "stale",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scheinwerfer"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spotlight"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foco"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projecteur"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スポットライト"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스포트라이트"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прожектор"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Đèn rọi"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "聚光灯"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "聚光燈"
           }
         }
       }
@@ -9169,31 +9299,25 @@
     "annotate.washi": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Washi"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Washi"
           }
         },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Băng dán"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "和纸"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "和紙"
-          }
-        },
         "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Washi"
+          }
+        },
+        "fr": {
           "stringUnit": {
             "state": "translated",
             "value": "Washi"
@@ -9217,16 +9341,22 @@
             "value": "Васи"
           }
         },
-        "fr": {
+        "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Washi"
+            "value": "Băng dán"
           }
         },
-        "de": {
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Washi"
+            "value": "和纸"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "和紙"
           }
         }
       }
@@ -9234,34 +9364,28 @@
     "annotate.washi-blur-description": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sensible Details mit einem dekorativen halbtransparenten Washi-Tape verdecken"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Pastel teal paper tape with grid dot patterns"
           }
         },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Băng dán giấy màu xanh ngọc nhạt với hoa văn chấm lưới"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "用装饰性半透明和纸胶带遮盖敏感细节"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "用裝飾性半透明和紙膠帶遮蓋敏感細節"
-          }
-        },
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Enmascarar detalles sensibles con una cinta washi decorativa semitransparente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masquer les détails sensibles avec un ruban washi décoratif semi-transparent"
           }
         },
         "ja": {
@@ -9282,16 +9406,22 @@
             "value": "Скрыть конфиденциальные детали декоративной полупрозрачной лентой васи"
           }
         },
-        "fr": {
+        "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Masquer les détails sensibles avec un ruban washi décoratif semi-transparent"
+            "value": "Băng dán giấy màu xanh ngọc nhạt với hoa văn chấm lưới"
           }
         },
-        "de": {
+        "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sensible Details mit einem dekorativen halbtransparenten Washi-Tape verdecken"
+            "value": "用装饰性半透明和纸胶带遮盖敏感细节"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "用裝飾性半透明和紙膠帶遮蓋敏感細節"
           }
         }
       }
@@ -9422,71 +9552,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "不透明度"
-          }
-        }
-      }
-    },
-    "annotate.spotlight-opacity": {
-      "extractionState": "stale",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dunkelheit"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Darkness"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Oscuridad"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Obscurité"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "暗さ"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "어둡기"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Затемнение"
-          }
-        },
-        "vi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Độ tối"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "暗度"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "暗度"
           }
         }
       }
