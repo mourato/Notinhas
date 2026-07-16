@@ -2812,6 +2812,28 @@ final class AnnotateState: ObservableObject {
     ).standardized
   }
 
+  /// Move an arrow's start/end endpoint (Figma-style line editing).
+  /// Style, display type, and heads are preserved; the curve control point is
+  /// re-derived from the new endpoints so curved arrows follow the drag.
+  func updateArrowEndpoint(id: UUID, start newStart: CGPoint? = nil, end newEnd: CGPoint? = nil) {
+    guard let index = annotations.firstIndex(where: { $0.id == id }),
+          case .arrow(let geometry) = annotations[index].type else { return }
+
+    let updatedStart = newStart ?? geometry.start
+    let updatedEnd = newEnd ?? geometry.end
+    let updated = ArrowGeometry(
+      start: updatedStart,
+      end: updatedEnd,
+      style: geometry.style,
+      arrowType: geometry.arrowType,
+      startHead: geometry.startHead,
+      endHead: geometry.endHead
+    )
+    annotations[index].type = .arrow(updated)
+    annotations[index].bounds = updated.bounds()
+    hasUnsavedChanges = true
+  }
+
   func updateAnnotationText(id: UUID, text: String) {
     guard let index = annotations.firstIndex(where: { $0.id == id }),
           case .text(let currentText) = annotations[index].type else { return }
