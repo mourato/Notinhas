@@ -92,6 +92,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.30.0-beta.4] - 2026-07-17
+
+### Features
+-  Implement endpoint editing for arrows and lines; update selection affordances (22766cb)
+-  Add double-sided arrow in the mark-up (#368) (b299bad)
+
+### Bug Fixes
+-  Fixed pause offset handling in RecordingSession and update ScreenRecordingManager and tests (#322) (70f7f36)
+
+### Chore
+- chore: update appcast for v1.30.0-beta.3 (4885f57)
+
+### Contributors
+- @duongductrong
+- @github-actions[bot]
+
 ## [1.30.0-beta.3] - 2026-07-15
 
 ### Features
