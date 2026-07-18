@@ -94,6 +94,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.30.0-beta.6] - 2026-07-18
+
+### Bug Fixes
+-  Restore markup on combined images and enhance text editing (#377) (62f4782)
+
+### Chore
+- chore: update appcast for v1.30.0-beta.5 (91e46d6)
+
+### Contributors
+- @github-actions[bot]
+- @menmer0859
+
 ## [1.30.0-beta.5] - 2026-07-18
 
 ### Bug Fixes
