@@ -170,6 +170,7 @@ struct AnnotateQuickPropertiesBar: View {
     let showStrokeColor = state.quickPropertiesSupportsStrokeColor
     let showFill = state.quickPropertiesSupportsFill
     let showTextBackground = state.quickPropertiesSupportsTextBackground
+    let showTextPresentation = state.quickPropertiesSupportsTextPresentation
     let showTextFontSize = state.quickPropertiesSupportsTextFontSize
     let showWatermark = state.quickPropertiesSupportsWatermark
     let showBlurType = state.quickPropertiesSupportsBlurType
@@ -187,7 +188,8 @@ struct AnnotateQuickPropertiesBar: View {
       || showArrowStyle
     let showSelectionStyle = state.quickPropertiesShowsSelectionStyle && !hasEditableStyleControls
     let showSelectionInfo = state.quickPropertiesSelectedAnnotationCount > 0 && showSelectionStyle
-    let hasBeforeTextBackground = showStrokeColor || showFill
+    let hasBeforeTextPresentation = showStrokeColor || showFill
+    let hasBeforeTextBackground = hasBeforeTextPresentation || showTextPresentation
     let hasBeforeTextFontSize = hasBeforeTextBackground || showTextBackground
     let hasBeforeWatermarkText = hasBeforeTextFontSize || showTextFontSize
     let hasBeforeWatermarkStyle = hasBeforeWatermarkText || showWatermark
@@ -262,6 +264,20 @@ struct AnnotateQuickPropertiesBar: View {
           role: .annotationFill,
           quickColorLimit: density == .regular ? 4 : 2,
           groupSpacing: density.groupSpacing
+        )
+      }
+
+      activePropertySlot(
+        isVisible: showTextPresentation,
+        isEnabled: state.quickPropertiesSupportsTextPresentation,
+        showsLeadingDivider: hasBeforeTextPresentation,
+        width: nil
+      ) {
+        QuickTextPresentationControl(
+          buttonWidth: density.controlButtonWidth,
+          groupSpacing: density.groupSpacing,
+          selectedPresentation: state.quickTextPresentation,
+          onSelect: state.setTextPresentation
         )
       }
 
@@ -1406,6 +1422,40 @@ private struct QuickTextFontSizeControl: View {
   }
 }
 
+private struct QuickTextPresentationControl: View {
+  let buttonWidth: CGFloat
+  let groupSpacing: CGFloat
+  let selectedPresentation: TextPresentation
+  let onSelect: (TextPresentation) -> Void
+
+  var body: some View {
+    QuickPropertiesGroup(title: L10n.AnnotateUI.textStyle, spacing: groupSpacing) {
+      HStack(spacing: 5) {
+        ForEach(TextPresentation.allCases) { presentation in
+          Button {
+            onSelect(presentation)
+          } label: {
+            Image(systemName: presentation.icon)
+              .font(.system(size: 12, weight: .semibold))
+              .foregroundColor(selectedPresentation == presentation ? .accentColor : .secondary)
+              .frame(width: buttonWidth, height: 24)
+              .background(
+                RoundedRectangle(cornerRadius: 7)
+                  .fill(selectedPresentation == presentation ? Color.accentColor.opacity(0.16) : SidebarColors.itemDefault)
+              )
+              .overlay(
+                RoundedRectangle(cornerRadius: 7)
+                  .stroke(selectedPresentation == presentation ? Color.accentColor.opacity(0.45) : Color.secondary.opacity(0.14), lineWidth: 1)
+              )
+          }
+          .buttonStyle(.plain)
+          .help(presentation.helpText)
+        }
+      }
+    }
+  }
+}
+
 private struct QuickWatermarkTextControl: View {
   @Binding var text: String
   let groupSpacing: CGFloat
@@ -1667,7 +1717,6 @@ private struct QuickArrowStyleControl: View {
             } label: {
               Image(systemName: style.icon)
                 .font(.system(size: 12, weight: .semibold))
-                .scaleEffect(x: 1, y: style == .curvedRight ? -1 : 1)
                 .foregroundColor(selectedStyle == style ? .accentColor : .secondary)
                 .frame(width: buttonWidth, height: 24)
                 .background(
@@ -1729,9 +1778,8 @@ private struct QuickArrowStyleControl: View {
             Button {
               selectedType = type
             } label: {
-              Image(systemName: type.icon(for: selectedStyle))
+              Image(systemName: type.icon)
                 .font(.system(size: 12, weight: .semibold))
-                .scaleEffect(x: 1, y: selectedStyle == .curvedRight ? -1 : 1)
                 .foregroundColor(selectedType == type ? .accentColor : .secondary)
                 .frame(width: buttonWidth, height: 24)
                 .background(

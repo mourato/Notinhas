@@ -203,6 +203,9 @@ final class AnnotateState: ObservableObject {
   private var quickPropertiesGestureUndoSnapshot: AnnotationSnapshot?
   private var sharedAnnotationColor: Color?
   private var sharedAnnotationParameterDefaults = SharedAnnotationParameterDefaults()
+  /// New text starts as a natural-width line. Resizing it switches that item
+  /// to a fixed width so deliberate wrapping is never overwritten while typing.
+  private var autoSizingTextAnnotationIDs: Set<UUID> = []
 
   // MARK: - Editor Mode
 
@@ -457,6 +460,9 @@ final class AnnotateState: ObservableObject {
   /// Viewport pan offset (points). Applied alongside scaleEffect.
   @Published var panOffset: CGSize = .zero
 
+  /// Keeps the canvas in a direct manipulation mode while the hand button is active.
+  @Published var isCanvasPanningMode = false
+
   /// Whether Space key is currently held (hand tool active)
   @Published var isSpacePanning: Bool = false
 
@@ -507,6 +513,7 @@ final class AnnotateState: ObservableObject {
   func resetPanIfNeeded() {
     if !canPanInteractively {
       panOffset = .zero
+      isCanvasPanningMode = false
     } else {
       clampPanOffset()
     }
@@ -2277,6 +2284,12 @@ final class AnnotateState: ObservableObject {
     editingTextAnnotationId = id
   }
 
+  func useAutomaticTextWidth(for id: UUID) {
+    guard let annotation = annotations.first(where: { $0.id == id }),
+          case .text = annotation.type else { return }
+    autoSizingTextAnnotationIDs.insert(id)
+  }
+
   func finishTextEditing() {
     editingTextAnnotationId = nil
   }
@@ -2764,7 +2777,24 @@ final class AnnotateState: ObservableObject {
     let oldBounds = annotations[index].resizeBounds
     let normalizedBounds = bounds.standardized
 
+    if case .text = annotations[index].type,
+       annotations[index].properties.textPresentation == .callout,
+       let tailTarget = annotations[index].properties.calloutTailTarget {
+      if TextBubbleGeometry.isDefaultTail(tailTarget, for: oldBounds, fontSize: annotations[index].properties.fontSize) {
+        annotations[index].properties.calloutTailTarget = defaultCalloutTailTarget(for: normalizedBounds, fontSize: annotations[index].properties.fontSize)
+      } else if oldBounds.size == normalizedBounds.size {
+        annotations[index].properties.calloutTailTarget = CGPoint(
+          x: tailTarget.x + normalizedBounds.minX - oldBounds.minX,
+          y: tailTarget.y + normalizedBounds.minY - oldBounds.minY
+        )
+      }
+    }
     annotations[index].bounds = normalizedBounds
+
+    if case .text = annotations[index].type,
+       abs(oldBounds.width - normalizedBounds.width) > 0.5 {
+      autoSizingTextAnnotationIDs.remove(id)
+    }
 
     // Also update embedded coordinates for arrows/lines/paths
     switch annotations[index].type {
@@ -2840,6 +2870,7 @@ final class AnnotateState: ObservableObject {
 
     let currentBounds = annotations[index].bounds
     let newBounds = resizedTextBounds(
+      id: id,
       text: text,
       properties: annotations[index].properties,
       currentBounds: currentBounds
@@ -2854,6 +2885,11 @@ final class AnnotateState: ObservableObject {
       annotations[index].type = .text(text)
     }
     annotations[index].bounds = newBounds
+    if annotations[index].properties.textPresentation == .callout,
+       let tailTarget = annotations[index].properties.calloutTailTarget,
+       TextBubbleGeometry.isDefaultTail(tailTarget, for: currentBounds, fontSize: annotations[index].properties.fontSize) {
+      annotations[index].properties.calloutTailTarget = defaultCalloutTailTarget(for: newBounds, fontSize: annotations[index].properties.fontSize)
+    }
     hasUnsavedChanges = true
   }
 
@@ -2985,6 +3021,7 @@ final class AnnotateState: ObservableObject {
         let currentBounds = annotations[index].bounds
         let properties = annotations[index].properties
         annotations[index].bounds = resizedTextBounds(
+          id: id,
           text: content,
           properties: properties,
           currentBounds: currentBounds
@@ -3114,18 +3151,21 @@ final class AnnotateState: ObservableObject {
     origin: CGPoint,
     fontName: String? = nil,
     constrainedWidth: CGFloat? = nil,
-    maximumHeight: CGFloat = AnnotateTextLayout.maxHeight
+    maximumHeight: CGFloat = AnnotateTextLayout.maxHeight,
+    presentation: TextPresentation = .plain
   ) -> CGRect {
     AnnotateTextLayout.bounds(
       text: text,
       font: AnnotateTextLayout.font(size: fontSize, fontName: fontName),
       origin: origin,
       constrainedWidth: constrainedWidth,
-      maximumHeight: maximumHeight
+      maximumHeight: maximumHeight,
+      presentation: presentation
     )
   }
 
   private func resizedTextBounds(
+    id: UUID,
     text: String,
     properties: AnnotationProperties,
     currentBounds: CGRect
@@ -3134,11 +3174,22 @@ final class AnnotateState: ObservableObject {
     let annotationBounds = activeAnnotationBounds.standardized
     let topY = currentBounds.maxY
     let availableWidth = max(annotationBounds.maxX - currentBounds.minX, AnnotateTextLayout.minWidth)
-    let availableHeight = max(topY - annotationBounds.minY, AnnotateTextLayout.minimumHeight(for: font))
-    let targetWidth = AnnotateTextLayout.clampedWidth(
-      currentBounds.width,
-      maximumWidth: availableWidth
-    )
+    let availableHeight = max(topY - annotationBounds.minY, AnnotateTextLayout.minimumHeight(for: font, presentation: properties.textPresentation))
+    let targetWidth: CGFloat
+    if autoSizingTextAnnotationIDs.contains(id) {
+      targetWidth = AnnotateTextLayout.preferredAutoWidth(
+        text: text,
+        font: font,
+        minimumWidth: AnnotateTextLayout.minWidth,
+        maximumWidth: availableWidth,
+        presentation: properties.textPresentation
+      )
+    } else {
+      targetWidth = AnnotateTextLayout.clampedWidth(
+        currentBounds.width,
+        maximumWidth: availableWidth
+      )
+    }
 
     var bounds = calculateTextBounds(
       text: text,
@@ -3146,7 +3197,8 @@ final class AnnotateState: ObservableObject {
       origin: currentBounds.origin,
       fontName: properties.fontName,
       constrainedWidth: targetWidth,
-      maximumHeight: availableHeight
+      maximumHeight: availableHeight,
+      presentation: properties.textPresentation
     )
     bounds.origin.y = topY - bounds.height
     return bounds
@@ -3204,6 +3256,7 @@ final class AnnotateState: ObservableObject {
     }
     return arrowStyle
   }
+
   func setActiveArrowStyle(_ style: ArrowStyle) {
     arrowStyle = style
     sharedAnnotationParameterDefaults.arrowStyle = style.rawValue
@@ -3218,6 +3271,8 @@ final class AnnotateState: ObservableObject {
         saveState()
       }
       arrowAnnotations.forEach { updateArrowStyle(id: $0.id, style: style) }
+    } else {
+      arrowStyle = style
     }
   }
 
@@ -3243,6 +3298,8 @@ final class AnnotateState: ObservableObject {
         saveState()
       }
       arrowAnnotations.forEach { updateArrowType(id: $0.id, arrowType: type) }
+    } else {
+      arrowType = type
     }
   }
 
@@ -3270,6 +3327,8 @@ final class AnnotateState: ObservableObject {
       arrowAnnotations.forEach {
         updateArrowBendDirection(id: $0.id, bendDirection: bendDirection)
       }
+    } else {
+      arrowBendDirection = bendDirection
     }
   }
 
@@ -3322,7 +3381,6 @@ final class AnnotateState: ObservableObject {
       arrowAnnotations.forEach { updateArrowEndHead(id: $0.id, head: head) }
     }
   }
-
 
   var activeBlurType: BlurType {
     if let annotation = selectedBlurAnnotations.first,
@@ -3763,10 +3821,27 @@ final class AnnotateState: ObservableObject {
 
   func annotationCreationProperties(for tool: AnnotationToolType) -> AnnotationProperties {
     var properties = defaultAnnotationProperties(for: tool)
+    if tool == .text, shouldUseRecommendedTextFontSize {
+      properties.fontSize = recommendedTextFontSize()
+    }
     if tool == .filledRectangle {
       properties.fillColor = properties.strokeColor
     }
     return properties
+  }
+
+  /// Starts new text at a readable size relative to the current image or combined canvas.
+  /// A manually chosen text size is always preserved for subsequent annotations.
+  func recommendedTextFontSize() -> CGFloat {
+    let canvasSize = effectiveContentBounds.size
+    let shortSide = max(min(canvasSize.width, canvasSize.height), 1)
+    let suggested = shortSide * 0.026
+    let stepped = (suggested / 2).rounded() * 2
+    return min(max(stepped, 16), 36)
+  }
+
+  private var shouldUseRecommendedTextFontSize: Bool {
+    sharedAnnotationParameterDefaults.fontSize == nil && annotationToolProperties[.text] == nil
   }
 
   private func updateDefaultAnnotationProperties(
@@ -4108,6 +4183,79 @@ final class AnnotateState: ObservableObject {
     }
 
     return quickPropertiesTool == .text
+  }
+
+  var quickPropertiesSupportsTextPresentation: Bool {
+    quickPropertiesSupportsTextBackground
+  }
+
+  var quickTextPresentation: TextPresentation {
+    quickSelectionTargets(matching: {
+      if case .text = $0 { return true }
+      return false
+    }).first?.properties.textPresentation
+      ?? defaultAnnotationProperties(for: quickPropertiesTool).textPresentation
+  }
+
+  func setTextPresentation(_ presentation: TextPresentation) {
+    let selected = quickSelectionTargets(matching: {
+      if case .text = $0 { return true }
+      return false
+    })
+
+    guard !selected.isEmpty else {
+      guard quickPropertiesTool == .text else { return }
+      var properties = defaultAnnotationProperties(for: .text)
+      properties.textPresentation = presentation
+      properties.calloutTailTarget = nil
+      if presentation != .plain, properties.fillColor == .clear {
+        properties.fillColor = .black
+      }
+      annotationToolProperties[.text] = properties
+      return
+    }
+
+    saveState()
+    for annotation in selected {
+      guard let index = annotations.firstIndex(where: { $0.id == annotation.id }) else { continue }
+      annotations[index].properties.textPresentation = presentation
+      if presentation == .plain {
+        annotations[index].properties.calloutTailTarget = nil
+      } else if presentation == .callout {
+        annotations[index].properties.calloutTailTarget = annotations[index].properties.calloutTailTarget
+          ?? defaultCalloutTailTarget(for: annotations[index].bounds, fontSize: annotations[index].properties.fontSize)
+      } else {
+        annotations[index].properties.calloutTailTarget = nil
+      }
+      if presentation != .plain, annotations[index].properties.fillColor == .clear {
+        annotations[index].properties.fillColor = .black
+      }
+    }
+    hasUnsavedChanges = true
+  }
+
+  func prepareTextCalloutTail(for id: UUID) {
+    guard let index = annotations.firstIndex(where: { $0.id == id }),
+          case .text = annotations[index].type,
+          annotations[index].properties.textPresentation == .callout,
+          annotations[index].properties.calloutTailTarget == nil else { return }
+    annotations[index].properties.calloutTailTarget = defaultCalloutTailTarget(for: annotations[index].bounds, fontSize: annotations[index].properties.fontSize)
+  }
+
+  func updateTextCalloutTail(id: UUID, target: CGPoint) {
+    guard let index = annotations.firstIndex(where: { $0.id == id }),
+          case .text = annotations[index].type,
+          annotations[index].properties.textPresentation == .callout else { return }
+    annotations[index].properties.calloutTailTarget = TextBubbleGeometry.resolvedTailTarget(
+      in: annotations[index].bounds,
+      requestedTarget: target,
+      fontSize: annotations[index].properties.fontSize
+    )
+    hasUnsavedChanges = true
+  }
+
+  private func defaultCalloutTailTarget(for bounds: CGRect, fontSize: CGFloat) -> CGPoint {
+    TextBubbleGeometry.defaultTailTarget(for: bounds, fontSize: fontSize)
   }
 
   var quickTextFontSizeBinding: Binding<CGFloat> {
@@ -4619,7 +4767,9 @@ final class AnnotateState: ObservableObject {
       commitTextEditing()
     }
     if tool != .selection {
-      selectedAnnotationId = nil
+      // A selected combined-image layer must not keep its handles or consume
+      // clicks after the user switches back to drawing annotations.
+      deselectAnnotation()
     }
     selectedTool = tool
   }
@@ -4632,6 +4782,7 @@ final class AnnotateState: ObservableObject {
     ])
     saveState()
     annotations.removeAll { selectedIds.contains($0.id) }
+    autoSizingTextAnnotationIDs.subtract(selectedIds)
     selectedIds.forEach { freeCombineBoundsByAnnotationID.removeValue(forKey: $0) }
     pruneUnusedEmbeddedAssets()
     updateImportWarningIfNeeded()
@@ -4764,20 +4915,22 @@ enum AnnotateTextLayout {
     font: NSFont,
     origin: CGPoint,
     constrainedWidth: CGFloat? = nil,
-    maximumHeight: CGFloat = maxHeight
+    maximumHeight: CGFloat = maxHeight,
+    presentation: TextPresentation = .plain
   ) -> CGRect {
     let finalWidth: CGFloat
 
     if let constrainedWidth = constrainedWidth {
       finalWidth = clampedWidth(constrainedWidth)
     } else {
-      finalWidth = preferredAutoWidth(text: text, font: font)
+      finalWidth = preferredAutoWidth(text: text, font: font, presentation: presentation)
     }
 
-    let contentWidth = max(finalWidth - horizontalPadding * 2, minContentWidth)
+    let insets = TextBubbleGeometry.contentInsets(for: presentation, fontSize: font.pointSize)
+    let contentWidth = max(finalWidth - insets.width * 2, minContentWidth)
     let contentHeight = ceil(contentSize(for: text, font: font, constrainedWidth: contentWidth).height)
     let resolvedMaximumHeight = max(minimumHeight(for: font), min(maximumHeight, maxHeight))
-    let finalHeight = min(max(contentHeight + verticalPadding * 2, minimumHeight(for: font)), resolvedMaximumHeight)
+    let finalHeight = min(max(contentHeight + insets.height * 2, minimumHeight(for: font, presentation: presentation)), resolvedMaximumHeight)
 
     return CGRect(
       x: origin.x,
@@ -4787,14 +4940,15 @@ enum AnnotateTextLayout {
     )
   }
 
-  static func textRect(for text: String, font: NSFont, in bounds: CGRect) -> CGRect {
-    let contentWidth = max(bounds.width - horizontalPadding * 2, minContentWidth)
+  static func textRect(for text: String, font: NSFont, in bounds: CGRect, presentation: TextPresentation = .plain) -> CGRect {
+    let insets = TextBubbleGeometry.contentInsets(for: presentation, fontSize: font.pointSize)
+    let contentWidth = max(bounds.width - insets.width * 2, minContentWidth)
     let contentHeight = ceil(contentSize(for: text, font: font, constrainedWidth: contentWidth).height)
     let drawHeight = min(contentHeight, max(bounds.height, 0))
     let verticalInset = max((bounds.height - drawHeight) / 2, 0)
 
     return CGRect(
-      x: bounds.minX + horizontalPadding,
+      x: bounds.minX + insets.width,
       y: bounds.minY + verticalInset,
       width: contentWidth,
       height: drawHeight
@@ -4810,11 +4964,12 @@ enum AnnotateTextLayout {
     ).height
   }
 
-  static func textEditorInset(scale: CGFloat) -> NSSize {
+  static func textEditorInset(scale: CGFloat, presentation: TextPresentation = .plain, fontSize: CGFloat = 16) -> NSSize {
     let resolvedScale = max(scale, 0.0001)
+    let insets = TextBubbleGeometry.contentInsets(for: presentation, fontSize: fontSize)
     return NSSize(
-      width: horizontalPadding * resolvedScale,
-      height: verticalPadding * resolvedScale
+      width: insets.width * resolvedScale,
+      height: insets.height * resolvedScale
     )
   }
 
@@ -4827,16 +4982,19 @@ enum AnnotateTextLayout {
     text: String,
     font: NSFont,
     minimumWidth: CGFloat = defaultInitialWidth,
-    maximumWidth: CGFloat = maxWidth
+    maximumWidth: CGFloat = maxWidth,
+    presentation: TextPresentation = .plain
   ) -> CGFloat {
-    let measuredWidth = ceil(singleLineSize(for: text, font: font).width) + horizontalPadding * 2
+    let insets = TextBubbleGeometry.contentInsets(for: presentation, fontSize: font.pointSize)
+    let measuredWidth = ceil(singleLineSize(for: text, font: font).width) + insets.width * 2
     let resolvedMaximumWidth = max(minWidth, min(maximumWidth, maxWidth))
     let resolvedMinimumWidth = min(max(minimumWidth, minWidth), resolvedMaximumWidth)
     return min(max(measuredWidth, resolvedMinimumWidth), resolvedMaximumWidth)
   }
 
-  static func minimumHeight(for font: NSFont) -> CGFloat {
-    ceil(font.ascender - font.descender + font.leading) + verticalPadding * 2
+  static func minimumHeight(for font: NSFont, presentation: TextPresentation = .plain) -> CGFloat {
+    let insets = TextBubbleGeometry.contentInsets(for: presentation, fontSize: font.pointSize)
+    return ceil(font.ascender - font.descender + font.leading) + insets.height * 2
   }
 
   private static func singleLineSize(for text: String, font: NSFont) -> CGSize {
