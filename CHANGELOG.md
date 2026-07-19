@@ -98,6 +98,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.30.0-beta.10] - 2026-07-19
+
+### Bug Fixes
+-  Fixed screenshot overlay drag cursor handling (#336) (b70f187)
+
+### Chore
+- chore: update appcast for v1.30.0-beta.9 (4da02cc)
+
+### Contributors
+- @github-actions[bot]
+- @omarshahine
+
 ## [1.30.0-beta.9] - 2026-07-19
 
 ### Bug Fixes
