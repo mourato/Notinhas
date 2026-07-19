@@ -97,6 +97,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.30.0-beta.9] - 2026-07-19
+
+### Bug Fixes
+-  Fixed coordinate indicator behavior during selection and drag events (056b044)
+-  Fixed coordinate indicator handling during layout passes and re-renders (2bcbfd4)
+
+### Chore
+- chore: update appcast for v1.30.0-beta.8 (5526b1c)
+
+### Contributors
+- @duongductrong
+- @github-actions[bot]
+
 ## [1.30.0-beta.8] - 2026-07-19
 
 ### Chore
