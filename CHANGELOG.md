@@ -96,6 +96,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.30.0-beta.8] - 2026-07-19
+
+### Chore
+- refactor: Improve QuickAccessPanelController transitions and add tests for edge cases (b50463c)
+- chore: update appcast for v1.30.0-beta.7 (94d58ce)
+
+### Contributors
+- @duongductrong
+- @github-actions[bot]
+
 ## [1.30.0-beta.7] - 2026-07-19
 
 ### Chore
