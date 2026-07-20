@@ -9,6 +9,7 @@ LOG_SUBSYSTEM="${LOG_SUBSYSTEM:-Snapzy}"
 # The existing local development identity shared with Vozinha. Override this for
 # a different local keychain identity without changing project settings.
 LOCAL_CODE_SIGN_IDENTITY="${LOCAL_CODE_SIGN_IDENTITY:-Prisma Local Code Signing}"
+LOCAL_ENABLE_HARDENED_RUNTIME="${LOCAL_ENABLE_HARDENED_RUNTIME:-NO}"
 APPLICATIONS_DIR="${APPLICATIONS_DIR:-/Applications}"
 
 MODE="run"
@@ -256,17 +257,17 @@ run_xcodebuild() {
   )
 
   # The project targets an unavailable legacy development team. Use the shared
-  # Vozinha identity for local app bundles instead. The self-signed, team-less
-  # identity needs library validation disabled only for Debug, where Xcode
-  # injects a debug dylib; Release keeps its hardened runtime enabled.
+  # Vozinha identity for local app bundles instead. Its local, team-less
+  # certificate cannot pass library validation for the bundled Sparkle
+  # framework, so local builds disable hardened runtime by default. A trusted
+  # Apple distribution identity can opt in with LOCAL_ENABLE_HARDENED_RUNTIME=YES.
   args+=(
     "CODE_SIGN_STYLE=Manual"
     "CODE_SIGN_IDENTITY=$LOCAL_CODE_SIGN_IDENTITY"
     "DEVELOPMENT_TEAM="
+    "ENABLE_HARDENED_RUNTIME=$LOCAL_ENABLE_HARDENED_RUNTIME"
   )
-  if [[ "$CONFIGURATION" == "Debug" ]]; then
-    args+=("ENABLE_HARDENED_RUNTIME=NO")
-  else
+  if [[ "$CONFIGURATION" != "Debug" ]]; then
     # Xcode 17's Swift 6.3.3 whole-module optimizer crashes while compiling
     # this project. Keep Release optimization enabled while disabling only the
     # failing SIL performance pass.
@@ -340,7 +341,13 @@ open_installed_release_app() {
   installed_app="$(installed_release_app_path)"
   info "Launching installed $APP_NAME..."
   /usr/bin/open -n "$installed_app"
-  success "Launched $installed_app"
+  sleep 2
+
+  if pgrep -x "$APP_NAME" >/dev/null 2>&1; then
+    success "Launched $installed_app"
+  else
+    fail "$APP_NAME did not remain running after launch. Check the code-signing identity and system logs."
+  fi
 }
 
 release_post_build_menu() {

@@ -206,8 +206,11 @@ The local Release bundle is created at:
 ```
 
 The script uses the local `Prisma Local Code Signing` identity by default. Set
-`LOCAL_CODE_SIGN_IDENTITY` to use a different Keychain identity. Command-line
-options remain available for automation, for example:
+`LOCAL_CODE_SIGN_IDENTITY` to use a different Keychain identity. This local,
+self-signed identity builds without hardened runtime so it can load the bundled
+Sparkle framework. Use `LOCAL_ENABLE_HARDENED_RUNTIME=YES` only with a trusted
+Apple distribution identity. Command-line options remain available for
+automation, for example:
 
 ```bash
 ./scripts/build_and_run.sh --configuration Release --clean
