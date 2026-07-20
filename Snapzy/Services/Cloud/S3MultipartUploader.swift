@@ -69,7 +69,7 @@ final class S3MultipartUploader {
 
     // Track part progress to report accurate overall progress
     let totalParts = Int(ceil(Double(fileSize) / Double(self.partSize)))
-    let partProgresses = ThreadSafeDictionary<Int, Double>()
+    let partProgresses = MultipartPartProgressStore()
     for i in 1...totalParts {
       partProgresses[i] = 0.0
     }
@@ -317,19 +317,29 @@ final class S3MultipartUploader {
   }
 }
 
-// MARK: - Thread Safe Dictionary Helper
+// MARK: - Multipart Progress Store
 
-private final class ThreadSafeDictionary<Key: Hashable, Value>: @unchecked Sendable {
-  private var dictionary: [Key: Value] = [:]
-  private let queue = DispatchQueue(label: "com.snapzy.multipart.dictionary", attributes: .concurrent)
+private final class MultipartPartProgressStore: @unchecked Sendable {
+  private var values: [Int: Double] = [:]
+  private let lock = NSLock()
 
-  subscript(key: Key) -> Value? {
-    get { queue.sync { dictionary[key] } }
-    set { queue.async(flags: .barrier) { self.dictionary[key] = newValue } }
+  subscript(partNumber: Int) -> Double? {
+    get {
+      lock.lock()
+      defer { lock.unlock() }
+      return values[partNumber]
+    }
+    set {
+      lock.lock()
+      values[partNumber] = newValue
+      lock.unlock()
+    }
   }
 
-  var allValues: [Value] {
-    queue.sync { Array(dictionary.values) }
+  var allValues: [Double] {
+    lock.lock()
+    defer { lock.unlock() }
+    return Array(values.values)
   }
 }
 

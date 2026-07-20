@@ -186,6 +186,36 @@ For local setup, source builds, and first-time development workflow, start with 
 
 If you need archive, export, or DMG packaging commands, see [docs/BUILD.md](docs/BUILD.md). If you want the contribution workflow, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
+### Local builds
+
+From a terminal, run the build assistant with no arguments:
+
+```bash
+./scripts/build_and_run.sh
+```
+
+It lets you choose a Debug or Release build and whether to clean existing build
+artifacts first. Debug builds open `Snapzy Debug.app`. Release builds produce
+the signed `Snapzy.app` and then offer to open it from the build folder, install
+it in `/Applications`, install and open it, or exit.
+
+The local Release bundle is created at:
+
+```text
+.build/xcode-derived-data/Build/Products/Release/Snapzy.app
+```
+
+The script uses the local `Prisma Local Code Signing` identity by default. Set
+`LOCAL_CODE_SIGN_IDENTITY` to use a different Keychain identity. Command-line
+options remain available for automation, for example:
+
+```bash
+./scripts/build_and_run.sh --configuration Release --clean
+```
+
+This local signature is intended for development and installation on trusted
+machines; it is separate from the notarized public release process.
+
 ## Documentation
 
 - [Ask DeepWiki (interactive docs assistant)](https://deepwiki.com/duongductrong/Snapzy)

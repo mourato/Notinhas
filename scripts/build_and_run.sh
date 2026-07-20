@@ -9,6 +9,7 @@ LOG_SUBSYSTEM="${LOG_SUBSYSTEM:-Snapzy}"
 # The existing local development identity shared with Vozinha. Override this for
 # a different local keychain identity without changing project settings.
 LOCAL_CODE_SIGN_IDENTITY="${LOCAL_CODE_SIGN_IDENTITY:-Prisma Local Code Signing}"
+APPLICATIONS_DIR="${APPLICATIONS_DIR:-/Applications}"
 
 MODE="run"
 CONFIGURATION="${CONFIGURATION:-Debug}"
@@ -52,7 +53,7 @@ ${BOLD}Modes:${NC}
   --verify, verify    Launch and confirm the Snapzy process is running
 
 ${BOLD}Options:${NC}
-  --configuration C   Build configuration. Debug uses LOCAL_CODE_SIGN_IDENTITY.
+  --configuration C   Build configuration. Local builds use LOCAL_CODE_SIGN_IDENTITY.
   --derived-data PATH Build DerivedData path. Default: .build/xcode-derived-data
   --log-level LEVELS  default,info,debug,error,fault,all. Default: default,error,fault
   --clean             Clean before building
@@ -75,7 +76,47 @@ require_command() {
   command -v "$1" >/dev/null 2>&1 || fail "Missing required command: $1"
 }
 
+configure_interactive_build() {
+  while true; do
+    printf "\nChoose a local build:\n"
+    printf "  1) Debug — build and open Snapzy Debug.app\n"
+    printf "  2) Release — build signed Snapzy.app, then choose what to do with it\n"
+    printf "  3) Exit\n"
+    printf "Choose [1-3]: "
+
+    local choice
+    read -r choice || exit 0
+    case "$choice" in
+      1)
+        CONFIGURATION="Debug"
+        break
+        ;;
+      2)
+        CONFIGURATION="Release"
+        break
+        ;;
+      3)
+        exit 0
+        ;;
+      *)
+        info "Please enter a number from 1 to 3."
+        ;;
+    esac
+  done
+
+  printf "Clean previous build artifacts first? [y/N]: "
+  local clean_choice
+  read -r clean_choice || exit 0
+  case "$clean_choice" in
+    y|Y|yes|YES)
+      CLEAN=1
+      ;;
+  esac
+}
+
 parse_args() {
+  local argument_count=$#
+
   while [[ $# -gt 0 ]]; do
     case "$1" in
       run)
@@ -127,9 +168,13 @@ parse_args() {
         ;;
       *)
         fail "Unknown option: $1"
-        ;;
+      ;;
     esac
   done
+
+  if [[ "$argument_count" -eq 0 && -t 0 && -t 1 ]]; then
+    configure_interactive_build
+  fi
 }
 
 message_type_predicate() {
@@ -188,6 +233,10 @@ app_binary_path() {
   printf "%s/Contents/MacOS/%s" "$(app_bundle_path)" "$APP_NAME"
 }
 
+installed_release_app_path() {
+  printf "%s/%s.app" "$APPLICATIONS_DIR" "$APP_NAME"
+}
+
 stop_app() {
   if pgrep -x "$APP_NAME" >/dev/null 2>&1; then
     info "Stopping existing $APP_NAME process..."
@@ -206,18 +255,22 @@ run_xcodebuild() {
     -derivedDataPath "$DERIVED_DATA_PATH"
   )
 
-  # The repository's Xcode project targets an unavailable legacy development
-  # team. Local Debug builds use the shared Vozinha identity instead. Its
-  # self-signed team-less certificate cannot load Xcode's injected debug dylib
-  # with library validation enabled, so this intentionally applies only to
-  # Debug. Release signing and hardened runtime remain project-controlled.
+  # The project targets an unavailable legacy development team. Use the shared
+  # Vozinha identity for local app bundles instead. The self-signed, team-less
+  # identity needs library validation disabled only for Debug, where Xcode
+  # injects a debug dylib; Release keeps its hardened runtime enabled.
+  args+=(
+    "CODE_SIGN_STYLE=Manual"
+    "CODE_SIGN_IDENTITY=$LOCAL_CODE_SIGN_IDENTITY"
+    "DEVELOPMENT_TEAM="
+  )
   if [[ "$CONFIGURATION" == "Debug" ]]; then
-    args+=(
-      "CODE_SIGN_STYLE=Manual"
-      "CODE_SIGN_IDENTITY=$LOCAL_CODE_SIGN_IDENTITY"
-      "DEVELOPMENT_TEAM="
-      "ENABLE_HARDENED_RUNTIME=NO"
-    )
+    args+=("ENABLE_HARDENED_RUNTIME=NO")
+  else
+    # Xcode 17's Swift 6.3.3 whole-module optimizer crashes while compiling
+    # this project. Keep Release optimization enabled while disabling only the
+    # failing SIL performance pass.
+    args+=('OTHER_SWIFT_FLAGS=$(inherited) -Xfrontend -disable-sil-perf-optzns')
   fi
 
   if [[ "$QUIET" -eq 1 ]]; then
@@ -253,6 +306,82 @@ open_app() {
   info "Launching $APP_NAME..."
   /usr/bin/open -n "$app_bundle"
   success "Launched $APP_NAME"
+}
+
+install_release_app() {
+  local source_app destination_app backup_directory
+  source_app="$(app_bundle_path)"
+  destination_app="$(installed_release_app_path)"
+
+  [[ -d "$APPLICATIONS_DIR" ]] || fail "Applications directory was not found: $APPLICATIONS_DIR"
+  [[ -w "$APPLICATIONS_DIR" ]] || fail "Applications directory is not writable: $APPLICATIONS_DIR"
+
+  backup_directory="$(mktemp -d "$APPLICATIONS_DIR/.${APP_NAME}.install-backup.XXXXXX")"
+  if [[ -e "$destination_app" ]]; then
+    info "Replacing existing $destination_app..."
+    mv "$destination_app" "$backup_directory/$APP_NAME.app"
+  fi
+
+  if /usr/bin/ditto "$source_app" "$destination_app"; then
+    rm -rf "$backup_directory"
+    success "Installed: $destination_app"
+  else
+    rm -rf "$destination_app"
+    if [[ -e "$backup_directory/$APP_NAME.app" ]]; then
+      mv "$backup_directory/$APP_NAME.app" "$destination_app"
+    fi
+    rmdir "$backup_directory" 2>/dev/null || true
+    fail "Could not install $APP_NAME. The previous app was restored."
+  fi
+}
+
+open_installed_release_app() {
+  local installed_app
+  installed_app="$(installed_release_app_path)"
+  info "Launching installed $APP_NAME..."
+  /usr/bin/open -n "$installed_app"
+  success "Launched $installed_app"
+}
+
+release_post_build_menu() {
+  [[ -t 0 && -t 1 ]] || {
+    info "Release app is ready: $(app_bundle_path)"
+    return
+  }
+
+  while true; do
+    printf "\nRelease build completed. What would you like to do?\n"
+    printf "  1) Open the .app from the build folder\n"
+    printf "  2) Install the .app in %s\n" "$APPLICATIONS_DIR"
+    printf "  3) Install the .app in %s and open it\n" "$APPLICATIONS_DIR"
+    printf "  4) Exit\n"
+    printf "Choose [1-4]: "
+
+    local choice
+    read -r choice
+    case "$choice" in
+      1)
+        open_app
+        return
+        ;;
+      2)
+        install_release_app
+        return
+        ;;
+      3)
+        install_release_app
+        open_installed_release_app
+        return
+        ;;
+      4)
+        info "Release app remains at: $(app_bundle_path)"
+        return
+        ;;
+      *)
+        info "Please enter a number from 1 to 4."
+        ;;
+    esac
+  done
 }
 
 verify_app() {
@@ -299,6 +428,11 @@ main() {
   cd "$ROOT_DIR"
   stop_app
   build_app
+
+  if [[ "$CONFIGURATION" == "Release" && "$MODE" == "run" ]]; then
+    release_post_build_menu
+    return
+  fi
 
   case "$MODE" in
     run)
