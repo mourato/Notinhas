@@ -17,6 +17,43 @@ nonisolated enum NotinhasNoteGeometry {
     dragDistance >= dragThreshold
   }
 
+  static func shouldBeginMove(dragDistance: CGFloat) -> Bool {
+    dragDistance >= dragThreshold
+  }
+
+  static func translated(
+    _ target: NotinhasNoteTarget,
+    by delta: CGPoint,
+    within bounds: CGRect
+  ) -> NotinhasNoteTarget {
+    switch target {
+    case .point(let center):
+      return .point(clampedPoint(
+        CGPoint(x: center.x + delta.x, y: center.y + delta.y),
+        within: bounds
+      ))
+    case .rect(let rect):
+      let standardized = rect.standardized
+      var translated = CGRect(
+        x: standardized.origin.x + delta.x,
+        y: standardized.origin.y + delta.y,
+        width: standardized.width,
+        height: standardized.height
+      )
+      if translated.width > bounds.width {
+        translated.origin.x = bounds.minX
+      } else {
+        translated.origin.x = max(bounds.minX, min(translated.origin.x, bounds.maxX - translated.width))
+      }
+      if translated.height > bounds.height {
+        translated.origin.y = bounds.minY
+      } else {
+        translated.origin.y = max(bounds.minY, min(translated.origin.y, bounds.maxY - translated.height))
+      }
+      return .rect(translated)
+    }
+  }
+
   static func clampedRect(from start: CGPoint, to end: CGPoint, within bounds: CGRect) -> CGRect {
     let standardized = CGRect(
       x: min(start.x, end.x),

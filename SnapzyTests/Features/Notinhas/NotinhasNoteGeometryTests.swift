@@ -8,6 +8,36 @@ final class NotinhasNoteGeometryTests: XCTestCase {
   func testShouldCreateRectUsesDragThreshold() {
     XCTAssertFalse(NotinhasNoteGeometry.shouldCreateRect(dragDistance: 4))
     XCTAssertTrue(NotinhasNoteGeometry.shouldCreateRect(dragDistance: 12))
+    XCTAssertFalse(NotinhasNoteGeometry.shouldBeginMove(dragDistance: 4))
+    XCTAssertTrue(NotinhasNoteGeometry.shouldBeginMove(dragDistance: 12))
+  }
+
+  func testTranslatedPointStaysInsideBounds() {
+    let bounds = CGRect(x: 0, y: 0, width: 100, height: 100)
+    let translated = NotinhasNoteGeometry.translated(
+      .point(CGPoint(x: 90, y: 50)),
+      by: CGPoint(x: 20, y: 0),
+      within: bounds
+    )
+    guard case .point(let point) = translated else {
+      return XCTFail("Expected point target")
+    }
+    XCTAssertEqual(point.x, 100)
+    XCTAssertEqual(point.y, 50)
+  }
+
+  func testTranslatedRectStaysInsideBounds() {
+    let bounds = CGRect(x: 0, y: 0, width: 100, height: 100)
+    let translated = NotinhasNoteGeometry.translated(
+      .rect(CGRect(x: 70, y: 10, width: 20, height: 20)),
+      by: CGPoint(x: 20, y: 0),
+      within: bounds
+    )
+    guard case .rect(let rect) = translated else {
+      return XCTFail("Expected rect target")
+    }
+    XCTAssertEqual(rect.origin.x, 80)
+    XCTAssertEqual(rect.width, 20)
   }
 
   func testDisplayNumberUsesCreationOrderAmongRenderableNotes() {

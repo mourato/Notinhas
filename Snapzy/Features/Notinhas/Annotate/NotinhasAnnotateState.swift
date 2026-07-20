@@ -30,11 +30,62 @@ extension AnnotateState {
     }
   }
 
-  func notinhasSelectNote(id: UUID?) {
+  func notinhasSelectNote(id: UUID?, beginEditing: Bool = true) {
     notinhasSelectedNoteID = id
-    if let id {
+    if beginEditing, let id {
       notinhasEditingNoteID = id
     }
+  }
+
+  func notinhasBeginMovingNote(id: UUID) {
+    guard let note = notinhasNotes.first(where: { $0.id == id }) else { return }
+    notinhasMovingNoteID = id
+    notinhasMoveOriginalTarget = note.target
+  }
+
+  func notinhasUpdateMovingNote(
+    to imagePoint: CGPoint,
+    imageBounds: CGRect,
+    from startPoint: CGPoint
+  ) {
+    guard let id = notinhasMovingNoteID,
+          let original = notinhasMoveOriginalTarget,
+          let index = notinhasNotes.firstIndex(where: { $0.id == id }) else { return }
+    let delta = CGPoint(x: imagePoint.x - startPoint.x, y: imagePoint.y - startPoint.y)
+    notinhasNotes[index].target = NotinhasNoteGeometry.translated(
+      original,
+      by: delta,
+      within: imageBounds
+    )
+  }
+
+  func notinhasCommitMovingNote() {
+    guard let id = notinhasMovingNoteID,
+          let original = notinhasMoveOriginalTarget,
+          let index = notinhasNotes.firstIndex(where: { $0.id == id }) else {
+      notinhasCancelMovingNote()
+      return
+    }
+
+    let finalTarget = notinhasNotes[index].target
+    if finalTarget != original {
+      notinhasNotes[index].target = original
+      saveState()
+      notinhasNotes[index].target = finalTarget
+    }
+
+    notinhasMovingNoteID = nil
+    notinhasMoveOriginalTarget = nil
+  }
+
+  func notinhasCancelMovingNote() {
+    if let id = notinhasMovingNoteID,
+       let original = notinhasMoveOriginalTarget,
+       let index = notinhasNotes.firstIndex(where: { $0.id == id }) {
+      notinhasNotes[index].target = original
+    }
+    notinhasMovingNoteID = nil
+    notinhasMoveOriginalTarget = nil
   }
 
   func notinhasCloseEditor(discardIfEmpty: Bool = true) {
@@ -48,6 +99,8 @@ extension AnnotateState {
     notinhasDraftNote = nil
     notinhasIsDrawingNote = false
     notinhasNoteDrawStart = nil
+    notinhasMovingNoteID = nil
+    notinhasMoveOriginalTarget = nil
   }
 
   func notinhasNote(at point: CGPoint) -> NotinhasVisualNote? {

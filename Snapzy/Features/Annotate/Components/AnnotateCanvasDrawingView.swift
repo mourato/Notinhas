@@ -155,6 +155,8 @@ final class DrawingCanvasNSView: NSView {
 
   private var stateObservers = Set<AnyCancellable>()
   private var notinhasEditorOverlay: NotinhasNoteEditorOverlay?
+  private var notinhasMoveStartPoint: CGPoint?
+  private var notinhasIsMovingNote = false
 
 
   init(state: AnnotateState) {
@@ -298,6 +300,17 @@ final class DrawingCanvasNSView: NSView {
 
     switch event.keyCode {
     case 51, 117: // Delete, Forward Delete
+      if state.selectedTool == .notinhasNote,
+         let noteID = state.notinhasSelectedNoteID,
+         state.notinhasEditingNoteID == nil,
+         state.editingTextAnnotationId == nil {
+        Task { @MainActor in
+          state.notinhasDeleteNote(id: noteID)
+          self.dismissNotinhasEditor()
+        }
+        invalidateDrawing()
+        return
+      }
       if state.hasSelectedAnnotations, state.editingTextAnnotationId == nil {
         Task { @MainActor in
           state.deleteSelectedAnnotation()
@@ -1262,8 +1275,10 @@ final class DrawingCanvasNSView: NSView {
     guard state.selectedTool == .notinhasNote else { return false }
 
     if let note = state.notinhasNote(at: imagePoint) {
-      state.notinhasSelectNote(id: note.id)
-      presentNotinhasEditor(for: note.id)
+      state.notinhasSelectNote(id: note.id, beginEditing: false)
+      state.notinhasBeginMovingNote(id: note.id)
+      notinhasMoveStartPoint = imagePoint
+      notinhasIsMovingNote = false
       invalidateDrawing()
       return true
     }
@@ -1274,14 +1289,50 @@ final class DrawingCanvasNSView: NSView {
   }
 
   private func handleNotinhasMouseDragged(to imagePoint: CGPoint) -> Bool {
-    guard state.selectedTool == .notinhasNote, state.notinhasIsDrawingNote else { return false }
+    guard state.selectedTool == .notinhasNote else { return false }
+
+    if let startPoint = notinhasMoveStartPoint, state.notinhasMovingNoteID != nil {
+      let distance = hypot(imagePoint.x - startPoint.x, imagePoint.y - startPoint.y)
+      if !notinhasIsMovingNote, NotinhasNoteGeometry.shouldBeginMove(dragDistance: distance) {
+        notinhasIsMovingNote = true
+      }
+      if notinhasIsMovingNote {
+        state.notinhasUpdateMovingNote(
+          to: imagePoint,
+          imageBounds: notinhasImageBounds(),
+          from: startPoint
+        )
+        invalidateLiveLayers()
+        return true
+      }
+    }
+
+    guard state.notinhasIsDrawingNote else { return false }
     state.notinhasUpdateDrawing(to: imagePoint, imageBounds: notinhasImageBounds())
     invalidateLiveLayers()
     return true
   }
 
   private func handleNotinhasMouseUp(at imagePoint: CGPoint) -> Bool {
-    guard state.selectedTool == .notinhasNote, state.notinhasIsDrawingNote else { return false }
+    guard state.selectedTool == .notinhasNote else { return false }
+
+    if state.notinhasMovingNoteID != nil {
+      if notinhasIsMovingNote {
+        state.notinhasCommitMovingNote()
+      } else {
+        state.notinhasCancelMovingNote()
+        if let selectedID = state.notinhasSelectedNoteID {
+          state.notinhasSelectNote(id: selectedID, beginEditing: true)
+          presentNotinhasEditor(for: selectedID)
+        }
+      }
+      notinhasMoveStartPoint = nil
+      notinhasIsMovingNote = false
+      invalidateDrawing()
+      return true
+    }
+
+    guard state.notinhasIsDrawingNote else { return false }
     state.notinhasUpdateDrawing(to: imagePoint, imageBounds: notinhasImageBounds())
     state.notinhasCommitDraft(color: defaultNotinhasColor())
     if let editingID = state.notinhasEditingNoteID {

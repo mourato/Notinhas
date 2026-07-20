@@ -1252,6 +1252,8 @@ final class AnnotateState: ObservableObject {
   var notinhasDraftNote: NotinhasVisualNote?
   var notinhasIsDrawingNote = false
   var notinhasNoteDrawStart: CGPoint?
+  var notinhasMovingNoteID: UUID?
+  var notinhasMoveOriginalTarget: NotinhasNoteTarget?
   /// Imported image assets referenced by `.embeddedImage(assetId)` annotations.
   @Published private(set) var embeddedImageAssets: [UUID: NSImage] = [:]
   /// Non-blocking warning for large multi-image imports.

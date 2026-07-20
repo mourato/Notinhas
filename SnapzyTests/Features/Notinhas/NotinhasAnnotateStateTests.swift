@@ -50,4 +50,46 @@ final class NotinhasAnnotateStateTests: XCTestCase {
 
     XCTAssertEqual(state.notinhasNotes, [note])
   }
+
+  func testMovingNoteCreatesOneUndoCheckpoint() {
+    let state = makeState()
+    let note = makeNote()
+    state.notinhasNotes = [note]
+    let bounds = CGRect(x: 0, y: 0, width: 200, height: 200)
+
+    state.notinhasBeginMovingNote(id: note.id)
+    state.notinhasUpdateMovingNote(
+      to: CGPoint(x: 30, y: 0),
+      imageBounds: bounds,
+      from: .zero
+    )
+    state.notinhasCommitMovingNote()
+
+    guard case .point(let movedPoint) = state.notinhasNotes[0].target else {
+      return XCTFail("Expected point target")
+    }
+    XCTAssertEqual(movedPoint.x, 30, accuracy: 0.001)
+
+    state.undo()
+    XCTAssertEqual(state.notinhasNotes[0].target, note.target)
+  }
+
+  func testCancelMovingNoteDoesNotCreateUndoCheckpoint() {
+    let state = makeState()
+    let note = makeNote()
+    state.notinhasNotes = [note]
+    let bounds = CGRect(x: 0, y: 0, width: 200, height: 200)
+
+    state.notinhasBeginMovingNote(id: note.id)
+    state.notinhasUpdateMovingNote(
+      to: CGPoint(x: 30, y: 0),
+      imageBounds: bounds,
+      from: .zero
+    )
+    state.notinhasCancelMovingNote()
+
+    XCTAssertEqual(state.notinhasNotes[0].target, note.target)
+    state.undo()
+    XCTAssertEqual(state.notinhasNotes, [note])
+  }
 }
