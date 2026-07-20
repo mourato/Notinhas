@@ -635,12 +635,13 @@ final class QuickAccessCoreTests: XCTestCase {
       .delete,
       .edit,
       .uploadToCloud,
+      .uploadToImgur,
       .pinToScreen,
     ]
 
     XCTAssertEqual(
       QuickAccessActionKind.contextMenuOrder(from: configuredOrder),
-      [.copy, .saveOrOpen, .edit, .uploadToCloud, .pinToScreen, .dismiss, .delete]
+      [.copy, .saveOrOpen, .edit, .uploadToCloud, .uploadToImgur, .pinToScreen, .dismiss, .delete]
     )
   }
 
@@ -667,7 +668,7 @@ final class QuickAccessCoreTests: XCTestCase {
 
     XCTAssertEqual(
       store.actionOrder,
-      [.delete, .copy, .saveOrOpen, .dismiss, .edit, .uploadToCloud, .pinToScreen]
+      [.delete, .copy, .saveOrOpen, .dismiss, .edit, .uploadToCloud, .uploadToImgur, .pinToScreen]
     )
     XCTAssertEqual(store.orderedActions(includeDisabled: false), [.copy])
   }
@@ -701,7 +702,7 @@ final class QuickAccessCoreTests: XCTestCase {
     XCTAssertFalse(store.isEnabled(.uploadToCloud))
     XCTAssertEqual(
       store.actionOrder,
-      [.saveOrOpen, .dismiss, .copy, .delete, .edit, .uploadToCloud, .pinToScreen]
+      [.saveOrOpen, .dismiss, .copy, .delete, .edit, .uploadToCloud, .uploadToImgur, .pinToScreen]
     )
     XCTAssertEqual(store.slotAssignments, QuickAccessActionSlot.defaultAssignments)
 
@@ -714,12 +715,12 @@ final class QuickAccessCoreTests: XCTestCase {
     reloadedStore.clearSlot(.bottomLeading)
 
     XCTAssertEqual(reloadedStore.action(in: .centerTop), .uploadToCloud)
-    XCTAssertNil(reloadedStore.action(in: .bottomTrailing))
+    XCTAssertEqual(reloadedStore.action(in: .bottomTrailing), .uploadToImgur)
     XCTAssertNil(reloadedStore.action(in: .bottomLeading))
 
     let placementReload = makeActionConfigurationStore(defaults: defaults)
     XCTAssertEqual(placementReload.action(in: .centerTop), .uploadToCloud)
-    XCTAssertNil(placementReload.action(in: .bottomTrailing))
+    XCTAssertEqual(placementReload.action(in: .bottomTrailing), .uploadToImgur)
     XCTAssertNil(placementReload.action(in: .bottomLeading))
 
     placementReload.resetToDefaults()
@@ -747,7 +748,7 @@ final class QuickAccessCoreTests: XCTestCase {
     XCTAssertEqual(store.action(in: .topTrailing), .delete)
     XCTAssertNil(store.action(in: .topLeading))
     XCTAssertEqual(store.action(in: .bottomLeading), .edit)
-    XCTAssertEqual(store.action(in: .bottomTrailing), .uploadToCloud)
+    XCTAssertEqual(store.action(in: .bottomTrailing), .uploadToImgur)
   }
 
   func testQuickAccessCountdownTimer_pauseResumePreservesRemainingTime() async throws {

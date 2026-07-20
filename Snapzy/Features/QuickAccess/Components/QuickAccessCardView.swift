@@ -27,6 +27,9 @@ struct QuickAccessCardView: View {
   @State private var swipeOffset: CGFloat = 0
   @State private var isCloudUploading = false
   @State private var cloudUploadProgress: Double = 0
+  @State private var isImgurUploading = false
+  @State private var imgurUploadError: String?
+  private let imgurUploadCoordinator = NotinhasUploadCoordinator()
   @Environment(\.accessibilityReduceMotion) var reduceMotion
 
   private let cornerRadius: CGFloat = 16
@@ -63,8 +66,8 @@ struct QuickAccessCardView: View {
       }
 
       // Cloud upload progress overlay
-      if isCloudUploading {
-        QuickAccessProgressView(state: .processing(progress: cloudUploadProgress))
+      if isCloudUploading || isImgurUploading {
+        QuickAccessProgressView(state: .processing(progress: isCloudUploading ? cloudUploadProgress : 0.8))
           .transition(.opacity)
       }
 
@@ -138,6 +141,14 @@ struct QuickAccessCardView: View {
           swipeOffset = 0
         }
       }
+    }
+    .alert(NotinhasL10n.imgurUploadFailed, isPresented: Binding(
+      get: { imgurUploadError != nil },
+      set: { if !$0 { imgurUploadError = nil } }
+    )) {
+      Button(L10n.Common.ok, role: .cancel) {}
+    } message: {
+      Text(imgurUploadError ?? "")
     }
     .animation(QuickAccessAnimations.hoverOverlay, value: isHovering)
   }
@@ -334,6 +345,8 @@ struct QuickAccessCardView: View {
       return editActionTitle
     case .uploadToCloud:
       return cloudActionTitle
+    case .uploadToImgur:
+      return NotinhasL10n.uploadToImgur
     case .pinToScreen:
       return item.isPinned ? L10n.PreferencesQuickAccess.unpinAction : L10n.PreferencesQuickAccess.pinToScreenAction
     }
@@ -345,6 +358,8 @@ struct QuickAccessCardView: View {
       return isTempFile ? "square.and.arrow.down" : "folder"
     case .uploadToCloud:
       return cloudActionIcon
+    case .uploadToImgur:
+      return "photo.on.rectangle.angled"
     case .pinToScreen:
       return item.isPinned ? "pin.fill" : "pin"
     default:
@@ -365,6 +380,8 @@ struct QuickAccessCardView: View {
       return true
     case .uploadToCloud:
       return shouldShowCloudButton
+    case .uploadToImgur:
+      return NotinhasImgurConfiguration.clientID != nil
     case .delete:
       return true
     }
@@ -376,6 +393,8 @@ struct QuickAccessCardView: View {
       return !item.isVideo
     case .uploadToCloud:
       return shouldShowCloudButton && !alreadyUploadedToCloud && !isCloudUploading
+    case .uploadToImgur:
+      return NotinhasImgurConfiguration.clientID != nil && !item.isVideo && !isImgurUploading
     case .copy, .saveOrOpen, .dismiss, .delete, .edit:
       return true
     }
@@ -397,6 +416,8 @@ struct QuickAccessCardView: View {
       handleDoubleClick()
     case .uploadToCloud:
       uploadToCloud()
+    case .uploadToImgur:
+      uploadToImgur()
     case .pinToScreen:
       guard !item.isVideo else { return }
       manager.togglePin(id: item.id)
@@ -633,7 +654,38 @@ struct QuickAccessCardView: View {
     cloudManager.isConfigured
   }
 
-  /// Upload the current item to cloud storage
+  private func uploadToImgur() {
+    guard let clientID = NotinhasImgurConfiguration.clientID else { return }
+    guard !isImgurUploading, let image = NSImage(contentsOf: item.url) else {
+      imgurUploadError = NotinhasL10n.imgurInvalidImageData
+      return
+    }
+
+    isImgurUploading = true
+    manager.pauseCountdownForActivity(item.id)
+    Task { @MainActor in
+      defer {
+        isImgurUploading = false
+        manager.resumeCountdownForActivity(item.id)
+      }
+
+      let link = await imgurUploadCoordinator.upload(
+        finalImage: image,
+        maxDimension: 2048,
+        clientID: clientID
+      )
+      guard let link else {
+        imgurUploadError = imgurUploadCoordinator.lastErrorMessage ?? NotinhasL10n.imgurUploadFailed
+        return
+      }
+
+      let pasteboard = NSPasteboard.general
+      pasteboard.clearContents()
+      pasteboard.setString(link, forType: .string)
+      SoundManager.play("Pop")
+    }
+  }
+
   private func uploadToCloud() {
     guard !isCloudUploading, !alreadyUploadedToCloud else {
       DiagnosticLogger.shared.log(
