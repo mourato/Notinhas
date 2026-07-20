@@ -118,6 +118,9 @@ struct AnnotateToolbarView: View {
 
       ForEach(drawingTools, id: \.self) { tool in
         annotationToolButton(for: tool)
+        if tool == .counter {
+          notinhasNoteButton
+        }
       }
 
       backgroundCutoutButton
@@ -127,6 +130,10 @@ struct AnnotateToolbarView: View {
 
   private var drawingTools: [AnnotationToolType] {
     AnnotationToolType.drawableTools
+  }
+
+  private var notinhasNoteButton: some View {
+    annotationToolButton(for: .notinhasNote)
   }
 
   private var backgroundCutoutButton: some View {

@@ -131,6 +131,47 @@ final class AnnotationSessionStoreTests: XCTestCase {
     return url
   }
 
+  func testPersistAndLoad_roundTripsNotinhasNotes() throws {
+    let sourceURL = try writeSourceImage(named: "notinhas.png")
+    var sessionData = try makeSessionData()
+    let note = NotinhasVisualNote(
+      text: "Increase contrast",
+      target: .point(CGPoint(x: 40, y: 60)),
+      color: RGBAColor(red: 1, green: 0, blue: 0, alpha: 1),
+      creationOrder: 1
+    )
+    sessionData.notinhasNotes = PersistedNotinhasNotesSession(notes: [note])
+
+    XCTAssertTrue(store.persist(sessionData, for: sourceURL))
+    let loaded = try XCTUnwrap(store.load(for: sourceURL))
+    XCTAssertEqual(loaded.notinhasNotes?.notes.count, 1)
+    XCTAssertEqual(loaded.notinhasNotes?.notes.first?.text, "Increase contrast")
+  }
+
+  func testPersistedSession_ignoresMalformedNotinhasPayload() throws {
+    let sessionData = try makeSessionData()
+    let manifest = PersistedAnnotationSession(
+      sessionData: sessionData,
+      sourceFilePath: "/tmp/capture.png",
+      sourceFilePathHash: "hash",
+      sourceSignature: PersistedFileSignature(fileSize: 1, modifiedAtMilliseconds: 1, pathExtension: "png"),
+      createdAt: Date(timeIntervalSince1970: 0)
+    )
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+    let encoded = try encoder.encode(manifest)
+    var object = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+    object["notinhasNotesSession"] = ["notes": ["invalid": true]]
+    let malformed = try JSONSerialization.data(withJSONObject: object)
+
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .iso8601
+    let decoded = try decoder.decode(PersistedAnnotationSession.self, from: malformed)
+
+    XCTAssertEqual(decoded.annotations.count, sessionData.annotations.count)
+    XCTAssertNil(decoded.notinhasNotesSession)
+  }
+
   private func makeSessionData(assetId: UUID = UUID()) throws -> AnnotationSessionData {
     let originalData = try makeImageData(width: 24, height: 16)
     let cutoutData = try makeImageData(width: 8, height: 8)

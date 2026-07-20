@@ -62,6 +62,8 @@ struct AnnotationSessionData {
   var embeddedImageAssetsData: [UUID: Data] = [:]
   /// Active combine/stitch session flags, if the session was in combine mode.
   var combineSession: CombineSessionSnapshot? = nil
+  /// Optional Notinhas numbered notes payload.
+  var notinhasNotes: PersistedNotinhasNotesSession? = nil
 }
 
 /// Manages annotation window instances
@@ -345,7 +347,8 @@ extension AnnotationSessionData {
       didCutoutAutoApplyCrop: cutoutSnapshot.didAutoApplyCrop,
       cutoutAutoAppliedCropRect: cutoutSnapshot.autoAppliedCropRect,
       embeddedImageAssetsData: state.embeddedImageAssetsSnapshotData(),
-      combineSession: state.combineSessionSnapshot()
+      combineSession: state.combineSessionSnapshot(),
+      notinhasNotes: state.notinhasNotes.isEmpty ? nil : PersistedNotinhasNotesSession(notes: state.notinhasNotes)
     )
   }
 }

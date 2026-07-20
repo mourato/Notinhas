@@ -17,6 +17,8 @@ struct AnnotateSettingsView: View {
   private var annotateQuickPropertiesSyncEnabled = true
   @AppStorage(PreferencesKeys.annotateCombineSaveAsEdit)
   private var annotateCombineSaveAsEdit = true
+  @AppStorage(PreferencesKeys.notinhasImgurClientID) private var notinhasImgurClientID = ""
+  @AppStorage(PreferencesKeys.notinhasNotesPanelSide) private var notinhasNotesPanelSide = NotinhasNotesPanelSide.default.rawValue
 
   var body: some View {
     Form {
@@ -74,8 +76,40 @@ struct AnnotateSettingsView: View {
         }
         .disabled(annotateCloseAfterDrag)
       }
+
+      Section(NotinhasL10n.settingsSection) {
+        SettingRow(
+          icon: "sidebar.left",
+          title: NotinhasL10n.panelSideTitle,
+          description: NotinhasL10n.panelSideDescription
+        ) {
+          Picker("", selection: $notinhasNotesPanelSide) {
+            Text(NotinhasL10n.left).tag(NotinhasNotesPanelSide.left.rawValue)
+            Text(NotinhasL10n.right).tag(NotinhasNotesPanelSide.right.rawValue)
+          }
+          .labelsHidden()
+          .pickerStyle(.segmented)
+          .frame(width: 180, alignment: .trailing)
+        }
+
+        SettingRow(
+          icon: "photo.on.rectangle.angled",
+          title: NotinhasL10n.imgurClientIDTitle,
+          description: NotinhasL10n.imgurClientIDHelp
+        ) {
+          TextField(
+            NotinhasL10n.imgurClientIDPlaceholder,
+            text: $notinhasImgurClientID
+          )
+            .textFieldStyle(.roundedBorder)
+            .frame(width: 180)
+        }
+      }
     }
     .formStyle(.grouped)
+    .onAppear {
+      NotinhasImgurConfiguration.migratePanelSideIfNeeded()
+    }
   }
 }
 

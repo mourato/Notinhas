@@ -16,6 +16,7 @@ final class AnnotateState: ObservableObject {
   private struct AnnotationSnapshot {
     var annotations: [AnnotationItem]
     var embeddedImageAssets: [UUID: NSImage]
+    var notinhasNotes: [NotinhasVisualNote]
   }
 
   /// Snapshot of every piece of state mutated by an image rotation. Used as a dedicated
@@ -28,6 +29,7 @@ final class AnnotateState: ObservableObject {
     var embeddedImageSourceData: [UUID: Data]
     var embeddedImageSnapshotCacheData: [UUID: Data]
     var annotations: [AnnotationItem]
+    var notinhasNotes: [NotinhasVisualNote]
     var cropRect: CGRect?
     var originalCropRect: CGRect?
     var cropAspectRatio: CropAspectRatio
@@ -1244,6 +1246,12 @@ final class AnnotateState: ObservableObject {
   // MARK: - Annotations
 
   @Published var annotations: [AnnotationItem] = []
+  @Published var notinhasNotes: [NotinhasVisualNote] = []
+  @Published var notinhasSelectedNoteID: UUID?
+  @Published var notinhasEditingNoteID: UUID?
+  var notinhasDraftNote: NotinhasVisualNote?
+  var notinhasIsDrawingNote = false
+  var notinhasNoteDrawStart: CGPoint?
   /// Imported image assets referenced by `.embeddedImage(assetId)` annotations.
   @Published private(set) var embeddedImageAssets: [UUID: NSImage] = [:]
   /// Non-blocking warning for large multi-image imports.
@@ -1562,6 +1570,8 @@ final class AnnotateState: ObservableObject {
       effectiveContentBounds: effectiveContentBounds,
       cropRect: cropRect,
       annotations: annotations,
+      notinhasNotes: notinhasNotes,
+      notinhasPanelSide: NotinhasNotesPanelSide.resolved(from: UserDefaults.standard.string(forKey: PreferencesKeys.notinhasNotesPanelSide)),
       embeddedImages: embeddedImageAssets,
       embeddedCGImages: embeddedImageCGImageCache,
       backgroundStyle: backgroundStyle,
@@ -2299,7 +2309,8 @@ final class AnnotateState: ObservableObject {
   private func currentSnapshot() -> AnnotationSnapshot {
     AnnotationSnapshot(
       annotations: annotations,
-      embeddedImageAssets: embeddedImageAssets
+      embeddedImageAssets: embeddedImageAssets,
+      notinhasNotes: notinhasNotes
     )
   }
 
@@ -2312,6 +2323,7 @@ final class AnnotateState: ObservableObject {
       embeddedImageSourceData: embeddedImageSourceData,
       embeddedImageSnapshotCacheData: embeddedImageSnapshotCacheData,
       annotations: annotations,
+      notinhasNotes: notinhasNotes,
       cropRect: cropRect,
       originalCropRect: originalCropRect,
       cropAspectRatio: cropAspectRatio,
@@ -2368,6 +2380,10 @@ final class AnnotateState: ObservableObject {
   private func applySnapshot(_ snapshot: AnnotationSnapshot) {
     annotations = snapshot.annotations
     embeddedImageAssets = snapshot.embeddedImageAssets
+    notinhasNotes = snapshot.notinhasNotes
+    notinhasSelectedNoteID = nil
+    notinhasEditingNoteID = nil
+    notinhasClearDrawingState()
     pruneUnusedEmbeddedAssets()
     updateImportWarningIfNeeded()
 
@@ -2390,6 +2406,7 @@ final class AnnotateState: ObservableObject {
     embeddedImageSnapshotCacheData = snapshot.embeddedImageSnapshotCacheData
     embeddedImageCGImageCache.removeAll()
     annotations = snapshot.annotations
+    notinhasNotes = snapshot.notinhasNotes
     cropRect = snapshot.cropRect
     originalCropRect = snapshot.originalCropRect
     cropAspectRatio = snapshot.cropAspectRatio
@@ -2471,6 +2488,7 @@ final class AnnotateState: ObservableObject {
     embeddedImageCGImageCache.removeAll()
 
     annotations = annotations.map { rotateAnnotation($0, oldSize: oldSize, clockwise: clockwise) }
+    notinhasNotes = notinhasNotes.map { rotateNotinhasNote($0, oldSize: oldSize, clockwise: clockwise) }
 
     cropRect = cropRect.map { AnnotateImageRotation.rotateRect($0, oldSize: oldSize, clockwise: clockwise) }
     originalCropRect = originalCropRect.map { AnnotateImageRotation.rotateRect($0, oldSize: oldSize, clockwise: clockwise) }
@@ -2542,6 +2560,16 @@ final class AnnotateState: ObservableObject {
       break
     }
 
+    return rotated
+  }
+
+  private func rotateNotinhasNote(
+    _ note: NotinhasVisualNote,
+    oldSize: CGSize,
+    clockwise: Bool
+  ) -> NotinhasVisualNote {
+    var rotated = note
+    rotated.target = note.target.rotated(oldSize: oldSize, clockwise: clockwise)
     return rotated
   }
 
@@ -4785,6 +4813,9 @@ final class AnnotateState: ObservableObject {
   func activateTool(_ tool: AnnotationToolType) {
     if editingTextAnnotationId != nil {
       commitTextEditing()
+    }
+    if selectedTool == .notinhasNote, tool != .notinhasNote {
+      notinhasCloseEditor(discardIfEmpty: true)
     }
     if tool != .selection {
       // A selected combined-image layer must not keep its handles or consume

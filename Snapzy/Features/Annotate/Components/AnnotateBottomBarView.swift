@@ -49,6 +49,10 @@ struct AnnotateBottomBarView: View {
   @ObservedObject private var annotateShortcutManager = AnnotateShortcutManager.shared
 
   @State private var isCloudUploading = false
+  @State private var isImgurUploading = false
+  @State private var imgurUploadError: String?
+  @State private var lastImgurURL: String?
+  private let imgurUploadCoordinator = NotinhasUploadCoordinator()
   @State private var cloudUploadProgress: Double = 0
   @State private var cloudUploadError: String?
   @State private var showCloudNotConfiguredAlert = false
@@ -96,6 +100,14 @@ struct AnnotateBottomBarView: View {
       Button(L10n.Common.cancel, role: .cancel) {}
     } message: {
       Text(L10n.AnnotateUI.overwriteCloudFileMessage)
+    }
+    .alert(NotinhasL10n.imgurUploadFailed, isPresented: Binding(
+      get: { imgurUploadError != nil },
+      set: { if !$0 { imgurUploadError = nil } }
+    )) {
+      Button(L10n.Common.ok, role: .cancel) {}
+    } message: {
+      Text(imgurUploadError ?? "")
     }
     .onReceive(NotificationCenter.default.publisher(for: .annotateCloudUpload)) { _ in
       // ⌘U shortcut: trigger cloud upload (with overwrite confirmation if needed)
@@ -375,6 +387,14 @@ struct AnnotateBottomBarView: View {
         share()
       }
 
+      BottomBarButton(
+        icon: isImgurUploading ? "hourglass" : "photo.on.rectangle.angled",
+        tooltip: NotinhasL10n.uploadToImgur
+      ) {
+        handleImgurUpload()
+      }
+      .disabled(isImgurUploading)
+
       // Cloud upload button
       if showCloudButton {
         // needsReUpload: true when output changed in current session OR was changed since last upload
@@ -511,6 +531,36 @@ struct AnnotateBottomBarView: View {
     } catch {
       DiagnosticLogger.shared.logError(.cloud, error, "Annotate temp render write failed")
       return nil
+    }
+  }
+
+
+  private func handleImgurUpload() {
+    guard let clientID = NotinhasImgurConfiguration.clientID else {
+      imgurUploadError = NotinhasL10n.imgurMissingClientID
+      return
+    }
+    guard let renderedImage = AnnotateExporter.renderFinalImage(state: state) else {
+      imgurUploadError = NotinhasL10n.imgurInvalidImageData
+      return
+    }
+
+    isImgurUploading = true
+    Task { @MainActor in
+      defer { isImgurUploading = false }
+      let link = await imgurUploadCoordinator.upload(
+        finalImage: renderedImage,
+        maxDimension: 2048,
+        clientID: clientID
+      )
+      if let link {
+        lastImgurURL = link
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.setString(link, forType: .string)
+      } else {
+        imgurUploadError = imgurUploadCoordinator.lastErrorMessage ?? NotinhasL10n.imgurUploadFailed
+      }
     }
   }
 

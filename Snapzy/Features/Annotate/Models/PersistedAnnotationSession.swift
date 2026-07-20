@@ -32,6 +32,80 @@ nonisolated struct PersistedAnnotationSession: Codable {
   /// Combine/stitch session flags. Optional so pre-existing sidecars (and older app
   /// builds) decode without it — schemaVersion stays 1, no migration needed.
   var combineSession: PersistedCombineSession?
+  /// Optional Notinhas notes payload.
+  var notinhasNotesSession: PersistedNotinhasNotesSession?
+
+  private enum CodingKeys: String, CodingKey {
+    case schemaVersion, sourceFilePath, sourceFilePathHash, sourceSignature, originalFileName
+    case cutoutFileName, embeddedAssetFileNames, annotations, canvasEffects, selectedCanvasPresetId
+    case isSelectedCanvasPresetDirty, cropRect, isCutoutApplied, didCutoutAutoApplyCrop
+    case cutoutAutoAppliedCropRect, createdAt, updatedAt, combineSession, notinhasNotesSession
+  }
+
+  init(
+    schemaVersion: Int,
+    sourceFilePath: String,
+    sourceFilePathHash: String,
+    sourceSignature: PersistedFileSignature,
+    originalFileName: String,
+    cutoutFileName: String?,
+    embeddedAssetFileNames: [String: String],
+    annotations: [PersistedAnnotationItem],
+    canvasEffects: PersistedCanvasEffects,
+    selectedCanvasPresetId: UUID?,
+    isSelectedCanvasPresetDirty: Bool,
+    cropRect: CGRect?,
+    isCutoutApplied: Bool,
+    didCutoutAutoApplyCrop: Bool,
+    cutoutAutoAppliedCropRect: CGRect?,
+    createdAt: Date,
+    updatedAt: Date,
+    combineSession: PersistedCombineSession?,
+    notinhasNotesSession: PersistedNotinhasNotesSession?
+  ) {
+    self.schemaVersion = schemaVersion
+    self.sourceFilePath = sourceFilePath
+    self.sourceFilePathHash = sourceFilePathHash
+    self.sourceSignature = sourceSignature
+    self.originalFileName = originalFileName
+    self.cutoutFileName = cutoutFileName
+    self.embeddedAssetFileNames = embeddedAssetFileNames
+    self.annotations = annotations
+    self.canvasEffects = canvasEffects
+    self.selectedCanvasPresetId = selectedCanvasPresetId
+    self.isSelectedCanvasPresetDirty = isSelectedCanvasPresetDirty
+    self.cropRect = cropRect
+    self.isCutoutApplied = isCutoutApplied
+    self.didCutoutAutoApplyCrop = didCutoutAutoApplyCrop
+    self.cutoutAutoAppliedCropRect = cutoutAutoAppliedCropRect
+    self.createdAt = createdAt
+    self.updatedAt = updatedAt
+    self.combineSession = combineSession
+    self.notinhasNotesSession = notinhasNotesSession
+  }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+    sourceFilePath = try container.decode(String.self, forKey: .sourceFilePath)
+    sourceFilePathHash = try container.decode(String.self, forKey: .sourceFilePathHash)
+    sourceSignature = try container.decode(PersistedFileSignature.self, forKey: .sourceSignature)
+    originalFileName = try container.decode(String.self, forKey: .originalFileName)
+    cutoutFileName = try container.decodeIfPresent(String.self, forKey: .cutoutFileName)
+    embeddedAssetFileNames = try container.decode([String: String].self, forKey: .embeddedAssetFileNames)
+    annotations = try container.decode([PersistedAnnotationItem].self, forKey: .annotations)
+    canvasEffects = try container.decode(PersistedCanvasEffects.self, forKey: .canvasEffects)
+    selectedCanvasPresetId = try container.decodeIfPresent(UUID.self, forKey: .selectedCanvasPresetId)
+    isSelectedCanvasPresetDirty = try container.decode(Bool.self, forKey: .isSelectedCanvasPresetDirty)
+    cropRect = try container.decodeIfPresent(CGRect.self, forKey: .cropRect)
+    isCutoutApplied = try container.decode(Bool.self, forKey: .isCutoutApplied)
+    didCutoutAutoApplyCrop = try container.decode(Bool.self, forKey: .didCutoutAutoApplyCrop)
+    cutoutAutoAppliedCropRect = try container.decodeIfPresent(CGRect.self, forKey: .cutoutAutoAppliedCropRect)
+    createdAt = try container.decode(Date.self, forKey: .createdAt)
+    updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+    combineSession = try container.decodeIfPresent(PersistedCombineSession.self, forKey: .combineSession)
+    notinhasNotesSession = try? container.decodeIfPresent(PersistedNotinhasNotesSession.self, forKey: .notinhasNotesSession)
+  }
 }
 
 /// Persisted combine/stitch layout flags. Enum values stored as raw strings and read back

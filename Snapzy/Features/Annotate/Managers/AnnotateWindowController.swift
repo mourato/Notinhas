@@ -85,6 +85,9 @@ final class AnnotateWindowController: NSWindowController, NSWindowDelegate {
       if let combineSession = sessionData.combineSession {
         self.state.restoreCombineSession(combineSession)
       }
+      if let notinhas = sessionData.notinhasNotes {
+        self.state.notinhasRestoreNotes(notinhas.notes)
+      }
     } else {
       // First open: load image from disk and capture raw file bytes (fast, no re-encoding)
       let image = Self.loadImageWithCorrectScale(from: item.url) ?? item.thumbnail
@@ -192,6 +195,9 @@ final class AnnotateWindowController: NSWindowController, NSWindowDelegate {
       )
       if let combineSession = sessionData.combineSession {
         self.state.restoreCombineSession(combineSession)
+      }
+      if let notinhas = sessionData.notinhasNotes {
+        self.state.notinhasRestoreNotes(notinhas.notes)
       }
     } else {
       let image = Self.loadImageWithCorrectScale(from: url)

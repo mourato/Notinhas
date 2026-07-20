@@ -2980,6 +2980,41 @@ nonisolated enum L10n {
     )
   }
 
+  enum Notinhas {
+    static let noteTool = string("annotate.notinhas.note-tool", defaultValue: "Note", comment: "Notinhas note tool")
+    static let noteEditorTitle = string("annotate.notinhas.note-editor-title", defaultValue: "Note", comment: "Notinhas note editor title")
+    static let noteEditorPlaceholder = string("annotate.notinhas.note-editor-placeholder", defaultValue: "Describe the change...", comment: "Notinhas note editor placeholder")
+    static let save = string("annotate.notinhas.save", defaultValue: "Save", comment: "Save Notinhas note")
+    static let cancel = string("annotate.notinhas.cancel", defaultValue: "Cancel", comment: "Cancel Notinhas note editing")
+    static let sidePanelTitle = string("annotate.notinhas.side-panel-title", defaultValue: "Notes", comment: "Notinhas notes panel title")
+    static let sidePanelEmpty = string("annotate.notinhas.side-panel-empty", defaultValue: "No notes yet", comment: "Empty Notinhas notes panel")
+    static let emptyNoteLabel = string("annotate.notinhas.empty-note", defaultValue: "Empty note", comment: "Empty Notinhas note")
+    static let deleteNote = string("annotate.notinhas.delete-note", defaultValue: "Delete note", comment: "Delete Notinhas note")
+    static let pointTargetLabel = string("annotate.notinhas.point-target", defaultValue: "Point", comment: "Notinhas point target")
+    static let areaTargetLabel = string("annotate.notinhas.area-target", defaultValue: "Area", comment: "Notinhas area target")
+    static let areaStyleOutline = string("annotate.notinhas.area-style-outline", defaultValue: "Outline", comment: "Notinhas area outline style")
+    static let areaStyleTinted = string("annotate.notinhas.area-style-tinted", defaultValue: "Tinted", comment: "Notinhas area tinted style")
+    static let areaStyleHatched = string("annotate.notinhas.area-style-hatched", defaultValue: "Hatched", comment: "Notinhas area hatched style")
+    static let areaStylePicker = string("annotate.notinhas.area-style-picker", defaultValue: "Style", comment: "Notinhas area style picker")
+    static let settingsSection = string("annotate.notinhas.settings-section", defaultValue: "Notinhas", comment: "Notinhas settings section")
+    static let panelSideTitle = string("annotate.notinhas.panel-side-title", defaultValue: "Notes panel side", comment: "Notinhas export panel side setting")
+    static let panelSideDescription = string("annotate.notinhas.panel-side-description", defaultValue: "Choose where the exported notes panel appears.", comment: "Notinhas export panel side setting description")
+    static let left = string("annotate.notinhas.left", defaultValue: "Left", comment: "Notinhas left panel side")
+    static let right = string("annotate.notinhas.right", defaultValue: "Right", comment: "Notinhas right panel side")
+    static let imgurClientIDTitle = string("annotate.notinhas.imgur-client-id-title", defaultValue: "Imgur Client ID", comment: "Imgur client ID setting title")
+    static let imgurClientIDHelp = string("annotate.notinhas.imgur-client-id-help", defaultValue: "Used for anonymous image uploads from Annotate.", comment: "Imgur client ID setting description")
+    static let imgurClientIDPlaceholder = string("annotate.notinhas.imgur-client-id-placeholder", defaultValue: "Client ID", comment: "Imgur client ID input placeholder")
+    static let imgurMissingClientID = string("annotate.notinhas.imgur-missing-client-id", defaultValue: "Add an Imgur Client ID in Settings before uploading.", comment: "Imgur missing client ID error")
+    static let imgurInvalidImageData = string("annotate.notinhas.imgur-invalid-image-data", defaultValue: "Could not prepare the image for upload.", comment: "Imgur invalid image error")
+    static let imgurInvalidResponse = string("annotate.notinhas.imgur-invalid-response", defaultValue: "Imgur returned an unexpected response.", comment: "Imgur invalid response error")
+    static let uploadToImgur = string("annotate.notinhas.upload-to-imgur", defaultValue: "Upload to Imgur", comment: "Upload image to Imgur")
+    static let imgurUploadFailed = string("annotate.notinhas.imgur-upload-failed", defaultValue: "Imgur upload failed", comment: "Imgur upload failure alert title")
+    static let selected = string("annotate.notinhas.selected", defaultValue: "Selected", comment: "Selected color swatch accessibility value")
+    static func colorSwatch(_ index: Int) -> String {
+      format("annotate.notinhas.color-swatch", defaultValue: "Color %d", comment: "Notinhas color swatch accessibility label. %d is the palette position.", index)
+    }
+  }
+
   enum PreferencesShortcuts {
     static let actionRequired = string(
       "preferences-shortcuts.action-required",

@@ -154,6 +154,8 @@ final class DrawingCanvasNSView: NSView {
   }
 
   private var stateObservers = Set<AnyCancellable>()
+  private var notinhasEditorOverlay: NotinhasNoteEditorOverlay?
+
 
   init(state: AnnotateState) {
     self.state = state
@@ -205,6 +207,9 @@ final class DrawingCanvasNSView: NSView {
     stateObservers.removeAll()
     // Content-driving publishers: redraw every layer.
     state.$annotations
+      .sink { [weak self] _ in self?.invalidateDrawing() }
+      .store(in: &stateObservers)
+    state.$notinhasNotes
       .sink { [weak self] _ in self?.invalidateDrawing() }
       .store(in: &stateObservers)
     state.$selectedAnnotationIds
@@ -597,6 +602,10 @@ final class DrawingCanvasNSView: NSView {
       }
     }
 
+    if handleNotinhasMouseDown(at: imagePoint) {
+      return
+    }
+
     // Handle crop tool
     if state.selectedTool == .crop {
       handleCropMouseDown(at: imagePoint)
@@ -843,6 +852,10 @@ final class DrawingCanvasNSView: NSView {
       return
     }
 
+    if handleNotinhasMouseDragged(to: imagePoint) {
+      return
+    }
+
     // Handle drawing (in image coordinates)
     guard isDrawing else { return }
 
@@ -1043,6 +1056,10 @@ final class DrawingCanvasNSView: NSView {
       return
     }
 
+    if handleNotinhasMouseUp(at: imagePoint) {
+      return
+    }
+
     // Finish drawing (already in image coords)
     guard isDrawing, let start = dragStart else { return }
 
@@ -1191,6 +1208,135 @@ final class DrawingCanvasNSView: NSView {
     }
   }
 
+  // MARK: - Notinhas Notes
+
+  private func defaultNotinhasColor() -> RGBAColor {
+    RGBAColor(color: state.strokeColor) ?? RGBAColor(red: 1, green: 0, blue: 0, alpha: 1)
+  }
+
+  private func notinhasImageBounds() -> CGRect {
+    state.isCombineMode ? state.effectiveContentBounds.standardized : state.activeAnnotationBounds.standardized
+  }
+
+  private func presentNotinhasEditor(for noteID: UUID) {
+    dismissNotinhasEditor()
+    let overlay = NotinhasNoteEditorOverlay(
+      state: state,
+      onCommit: { [weak self] in
+        self?.state.notinhasCloseEditor(discardIfEmpty: true)
+        self?.dismissNotinhasEditor()
+        self?.invalidateDrawing()
+      },
+      onCancel: { [weak self] in
+        self?.state.notinhasCloseEditor(discardIfEmpty: true)
+        self?.dismissNotinhasEditor()
+        self?.invalidateDrawing()
+      },
+      onDelete: { [weak self] in
+        guard let self else { return }
+        if let editingID = self.state.notinhasEditingNoteID {
+          self.state.notinhasDeleteNote(id: editingID)
+        }
+        self.dismissNotinhasEditor()
+        self.invalidateDrawing()
+      }
+    )
+    overlay.show(for: noteID, in: bounds)
+    addSubview(overlay)
+    notinhasEditorOverlay = overlay
+  }
+
+  private func dismissNotinhasEditor() {
+    notinhasEditorOverlay?.dismiss()
+    notinhasEditorOverlay = nil
+  }
+
+  private func handleNotinhasMouseDown(at imagePoint: CGPoint) -> Bool {
+    if state.notinhasEditingNoteID != nil {
+      state.notinhasCloseEditor(discardIfEmpty: true)
+      dismissNotinhasEditor()
+      invalidateDrawing()
+      return true
+    }
+
+    guard state.selectedTool == .notinhasNote else { return false }
+
+    if let note = state.notinhasNote(at: imagePoint) {
+      state.notinhasSelectNote(id: note.id)
+      presentNotinhasEditor(for: note.id)
+      invalidateDrawing()
+      return true
+    }
+
+    state.notinhasBeginDrawing(at: imagePoint, color: defaultNotinhasColor())
+    invalidateLiveLayers()
+    return true
+  }
+
+  private func handleNotinhasMouseDragged(to imagePoint: CGPoint) -> Bool {
+    guard state.selectedTool == .notinhasNote, state.notinhasIsDrawingNote else { return false }
+    state.notinhasUpdateDrawing(to: imagePoint, imageBounds: notinhasImageBounds())
+    invalidateLiveLayers()
+    return true
+  }
+
+  private func handleNotinhasMouseUp(at imagePoint: CGPoint) -> Bool {
+    guard state.selectedTool == .notinhasNote, state.notinhasIsDrawingNote else { return false }
+    state.notinhasUpdateDrawing(to: imagePoint, imageBounds: notinhasImageBounds())
+    state.notinhasCommitDraft(color: defaultNotinhasColor())
+    if let editingID = state.notinhasEditingNoteID {
+      presentNotinhasEditor(for: editingID)
+    }
+    invalidateDrawing()
+    return true
+  }
+
+  private func drawNotinhasNotes(dirtyRect _: NSRect) {
+    guard !state.notinhasNotes.isEmpty || state.notinhasDraftNote != nil else { return }
+    guard let context = NSGraphicsContext.current?.cgContext else { return }
+    context.saveGState()
+    context.scaleBy(x: displayScale, y: displayScale)
+    context.translateBy(x: -effectiveCanvasBounds.minX, y: -effectiveCanvasBounds.minY)
+
+    let ordered = state.notinhasNotes.sorted { lhs, rhs in
+      if lhs.creationOrder == rhs.creationOrder { return lhs.id.uuidString < rhs.id.uuidString }
+      return lhs.creationOrder < rhs.creationOrder
+    }
+    for (index, note) in ordered.enumerated() {
+      NotinhasNoteRenderer.draw(
+        note: note,
+        displayNumber: index + 1,
+        isSelected: note.id == state.notinhasSelectedNoteID,
+        in: context,
+        imageBounds: notinhasImageBounds()
+      )
+    }
+
+    if let draft = state.notinhasDraftNote {
+      NotinhasNoteRenderer.draw(
+        note: draft,
+        displayNumber: ordered.count + 1,
+        isSelected: true,
+        in: context,
+        imageBounds: notinhasImageBounds()
+      )
+    }
+
+    context.restoreGState()
+  }
+
+  private func drawNotinhasDraftPreview(in context: CGContext) {
+    guard state.selectedTool == .notinhasNote, let draft = state.notinhasDraftNote else { return }
+    let orderedCount = state.notinhasNotes.count
+    NotinhasNoteRenderer.draw(
+      note: draft,
+      displayNumber: orderedCount + 1,
+      isSelected: true,
+      in: context,
+      imageBounds: notinhasImageBounds()
+    )
+  }
+
   private func createTextAnnotation(at point: CGPoint) {
     let properties = state.annotationCreationProperties(for: .text)
     let initialBounds = AnnotateTextLayout.bounds(
@@ -1312,6 +1458,7 @@ final class DrawingCanvasNSView: NSView {
 
   private func drawStaticAbove(dirtyRect: NSRect) {
     drawAnnotationItems(partitionedDisplayItems().above, dirtyRect: dirtyRect)
+    drawNotinhasNotes(dirtyRect: dirtyRect)
   }
 
   /// Draws annotations with selection visuals. Skips items that cannot
@@ -1399,6 +1546,7 @@ final class DrawingCanvasNSView: NSView {
     context.scaleBy(x: displayScale, y: displayScale)
     context.translateBy(x: -effectiveCanvasBounds.minX, y: -effectiveCanvasBounds.minY)
     drawCurrentStrokePreview(sourceImage: sourceImage, sourceCGImage: sourceCGImage, in: context)
+    drawNotinhasDraftPreview(in: context)
     drawAreaSelectionPreview(in: context)
     context.restoreGState()
   }

@@ -374,9 +374,9 @@ final class AnnotateExporter {
     if snapshot.editorMode == .mockup {
       DiagnosticLogger.shared.log(.debug, .annotate, "Rendering mockup image")
       guard let flatImage = renderMockupFlatImage(snapshot: snapshot) else { return nil }
-      return compositeMockupImage(flatImage: flatImage, snapshot: snapshot)
+      return composeNotinhasIfNeeded(compositeMockupImage(flatImage: flatImage, snapshot: snapshot), snapshot: snapshot)
     }
-    return renderFlatFinalImage(snapshot: snapshot)
+    return composeNotinhasIfNeeded(renderFlatFinalImage(snapshot: snapshot), snapshot: snapshot)
   }
 
   /// Off-main render entry point for the save-and-close background path.
@@ -386,9 +386,10 @@ final class AnnotateExporter {
     if snapshot.editorMode == .mockup {
       DiagnosticLogger.shared.log(.debug, .annotate, "Rendering mockup image")
       guard let flatImage = renderMockupFlatImage(snapshot: snapshot) else { return nil }
-      return await compositeMockupImage(flatImage: flatImage, snapshot: snapshot)
+      let composited = await compositeMockupImage(flatImage: flatImage, snapshot: snapshot)
+      return composeNotinhasIfNeeded(composited, snapshot: snapshot)
     }
-    return renderFlatFinalImage(snapshot: snapshot)
+    return composeNotinhasIfNeeded(renderFlatFinalImage(snapshot: snapshot), snapshot: snapshot)
   }
 
   /// Flat render pipeline (no mockup transforms). Pure CoreGraphics/AppKit drawing into a
@@ -581,6 +582,14 @@ final class AnnotateExporter {
       renderer.draw(offsetAnnotation)
     }
 
+    drawNotinhasNotesForExport(
+      notes: exportableNotinhasNotes(snapshot),
+      cropOrigin: effectiveBounds.origin,
+      destinationOffset: CGPoint(x: destX, y: destY),
+      imageBounds: CGRect(x: destX, y: destY, width: effectiveBounds.width, height: effectiveBounds.height),
+      in: context
+    )
+
     if snapshot.isCombineMode {
       context.resetClip()
     }
@@ -590,6 +599,52 @@ final class AnnotateExporter {
     let image = NSImage(size: totalSize)
     image.addRepresentation(bitmapRep)
     return image
+  }
+
+  nonisolated private static func composeNotinhasIfNeeded(
+    _ image: NSImage?,
+    snapshot: AnnotateRenderSnapshot
+  ) -> NSImage? {
+    guard let image else { return nil }
+    let renderableNotes = exportableNotinhasNotes(snapshot)
+    guard !renderableNotes.isEmpty else { return image }
+    return NotinhasNotesComposer.addPanelOnly(
+      to: image,
+      notes: renderableNotes,
+      panelSide: snapshot.notinhasPanelSide
+    )
+  }
+
+  nonisolated private static func drawNotinhasNotesForExport(
+    notes: [NotinhasVisualNote],
+    cropOrigin: CGPoint,
+    destinationOffset: CGPoint,
+    imageBounds: CGRect,
+    in context: CGContext
+  ) {
+    guard !notes.isEmpty else { return }
+    let transformed = notes.map {
+      NotinhasNoteGeometry.exportTransformed(
+        $0,
+        cropOrigin: cropOrigin,
+        destinationOffset: destinationOffset
+      )
+    }
+    NotinhasNoteRenderer.draw(
+      notes: transformed,
+      selectedNoteID: nil,
+      in: context,
+      imageBounds: imageBounds
+    )
+  }
+
+  /// Notes use the same crop visibility and deterministic ordering in every final renderer.
+  nonisolated private static func exportableNotinhasNotes(
+    _ snapshot: AnnotateRenderSnapshot
+  ) -> [NotinhasVisualNote] {
+    let notes = NotinhasNoteGeometry.orderedRenderableNotes(snapshot.notinhasNotes)
+    guard let cropRect = snapshot.cropRect?.standardized else { return notes }
+    return notes.filter { $0.target.selectionBounds.intersects(cropRect) }
   }
 
   /// Draw only the source-image portion that intersects the requested canvas bounds.
@@ -1047,6 +1102,14 @@ final class AnnotateExporter {
       )
       renderer.draw(offsetAnnotation)
     }
+
+    drawNotinhasNotesForExport(
+      notes: exportableNotinhasNotes(snapshot),
+      cropOrigin: effectiveBounds.origin,
+      destinationOffset: .zero,
+      imageBounds: CGRect(origin: .zero, size: effectiveBounds.size),
+      in: context
+    )
 
     NSGraphicsContext.restoreGraphicsState()
 

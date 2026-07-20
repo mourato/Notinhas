@@ -46,6 +46,20 @@ struct AnnotateMainView: View {
           .frame(maxWidth: .infinity, maxHeight: .infinity)
           .contentShape(Rectangle()) // Constrain hit-test area to frame bounds
           .clipped() // Prevent canvas content from overlapping toolbar/bottombar
+
+        if !state.notinhasNotes.isEmpty, state.editorMode != .preview {
+          Divider()
+            .background(Color.white.opacity(0.1))
+
+          NotinhasNotesSidePanelView(
+            notes: state.notinhasNotes,
+            selectedNoteID: state.notinhasSelectedNoteID,
+            onSelect: { state.notinhasSelectNote(id: $0) },
+            onDelete: { state.notinhasDeleteNote(id: $0) }
+          )
+          .frame(width: 264)
+          .padding(12)
+        }
       }
 
       Divider()

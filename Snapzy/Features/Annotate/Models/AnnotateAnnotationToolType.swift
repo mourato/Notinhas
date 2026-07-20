@@ -21,6 +21,7 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
   case blur
   case spotlight
   case counter
+  case notinhasNote
   case watermark
   case pencil
   case mockup
@@ -61,6 +62,7 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
     case .blur: return "eye.slash"
     case .spotlight: return "viewfinder"
     case .counter: return "list.number"
+    case .notinhasNote: return "pin.circle.fill"
     case .watermark: return "seal"
     case .pencil: return "pencil"
     case .mockup: return "cube.transparent"
@@ -82,6 +84,7 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
     case .blur: return "b"
     case .spotlight: return "s"
     case .counter: return "n"
+    case .notinhasNote: return "i"
     case .watermark: return "w"
     case .pencil: return "p"
     case .mockup: return "m"
@@ -103,6 +106,7 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
     case .blur: return L10n.Annotate.blurTool
     case .spotlight: return L10n.Annotate.spotlightTool
     case .counter: return L10n.Annotate.counterTool
+    case .notinhasNote: return NotinhasL10n.noteTool
     case .watermark: return L10n.Annotate.watermarkTool
     case .pencil: return L10n.Annotate.pencilTool
     case .mockup: return L10n.Annotate.mockupTool
@@ -113,7 +117,7 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
     switch self {
     case .rectangle, .filledRectangle, .oval, .arrow, .line, .text, .highlighter, .blur, .spotlight, .counter, .watermark, .pencil:
       return true
-    case .selection, .crop, .mockup:
+    case .selection, .crop, .mockup, .notinhasNote:
       return false
     }
   }
@@ -125,7 +129,7 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
     switch self {
     case .rectangle, .filledRectangle, .oval, .arrow, .line, .blur, .spotlight, .watermark:
       return true
-    case .selection, .crop, .text, .highlighter, .counter, .pencil, .mockup:
+    case .selection, .crop, .text, .highlighter, .counter, .pencil, .mockup, .notinhasNote:
       return false
     }
   }
@@ -134,7 +138,7 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
     switch self {
     case .rectangle, .filledRectangle, .oval, .arrow, .line, .text, .highlighter, .counter, .watermark, .pencil:
       return true
-    case .selection, .crop, .blur, .spotlight, .mockup:
+    case .selection, .crop, .blur, .spotlight, .mockup, .notinhasNote:
       return false
     }
   }
@@ -147,7 +151,7 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
     switch self {
     case .rectangle, .filledRectangle, .oval, .arrow, .line, .highlighter, .blur, .counter, .pencil:
       return true
-    case .selection, .crop, .text, .watermark, .spotlight, .mockup:
+    case .selection, .crop, .text, .watermark, .spotlight, .mockup, .notinhasNote:
       return false
     }
   }
@@ -156,7 +160,7 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
     switch self {
     case .rectangle, .filledRectangle, .text, .spotlight:
       return true
-    case .selection, .crop, .oval, .arrow, .line, .highlighter, .blur, .counter, .watermark, .pencil, .mockup:
+    case .selection, .crop, .oval, .arrow, .line, .highlighter, .blur, .counter, .watermark, .pencil, .mockup, .notinhasNote:
       return false
     }
   }

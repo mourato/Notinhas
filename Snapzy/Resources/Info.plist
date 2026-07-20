@@ -49,5 +49,7 @@
 	<string>zcoJ90nh+SEFg6ZEkb9fwQCEK51vSIRwyn6tOsQisL0=</string>
 	<key>SUEnableInstallerLauncherService</key>
 	<true/>
+  <key>IMGUR_CLIENT_ID</key>
+  <string>$(IMGUR_CLIENT_ID)</string>
 </dict>
 </plist>
