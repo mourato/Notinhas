@@ -120,14 +120,14 @@ enum NotinhasNotesComposer {
     context: CGContext
   ) {
     context.saveGState()
-    context.setFillColor(NSColor(white: 0.97, alpha: 1).cgColor)
+    context.setFillColor(NotinhasNotesPanelStyle.background.cgColor)
     context.fill(panelRect)
 
     var cursorY = panelRect.maxY - panelPadding
 
     let headerAttributes: [NSAttributedString.Key: Any] = [
       .font: NSFont.boldSystemFont(ofSize: 18),
-      .foregroundColor: NSColor.labelColor,
+      .foregroundColor: NotinhasNotesPanelStyle.primaryText,
     ]
     let header = NSAttributedString(string: NotinhasL10n.sidePanelTitle, attributes: headerAttributes)
     let headerSize = header.size()
@@ -137,7 +137,7 @@ enum NotinhasNotesComposer {
 
     let textAttributes: [NSAttributedString.Key: Any] = [
       .font: NSFont.systemFont(ofSize: 14),
-      .foregroundColor: NSColor.labelColor,
+      .foregroundColor: NotinhasNotesPanelStyle.primaryText,
     ]
 
     for (index, note) in notes.enumerated() {

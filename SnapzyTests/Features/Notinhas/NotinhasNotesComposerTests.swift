@@ -36,4 +36,13 @@ final class NotinhasNotesComposerTests: XCTestCase {
 
     XCTAssertEqual(composed.size, base.size)
   }
+
+  func testExportPanelPrimaryTextIsDarkInk() {
+    let ink = NotinhasNotesPanelStyle.primaryText.usingColorSpace(.deviceRGB) ?? NotinhasNotesPanelStyle.primaryText
+    let background = NotinhasNotesPanelStyle.background.usingColorSpace(.deviceRGB) ?? NotinhasNotesPanelStyle
+      .background
+
+    XCTAssertLessThan(ink.brightnessComponent, 0.35)
+    XCTAssertGreaterThan(background.brightnessComponent, 0.9)
+  }
 }
