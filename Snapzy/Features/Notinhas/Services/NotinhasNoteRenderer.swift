@@ -3,7 +3,6 @@ import CoreGraphics
 
 enum NotinhasNoteRenderer {
   static let pinRadius: CGFloat = 14
-  static let pinFontSize: CGFloat = 12
   static let selectionStrokeWidth: CGFloat = 2
 
   static func draw(
@@ -72,8 +71,13 @@ enum NotinhasNoteRenderer {
     )
 
     context.saveGState()
-    context.setFillColor(color.withAlphaComponent(0.92).cgColor)
-    context.fillEllipse(in: circleRect)
+
+    AnnotationNumberedBadgeDrawer.draw(
+      value: displayNumber,
+      in: circleRect,
+      fillColor: color.withAlphaComponent(0.92),
+      in: context
+    )
 
     if isSelected {
       context.setStrokeColor(NSColor.white.cgColor)
@@ -81,7 +85,6 @@ enum NotinhasNoteRenderer {
       context.strokeEllipse(in: circleRect.insetBy(dx: -2, dy: -2))
     }
 
-    drawCenteredNumber(displayNumber, in: circleRect, context: context)
     context.restoreGState()
   }
 
@@ -127,9 +130,12 @@ enum NotinhasNoteRenderer {
       width: pinRadius * 2,
       height: pinRadius * 2
     )
-    context.setFillColor(color.withAlphaComponent(0.92).cgColor)
-    context.fillEllipse(in: circleRect)
-    drawCenteredNumber(displayNumber, in: circleRect, context: context)
+    AnnotationNumberedBadgeDrawer.draw(
+      value: displayNumber,
+      in: circleRect,
+      fillColor: color.withAlphaComponent(0.92),
+      in: context
+    )
 
     context.restoreGState()
   }
@@ -147,28 +153,6 @@ enum NotinhasNoteRenderer {
       offset += spacing
     }
     context.strokePath()
-    context.restoreGState()
-  }
-
-  private static func drawCenteredNumber(_ number: Int, in rect: CGRect, context: CGContext) {
-    let text = "\(number)" as NSString
-    let attributes: [NSAttributedString.Key: Any] = [
-      .font: NSFont.boldSystemFont(ofSize: pinFontSize),
-      .foregroundColor: NSColor.white,
-    ]
-    let size = text.size(withAttributes: attributes)
-    let origin = CGPoint(
-      x: rect.midX - size.width / 2,
-      y: rect.midY - size.height / 2
-    )
-    context.saveGState()
-    context.textMatrix = .identity
-    context.translateBy(x: 0, y: origin.y * 2 + size.height)
-    context.scaleBy(x: 1, y: -1)
-    let attributed = NSAttributedString(string: text as String, attributes: attributes)
-    let line = CTLineCreateWithAttributedString(attributed)
-    context.textPosition = CGPoint(x: origin.x, y: origin.y)
-    CTLineDraw(line, context)
     context.restoreGState()
   }
 }
