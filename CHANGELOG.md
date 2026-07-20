@@ -99,6 +99,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.30.0-beta.11] - 2026-07-20
+
+### Features
+-  Add support for Fn key shortcuts and accessibility hints (f5a1a93)
+
+### Chore
+- chore: update appcast for v1.30.0-beta.10 (7a86f6b)
+
+### Contributors
+- @duongductrong
+- @github-actions[bot]
+
 ## [1.30.0-beta.10] - 2026-07-19
 
 ### Bug Fixes
