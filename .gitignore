@@ -16,3 +16,4 @@ Snapzy/Config/Secrets.xcconfig
 /plans
 
 .codex
+.DS_Store
