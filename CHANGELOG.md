@@ -100,6 +100,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 
 
+
+## [1.30.0-beta.12] - 2026-07-20
+
+### Features
+-  Enhance area selection session management (c5f1e9d)
+
+### Chore
+- chore: update appcast for v1.30.0-beta.11 (e824615)
+
+### Contributors
+- @duongductrong
+- @github-actions[bot]
+
 ## [1.30.0-beta.11] - 2026-07-20
 
 ### Features
