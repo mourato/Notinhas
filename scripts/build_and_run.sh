@@ -6,6 +6,9 @@ DEBUG_BUNDLE_NAME="Snapzy Debug"
 SCHEME="Snapzy"
 PROJECT="Snapzy.xcodeproj"
 LOG_SUBSYSTEM="${LOG_SUBSYSTEM:-Snapzy}"
+# The existing local development identity shared with Vozinha. Override this for
+# a different local keychain identity without changing project settings.
+LOCAL_CODE_SIGN_IDENTITY="${LOCAL_CODE_SIGN_IDENTITY:-Prisma Local Code Signing}"
 
 MODE="run"
 CONFIGURATION="${CONFIGURATION:-Debug}"
@@ -49,7 +52,7 @@ ${BOLD}Modes:${NC}
   --verify, verify    Launch and confirm the Snapzy process is running
 
 ${BOLD}Options:${NC}
-  --configuration C   Build configuration. Default: Debug
+  --configuration C   Build configuration. Debug uses LOCAL_CODE_SIGN_IDENTITY.
   --derived-data PATH Build DerivedData path. Default: .build/xcode-derived-data
   --log-level LEVELS  default,info,debug,error,fault,all. Default: default,error,fault
   --clean             Clean before building
@@ -202,6 +205,20 @@ run_xcodebuild() {
     -configuration "$CONFIGURATION"
     -derivedDataPath "$DERIVED_DATA_PATH"
   )
+
+  # The repository's Xcode project targets an unavailable legacy development
+  # team. Local Debug builds use the shared Vozinha identity instead. Its
+  # self-signed team-less certificate cannot load Xcode's injected debug dylib
+  # with library validation enabled, so this intentionally applies only to
+  # Debug. Release signing and hardened runtime remain project-controlled.
+  if [[ "$CONFIGURATION" == "Debug" ]]; then
+    args+=(
+      "CODE_SIGN_STYLE=Manual"
+      "CODE_SIGN_IDENTITY=$LOCAL_CODE_SIGN_IDENTITY"
+      "DEVELOPMENT_TEAM="
+      "ENABLE_HARDENED_RUNTIME=NO"
+    )
+  fi
 
   if [[ "$QUIET" -eq 1 ]]; then
     args+=(-quiet)
