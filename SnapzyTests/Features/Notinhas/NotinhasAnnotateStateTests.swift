@@ -123,4 +123,51 @@ final class NotinhasAnnotateStateTests: XCTestCase {
     XCTAssertEqual(state.notinhasSelectedNoteID, note.id)
     XCTAssertNil(state.notinhasEditingNoteID)
   }
+
+  func testLiveAppearanceUpdateDoesNotCreateUndoCheckpoint() {
+    let state = makeState()
+    let note = makeNote()
+    state.notinhasNotes = [note]
+    var live = note
+    live.color = RGBAColor(red: 0, green: 0, blue: 1, alpha: 1)
+
+    state.notinhasApplyLiveAppearance(live)
+
+    XCTAssertEqual(state.notinhasNotes[0].color, live.color)
+    XCTAssertEqual(state.notinhasNotes[0].text, note.text)
+    XCTAssertFalse(state.canUndo)
+  }
+
+  func testRevertNoteRestoresOpeningSnapshot() {
+    let state = makeState()
+    let original = makeNote(text: "Before")
+    state.notinhasNotes = [original]
+    var edited = original
+    edited.text = "After"
+    edited.color = RGBAColor(red: 0, green: 0, blue: 1, alpha: 1)
+    edited.areaStyle = .hatched
+    state.notinhasNotes = [edited]
+
+    state.notinhasRevertNote(to: original)
+
+    XCTAssertEqual(state.notinhasNotes, [original])
+    XCTAssertFalse(state.canUndo)
+  }
+
+  func testSaveAfterLiveAppearanceCreatesOneUndoCheckpoint() {
+    let state = makeState()
+    let original = makeNote(text: "Before")
+    state.notinhasNotes = [original]
+    var live = original
+    live.color = RGBAColor(red: 0, green: 0, blue: 1, alpha: 1)
+    state.notinhasApplyLiveAppearance(live)
+
+    var saved = live
+    saved.text = "After"
+    state.notinhasCommitNoteEdit(draft: saved, openingSnapshot: original)
+
+    XCTAssertEqual(state.notinhasNotes[0].text, "After")
+    state.undo()
+    XCTAssertEqual(state.notinhasNotes, [original])
+  }
 }

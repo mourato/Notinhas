@@ -2990,6 +2990,7 @@ nonisolated enum L10n {
     static let sidePanelEmpty = string("annotate.notinhas.side-panel-empty", defaultValue: "No notes yet", comment: "Empty Notinhas notes panel")
     static let emptyNoteLabel = string("annotate.notinhas.empty-note", defaultValue: "Empty note", comment: "Empty Notinhas note")
     static let deleteNote = string("annotate.notinhas.delete-note", defaultValue: "Delete note", comment: "Delete Notinhas note")
+    static let noteEditorColorButton = string("annotate.notinhas.note-editor-color-button", defaultValue: "Note color", comment: "Notinhas note editor color button accessibility label")
     static let pointTargetLabel = string("annotate.notinhas.point-target", defaultValue: "Point", comment: "Notinhas point target")
     static let areaTargetLabel = string("annotate.notinhas.area-target", defaultValue: "Area", comment: "Notinhas area target")
     static let areaStyleOutline = string("annotate.notinhas.area-style-outline", defaultValue: "Outline", comment: "Notinhas area outline style")

@@ -18,6 +18,35 @@ extension AnnotateState {
     notinhasNotes[index] = note
   }
 
+  /// Commits an edited note and records one undo checkpoint back to `openingSnapshot`.
+  func notinhasCommitNoteEdit(draft: NotinhasVisualNote, openingSnapshot: NotinhasVisualNote) {
+    guard let index = notinhasNotes.firstIndex(where: { $0.id == draft.id }) else { return }
+    guard notinhasNotes[index] != draft || openingSnapshot != draft else { return }
+    if openingSnapshot != draft {
+      var checkpointNotes = notinhasNotes
+      checkpointNotes[index] = openingSnapshot
+      saveNotinhasNotesUndoCheckpoint(checkpointNotes)
+    }
+    notinhasNotes[index] = draft
+  }
+
+  /// Mutates color and area style without creating an undo checkpoint. Text is not applied here.
+  func notinhasApplyLiveAppearance(_ note: NotinhasVisualNote) {
+    guard let index = notinhasNotes.firstIndex(where: { $0.id == note.id }) else { return }
+    var updated = notinhasNotes[index]
+    updated.color = note.color
+    updated.areaStyle = note.areaStyle
+    guard notinhasNotes[index].color != updated.color
+      || notinhasNotes[index].areaStyle != updated.areaStyle else { return }
+    notinhasNotes[index] = updated
+  }
+
+  /// Restores a note to the opening snapshot without creating an undo checkpoint.
+  func notinhasRevertNote(to snapshot: NotinhasVisualNote) {
+    guard let index = notinhasNotes.firstIndex(where: { $0.id == snapshot.id }) else { return }
+    notinhasNotes[index] = snapshot
+  }
+
   func notinhasDeleteNote(id: UUID) {
     guard notinhasNotes.contains(where: { $0.id == id }) else { return }
     saveState()

@@ -158,7 +158,6 @@ final class DrawingCanvasNSView: NSView {
   private var notinhasMoveStartPoint: CGPoint?
   private var notinhasIsMovingNote = false
 
-
   init(state: AnnotateState) {
     self.state = state
     super.init(frame: .zero)
@@ -691,7 +690,9 @@ final class DrawingCanvasNSView: NSView {
     selectedTool: AnnotationToolType
   ) -> Bool {
     guard selectedTool != .selection else { return false }
-    if case .embeddedImage = annotation.type { return true }
+    if case .embeddedImage = annotation.type {
+      return true
+    }
     return false
   }
 
@@ -733,7 +734,9 @@ final class DrawingCanvasNSView: NSView {
 
   private func canResizeAnnotation(_ annotation: AnnotationItem) -> Bool {
     guard state.isCombineMode, state.combineMode == .autoStitch else { return true }
-    if case .embeddedImage = annotation.type { return false }
+    if case .embeddedImage = annotation.type {
+      return false
+    }
     return true
   }
 
@@ -943,7 +946,9 @@ final class DrawingCanvasNSView: NSView {
 
     default:
       let isEmbeddedImage: Bool = {
-        if case .embeddedImage = original.type { return true }
+        if case .embeddedImage = original.type {
+          return true
+        }
         return false
       }()
       let proportional = event.modifierFlags.contains(.shift)
@@ -979,7 +984,9 @@ final class DrawingCanvasNSView: NSView {
       if let resizeId = resizingAnnotationId, let handle = activeResizeHandle {
         let isArrow: Bool = {
           guard let item = gestureLocalItems[resizeId] ?? gestureOriginalItems[resizeId] else { return false }
-          if case .arrow = item.type { return true }
+          if case .arrow = item.type {
+            return true
+          }
           return false
         }()
         switch handle {
@@ -1247,11 +1254,14 @@ final class DrawingCanvasNSView: NSView {
       },
       onDelete: { [weak self] in
         guard let self else { return }
-        if let editingID = self.state.notinhasEditingNoteID {
-          self.state.notinhasDeleteNote(id: editingID)
+        if let editingID = state.notinhasEditingNoteID {
+          state.notinhasDeleteNote(id: editingID)
         }
-        self.dismissNotinhasEditor()
-        self.invalidateDrawing()
+        dismissNotinhasEditor()
+        invalidateDrawing()
+      },
+      onLiveAppearanceChanged: { [weak self] in
+        self?.invalidateDrawing()
       }
     )
     overlay.show(for: noteID, in: bounds)
@@ -1368,7 +1378,9 @@ final class DrawingCanvasNSView: NSView {
     context.translateBy(x: -effectiveCanvasBounds.minX, y: -effectiveCanvasBounds.minY)
 
     let ordered = state.notinhasNotes.sorted { lhs, rhs in
-      if lhs.creationOrder == rhs.creationOrder { return lhs.id.uuidString < rhs.id.uuidString }
+      if lhs.creationOrder == rhs.creationOrder {
+        return lhs.id.uuidString < rhs.id.uuidString
+      }
       return lhs.creationOrder < rhs.creationOrder
     }
     for (index, note) in ordered.enumerated() {
@@ -1461,7 +1473,9 @@ final class DrawingCanvasNSView: NSView {
   /// below/above layers (exact z-order during the gesture).
   private var usesDragLayerSplit: Bool {
     guard isResizingAnnotation || isDraggingAnnotation else { return false }
-    if isDraggingAnnotation, gestureExcludedIds.isEmpty { return false } // multi-item drag
+    if isDraggingAnnotation, gestureExcludedIds.isEmpty {
+      return false
+    } // multi-item drag
     let excluded = gestureExcludedIds
     // A selected item outside the gesture would keep stale selection visuals in
     // the static layers — keep everything static instead (exact same output).
@@ -1472,7 +1486,8 @@ final class DrawingCanvasNSView: NSView {
 
   /// Splits display items into the three drawing layers, preserving the
   /// `renderOrdered` z-order around the dragged item.
-  private func partitionedDisplayItems() -> (below: [AnnotationItem], dragged: [AnnotationItem], above: [AnnotationItem]) {
+  private func partitionedDisplayItems()
+    -> (below: [AnnotationItem], dragged: [AnnotationItem], above: [AnnotationItem]) {
     let ordered = currentDisplayItems().renderOrdered
     guard usesDragLayerSplit else {
       return (ordered, [], [])
@@ -1497,7 +1512,8 @@ final class DrawingCanvasNSView: NSView {
     return (effectiveSourceImage, effectiveSourceImage?.cgImage(forProposedRect: nil, context: nil, hints: nil))
   }
 
-  private func makeRenderer(sourceImage: NSImage?, sourceCGImage: CGImage?, in context: CGContext) -> AnnotationRenderer {
+  private func makeRenderer(sourceImage: NSImage?, sourceCGImage: CGImage?,
+                            in context: CGContext) -> AnnotationRenderer {
     AnnotationRenderer(
       context: context,
       editingTextId: state.editingTextAnnotationId,

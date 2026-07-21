@@ -7,20 +7,24 @@ final class NotinhasNoteEditorOverlay: NSView {
   private let onCommit: () -> Void
   private let onCancel: () -> Void
   private let onDelete: () -> Void
+  private let onLiveAppearanceChanged: () -> Void
 
   private var hostingView: NSHostingView<NotinhasNoteEditorView>?
   private var draftNote: NotinhasVisualNote?
+  private var openingSnapshot: NotinhasVisualNote?
 
   init(
     state: AnnotateState,
     onCommit: @escaping () -> Void,
     onCancel: @escaping () -> Void,
-    onDelete: @escaping () -> Void
+    onDelete: @escaping () -> Void,
+    onLiveAppearanceChanged: @escaping () -> Void
   ) {
     self.state = state
     self.onCommit = onCommit
     self.onCancel = onCancel
     self.onDelete = onDelete
+    self.onLiveAppearanceChanged = onLiveAppearanceChanged
     super.init(frame: .zero)
     wantsLayer = true
     layer?.backgroundColor = NSColor.clear.cgColor
@@ -36,6 +40,7 @@ final class NotinhasNoteEditorOverlay: NSView {
 
     hostingView?.removeFromSuperview()
 
+    openingSnapshot = note
     draftNote = note
     let displayNumber = state.notinhasDisplayNumber(for: noteID) ?? 1
     let editor = NotinhasNoteEditorView(
@@ -56,9 +61,7 @@ final class NotinhasNoteEditorOverlay: NSView {
             ?? RGBAColor(red: 1, green: 0, blue: 0, alpha: 1)
         },
         set: { [self] newValue in
-          guard var updated = draftNote else { return }
-          updated.color = newValue
-          draftNote = updated
+          applyLiveAppearance(color: newValue, areaStyle: nil)
         }
       ),
       areaStyle: Binding(
@@ -66,19 +69,19 @@ final class NotinhasNoteEditorOverlay: NSView {
           draftNote?.areaStyle ?? .outline
         },
         set: { [self] newValue in
-          guard var updated = draftNote else { return }
-          updated.areaStyle = newValue
-          draftNote = updated
+          applyLiveAppearance(color: nil, areaStyle: newValue)
         }
       ),
       showsAreaStyle: note.target.isRectangular,
       onCommit: { [weak self] in
-        if let draftNote = self?.draftNote {
-          self?.state.notinhasUpdateNote(draftNote)
+        if let draftNote = self?.draftNote, let openingSnapshot = self?.openingSnapshot {
+          self?.state.notinhasCommitNoteEdit(draft: draftNote, openingSnapshot: openingSnapshot)
         }
         self?.onCommit()
       },
-      onCancel: onCancel,
+      onCancel: { [weak self] in
+        self?.cancelEditing()
+      },
       onDelete: onDelete
     )
 
@@ -88,7 +91,7 @@ final class NotinhasNoteEditorOverlay: NSView {
     hostingView = hosting
 
     let anchor = NotinhasNoteGeometry.pinAnchor(for: note.target)
-    let panelSize = CGSize(width: 300, height: note.target.isRectangular ? 220 : 180)
+    let panelSize = CGSize(width: 300, height: note.target.isRectangular ? 260 : 240)
     var origin = CGPoint(x: anchor.x + 24, y: anchor.y - panelSize.height / 2)
 
     if origin.x + panelSize.width > containerBounds.maxX - 12 {
@@ -105,10 +108,37 @@ final class NotinhasNoteEditorOverlay: NSView {
     hosting.frame = bounds
   }
 
+  func cancelEditing() {
+    if let openingSnapshot {
+      state.notinhasRevertNote(to: openingSnapshot)
+      onLiveAppearanceChanged()
+    }
+    onCancel()
+  }
+
   func dismiss() {
     hostingView?.removeFromSuperview()
     hostingView = nil
     draftNote = nil
+    openingSnapshot = nil
     removeFromSuperview()
+  }
+
+  private func applyLiveAppearance(color: RGBAColor?, areaStyle: NotinhasAreaStyle?) {
+    guard var updated = draftNote else { return }
+    if let color {
+      updated.color = color
+    }
+    if let areaStyle {
+      updated.areaStyle = areaStyle
+    }
+    draftNote = updated
+
+    var liveNote = updated
+    if let stateNote = state.notinhasNotes.first(where: { $0.id == updated.id }) {
+      liveNote.text = stateNote.text
+    }
+    state.notinhasApplyLiveAppearance(liveNote)
+    onLiveAppearanceChanged()
   }
 }

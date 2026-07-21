@@ -10,6 +10,7 @@ enum NotinhasL10n {
   static let sidePanelEmpty = L10n.Notinhas.sidePanelEmpty
   static let emptyNoteLabel = L10n.Notinhas.emptyNoteLabel
   static let deleteNote = L10n.Notinhas.deleteNote
+  static let noteEditorColorButton = L10n.Notinhas.noteEditorColorButton
   static let pointTargetLabel = L10n.Notinhas.pointTargetLabel
   static let rectTargetLabel = L10n.Notinhas.areaTargetLabel
   static let areaStyleOutline = L10n.Notinhas.areaStyleOutline

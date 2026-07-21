@@ -32,33 +32,43 @@ struct NotinhasNoteEditorView: View {
 
         Text(NotinhasL10n.noteEditorTitle)
           .font(.system(size: 13, weight: .semibold))
+
+        Spacer(minLength: 0)
+
+        Menu {
+          ForEach(Array(palette.enumerated()), id: \.offset) { index, swatch in
+            Button {
+              color = swatch
+            } label: {
+              Label {
+                Text(NotinhasL10n.colorSwatch(index + 1))
+              } icon: {
+                Circle()
+                  .fill(swatch.color)
+                  .frame(width: 14, height: 14)
+              }
+            }
+          }
+        } label: {
+          Circle()
+            .fill(color.color)
+            .frame(width: 22, height: 22)
+            .overlay {
+              Circle()
+                .stroke(Color.primary.opacity(0.25), lineWidth: 1)
+            }
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .accessibilityLabel(NotinhasL10n.noteEditorColorButton)
       }
 
       TextField(NotinhasL10n.noteEditorPlaceholder, text: $text, axis: .vertical)
         .textFieldStyle(.roundedBorder)
-        .lineLimit(1 ... 4)
+        .lineLimit(3 ... 6)
+        .frame(minHeight: 60)
         .focused($isFocused)
         .onSubmit(onCommit)
-
-      HStack(spacing: 8) {
-        ForEach(Array(palette.enumerated()), id: \.offset) { index, swatch in
-          Button {
-            color = swatch
-          } label: {
-            Circle()
-              .fill(swatch.color)
-              .frame(width: 18, height: 18)
-              .overlay {
-                if color == swatch {
-                  Circle().stroke(Color.primary, lineWidth: 2)
-                }
-              }
-          }
-          .buttonStyle(.plain)
-          .accessibilityLabel(NotinhasL10n.colorSwatch(index + 1))
-          .accessibilityValue(color == swatch ? NotinhasL10n.selected : "")
-        }
-      }
 
       if showsAreaStyle {
         Picker(NotinhasL10n.areaStylePickerLabel, selection: $areaStyle) {
@@ -70,8 +80,14 @@ struct NotinhasNoteEditorView: View {
       }
 
       HStack {
-        Button(NotinhasL10n.deleteNote, role: .destructive) { onDelete() }
+        Button(role: .destructive) { onDelete() } label: {
+          Image(systemName: "trash")
+        }
+        .help(NotinhasL10n.deleteNote)
+        .accessibilityLabel(NotinhasL10n.deleteNote)
+
         Spacer()
+
         Button(NotinhasL10n.cancel) { onCancel() }
           .keyboardShortcut(.cancelAction)
         Button(NotinhasL10n.save) { onCommit() }
