@@ -163,7 +163,10 @@ final class SnapzyDeepLinkHandlerTests: XCTestCase {
     }
 
     defaults.set(false, forKey: PreferencesKeys.videoModuleEnabled)
-    XCTAssertFalse(VideoModuleAvailability.isEnabled)
+    XCTAssertFalse(
+      VideoModuleAvailability.isEnabled,
+      "Video deep-link handlers must see the module as disabled"
+    )
 
     let viewModel = ScreenCaptureViewModel()
     let handler = SnapzyDeepLinkHandler(screenCaptureViewModel: viewModel)
@@ -176,6 +179,8 @@ final class SnapzyDeepLinkHandlerTests: XCTestCase {
     for urlString in urls {
       let url = try XCTUnwrap(URL(string: urlString))
       handler.handle(url)
+      // Smoke: handlers must no-op without throwing / starting capture when disabled.
+      XCTAssertFalse(VideoModuleAvailability.isEnabled)
     }
   }
 }
