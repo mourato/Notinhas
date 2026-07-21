@@ -49,6 +49,7 @@ struct ShortcutsSettingsView: View {
   @State private var hasSystemConflict: Bool = false
   @State private var isRefreshingConflict: Bool = false
   @State private var accessibilityGranted: Bool = AXIsProcessTrusted()
+  @State private var videoModuleEnabled = VideoModuleAvailability.isEnabled
 
   private let manager = KeyboardShortcutManager.shared
   private let validator = ShortcutValidationService.shared
@@ -308,7 +309,8 @@ struct ShortcutsSettingsView: View {
             Spacer()
 
             Button(L10n.Common.openSettings) {
-              if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+              if let url =
+                URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
                 NSWorkspace.shared.open(url)
               }
             }
@@ -434,84 +436,86 @@ struct ShortcutsSettingsView: View {
           }
         }
 
-        Section {
-          VStack(alignment: .leading, spacing: 4) {
-            ShortcutRecorderView(
-              label: L10n.Actions.recordVideo,
-              icon: "record.circle",
-              description: L10n.PreferencesShortcuts.recordVideoDescription,
-              shortcut: $recordingShortcut,
-              defaultShortcut: .defaultRecording,
-              isEnabled: globalEnabledBinding(for: .recording),
-              validationIssue: globalValidationIssues[.recording],
-              onShortcutChanged: { handleGlobalShortcutChange($0, for: .recording) }
-            )
+        if videoModuleEnabled {
+          Section {
+            VStack(alignment: .leading, spacing: 4) {
+              ShortcutRecorderView(
+                label: L10n.Actions.recordVideo,
+                icon: "record.circle",
+                description: L10n.PreferencesShortcuts.recordVideoDescription,
+                shortcut: $recordingShortcut,
+                defaultShortcut: .defaultRecording,
+                isEnabled: globalEnabledBinding(for: .recording),
+                validationIssue: globalValidationIssues[.recording],
+                onShortcutChanged: { handleGlobalShortcutChange($0, for: .recording) }
+              )
 
-            CaptureOverlayShortcutRecorderRow(
-              label: L10n.PreferencesShortcuts.applicationRecordingTitle,
-              description: L10n.PreferencesShortcuts.applicationRecordingDescription,
-              shortcut: $recordingApplicationCaptureShortcut,
-              defaultShortcut: CaptureOverlayShortcutSettings.defaultRecordingApplicationCaptureShortcut,
-              isEnabled: globalEnabledBinding(for: .recording),
-              validationIssue: captureOverlayValidationIssues[.applicationRecording]
-            ) { newShortcut in
-              handleCaptureOverlayShortcutChange(newShortcut, for: .applicationRecording)
+              CaptureOverlayShortcutRecorderRow(
+                label: L10n.PreferencesShortcuts.applicationRecordingTitle,
+                description: L10n.PreferencesShortcuts.applicationRecordingDescription,
+                shortcut: $recordingApplicationCaptureShortcut,
+                defaultShortcut: CaptureOverlayShortcutSettings.defaultRecordingApplicationCaptureShortcut,
+                isEnabled: globalEnabledBinding(for: .recording),
+                validationIssue: captureOverlayValidationIssues[.applicationRecording]
+              ) { newShortcut in
+                handleCaptureOverlayShortcutChange(newShortcut, for: .applicationRecording)
+              }
+
+              ShortcutRecorderView(
+                label: L10n.Actions.pauseResumeRecording,
+                icon: "pause.circle",
+                description: L10n.PreferencesShortcuts.pauseResumeRecordingDescription,
+                shortcut: $pauseResumeRecordingShortcut,
+                defaultShortcut: nil,
+                isEnabled: globalEnabledBinding(for: .pauseResumeRecording),
+                validationIssue: globalValidationIssues[.pauseResumeRecording],
+                onShortcutChanged: { handleGlobalShortcutChange($0, for: .pauseResumeRecording) }
+              )
+
+              ShortcutRecorderView(
+                label: L10n.Actions.togglePenRecording,
+                icon: "pencil.tip.crop.circle",
+                description: L10n.PreferencesShortcuts.togglePenRecordingDescription,
+                shortcut: $togglePenRecordingShortcut,
+                defaultShortcut: nil,
+                isEnabled: globalEnabledBinding(for: .togglePenRecording),
+                validationIssue: globalValidationIssues[.togglePenRecording],
+                onShortcutChanged: { handleGlobalShortcutChange($0, for: .togglePenRecording) }
+              )
+
+              ShortcutRecorderView(
+                label: L10n.Actions.restartRecording,
+                icon: "arrow.counterclockwise.circle",
+                description: L10n.PreferencesShortcuts.restartRecordingDescription,
+                shortcut: $restartRecordingShortcut,
+                defaultShortcut: nil,
+                isEnabled: globalEnabledBinding(for: .restartRecording),
+                validationIssue: globalValidationIssues[.restartRecording],
+                onShortcutChanged: { handleGlobalShortcutChange($0, for: .restartRecording) }
+              )
+
+              ShortcutRecorderView(
+                label: L10n.Actions.deleteRecording,
+                icon: "trash.circle",
+                description: L10n.PreferencesShortcuts.deleteRecordingDescription,
+                shortcut: $deleteRecordingShortcut,
+                defaultShortcut: nil,
+                isEnabled: globalEnabledBinding(for: .deleteRecording),
+                validationIssue: globalValidationIssues[.deleteRecording],
+                onShortcutChanged: { handleGlobalShortcutChange($0, for: .deleteRecording) }
+              )
             }
-
-            ShortcutRecorderView(
-              label: L10n.Actions.pauseResumeRecording,
-              icon: "pause.circle",
-              description: L10n.PreferencesShortcuts.pauseResumeRecordingDescription,
-              shortcut: $pauseResumeRecordingShortcut,
-              defaultShortcut: nil,
-              isEnabled: globalEnabledBinding(for: .pauseResumeRecording),
-              validationIssue: globalValidationIssues[.pauseResumeRecording],
-              onShortcutChanged: { handleGlobalShortcutChange($0, for: .pauseResumeRecording) }
-            )
-
-            ShortcutRecorderView(
-              label: L10n.Actions.togglePenRecording,
-              icon: "pencil.tip.crop.circle",
-              description: L10n.PreferencesShortcuts.togglePenRecordingDescription,
-              shortcut: $togglePenRecordingShortcut,
-              defaultShortcut: nil,
-              isEnabled: globalEnabledBinding(for: .togglePenRecording),
-              validationIssue: globalValidationIssues[.togglePenRecording],
-              onShortcutChanged: { handleGlobalShortcutChange($0, for: .togglePenRecording) }
-            )
-
-            ShortcutRecorderView(
-              label: L10n.Actions.restartRecording,
-              icon: "arrow.counterclockwise.circle",
-              description: L10n.PreferencesShortcuts.restartRecordingDescription,
-              shortcut: $restartRecordingShortcut,
-              defaultShortcut: nil,
-              isEnabled: globalEnabledBinding(for: .restartRecording),
-              validationIssue: globalValidationIssues[.restartRecording],
-              onShortcutChanged: { handleGlobalShortcutChange($0, for: .restartRecording) }
-            )
-
-            ShortcutRecorderView(
-              label: L10n.Actions.deleteRecording,
-              icon: "trash.circle",
-              description: L10n.PreferencesShortcuts.deleteRecordingDescription,
-              shortcut: $deleteRecordingShortcut,
-              defaultShortcut: nil,
-              isEnabled: globalEnabledBinding(for: .deleteRecording),
-              validationIssue: globalValidationIssues[.deleteRecording],
-              onShortcutChanged: { handleGlobalShortcutChange($0, for: .deleteRecording) }
-            )
-          }
-          .padding(.vertical, 2)
-        } header: {
-          HStack {
-            Text(L10n.PreferencesShortcuts.recordingSection)
-            Spacer()
-            Button(L10n.Common.reset) {
-              resetRecordingSection()
+            .padding(.vertical, 2)
+          } header: {
+            HStack {
+              Text(L10n.PreferencesShortcuts.recordingSection)
+              Spacer()
+              Button(L10n.Common.reset) {
+                resetRecordingSection()
+              }
+              .buttonStyle(.borderless)
+              .font(.caption)
             }
-            .buttonStyle(.borderless)
-            .font(.caption)
           }
         }
 
@@ -527,16 +531,18 @@ struct ShortcutsSettingsView: View {
             onShortcutChanged: { handleGlobalShortcutChange($0, for: .annotate) }
           )
 
-          ShortcutRecorderView(
-            label: L10n.Actions.openVideoEditor,
-            icon: "film",
-            description: L10n.PreferencesShortcuts.openVideoEditorDescription,
-            shortcut: $videoEditorShortcut,
-            defaultShortcut: .defaultVideoEditor,
-            isEnabled: globalEnabledBinding(for: .videoEditor),
-            validationIssue: globalValidationIssues[.videoEditor],
-            onShortcutChanged: { handleGlobalShortcutChange($0, for: .videoEditor) }
-          )
+          if videoModuleEnabled {
+            ShortcutRecorderView(
+              label: L10n.Actions.openVideoEditor,
+              icon: "film",
+              description: L10n.PreferencesShortcuts.openVideoEditorDescription,
+              shortcut: $videoEditorShortcut,
+              defaultShortcut: .defaultVideoEditor,
+              isEnabled: globalEnabledBinding(for: .videoEditor),
+              validationIssue: globalValidationIssues[.videoEditor],
+              onShortcutChanged: { handleGlobalShortcutChange($0, for: .videoEditor) }
+            )
+          }
 
           ShortcutRecorderView(
             label: L10n.Actions.cloudUploads,
@@ -792,6 +798,9 @@ struct ShortcutsSettingsView: View {
     }
     .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
       accessibilityGranted = AXIsProcessTrusted()
+    }
+    .onReceive(NotificationCenter.default.publisher(for: .videoModuleAvailabilityDidChange)) { _ in
+      videoModuleEnabled = VideoModuleAvailability.isEnabled
     }
     .safeAreaInset(edge: .bottom) {
       HStack {
@@ -1235,8 +1244,12 @@ struct ShortcutsSettingsView: View {
   private func toolContext(for tool: AnnotationToolType) -> AnnotationToolContext {
     let inScreenshot = Self.screenshotTools.contains(tool)
     let inRecording = Self.recordingTools.contains(tool)
-    if inScreenshot, inRecording { return .both }
-    if inRecording { return .recordingOnly }
+    if inScreenshot, inRecording {
+      return .both
+    }
+    if inRecording {
+      return .recordingOnly
+    }
     return .screenshotOnly
   }
 }

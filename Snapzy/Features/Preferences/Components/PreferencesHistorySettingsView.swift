@@ -11,8 +11,10 @@ struct HistorySettingsView: View {
   @ObservedObject private var manager = HistoryFloatingManager.shared
   @AppStorage(PreferencesKeys.historyRetentionDays) private var historyRetentionDays = 30
   @AppStorage(PreferencesKeys.historyMaxCount) private var historyMaxCount = 500
-  @AppStorage(PreferencesKeys.historyBackgroundStyle) private var historyBackgroundStyle: HistoryBackgroundStyle = .defaultStyle
+  @AppStorage(PreferencesKeys.historyBackgroundStyle) private var historyBackgroundStyle: HistoryBackgroundStyle =
+    .defaultStyle
   @State private var captureStorageSizeText = L10n.PreferencesGeneral.calculating
+  @State private var videoModuleEnabled = VideoModuleAvailability.isEnabled
   private let storageManager = CaptureStorageManager.shared
 
   var body: some View {
@@ -51,10 +53,12 @@ struct HistorySettingsView: View {
           description: L10n.PreferencesHistory.defaultFilterDescription
         ) {
           Picker("", selection: $manager.defaultFilter) {
-            Text(L10n.PreferencesHistory.defaultFilterAll).tag(Optional<CaptureHistoryType>.none)
-            Text(L10n.PreferencesHistory.defaultFilterScreenshots).tag(Optional<CaptureHistoryType>.some(.screenshot))
-            Text(L10n.PreferencesHistory.defaultFilterVideos).tag(Optional<CaptureHistoryType>.some(.video))
-            Text(L10n.PreferencesHistory.defaultFilterGifs).tag(Optional<CaptureHistoryType>.some(.gif))
+            Text(L10n.PreferencesHistory.defaultFilterAll).tag(CaptureHistoryType?.none)
+            Text(L10n.PreferencesHistory.defaultFilterScreenshots).tag(CaptureHistoryType?.some(.screenshot))
+            if videoModuleEnabled {
+              Text(L10n.PreferencesHistory.defaultFilterVideos).tag(CaptureHistoryType?.some(.video))
+              Text(L10n.PreferencesHistory.defaultFilterGifs).tag(CaptureHistoryType?.some(.gif))
+            }
           }
           .labelsHidden()
           .pickerStyle(.menu)
@@ -80,8 +84,11 @@ struct HistorySettingsView: View {
             Text(L10n.PreferencesHistory.panelSizeSmall)
               .font(.caption)
               .foregroundColor(.secondary)
-            Slider(value: $manager.panelScale.stepped(by: 0.05, in: HistoryFloatingLayout.scaleRange), in: HistoryFloatingLayout.scaleRange)
-              .frame(width: 120)
+            Slider(
+              value: $manager.panelScale.stepped(by: 0.05, in: HistoryFloatingLayout.scaleRange),
+              in: HistoryFloatingLayout.scaleRange
+            )
+            .frame(width: 120)
             Text(L10n.PreferencesHistory.panelSizeLarge)
               .font(.caption)
               .foregroundColor(.secondary)
@@ -106,8 +113,8 @@ struct HistorySettingsView: View {
             Slider(value: Binding(
               get: { Double(manager.maxDisplayedItems) },
               set: { manager.maxDisplayedItems = Int($0) }
-            ).stepped(by: 1, in: 3...20), in: 3...20)
-            .frame(width: 120)
+            ).stepped(by: 1, in: 3 ... 20), in: 3 ... 20)
+              .frame(width: 120)
           }
           .frame(width: 220, alignment: .trailing)
         }
@@ -127,8 +134,8 @@ struct HistorySettingsView: View {
             Slider(value: Binding(
               get: { Double(historyRetentionDays) },
               set: { historyRetentionDays = Int($0) }
-            ).stepped(by: 1, in: 0...90), in: 0...90)
-            .frame(width: 120)
+            ).stepped(by: 1, in: 0 ... 90), in: 0 ... 90)
+              .frame(width: 120)
           }
           .frame(width: 220, alignment: .trailing)
         }
@@ -146,8 +153,8 @@ struct HistorySettingsView: View {
             Slider(value: Binding(
               get: { Double(historyMaxCount) },
               set: { historyMaxCount = Int($0) }
-            ).stepped(by: 50, in: 0...1000), in: 0...1000)
-            .frame(width: 120)
+            ).stepped(by: 50, in: 0 ... 1000), in: 0 ... 1000)
+              .frame(width: 120)
           }
           .frame(width: 220, alignment: .trailing)
         }
@@ -183,6 +190,21 @@ struct HistorySettingsView: View {
     .formStyle(.grouped)
     .onAppear {
       updateCaptureStorageSize()
+      reconcileDefaultFilter()
+    }
+    .onReceive(NotificationCenter.default.publisher(for: .videoModuleAvailabilityDidChange)) { _ in
+      videoModuleEnabled = VideoModuleAvailability.isEnabled
+      reconcileDefaultFilter()
+    }
+  }
+
+  private func reconcileDefaultFilter() {
+    guard !videoModuleEnabled else { return }
+    switch manager.defaultFilter {
+    case .video, .gif:
+      manager.defaultFilter = nil
+    case .screenshot, .none:
+      break
     }
   }
 

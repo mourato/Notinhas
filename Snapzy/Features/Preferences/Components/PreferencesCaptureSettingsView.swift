@@ -27,6 +27,10 @@ private enum CaptureSettingsPane: CaseIterable, Hashable, Identifiable {
       CaptureType.recording.displayName
     }
   }
+
+  static func availablePanes(videoModuleEnabled: Bool) -> [CaptureSettingsPane] {
+    videoModuleEnabled ? allCases : [.general, .screenshot]
+  }
 }
 
 struct CaptureSettingsView: View {
@@ -78,6 +82,7 @@ struct CaptureSettingsView: View {
   @State private var showPermissionDeniedAlert = false
   @State private var selectedPane: CaptureSettingsPane = .general
   @State private var microphoneDevices: [RecordingMicrophoneDevice] = []
+  @State private var videoModuleEnabled = VideoModuleAvailability.isEnabled
 
   /// SwiftUI Color binding backed by archived NSColor in UserDefaults
   private var mouseHighlightSwiftColor: Binding<Color> {
@@ -104,7 +109,7 @@ struct CaptureSettingsView: View {
         Spacer()
 
         Picker("", selection: $selectedPane) {
-          ForEach(CaptureSettingsPane.allCases) { pane in
+          ForEach(CaptureSettingsPane.availablePanes(videoModuleEnabled: videoModuleEnabled)) { pane in
             Text(pane.title).tag(pane)
           }
         }
@@ -130,13 +135,15 @@ struct CaptureSettingsView: View {
                 .labelsHidden()
             }
 
-            SettingRow(
-              icon: "video",
-              title: L10n.PreferencesCapture.includeInRecordingsTitle,
-              description: L10n.PreferencesCapture.includeInRecordingsDescription
-            ) {
-              Toggle("", isOn: $includeOwnAppInRecordings)
-                .labelsHidden()
+            if videoModuleEnabled {
+              SettingRow(
+                icon: "video",
+                title: L10n.PreferencesCapture.includeInRecordingsTitle,
+                description: L10n.PreferencesCapture.includeInRecordingsDescription
+              ) {
+                Toggle("", isOn: $includeOwnAppInRecordings)
+                  .labelsHidden()
+              }
             }
           }
         }
@@ -320,14 +327,16 @@ struct CaptureSettingsView: View {
                 .frame(width: 260)
             }
 
-            SettingRow(
-              icon: "textformat.abc",
-              title: L10n.PreferencesCapture.recordingTemplateTitle,
-              description: L10n.PreferencesCapture.recordingTemplateDescription
-            ) {
-              TextField("", text: $recordingFileNameTemplate)
-                .textFieldStyle(.roundedBorder)
-                .frame(width: 260)
+            if videoModuleEnabled {
+              SettingRow(
+                icon: "textformat.abc",
+                title: L10n.PreferencesCapture.recordingTemplateTitle,
+                description: L10n.PreferencesCapture.recordingTemplateDescription
+              ) {
+                TextField("", text: $recordingFileNameTemplate)
+                  .textFieldStyle(.roundedBorder)
+                  .frame(width: 260)
+              }
             }
 
             HStack(alignment: .top, spacing: 6) {
@@ -344,7 +353,9 @@ struct CaptureSettingsView: View {
 
             VStack(alignment: .leading, spacing: 2) {
               Text(L10n.PreferencesCapture.screenshotPreview(screenshotFilenamePreview))
-              Text(L10n.PreferencesCapture.recordingPreview(recordingFilenamePreview))
+              if videoModuleEnabled {
+                Text(L10n.PreferencesCapture.recordingPreview(recordingFilenamePreview))
+              }
             }
             .font(.system(size: 11))
             .foregroundColor(.secondary)
@@ -652,7 +663,21 @@ struct CaptureSettingsView: View {
       }
       .formStyle(.grouped)
     }
-    .onAppear(perform: refreshMicrophoneDevices)
+    .onAppear {
+      refreshMicrophoneDevices()
+      reconcileSelectedPane()
+    }
+    .onReceive(NotificationCenter.default.publisher(for: .videoModuleAvailabilityDidChange)) { _ in
+      videoModuleEnabled = VideoModuleAvailability.isEnabled
+      reconcileSelectedPane()
+    }
+  }
+
+  private func reconcileSelectedPane() {
+    let available = CaptureSettingsPane.availablePanes(videoModuleEnabled: videoModuleEnabled)
+    if !available.contains(selectedPane) {
+      selectedPane = available.first ?? .general
+    }
   }
 
   // MARK: - Helpers

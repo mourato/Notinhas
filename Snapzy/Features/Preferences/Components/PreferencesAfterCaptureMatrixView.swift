@@ -1,5 +1,5 @@
 //
-//  AfterCaptureMatrixView.swift
+//  PreferencesAfterCaptureMatrixView.swift
 //  Snapzy
 //
 //  Grid component for configuring post-capture actions
@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AfterCaptureMatrixView: View {
   @ObservedObject private var manager = PreferencesManager.shared
+  @State private var videoModuleEnabled = VideoModuleAvailability.isEnabled
 
   var body: some View {
     VStack(spacing: 0) {
@@ -22,10 +23,12 @@ struct AfterCaptureMatrixView: View {
             .font(.caption2)
             .foregroundColor(.secondary)
             .frame(width: 70)
-          Text(CaptureType.recording.displayName)
-            .font(.caption2)
-            .foregroundColor(.secondary)
-            .frame(width: 70)
+          if videoModuleEnabled {
+            Text(CaptureType.recording.displayName)
+              .font(.caption2)
+              .foregroundColor(.secondary)
+              .frame(width: 70)
+          }
         }
       }
       .padding(.bottom, 4)
@@ -34,9 +37,11 @@ struct AfterCaptureMatrixView: View {
         actionRow(for: action)
       }
     }
+    .onReceive(NotificationCenter.default.publisher(for: .videoModuleAvailabilityDidChange)) { _ in
+      videoModuleEnabled = VideoModuleAvailability.isEnabled
+    }
   }
 
-  @ViewBuilder
   private func actionRow(for action: AfterCaptureAction) -> some View {
     HStack(spacing: 12) {
       Image(systemName: iconName(for: action))
@@ -56,7 +61,9 @@ struct AfterCaptureMatrixView: View {
 
       HStack(spacing: 16) {
         toggleColumn(captureType: .screenshot, action: action, type: .screenshot)
-        toggleColumn(captureType: .recording, action: action, type: .recording)
+        if videoModuleEnabled {
+          toggleColumn(captureType: .recording, action: action, type: .recording)
+        }
       }
     }
     .padding(.vertical, 4)
@@ -67,7 +74,10 @@ struct AfterCaptureMatrixView: View {
     let isDisabled = action == .openAnnotate && type == .recording
     Toggle("", isOn: binding(for: action, type: type))
       .labelsHidden()
-      .accessibilityLabel(L10n.AfterCapture.accessibilityLabel(action.displayName, captureKind: captureType.displayName))
+      .accessibilityLabel(L10n.AfterCapture.accessibilityLabel(
+        action.displayName,
+        captureKind: captureType.displayName
+      ))
       .frame(width: 70)
       .disabled(isDisabled)
       .opacity(isDisabled ? 0.3 : 1)
@@ -76,26 +86,26 @@ struct AfterCaptureMatrixView: View {
   private func iconName(for action: AfterCaptureAction) -> String {
     switch action {
     case .showQuickAccess:
-      return "rectangle.on.rectangle.angled"
+      "rectangle.on.rectangle.angled"
     case .copyFile:
-      return "doc.on.clipboard"
+      "doc.on.clipboard"
     case .save:
-      return "square.and.arrow.down"
+      "square.and.arrow.down"
     case .openAnnotate:
-      return "pencil.and.outline"
+      "pencil.and.outline"
     }
   }
 
   private func description(for action: AfterCaptureAction) -> String {
     switch action {
     case .showQuickAccess:
-      return L10n.AfterCapture.showQuickAccessDescription
+      L10n.AfterCapture.showQuickAccessDescription
     case .copyFile:
-      return L10n.AfterCapture.copyFileDescription
+      L10n.AfterCapture.copyFileDescription
     case .save:
-      return L10n.AfterCapture.saveDescription
+      L10n.AfterCapture.saveDescription
     case .openAnnotate:
-      return L10n.AfterCapture.openAnnotateDescription
+      L10n.AfterCapture.openAnnotateDescription
     }
   }
 
@@ -111,4 +121,3 @@ struct AfterCaptureMatrixView: View {
   AfterCaptureMatrixView()
     .padding()
 }
-
