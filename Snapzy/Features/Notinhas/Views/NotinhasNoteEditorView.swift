@@ -2,6 +2,7 @@ import SwiftUI
 
 struct NotinhasNoteEditorView: View {
   let displayNumber: Int
+  let panelWidth: CGFloat
   @Binding var text: String
   @Binding var color: RGBAColor
   @Binding var areaStyle: NotinhasAreaStyle
@@ -58,7 +59,7 @@ struct NotinhasNoteEditorView: View {
       }
     }
     .padding(12)
-    .frame(width: 300)
+    .frame(width: panelWidth)
     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     .onAppear { isFocused = true }
   }

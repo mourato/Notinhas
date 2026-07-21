@@ -329,6 +329,17 @@ struct AnnotateCanvasView: View {
         .offset(x: offset.x, y: offset.y)
         .modifier(MockupTransformModifier(state: state, isEnabled: shouldShowMockupTransforms))
 
+        if state.notinhasEditingNoteID != nil {
+          NotinhasNoteEditorCanvasOverlay(
+            state: state,
+            scale: scale,
+            canvasBounds: foregroundBounds,
+            imageOffset: offset,
+            hostSize: CGSize(width: bgWidth, height: bgHeight)
+          )
+          .frame(width: bgWidth, height: bgHeight)
+        }
+
         // Crop overlay - ONLY shown during active crop editing (NOT when crop is just applied)
         // This prevents CropSolidMask from covering the gradient/wallpaper background
         if state.selectedTool == .crop && state.isCropActive {

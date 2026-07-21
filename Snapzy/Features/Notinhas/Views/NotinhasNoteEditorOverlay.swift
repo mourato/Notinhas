@@ -1,132 +1,130 @@
-import AppKit
 import SwiftUI
 
-@MainActor
-final class NotinhasNoteEditorOverlay: NSView {
-  private let state: AnnotateState
-  private let onCommit: () -> Void
-  private let onCancel: () -> Void
-  private let onDelete: () -> Void
-  private let onLiveAppearanceChanged: () -> Void
+/// SwiftUI overlay for editing Notinhas notes on the annotate canvas viewport.
+struct NotinhasNoteEditorCanvasOverlay: View {
+  @ObservedObject var state: AnnotateState
+  let scale: CGFloat
+  let canvasBounds: CGRect
+  let imageOffset: CGPoint
+  let hostSize: CGSize
 
-  private var hostingView: NSHostingView<NotinhasNoteEditorView>?
-  private var draftNote: NotinhasVisualNote?
-  private var openingSnapshot: NotinhasVisualNote?
+  @State private var draftNote: NotinhasVisualNote?
+  @State private var openingSnapshot: NotinhasVisualNote?
 
-  init(
-    state: AnnotateState,
-    onCommit: @escaping () -> Void,
-    onCancel: @escaping () -> Void,
-    onDelete: @escaping () -> Void,
-    onLiveAppearanceChanged: @escaping () -> Void
-  ) {
-    self.state = state
-    self.onCommit = onCommit
-    self.onCancel = onCancel
-    self.onDelete = onDelete
-    self.onLiveAppearanceChanged = onLiveAppearanceChanged
-    super.init(frame: .zero)
-    wantsLayer = true
-    layer?.backgroundColor = NSColor.clear.cgColor
+  var body: some View {
+    if let editingID = state.notinhasEditingNoteID,
+       let note = state.notinhasNotes.first(where: { $0.id == editingID }) {
+      let hostBounds = CGRect(origin: .zero, size: hostSize)
+      let selectionDisplay = NotinhasNoteGeometry.selectionDisplayBounds(
+        for: note.target,
+        canvasBounds: canvasBounds,
+        displayScale: scale,
+        pinDiameter: note.pinDiameter
+      )
+      .offsetBy(dx: imageOffset.x, dy: imageOffset.y)
+      let panelSize = NotinhasNoteGeometry.editorPanelSize(
+        isRectangular: note.target.isRectangular,
+        in: hostBounds
+      )
+      let origin = NotinhasNoteGeometry.editorOrigin(
+        forSelectionBounds: selectionDisplay,
+        panelSize: panelSize,
+        in: hostBounds
+      )
+      let displayNumber = state.notinhasDisplayNumber(for: editingID) ?? 1
+
+      ZStack(alignment: .topLeading) {
+        Color.clear
+
+        NotinhasNoteEditorView(
+          displayNumber: displayNumber,
+          panelWidth: panelSize.width,
+          text: draftTextBinding,
+          color: draftColorBinding,
+          areaStyle: draftAreaStyleBinding,
+          areaStrokeWidth: draftAreaStrokeWidthBinding,
+          showsAreaStyle: note.target.isRectangular,
+          onCommit: commitEditing,
+          onCancel: cancelEditing,
+          onDelete: deleteEditing
+        )
+        .offset(x: origin.x, y: origin.y)
+      }
+      .frame(width: hostSize.width, height: hostSize.height)
+      .onAppear {
+        syncDraft(for: note)
+      }
+      .onChange(of: editingID) { _ in
+        if let current = state.notinhasNotes.first(where: { $0.id == editingID }) {
+          syncDraft(for: current)
+        }
+      }
+    }
   }
 
-  @available(*, unavailable)
-  required init?(coder _: NSCoder) {
-    fatalError("init(coder:) has not been implemented")
+  private var draftTextBinding: Binding<String> {
+    Binding(
+      get: { draftNote?.text ?? "" },
+      set: { newValue in
+        guard var updated = draftNote else { return }
+        updated.text = newValue
+        draftNote = updated
+      }
+    )
   }
 
-  func show(for noteID: UUID, in containerBounds: CGRect) {
-    guard let note = state.notinhasNotes.first(where: { $0.id == noteID }) else { return }
+  private var draftColorBinding: Binding<RGBAColor> {
+    Binding(
+      get: {
+        draftNote?.color ?? RGBAColor(red: 1, green: 0, blue: 0, alpha: 1)
+      },
+      set: { newValue in
+        applyLiveAppearance(color: newValue, areaStyle: nil, areaStrokeWidth: nil)
+      }
+    )
+  }
 
-    hostingView?.removeFromSuperview()
+  private var draftAreaStyleBinding: Binding<NotinhasAreaStyle> {
+    Binding(
+      get: { draftNote?.areaStyle ?? .outline },
+      set: { newValue in
+        applyLiveAppearance(color: nil, areaStyle: newValue, areaStrokeWidth: nil)
+      }
+    )
+  }
 
-    openingSnapshot = note
+  private var draftAreaStrokeWidthBinding: Binding<CGFloat> {
+    Binding(
+      get: {
+        draftNote?.areaStrokeWidth ?? NotinhasVisualNote.defaultAreaStrokeWidth
+      },
+      set: { newValue in
+        applyLiveAppearance(color: nil, areaStyle: nil, areaStrokeWidth: newValue)
+      }
+    )
+  }
+
+  private func syncDraft(for note: NotinhasVisualNote) {
     draftNote = note
+    openingSnapshot = note
     state.notinhasEditorOpeningSnapshot = note
-    let displayNumber = state.notinhasDisplayNumber(for: noteID) ?? 1
-    let editor = NotinhasNoteEditorView(
-      displayNumber: displayNumber,
-      text: Binding(
-        get: { [self] in
-          draftNote?.text ?? ""
-        },
-        set: { [self] newValue in
-          guard var updated = draftNote else { return }
-          updated.text = newValue
-          draftNote = updated
-        }
-      ),
-      color: Binding(
-        get: { [self] in
-          draftNote?.color
-            ?? RGBAColor(red: 1, green: 0, blue: 0, alpha: 1)
-        },
-        set: { [self] newValue in
-          applyLiveAppearance(color: newValue, areaStyle: nil, areaStrokeWidth: nil)
-        }
-      ),
-      areaStyle: Binding(
-        get: { [self] in
-          draftNote?.areaStyle ?? .outline
-        },
-        set: { [self] newValue in
-          applyLiveAppearance(color: nil, areaStyle: newValue, areaStrokeWidth: nil)
-        }
-      ),
-      areaStrokeWidth: Binding(
-        get: { [self] in
-          draftNote?.areaStrokeWidth ?? NotinhasVisualNote.defaultAreaStrokeWidth
-        },
-        set: { [self] newValue in
-          applyLiveAppearance(color: nil, areaStyle: nil, areaStrokeWidth: newValue)
-        }
-      ),
-      showsAreaStyle: note.target.isRectangular,
-      onCommit: { [weak self] in
-        if let draftNote = self?.draftNote, let openingSnapshot = self?.openingSnapshot {
-          self?.state.notinhasCommitNoteEdit(draft: draftNote, openingSnapshot: openingSnapshot)
-        }
-        self?.onCommit()
-      },
-      onCancel: { [weak self] in
-        self?.cancelEditing()
-      },
-      onDelete: onDelete
-    )
-
-    let hosting = NSHostingView(rootView: editor)
-    hosting.translatesAutoresizingMaskIntoConstraints = false
-    addSubview(hosting)
-    hostingView = hosting
-    hosting.layoutSubtreeIfNeeded()
-
-    let fitting = hosting.fittingSize
-    let width = max(300, ceil(fitting.width))
-    let preferredHeight = max(note.target.isRectangular ? 280 : 200, ceil(fitting.height))
-    let maxHeight = max(200, containerBounds.height - 24)
-    let panelSize = CGSize(width: width, height: min(preferredHeight, maxHeight))
-    let origin = NotinhasNoteGeometry.editorOrigin(
-      for: note.target,
-      panelSize: panelSize,
-      in: containerBounds,
-      pinDiameter: note.pinDiameter
-    )
-
-    frame = CGRect(origin: origin, size: panelSize)
-    hosting.frame = bounds
   }
 
-  func cancelEditing() {
-    // Canvas onCancel closes with revertLiveAppearance so Cancel and click-away share one path.
-    onCancel()
+  private func commitEditing() {
+    if let draftNote, let openingSnapshot {
+      state.notinhasCommitNoteEdit(draft: draftNote, openingSnapshot: openingSnapshot)
+    }
+    state.notinhasCloseEditor(discardIfEmpty: true)
   }
 
-  func dismiss() {
-    hostingView?.removeFromSuperview()
-    hostingView = nil
-    draftNote = nil
-    openingSnapshot = nil
-    removeFromSuperview()
+  private func cancelEditing() {
+    state.notinhasCloseEditor(discardIfEmpty: true, revertLiveAppearance: true)
+  }
+
+  private func deleteEditing() {
+    if let editingID = state.notinhasEditingNoteID {
+      state.notinhasDeleteNote(id: editingID)
+    }
   }
 
   private func applyLiveAppearance(
@@ -151,6 +149,5 @@ final class NotinhasNoteEditorOverlay: NSView {
       liveNote.text = stateNote.text
     }
     state.notinhasApplyLiveAppearance(liveNote)
-    onLiveAppearanceChanged()
   }
 }

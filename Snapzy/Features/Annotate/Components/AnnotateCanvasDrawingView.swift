@@ -154,7 +154,6 @@ final class DrawingCanvasNSView: NSView {
   }
 
   private var stateObservers = Set<AnyCancellable>()
-  private var notinhasEditorOverlay: NotinhasNoteEditorOverlay?
   private var notinhasMoveStartPoint: CGPoint?
   private var notinhasIsMovingNote = false
 
@@ -212,12 +211,6 @@ final class DrawingCanvasNSView: NSView {
       .store(in: &stateObservers)
     state.$notinhasNotes
       .sink { [weak self] _ in self?.invalidateDrawing() }
-      .store(in: &stateObservers)
-    state.$notinhasEditingNoteID
-      .sink { [weak self] editingID in
-        guard let self, editingID == nil, notinhasEditorOverlay != nil else { return }
-        dismissNotinhasEditor()
-      }
       .store(in: &stateObservers)
     state.$selectedAnnotationIds
       .sink { [weak self] _ in self?.invalidateDrawing() }
@@ -311,7 +304,6 @@ final class DrawingCanvasNSView: NSView {
          state.editingTextAnnotationId == nil {
         Task { @MainActor in
           state.notinhasDeleteNote(id: noteID)
-          self.dismissNotinhasEditor()
         }
         invalidateDrawing()
         return
@@ -1244,42 +1236,6 @@ final class DrawingCanvasNSView: NSView {
     state.isCombineMode ? state.effectiveContentBounds.standardized : state.activeAnnotationBounds.standardized
   }
 
-  private func presentNotinhasEditor(for noteID: UUID) {
-    dismissNotinhasEditor()
-    let overlay = NotinhasNoteEditorOverlay(
-      state: state,
-      onCommit: { [weak self] in
-        self?.state.notinhasCloseEditor(discardIfEmpty: true)
-        self?.dismissNotinhasEditor()
-        self?.invalidateDrawing()
-      },
-      onCancel: { [weak self] in
-        self?.state.notinhasCloseEditor(discardIfEmpty: true, revertLiveAppearance: true)
-        self?.dismissNotinhasEditor()
-        self?.invalidateDrawing()
-      },
-      onDelete: { [weak self] in
-        guard let self else { return }
-        if let editingID = state.notinhasEditingNoteID {
-          state.notinhasDeleteNote(id: editingID)
-        }
-        dismissNotinhasEditor()
-        invalidateDrawing()
-      },
-      onLiveAppearanceChanged: { [weak self] in
-        self?.invalidateDrawing()
-      }
-    )
-    overlay.show(for: noteID, in: bounds)
-    addSubview(overlay)
-    notinhasEditorOverlay = overlay
-  }
-
-  private func dismissNotinhasEditor() {
-    notinhasEditorOverlay?.dismiss()
-    notinhasEditorOverlay = nil
-  }
-
   private func clearNotinhasMoveGestureLocals() {
     notinhasMoveStartPoint = nil
     notinhasIsMovingNote = false
@@ -1288,7 +1244,7 @@ final class DrawingCanvasNSView: NSView {
   private func handleNotinhasMouseDown(at imagePoint: CGPoint) -> Bool {
     if state.notinhasEditingNoteID != nil {
       // Click-away matches Cancel: revert live appearance and discard uncommitted text.
-      notinhasEditorOverlay?.cancelEditing()
+      state.notinhasCloseEditor(discardIfEmpty: true, revertLiveAppearance: true)
       clearNotinhasMoveGestureLocals()
       invalidateDrawing()
       return true
@@ -1353,7 +1309,6 @@ final class DrawingCanvasNSView: NSView {
         state.notinhasCancelMovingNote()
         if let selectedID = state.notinhasSelectedNoteID {
           state.notinhasSelectNote(id: selectedID, beginEditing: true)
-          presentNotinhasEditor(for: selectedID)
         }
       }
       clearNotinhasMoveGestureLocals()
@@ -1369,9 +1324,6 @@ final class DrawingCanvasNSView: NSView {
     guard state.notinhasIsDrawingNote else { return false }
     state.notinhasUpdateDrawing(to: imagePoint, imageBounds: notinhasImageBounds())
     state.notinhasCommitDraft(color: defaultNotinhasColor())
-    if let editingID = state.notinhasEditingNoteID {
-      presentNotinhasEditor(for: editingID)
-    }
     invalidateDrawing()
     return true
   }

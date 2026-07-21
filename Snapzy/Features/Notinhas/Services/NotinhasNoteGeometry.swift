@@ -85,16 +85,29 @@ nonisolated enum NotinhasNoteGeometry {
     target.pinCenter
   }
 
+  /// Converts note selection bounds from image space to SwiftUI display space.
+  static func selectionDisplayBounds(
+    for target: NotinhasNoteTarget,
+    canvasBounds: CGRect,
+    displayScale: CGFloat,
+    pinDiameter: CGFloat = pinDiameter
+  ) -> CGRect {
+    let imageBounds = selectionBounds(for: target, pinDiameter: pinDiameter)
+    let scaledX = (imageBounds.origin.x - canvasBounds.minX) * displayScale
+    let scaledWidth = imageBounds.width * displayScale
+    let scaledHeight = imageBounds.height * displayScale
+    let flippedY = (canvasBounds.maxY - imageBounds.origin.y - imageBounds.height) * displayScale
+    return CGRect(x: scaledX, y: flippedY, width: scaledWidth, height: scaledHeight)
+  }
+
   /// Places the note editor beside the selection (prefer right), then clamps to the container.
   static func editorOrigin(
-    for target: NotinhasNoteTarget,
+    forSelectionBounds bounds: CGRect,
     panelSize: CGSize,
     in containerBounds: CGRect,
     gap: CGFloat = 24,
-    margin: CGFloat = 12,
-    pinDiameter: CGFloat = pinDiameter
+    margin: CGFloat = 12
   ) -> CGPoint {
-    let bounds = selectionBounds(for: target, pinDiameter: pinDiameter)
     let rightX = bounds.maxX + gap
     let leftX = bounds.minX - panelSize.width - gap
     let fitsRight = rightX + panelSize.width <= containerBounds.maxX - margin
@@ -120,6 +133,22 @@ nonisolated enum NotinhasNoteGeometry {
       originY = containerBounds.maxY - panelSize.height - margin
     }
     return CGPoint(x: originX, y: originY)
+  }
+
+  static func editorPanelSize(
+    isRectangular: Bool,
+    in containerBounds: CGRect,
+    margin: CGFloat = 12,
+    preferredWidth: CGFloat = 300,
+    minWidth: CGFloat = 220,
+    minHeight: CGFloat = 160
+  ) -> CGSize {
+    let maxWidth = max(minWidth, containerBounds.width - 2 * margin)
+    let maxHeight = max(minHeight, containerBounds.height - 2 * margin)
+    let width = min(preferredWidth, maxWidth)
+    let preferredHeight: CGFloat = isRectangular ? 280 : 200
+    let height = min(preferredHeight, maxHeight)
+    return CGSize(width: width, height: height)
   }
 
   static func displayNumber(for note: NotinhasVisualNote, in notes: [NotinhasVisualNote]) -> Int {
