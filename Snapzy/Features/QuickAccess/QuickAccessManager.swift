@@ -1279,6 +1279,16 @@ final class QuickAccessManager: ObservableObject {
   func openEditorForNewestItem() -> Bool {
     guard isEnabled, panelController.isVisible, let item = items.first else { return false }
     if item.isVideo {
+      guard VideoModuleAvailability.isEnabled else {
+        openInFinder(id: item.id)
+        DiagnosticLogger.shared.log(
+          .info,
+          .action,
+          "Quick access revealed video in Finder; video module disabled",
+          context: ["itemId": item.id.uuidString]
+        )
+        return true
+      }
       VideoEditorManager.shared.openEditor(for: item)
     } else {
       AnnotateManager.shared.openAnnotation(for: item)
