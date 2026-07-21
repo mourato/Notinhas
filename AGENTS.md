@@ -24,6 +24,13 @@ models and views colocated there. Introduce small protocols or adapters in
 integration points into the existing capture and annotation flows thin; avoid
 renaming, moving, or rewriting upstream code merely to match a new design.
 
+## Skills
+
+Agent skills live under `.agents/skills/`. Start at `.agents/SKILLS_INDEX.md` for routing.
+`project-standards` owns guidance governance (where docs live, skill template, anti-drift).
+Keep Notinhas behavior guidance aligned with Product Intent above; do not reintroduce
+unrelated product skills from other apps.
+
 ## Build, Test, and Run
 
 - `open Snapzy.xcodeproj` — develop and run in Xcode (`⌘R`).
