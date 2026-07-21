@@ -15,6 +15,7 @@ final class VideoModuleAvailabilityTests: XCTestCase {
   }
 
   func testRuntimeDefaultIsOffWhenKeyUnset() {
+    UserDefaults.standard.removeObject(forKey: PreferencesKeys.videoModuleEnabled)
     XCTAssertFalse(VideoModuleAvailability.isEnabled)
   }
 
