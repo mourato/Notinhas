@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingAnnotationShortcutConfig.swift
 //  Snapzy
@@ -80,3 +81,4 @@ final class RecordingAnnotationShortcutConfig: ObservableObject {
     holdDuration = Self.defaultHoldDuration
   }
 }
+#endif

@@ -17,7 +17,9 @@ enum SnapzyConfigurationDefaultDocument {
 
     writeGeneral(&writer)
     writeCapture(&writer)
-    writeRecording(&writer)
+    #if NOTINHAS_VIDEO_MODULE
+      writeRecording(&writer)
+    #endif
     writeQuickAccess(&writer)
     writeHistory(&writer)
     writeCloud(&writer)
@@ -76,6 +78,7 @@ enum SnapzyConfigurationDefaultDocument {
     writeAfterCapture(&writer, type: .recording)
   }
 
+  #if NOTINHAS_VIDEO_MODULE
   private static func writeRecording(_ writer: inout SimpleTOMLWriter) {
     writer.section("recording")
     writer.value("format", VideoFormat.mov.rawValue)
@@ -108,6 +111,7 @@ enum SnapzyConfigurationDefaultDocument {
     writer.value("modifier", RecordingAnnotationShortcutConfig.defaultModifier.rawValue)
     writer.value("hold_duration", RecordingAnnotationShortcutConfig.defaultHoldDuration)
   }
+  #endif
 
   private static func writeQuickAccess(_ writer: inout SimpleTOMLWriter) {
     writer.section("quick_access")

@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorZoomPreviewOverlay.swift
 //  Snapzy
@@ -312,3 +313,4 @@ struct ZoomableVideoPlayerSection: View {
   .frame(width: 640, height: 360)
   .background(Color.black)
 }
+#endif

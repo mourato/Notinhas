@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorBottomBar.swift
 //  Snapzy
@@ -231,3 +232,4 @@ struct VideoEditorBottomBarButton: View {
   .frame(width: 600)
   .background(Color(NSColor.windowBackgroundColor))
 }
+#endif

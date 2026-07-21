@@ -123,8 +123,12 @@ final class CaptureStorageManager {
   /// Whether it is safe to perform cache cleanup right now.
   /// Returns `false` if a capture or recording is in progress.
   var isSafeToCleanup: Bool {
-    !ScreenCaptureManager.shared.isCapturing
-      && !ScreenRecordingManager.shared.isRecording
+    guard !ScreenCaptureManager.shared.isCapturing else { return false }
+    #if NOTINHAS_VIDEO_MODULE
+      return !ScreenRecordingManager.shared.isRecording
+    #else
+      return true
+    #endif
   }
 
   // MARK: - Clear Cache
@@ -185,7 +189,9 @@ final class CaptureStorageManager {
 
     for path in deletedPaths {
       CaptureHistoryStore.shared.removeByFilePath(path)
-      try? RecordingMetadataStore.delete(for: URL(fileURLWithPath: path))
+      #if NOTINHAS_VIDEO_MODULE
+        try? RecordingMetadataStore.delete(for: URL(fileURLWithPath: path))
+      #endif
     }
 
     logger.info("Cache cleared: \(deletedPaths.count) item(s) removed")

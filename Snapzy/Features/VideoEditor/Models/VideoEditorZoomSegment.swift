@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  ZoomSegment.swift
 //  Snapzy
@@ -156,3 +157,4 @@ extension ZoomSegment {
     }
   }
 }
+#endif

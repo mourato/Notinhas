@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  MicrophoneAudioCapturer.swift
 //  Snapzy
@@ -268,3 +269,4 @@ nonisolated extension MicrophoneAudioCapturer: AVCaptureAudioDataOutputSampleBuf
     delegate?.microphoneCapturer(self, didOutput: sampleBuffer)
   }
 }
+#endif

@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingToolbarWindow.swift
 //  Snapzy
@@ -476,3 +477,4 @@ final class RecordingToolbarWindow: NSWindow {
     positionBelowRect(rect)
   }
 }
+#endif

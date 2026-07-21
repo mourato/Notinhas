@@ -240,7 +240,9 @@ final class TempCaptureManager {
     do {
       try FileManager.default.removeItem(at: url)
       // Also clean up recording metadata if exists
-      try? RecordingMetadataStore.delete(for: url)
+      #if NOTINHAS_VIDEO_MODULE
+        try? RecordingMetadataStore.delete(for: url)
+      #endif
       pruneEmptyTempDirectories(startingAt: url.deletingLastPathComponent())
       logger.debug("Deleted temp file: \(url.lastPathComponent)")
       DiagnosticLogger.shared.log(
@@ -319,7 +321,9 @@ final class TempCaptureManager {
 
       do {
         try fm.removeItem(at: fileURL)
-        try? RecordingMetadataStore.delete(for: fileURL)
+        #if NOTINHAS_VIDEO_MODULE
+          try? RecordingMetadataStore.delete(for: fileURL)
+        #endif
         directoriesToPrune.append(fileURL.deletingLastPathComponent())
         count += 1
       } catch {
@@ -427,27 +431,29 @@ final class TempCaptureManager {
 
   /// Move associated recording metadata sidecar when saving a video
   private func moveRecordingMetadataIfNeeded(from sourceURL: URL, to destinationURL: URL) {
-    // RecordingMetadataStore keeps metadata in App Support and maps it by file bookmark/path.
-    // Re-save using destination URL so association follows the moved video.
-    if let metadata = RecordingMetadataStore.load(for: sourceURL) {
-      do {
-        try RecordingMetadataStore.save(metadata, for: destinationURL)
-        try RecordingMetadataStore.delete(for: sourceURL)
-        DiagnosticLogger.shared.log(
-          .debug,
-          .recording,
-          "Recording metadata moved with temp capture",
-          context: ["fileName": destinationURL.lastPathComponent]
-        )
-      } catch {
-        DiagnosticLogger.shared.logError(
-          .recording,
+    #if NOTINHAS_VIDEO_MODULE
+      // RecordingMetadataStore keeps metadata in App Support and maps it by file bookmark/path.
+      // Re-save using destination URL so association follows the moved video.
+      if let metadata = RecordingMetadataStore.load(for: sourceURL) {
+        do {
+          try RecordingMetadataStore.save(metadata, for: destinationURL)
+          try RecordingMetadataStore.delete(for: sourceURL)
+          DiagnosticLogger.shared.log(
+            .debug,
+            .recording,
+            "Recording metadata moved with temp capture",
+            context: ["fileName": destinationURL.lastPathComponent]
+          )
+        } catch {
+          DiagnosticLogger.shared.logError(
+            .recording,
           error,
           "Recording metadata move failed for temp capture",
           context: ["fileName": destinationURL.lastPathComponent]
         )
       }
     }
+    #endif
   }
 
   private func shouldPreserveForHistoryRetention(_ fileURL: URL, historyEnabled: Bool) -> Bool {

@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingAudioLevelMeterTests.swift
 //  SnapzyTests
@@ -181,3 +182,4 @@ final class RecordingAudioLevelMeterTests: XCTestCase {
     return sampleBuffer
   }
 }
+#endif

@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  AnnotationToolbarContentBuilder.swift
 //  Snapzy
@@ -72,3 +73,4 @@ enum AnnotationToolbarContentBuilder {
     return hosting.fittingSize
   }
 }
+#endif

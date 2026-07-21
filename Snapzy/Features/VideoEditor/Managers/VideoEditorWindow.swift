@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorWindow.swift
 //  Snapzy
@@ -77,3 +78,4 @@ class VideoEditorWindow: NSWindow {
   override var canBecomeKey: Bool { true }
   override var canBecomeMain: Bool { true }
 }
+#endif

@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorExporter.swift
 //  Snapzy
@@ -880,3 +881,4 @@ enum VideoEditorExporter {
     }
   }
 }
+#endif

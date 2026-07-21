@@ -11,7 +11,9 @@ import SwiftUI
 private enum CaptureSettingsPane: CaseIterable, Hashable, Identifiable {
   case general
   case screenshot
-  case recording
+  #if NOTINHAS_VIDEO_MODULE
+    case recording
+  #endif
 
   var id: Self {
     self
@@ -23,13 +25,19 @@ private enum CaptureSettingsPane: CaseIterable, Hashable, Identifiable {
       L10n.Preferences.generalTab
     case .screenshot:
       CaptureType.screenshot.displayName
-    case .recording:
-      CaptureType.recording.displayName
+    #if NOTINHAS_VIDEO_MODULE
+      case .recording:
+        CaptureType.recording.displayName
+    #endif
     }
   }
 
   static func availablePanes(videoModuleEnabled: Bool) -> [CaptureSettingsPane] {
-    videoModuleEnabled ? allCases : [.general, .screenshot]
+    #if NOTINHAS_VIDEO_MODULE
+      videoModuleEnabled ? allCases : [.general, .screenshot]
+    #else
+      [.general, .screenshot]
+    #endif
   }
 }
 
@@ -51,57 +59,60 @@ struct CaptureSettingsView: View {
   @AppStorage(PreferencesKeys.screenshotFileNameTemplate)
   private var screenshotFileNameTemplate = CaptureOutputKind.screenshot.defaultTemplate
 
-  /// Recording settings
-  @AppStorage(PreferencesKeys.recordingFormat) private var format = "mov"
-  @AppStorage(PreferencesKeys.recordingFileNameTemplate)
-  private var recordingFileNameTemplate = CaptureOutputKind.recording.defaultTemplate
-  @AppStorage(PreferencesKeys.recordingFPS) private var fps = 30
-  @AppStorage(PreferencesKeys.recordingQuality) private var quality = "high"
-  @AppStorage(PreferencesKeys.recordingCaptureAudio) private var captureAudio = true
-  @AppStorage(PreferencesKeys.recordingCaptureMicrophone) private var captureMicrophone = false
-  @AppStorage(PreferencesKeys.recordingMicrophoneDeviceID)
-  private var microphoneDeviceID = RecordingMicrophoneDevice.systemDefaultID
-  @AppStorage(PreferencesKeys.recordingRememberLastArea) private var rememberLastArea = true
-  @AppStorage(PreferencesKeys.recordingIncludeOwnApp) private var includeOwnAppInRecordings = false
-  @AppStorage(PreferencesKeys.recordingShowCursor) private var recordingShowCursor = true
-  @AppStorage(PreferencesKeys.recordingHoverBarVisible) private var recordingHoverBarVisible = true
-  @AppStorage(PreferencesKeys.recordingShowTimeOnMenuBar) private var recordingShowTimeOnMenuBar = true
+  #if NOTINHAS_VIDEO_MODULE
+    /// Recording settings
+    @AppStorage(PreferencesKeys.recordingFormat) private var format = "mov"
+    @AppStorage(PreferencesKeys.recordingFileNameTemplate)
+    private var recordingFileNameTemplate = CaptureOutputKind.recording.defaultTemplate
+    @AppStorage(PreferencesKeys.recordingFPS) private var fps = 30
+    @AppStorage(PreferencesKeys.recordingQuality) private var quality = "high"
+    @AppStorage(PreferencesKeys.recordingCaptureAudio) private var captureAudio = true
+    @AppStorage(PreferencesKeys.recordingCaptureMicrophone) private var captureMicrophone = false
+    @AppStorage(PreferencesKeys.recordingMicrophoneDeviceID)
+    private var microphoneDeviceID = RecordingMicrophoneDevice.systemDefaultID
+    @AppStorage(PreferencesKeys.recordingRememberLastArea) private var rememberLastArea = true
+    @AppStorage(PreferencesKeys.recordingIncludeOwnApp) private var includeOwnAppInRecordings = false
+    @AppStorage(PreferencesKeys.recordingShowCursor) private var recordingShowCursor = true
+    @AppStorage(PreferencesKeys.recordingHoverBarVisible) private var recordingHoverBarVisible = true
+    @AppStorage(PreferencesKeys.recordingShowTimeOnMenuBar) private var recordingShowTimeOnMenuBar = true
 
-  // Mouse Highlight settings
-  @AppStorage(PreferencesKeys.mouseHighlightSize) private var mouseHighlightSize: Double = 50
-  @AppStorage(PreferencesKeys.mouseHighlightAnimationDuration) private var mouseHighlightAnimDuration: Double = 0.7
-  @AppStorage(PreferencesKeys.mouseHighlightRippleCount) private var mouseHighlightRippleCount: Int = 3
-  @AppStorage(PreferencesKeys.mouseHighlightOpacity) private var mouseHighlightOpacity: Double = 0.5
+    // Mouse Highlight settings
+    @AppStorage(PreferencesKeys.mouseHighlightSize) private var mouseHighlightSize: Double = 50
+    @AppStorage(PreferencesKeys.mouseHighlightAnimationDuration) private var mouseHighlightAnimDuration: Double = 0.7
+    @AppStorage(PreferencesKeys.mouseHighlightRippleCount) private var mouseHighlightRippleCount: Int = 3
+    @AppStorage(PreferencesKeys.mouseHighlightOpacity) private var mouseHighlightOpacity: Double = 0.5
 
-  // Keystroke Overlay settings
-  @AppStorage(PreferencesKeys.keystrokeFontSize) private var keystrokeFontSize: Double = 16
-  @AppStorage(PreferencesKeys.keystrokePosition) private var keystrokePosition: String = KeystrokeOverlayPosition
-    .bottomCenter.rawValue
-  @AppStorage(PreferencesKeys.keystrokeDisplayDuration) private var keystrokeDisplayDuration: Double = 1.5
+    // Keystroke Overlay settings
+    @AppStorage(PreferencesKeys.keystrokeFontSize) private var keystrokeFontSize: Double = 16
+    @AppStorage(PreferencesKeys.keystrokePosition) private var keystrokePosition: String = KeystrokeOverlayPosition
+      .bottomCenter.rawValue
+    @AppStorage(PreferencesKeys.keystrokeDisplayDuration) private var keystrokeDisplayDuration: Double = 1.5
+
+    @State private var microphoneDevices: [RecordingMicrophoneDevice] = []
+
+    /// SwiftUI Color binding backed by archived NSColor in UserDefaults
+    private var mouseHighlightSwiftColor: Binding<Color> {
+      Binding<Color>(
+        get: {
+          if let data = UserDefaults.standard.data(forKey: PreferencesKeys.mouseHighlightColor),
+             let nsColor = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) {
+            return Color(nsColor: nsColor)
+          }
+          return Color(nsColor: MouseHighlightConfiguration.defaultHighlightColor)
+        },
+        set: { newColor in
+          let nsColor = NSColor(newColor)
+          if let data = try? NSKeyedArchiver.archivedData(withRootObject: nsColor, requiringSecureCoding: true) {
+            UserDefaults.standard.set(data, forKey: PreferencesKeys.mouseHighlightColor)
+          }
+        }
+      )
+    }
+  #endif
 
   @State private var showPermissionDeniedAlert = false
   @State private var selectedPane: CaptureSettingsPane = .general
-  @State private var microphoneDevices: [RecordingMicrophoneDevice] = []
   @State private var videoModuleEnabled = VideoModuleAvailability.isEnabled
-
-  /// SwiftUI Color binding backed by archived NSColor in UserDefaults
-  private var mouseHighlightSwiftColor: Binding<Color> {
-    Binding<Color>(
-      get: {
-        if let data = UserDefaults.standard.data(forKey: PreferencesKeys.mouseHighlightColor),
-           let nsColor = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) {
-          return Color(nsColor: nsColor)
-        }
-        return Color(nsColor: MouseHighlightConfiguration.defaultHighlightColor)
-      },
-      set: { newColor in
-        let nsColor = NSColor(newColor)
-        if let data = try? NSKeyedArchiver.archivedData(withRootObject: nsColor, requiringSecureCoding: true) {
-          UserDefaults.standard.set(data, forKey: PreferencesKeys.mouseHighlightColor)
-        }
-      }
-    )
-  }
 
   var body: some View {
     VStack(spacing: 0) {
@@ -136,14 +147,16 @@ struct CaptureSettingsView: View {
             }
 
             if videoModuleEnabled {
-              SettingRow(
-                icon: "video",
-                title: L10n.PreferencesCapture.includeInRecordingsTitle,
-                description: L10n.PreferencesCapture.includeInRecordingsDescription
-              ) {
-                Toggle("", isOn: $includeOwnAppInRecordings)
-                  .labelsHidden()
-              }
+              #if NOTINHAS_VIDEO_MODULE
+                SettingRow(
+                  icon: "video",
+                  title: L10n.PreferencesCapture.includeInRecordingsTitle,
+                  description: L10n.PreferencesCapture.includeInRecordingsDescription
+                ) {
+                  Toggle("", isOn: $includeOwnAppInRecordings)
+                    .labelsHidden()
+                }
+              #endif
             }
           }
         }
@@ -328,15 +341,17 @@ struct CaptureSettingsView: View {
             }
 
             if videoModuleEnabled {
-              SettingRow(
-                icon: "textformat.abc",
-                title: L10n.PreferencesCapture.recordingTemplateTitle,
-                description: L10n.PreferencesCapture.recordingTemplateDescription
-              ) {
-                TextField("", text: $recordingFileNameTemplate)
-                  .textFieldStyle(.roundedBorder)
-                  .frame(width: 260)
-              }
+              #if NOTINHAS_VIDEO_MODULE
+                SettingRow(
+                  icon: "textformat.abc",
+                  title: L10n.PreferencesCapture.recordingTemplateTitle,
+                  description: L10n.PreferencesCapture.recordingTemplateDescription
+                ) {
+                  TextField("", text: $recordingFileNameTemplate)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 260)
+                }
+              #endif
             }
 
             HStack(alignment: .top, spacing: 6) {
@@ -354,7 +369,9 @@ struct CaptureSettingsView: View {
             VStack(alignment: .leading, spacing: 2) {
               Text(L10n.PreferencesCapture.screenshotPreview(screenshotFilenamePreview))
               if videoModuleEnabled {
-                Text(L10n.PreferencesCapture.recordingPreview(recordingFilenamePreview))
+                #if NOTINHAS_VIDEO_MODULE
+                  Text(L10n.PreferencesCapture.recordingPreview(recordingFilenamePreview))
+                #endif
               }
             }
             .font(.system(size: 11))
@@ -375,6 +392,7 @@ struct CaptureSettingsView: View {
 
         // MARK: - Recording
 
+        #if NOTINHAS_VIDEO_MODULE
         if selectedPane == .recording {
           Section(L10n.PreferencesCapture.recordingFormatSection) {
             SettingRow(
@@ -639,6 +657,7 @@ struct CaptureSettingsView: View {
             Text(L10n.Microphone.preferencesMessage)
           }
         }
+        #endif
 
         // MARK: - After Capture
 
@@ -664,7 +683,9 @@ struct CaptureSettingsView: View {
       .formStyle(.grouped)
     }
     .onAppear {
-      refreshMicrophoneDevices()
+      #if NOTINHAS_VIDEO_MODULE
+        refreshMicrophoneDevices()
+      #endif
       reconcileSelectedPane()
     }
     .onReceive(NotificationCenter.default.publisher(for: .videoModuleAvailabilityDidChange)) { _ in
@@ -693,13 +714,17 @@ struct CaptureSettingsView: View {
   }
 
   private var recordingFilenamePreview: String {
-    let sampleContext = CaptureContext(appName: "Safari", windowTitle: "GitHub")
-    let baseName = CaptureOutputNaming.resolveTemplateBaseName(
-      previewTemplate(recordingFileNameTemplate, kind: .recording),
-      kind: .recording,
-      context: sampleContext
-    )
-    return "\(baseName).\(recordingFileExtension)"
+    #if NOTINHAS_VIDEO_MODULE
+      let sampleContext = CaptureContext(appName: "Safari", windowTitle: "GitHub")
+      let baseName = CaptureOutputNaming.resolveTemplateBaseName(
+        previewTemplate(recordingFileNameTemplate, kind: .recording),
+        kind: .recording,
+        context: sampleContext
+      )
+      return "\(baseName).\(recordingFileExtension)"
+    #else
+      return ""
+    #endif
   }
 
   private func previewTemplate(_ template: String, kind: CaptureOutputKind) -> String {
@@ -713,9 +738,14 @@ struct CaptureSettingsView: View {
   }
 
   private var recordingFileExtension: String {
-    VideoFormat(rawValue: format)?.fileExtension ?? "mov"
+    #if NOTINHAS_VIDEO_MODULE
+      VideoFormat(rawValue: format)?.fileExtension ?? "mov"
+    #else
+      "mov"
+    #endif
   }
 
+  #if NOTINHAS_VIDEO_MODULE
   private func handleMicrophoneEnable() {
     let status = AVCaptureDevice.authorizationStatus(for: .audio)
 
@@ -751,14 +781,18 @@ struct CaptureSettingsView: View {
       selectedDeviceID: microphoneDeviceID
     )
   }
+  #endif
 
   // MARK: - Reset Defaults
 
   private func resetOutputNamingDefaults() {
     screenshotFileNameTemplate = CaptureOutputKind.screenshot.defaultTemplate
-    recordingFileNameTemplate = CaptureOutputKind.recording.defaultTemplate
+    #if NOTINHAS_VIDEO_MODULE
+      recordingFileNameTemplate = CaptureOutputKind.recording.defaultTemplate
+    #endif
   }
 
+  #if NOTINHAS_VIDEO_MODULE
   private func resetMouseHighlightDefaults() {
     mouseHighlightSize = MouseHighlightConfiguration.defaultHighlightSize
     mouseHighlightAnimDuration = MouseHighlightConfiguration.defaultAnimationDuration
@@ -772,6 +806,7 @@ struct CaptureSettingsView: View {
     keystrokePosition = KeystrokeOverlayConfiguration.defaultPosition.rawValue
     keystrokeDisplayDuration = KeystrokeOverlayConfiguration.defaultDisplayDuration
   }
+  #endif
 }
 
 #Preview {

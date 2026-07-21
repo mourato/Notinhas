@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoPlayerSection.swift
 //  Snapzy
@@ -25,3 +26,4 @@ struct VideoPlayerSection: NSViewRepresentable {
     // Player is managed by state, no updates needed
   }
 }
+#endif

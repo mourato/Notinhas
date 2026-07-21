@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorManager.swift
 //  Snapzy
@@ -236,3 +237,4 @@ final class VideoEditorManager {
     DiagnosticLogger.shared.log(.debug, .editor, "Video editor window closed", context: ["itemId": itemId.uuidString])
   }
 }
+#endif

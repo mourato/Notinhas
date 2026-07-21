@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  MicrophoneAudioCapturerTests.swift
 //  SnapzyTests
@@ -197,3 +198,4 @@ private nonisolated final class MockMicrophoneCaptureSessionFactory: MicrophoneC
     configureOutputCallCount += 1
   }
 }
+#endif

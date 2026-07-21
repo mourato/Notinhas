@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  KeystrokeOverlayConfiguration.swift
 //  Snapzy
@@ -73,3 +74,4 @@ struct KeystrokeOverlayConfiguration {
     self.edgeOffset = Self.defaultEdgeOffset
   }
 }
+#endif

@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingCoordinator.swift
 //  Snapzy
@@ -1302,3 +1303,4 @@ extension RecordingCoordinator: RecordingRegionOverlayDelegate {
     finalizeDragOrResize()
   }
 }
+#endif

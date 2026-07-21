@@ -364,6 +364,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       SmartElementCaptureController.shared.startCapture()
     case .captureObjectCutout:
       captureObjectCutout()
+    #if NOTINHAS_VIDEO_MODULE
     case .recordVideo:
       toggleRecordingFromShortcut(initialInteractionMode: .manualRegion)
     case .recordApplication:
@@ -376,10 +377,15 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       restartRecordingFromShortcut()
     case .deleteRecording:
       deleteRecordingFromShortcut()
-    case .openAnnotate:
-      AnnotateManager.shared.openEmptyAnnotation()
     case .openVideoEditor:
       VideoEditorManager.shared.openEmptyEditor()
+    #else
+    case .recordVideo, .recordApplication, .pauseResumeRecording, .togglePenRecording,
+         .restartRecording, .deleteRecording, .openVideoEditor:
+      break
+    #endif
+    case .openAnnotate:
+      AnnotateManager.shared.openEmptyAnnotation()
     case .openCloudUploads:
       if CloudUploadHistoryWindowController.shared.toggleWindow() {
         NSApp.activate(ignoringOtherApps: true)
@@ -1775,6 +1781,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
 
   // MARK: - Recording
 
+  #if NOTINHAS_VIDEO_MODULE
   func startRecordingFlow() {
     guard VideoModuleAvailability.isEnabled else { return }
     startRecordingFlow(initialInteractionMode: .manualRegion)
@@ -1950,6 +1957,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
         }
       }
   }
+  #endif
 
   // MARK: - Smart Element Capture
 

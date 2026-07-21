@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingAnnotationToolbarView.swift
 //  Snapzy
@@ -212,3 +213,4 @@ struct RecordingAnnotationToolbarView: View {
     }
   }
 }
+#endif

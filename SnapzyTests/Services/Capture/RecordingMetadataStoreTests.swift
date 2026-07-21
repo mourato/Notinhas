@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingMetadataStoreTests.swift
 //  SnapzyTests
@@ -275,3 +276,4 @@ final class RecordingMetadataStoreTests: XCTestCase {
       .appendingPathExtension("snapzy-recording.json")
   }
 }
+#endif

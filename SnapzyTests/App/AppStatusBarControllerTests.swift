@@ -32,6 +32,7 @@ final class AppStatusBarControllerTests: XCTestCase {
 
   // MARK: - Recording UI preference defaults (issue #351)
 
+  #if NOTINHAS_VIDEO_MODULE
   func testRecordingUIPreferences_defaultToTrueWhenUnset() {
     UserDefaults.standard.removeObject(forKey: PreferencesKeys.recordingHoverBarVisible)
     UserDefaults.standard.removeObject(forKey: PreferencesKeys.recordingShowTimeOnMenuBar)
@@ -81,6 +82,7 @@ final class AppStatusBarControllerTests: XCTestCase {
       )
     }
   }
+  #endif
 
   func testWindowDidClose_revertsActivationPolicyWhenNoOtherVisibleWindows() {
     // 1. Setup initial elevated state

@@ -67,7 +67,9 @@ final class AppCoordinator {
     startConfigurationSync(after: configurationAutoImportResult)
 
     LogCleanupScheduler.shared.start()
-    syncRecordingMetadataCleanupScheduler()
+    #if NOTINHAS_VIDEO_MODULE
+      syncRecordingMetadataCleanupScheduler()
+    #endif
     CaptureHistoryRetentionService.shared.start()
     DiagnosticLogger.shared.log(.debug, .lifecycle, "Background schedulers started")
 
@@ -96,7 +98,9 @@ final class AppCoordinator {
     DiagnosticLogger.shared.log(.info, .lifecycle, "App terminated normally")
     CrashSentinel.shared.markTerminated()
     LogCleanupScheduler.shared.stop()
-    RecordingMetadataCleanupScheduler.shared.stop()
+    #if NOTINHAS_VIDEO_MODULE
+      RecordingMetadataCleanupScheduler.shared.stop()
+    #endif
     SnapzyConfigurationSyncCoordinator.shared.stop()
 
     for observer in observers {
@@ -144,11 +148,13 @@ final class AppCoordinator {
   }
 
   private func syncRecordingMetadataCleanupScheduler() {
-    if VideoModuleAvailability.isEnabled {
-      RecordingMetadataCleanupScheduler.shared.start()
-    } else {
-      RecordingMetadataCleanupScheduler.shared.stop()
-    }
+    #if NOTINHAS_VIDEO_MODULE
+      if VideoModuleAvailability.isEnabled {
+        RecordingMetadataCleanupScheduler.shared.start()
+      } else {
+        RecordingMetadataCleanupScheduler.shared.stop()
+      }
+    #endif
   }
 
   private func applyUserConfigurationIfNeeded() -> SnapzyConfigurationAutoImportResult {

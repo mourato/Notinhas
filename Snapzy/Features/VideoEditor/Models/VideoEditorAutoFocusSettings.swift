@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorAutoFocusSettings.swift
 //  Snapzy
@@ -75,3 +76,4 @@ struct VideoEditorCameraState: Equatable {
     center: CGPoint(x: 0.5, y: 0.5)
   )
 }
+#endif

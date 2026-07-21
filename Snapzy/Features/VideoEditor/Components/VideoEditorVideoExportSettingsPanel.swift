@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorVideoExportSettingsPanel.swift
 //  Snapzy
@@ -574,3 +575,4 @@ struct VideoExportSettingsPanel: View {
     )
   }
 }
+#endif

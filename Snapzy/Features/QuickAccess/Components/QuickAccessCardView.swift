@@ -447,9 +447,11 @@ struct QuickAccessCardView: View {
 
   private func openVideoEditor() {
     guard VideoModuleAvailability.isEnabled else { return }
-    Task { @MainActor in
-      VideoEditorManager.shared.openEditor(for: item)
-    }
+    #if NOTINHAS_VIDEO_MODULE
+      Task { @MainActor in
+        VideoEditorManager.shared.openEditor(for: item)
+      }
+    #endif
   }
 
   private func copyItem() {

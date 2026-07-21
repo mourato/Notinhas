@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorEmptyStateView.swift
 //  Snapzy
@@ -285,3 +286,4 @@ struct VideoEditorEmptyStateView: View {
     showError = true
   }
 }
+#endif

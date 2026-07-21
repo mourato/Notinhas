@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorRightSidebar.swift
 //  Snapzy
@@ -568,3 +569,4 @@ struct ZoomSettingsContent: View {
     "\(Int((duration * 1000).rounded())) ms"
   }
 }
+#endif

@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorExportSettings.swift
 //  Snapzy
@@ -495,3 +496,4 @@ struct ExportSettings: Equatable {
     min(max(volume, minimumAudioVolume), maximumAudioVolume)
   }
 }
+#endif

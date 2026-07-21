@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingWaveformView.swift
 //  Snapzy
@@ -146,4 +147,5 @@ struct RecordingWaveformView: View {
   #Preview {
     RecordingWaveformPreview()
   }
+#endif
 #endif

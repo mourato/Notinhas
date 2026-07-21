@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingToolbarShortcutsTests.swift
 //  SnapzyTests
@@ -228,3 +229,4 @@ final class RecordingToolbarShortcutsTests: XCTestCase {
     XCTAssertEqual(document.value(at: "shortcuts", "global", "delete_recording", "enabled")?.boolValue, false)
   }
 }
+#endif

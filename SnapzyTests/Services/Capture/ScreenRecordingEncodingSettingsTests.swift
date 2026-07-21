@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  ScreenRecordingEncodingSettingsTests.swift
 //  SnapzyTests
@@ -209,3 +210,4 @@ final class ScreenRecordingEncodingSettingsTests: XCTestCase {
     return layout.mChannelLayoutTag
   }
 }
+#endif

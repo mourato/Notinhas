@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorZoomTimelineTrack.swift
 //  Snapzy
@@ -523,3 +524,4 @@ private struct ZoomPlaceholderView: View {
   .padding()
   .background(Color(NSColor.windowBackgroundColor))
 }
+#endif

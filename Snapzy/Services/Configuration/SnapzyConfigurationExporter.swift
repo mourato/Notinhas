@@ -18,7 +18,9 @@ enum SnapzyConfigurationExporter {
 
     writeGeneral(&writer, defaults: defaults)
     writeCapture(&writer, defaults: defaults)
-    writeRecording(&writer, defaults: defaults)
+    #if NOTINHAS_VIDEO_MODULE
+      writeRecording(&writer, defaults: defaults)
+    #endif
     writeQuickAccess(&writer)
     writeHistory(&writer, defaults: defaults)
     writeCloud(&writer, defaults: defaults)
@@ -83,6 +85,7 @@ enum SnapzyConfigurationExporter {
     writeAfterCapture(&writer, type: .recording)
   }
 
+  #if NOTINHAS_VIDEO_MODULE
   private static func writeRecording(_ writer: inout SimpleTOMLWriter, defaults: UserDefaults) {
     writer.section("recording")
     writer.value("format", RecordingToolbarPreferences.selectedFormat(defaults: defaults).rawValue)
@@ -120,6 +123,15 @@ enum SnapzyConfigurationExporter {
     )
     writer.value("hold_duration", defaults.doubleValue(PreferencesKeys.annotationShortcutHoldDuration, default: 0.3))
   }
+
+  private static func storedMouseColor(defaults: UserDefaults) -> NSColor {
+    guard let data = defaults.data(forKey: PreferencesKeys.mouseHighlightColor),
+          let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) else {
+      return MouseHighlightConfiguration.defaultHighlightColor
+    }
+    return color
+  }
+  #endif
 
   private static func writeQuickAccess(_ writer: inout SimpleTOMLWriter) {
     let manager = QuickAccessManager.shared
@@ -220,14 +232,6 @@ enum SnapzyConfigurationExporter {
     writer.value("quick_access", manager.isActionEnabled(.showQuickAccess, for: type))
     writer.value("copy_file", manager.isActionEnabled(.copyFile, for: type))
     writer.value("open_annotate", manager.isActionEnabled(.openAnnotate, for: type))
-  }
-
-  private static func storedMouseColor(defaults: UserDefaults) -> NSColor {
-    guard let data = defaults.data(forKey: PreferencesKeys.mouseHighlightColor),
-          let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) else {
-      return MouseHighlightConfiguration.defaultHighlightColor
-    }
-    return color
   }
 }
 

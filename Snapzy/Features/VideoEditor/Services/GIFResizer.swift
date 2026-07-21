@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  GIFResizer.swift
 //  Snapzy
@@ -224,3 +225,4 @@ enum GIFResizeError: Error, LocalizedError {
     }
   }
 }
+#endif

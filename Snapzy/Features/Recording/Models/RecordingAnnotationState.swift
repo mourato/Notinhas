@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingAnnotationState.swift
 //  Snapzy
@@ -159,3 +160,4 @@ final class RecordingAnnotationState: ObservableObject {
     annotations.removeAll { idsToRemove.contains($0.id) }
   }
 }
+#endif

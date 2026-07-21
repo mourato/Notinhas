@@ -24,6 +24,19 @@ enum ToolbarConstants {
   static let pressAnimation: Animation = .easeInOut(duration: 0.1)
 }
 
+// MARK: - Recording Toolbar Divider
+
+struct RecordingToolbarDivider: View {
+  var body: some View {
+    Rectangle()
+      .fill(Color.primary.opacity(0.15))
+      .frame(width: 1, height: ToolbarConstants.dividerHeight)
+      .padding(.horizontal, 4)
+  }
+}
+
+#if NOTINHAS_VIDEO_MODULE
+
 // MARK: - Native Toolbar Button Style (for icon buttons)
 
 struct NativeToolbarButtonStyle: ButtonStyle {
@@ -71,17 +84,6 @@ struct OptionsButtonStyle: ButtonStyle {
       )
       .contentShape(RoundedRectangle(cornerRadius: ToolbarConstants.buttonCornerRadius))
       .animation(ToolbarConstants.pressAnimation, value: configuration.isPressed)
-  }
-}
-
-// MARK: - Recording Toolbar Divider
-
-struct RecordingToolbarDivider: View {
-  var body: some View {
-    Rectangle()
-      .fill(Color.primary.opacity(0.15))
-      .frame(width: 1, height: ToolbarConstants.dividerHeight)
-      .padding(.horizontal, 4)
   }
 }
 
@@ -147,3 +149,4 @@ struct StopButtonStyle: ButtonStyle {
   }
   .padding()
 }
+#endif

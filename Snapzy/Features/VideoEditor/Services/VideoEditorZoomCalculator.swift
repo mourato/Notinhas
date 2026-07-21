@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  ZoomCalculator.swift
 //  Snapzy
@@ -199,3 +200,4 @@ enum ZoomCalculator {
     }
   }
 }
+#endif

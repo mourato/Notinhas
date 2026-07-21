@@ -175,7 +175,9 @@ final class HistoryWindowController {
             "itemId": item.id.uuidString,
           ]
         )
-        VideoEditorManager.shared.openEditor(for: item)
+        #if NOTINHAS_VIDEO_MODULE
+          VideoEditorManager.shared.openEditor(for: item)
+        #endif
       }
     }
   }

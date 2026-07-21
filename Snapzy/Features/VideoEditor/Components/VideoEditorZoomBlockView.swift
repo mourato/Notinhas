@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  ZoomBlockView.swift
 //  Snapzy
@@ -268,3 +269,4 @@ struct ZoomBlockView: View {
       }
   }
 }
+#endif

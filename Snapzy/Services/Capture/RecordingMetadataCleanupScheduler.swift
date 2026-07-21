@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingMetadataCleanupScheduler.swift
 //  Snapzy
@@ -52,3 +53,4 @@ final class RecordingMetadataCleanupScheduler {
     }
   }
 }
+#endif

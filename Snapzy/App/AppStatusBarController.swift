@@ -19,9 +19,11 @@ final class AppStatusBarController: ObservableObject {
   private var statusItem: NSStatusItem?
   private var cancellables = Set<AnyCancellable>()
   private var recordingStateCancellables = Set<AnyCancellable>()
-  private let recorder = ScreenRecordingManager.shared
+  #if NOTINHAS_VIDEO_MODULE
+    private let recorder = ScreenRecordingManager.shared
+    private lazy var recordingStopImage = makeRecordingStopImage()
+  #endif
   private lazy var idleStatusImage = makeIdleStatusImage()
-  private lazy var recordingStopImage = makeRecordingStopImage()
   private var menu: NSMenu?
   private var didDetectCrash = false
 
@@ -68,7 +70,9 @@ final class AppStatusBarController: ObservableObject {
   }
 
   func stopRecording() {
-    RecordingCoordinator.shared.stopFromStatusItem()
+    #if NOTINHAS_VIDEO_MODULE
+      RecordingCoordinator.shared.stopFromStatusItem()
+    #endif
   }
 
   /// Show or hide a processing spinner on the menu bar icon (e.g. during OCR).
@@ -171,11 +175,13 @@ final class AppStatusBarController: ObservableObject {
     case .leftMouseUp:
       // With the hover bar hidden during recording, a left-click stops immediately
       // (macOS ⌘⇧5 parity). Right-click still opens the full menu.
-      if isMenuBarActingAsStopControl {
-        DiagnosticLogger.shared.log(.debug, .ui, "Status bar direct stop (hover bar hidden)")
-        stopRecording()
-        return
-      }
+      #if NOTINHAS_VIDEO_MODULE
+        if isMenuBarActingAsStopControl {
+          DiagnosticLogger.shared.log(.debug, .ui, "Status bar direct stop (hover bar hidden)")
+          stopRecording()
+          return
+        }
+      #endif
       DiagnosticLogger.shared.log(.debug, .ui, "Status bar menu opened", context: ["event": "leftMouseUp"])
       showMenu()
     case .rightMouseUp:
@@ -196,6 +202,7 @@ final class AppStatusBarController: ObservableObject {
 
   // MARK: - Recording UI Preferences
 
+  #if NOTINHAS_VIDEO_MODULE
   /// Whether the floating recording controls bar is shown during recording.
   /// When hidden, the menu bar becomes the primary stop control (macOS ⌘⇧5 parity).
   /// Shared source of truth with `RecordingCoordinator` via `RecordingToolbarPreferences`.
@@ -345,6 +352,36 @@ final class AppStatusBarController: ObservableObject {
     }
   }
 
+  private func makeRecordingStopImage() -> NSImage? {
+    let config = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
+    // Actionable a11y cue matching the icon's behavior (a click stops the recording).
+    let image = NSImage(
+      systemSymbolName: "stop.circle.fill",
+      accessibilityDescription: L10n.RecordingToolbar.stopRecordingHint
+    )?.withSymbolConfiguration(config)
+    image?.isTemplate = true
+    return image
+  }
+  #else
+  private var isVideoModuleEnabled: Bool {
+    false
+  }
+
+  private func observeRecordingState() {}
+
+  private func syncRecordingStateObservation() {
+    renderStatusItem()
+  }
+
+  private func renderStatusItem() {
+    guard let button = statusItem?.button else { return }
+    button.image = idleStatusImage
+    button.contentTintColor = nil
+    button.attributedTitle = NSAttributedString(string: "")
+    button.toolTip = "Snapzy"
+  }
+  #endif
+
   private func makeIdleStatusImage() -> NSImage? {
     guard let appIcon = NSImage(named: "MenubarIcon") else { return nil }
 
@@ -377,19 +414,6 @@ final class AppStatusBarController: ObservableObject {
     return resizedIcon
   }
 
-  /// Distinct "stop" glyph shown on the menu bar item while recording with the hover bar hidden.
-  /// Signals that a click stops the recording (macOS ⌘⇧5 parity).
-  private func makeRecordingStopImage() -> NSImage? {
-    let config = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
-    // Actionable a11y cue matching the icon's behavior (a click stops the recording).
-    let image = NSImage(
-      systemSymbolName: "stop.circle.fill",
-      accessibilityDescription: L10n.RecordingToolbar.stopRecordingHint
-    )?.withSymbolConfiguration(config)
-    image?.isTemplate = true
-    return image
-  }
-
   // MARK: - Menu Building
 
   private func buildMenu() {
@@ -403,7 +427,8 @@ final class AppStatusBarController: ObservableObject {
     let shortcutManager = KeyboardShortcutManager.shared
 
     // Recording status indicator (when recording)
-    if recorder.state == .recording || recorder.state == .paused {
+    #if NOTINHAS_VIDEO_MODULE
+      if recorder.state == .recording || recorder.state == .paused {
       let stopItem = NSMenuItem(
         title: L10n.Menu.stopRecording(recorder.formattedDuration),
         action: #selector(stopRecordingAction),
@@ -429,6 +454,7 @@ final class AppStatusBarController: ObservableObject {
 
       menu?.addItem(NSMenuItem.separator())
     }
+    #endif
 
     // Capture Actions
     let captureAreaItem = NSMenuItem(
@@ -546,6 +572,7 @@ final class AppStatusBarController: ObservableObject {
     menu?.addItem(captureObjectCutoutItem)
 
     if isVideoModuleEnabled {
+      #if NOTINHAS_VIDEO_MODULE
       menu?.addItem(NSMenuItem.separator())
 
       // Recording
@@ -579,6 +606,7 @@ final class AppStatusBarController: ObservableObject {
       menu?.addItem(applicationRecordingItem)
 
       menu?.addItem(NSMenuItem.separator())
+      #endif
     } else {
       menu?.addItem(NSMenuItem.separator())
     }
@@ -610,6 +638,7 @@ final class AppStatusBarController: ObservableObject {
     menu?.addItem(combineImagesItem)
 
     if isVideoModuleEnabled {
+      #if NOTINHAS_VIDEO_MODULE
       let editVideoItem = NSMenuItem(
         title: L10n.Menu.editVideo,
         action: #selector(editVideoAction),
@@ -620,6 +649,7 @@ final class AppStatusBarController: ObservableObject {
       editVideoItem.image = NSImage(systemSymbolName: "film", accessibilityDescription: nil)
       editVideoItem.isEnabled = true
       menu?.addItem(editVideoItem)
+      #endif
     }
 
     let cloudUploadsItem = NSMenuItem(
@@ -728,6 +758,7 @@ final class AppStatusBarController: ObservableObject {
 
   // MARK: - Menu Actions
 
+  #if NOTINHAS_VIDEO_MODULE
   @objc private func stopRecordingAction() {
     logMenuAction("stopRecording", context: ["state": "\(recorder.state)"])
     stopRecording()
@@ -737,6 +768,7 @@ final class AppStatusBarController: ObservableObject {
     logMenuAction("togglePauseRecording", context: ["state": "\(recorder.state)"])
     recorder.togglePause()
   }
+  #endif
 
   @objc private func captureAreaAction() {
     logMenuAction("captureArea")
@@ -783,6 +815,7 @@ final class AppStatusBarController: ObservableObject {
     viewModel?.captureObjectCutout()
   }
 
+  #if NOTINHAS_VIDEO_MODULE
   @objc private func recordScreenAction() {
     logMenuAction("recordScreen")
     viewModel?.startRecordingFlow()
@@ -792,6 +825,7 @@ final class AppStatusBarController: ObservableObject {
     logMenuAction("recordApplication")
     viewModel?.startApplicationRecordingFlow()
   }
+  #endif
 
   @objc private func openAnnotateAction() {
     logMenuAction("openAnnotate")
@@ -803,10 +837,12 @@ final class AppStatusBarController: ObservableObject {
     CombineImagesCoordinator.shared.presentPicker()
   }
 
+  #if NOTINHAS_VIDEO_MODULE
   @objc private func editVideoAction() {
     logMenuAction("editVideo")
     VideoEditorManager.shared.openEmptyEditor()
   }
+  #endif
 
   @objc private func openCloudUploadsAction() {
     logMenuAction(
@@ -1093,47 +1129,53 @@ final class AppStatusBarController: ObservableObject {
       return
     }
 
-    let windowID = CGWindowID(trackedPreferencesWindow.windowNumber)
+    #if NOTINHAS_VIDEO_MODULE
+      let windowID = CGWindowID(trackedPreferencesWindow.windowNumber)
 
-    guard recorder.isActive else {
-      removeTrackedPreferencesWindowExclusion()
-      return
-    }
-
-    guard trackedPreferencesExcludedWindowID != windowID else { return }
-
-    let previousWindowID = trackedPreferencesExcludedWindowID
-    trackedPreferencesExcludedWindowID = windowID
-    DiagnosticLogger.shared.log(
-      .debug,
-      .recording,
-      "Preferences window added to runtime recording exclusion",
-      context: ["windowID": "\(windowID)"]
-    )
-
-    Task { @MainActor [weak self] in
-      guard let self else { return }
-      if let previousWindowID, previousWindowID != windowID {
-        await recorder.removeRuntimeExcludedWindow(windowID: previousWindowID)
+      guard recorder.isActive else {
+        removeTrackedPreferencesWindowExclusion()
+        return
       }
-      await recorder.addRuntimeExcludedWindow(windowID: windowID)
-    }
+
+      guard trackedPreferencesExcludedWindowID != windowID else { return }
+
+      let previousWindowID = trackedPreferencesExcludedWindowID
+      trackedPreferencesExcludedWindowID = windowID
+      DiagnosticLogger.shared.log(
+        .debug,
+        .recording,
+        "Preferences window added to runtime recording exclusion",
+        context: ["windowID": "\(windowID)"]
+      )
+
+      Task { @MainActor [weak self] in
+        guard let self else { return }
+        if let previousWindowID, previousWindowID != windowID {
+          await recorder.removeRuntimeExcludedWindow(windowID: previousWindowID)
+        }
+        await recorder.addRuntimeExcludedWindow(windowID: windowID)
+      }
+    #endif
   }
 
   private func removeTrackedPreferencesWindowExclusion() {
-    guard let windowID = trackedPreferencesExcludedWindowID else { return }
-    trackedPreferencesExcludedWindowID = nil
-    DiagnosticLogger.shared.log(
-      .debug,
-      .recording,
-      "Preferences window removed from runtime recording exclusion",
-      context: ["windowID": "\(windowID)"]
-    )
+    #if NOTINHAS_VIDEO_MODULE
+      guard let windowID = trackedPreferencesExcludedWindowID else { return }
+      trackedPreferencesExcludedWindowID = nil
+      DiagnosticLogger.shared.log(
+        .debug,
+        .recording,
+        "Preferences window removed from runtime recording exclusion",
+        context: ["windowID": "\(windowID)"]
+      )
 
-    Task { @MainActor [weak self] in
-      guard let self else { return }
-      await recorder.removeRuntimeExcludedWindow(windowID: windowID)
-    }
+      Task { @MainActor [weak self] in
+        guard let self else { return }
+        await recorder.removeRuntimeExcludedWindow(windowID: windowID)
+      }
+    #else
+      trackedPreferencesExcludedWindowID = nil
+    #endif
   }
 
   #if DEBUG
@@ -1151,6 +1193,7 @@ final class AppStatusBarController: ObservableObject {
       windowDidClose(notification)
     }
 
+    #if NOTINHAS_VIDEO_MODULE
     var isHoverBarVisibleForTesting: Bool {
       isHoverBarVisible
     }
@@ -1158,5 +1201,6 @@ final class AppStatusBarController: ObservableObject {
     var showsRecordingTimeOnMenuBarForTesting: Bool {
       showsRecordingTimeOnMenuBar
     }
+    #endif
   #endif
 }

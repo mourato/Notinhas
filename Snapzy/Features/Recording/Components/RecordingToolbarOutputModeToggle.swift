@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  ToolbarOutputModeToggle.swift
 //  Snapzy
@@ -176,3 +177,4 @@ private struct OutputModeRow: View {
   .background(.ultraThinMaterial)
   .clipShape(RoundedRectangle(cornerRadius: 14))
 }
+#endif
