@@ -27,7 +27,7 @@ SwiftUI or AppKit work: menu bar shell, capture/annotate UI, floating panels, ov
 ## Notinhas Focus
 
 - Area capture → Annotate with Notinhas note tool (`AnnotationToolType.notinhasNote`).
-- Note editor overlay (`NotinhasNoteEditorOverlay`) and side panel (`NotinhasNotesSidePanelView`).
+- Note editor overlay (`NotinhasNoteEditorCanvasOverlay`) and side panel (`NotinhasNotesSidePanelView`).
 - Export preview and clipboard-ready composition via `AnnotateExporter`.
 
 ## Preview Expectations

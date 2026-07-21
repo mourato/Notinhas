@@ -401,7 +401,7 @@ struct AnnotateBottomBarView: View {
         let needsReUpload = state.requiresRenderedOutputForSharing || state.isCloudStale
         let alreadyUploaded = state.cloudURL != nil && !needsReUpload
         BottomBarButton(
-          icon: alreadyUploaded ? "checkmark.icloud" : "icloud.and.arrow.up",
+          icon: alreadyUploaded ? "checkmark.cloud" : "cloud",
           tooltip: alreadyUploaded
             ? L10n.AnnotateUI.uploadedToCloud
             : tooltipText(

@@ -162,7 +162,7 @@ enum QuickAccessActionKind: String, CaseIterable, Codable, Hashable, Identifiabl
     case .edit:
       return "pencil"
     case .uploadToCloud:
-      return "icloud.and.arrow.up"
+      return "cloud"
     case .uploadToImgBB:
       return "icloud.and.arrow.up"
     case .pinToScreen:

@@ -325,20 +325,20 @@ struct AnnotateCanvasView: View {
             .frame(width: foregroundWidth, height: foregroundHeight)
             .clipped()
           }
+
+          // Keep Notinhas editor inside the mockup-transformed group so pins and panel stay aligned.
+          if state.notinhasEditingNoteID != nil {
+            NotinhasNoteEditorCanvasOverlay(
+              state: state,
+              scale: scale,
+              canvasBounds: foregroundBounds,
+              hostSize: CGSize(width: foregroundWidth, height: foregroundHeight)
+            )
+            .frame(width: foregroundWidth, height: foregroundHeight)
+          }
         }
         .offset(x: offset.x, y: offset.y)
         .modifier(MockupTransformModifier(state: state, isEnabled: shouldShowMockupTransforms))
-
-        if state.notinhasEditingNoteID != nil {
-          NotinhasNoteEditorCanvasOverlay(
-            state: state,
-            scale: scale,
-            canvasBounds: foregroundBounds,
-            imageOffset: offset,
-            hostSize: CGSize(width: bgWidth, height: bgHeight)
-          )
-          .frame(width: bgWidth, height: bgHeight)
-        }
 
         // Crop overlay - ONLY shown during active crop editing (NOT when crop is just applied)
         // This prevents CropSolidMask from covering the gradient/wallpaper background

@@ -3,6 +3,7 @@ import SwiftUI
 struct NotinhasNoteEditorView: View {
   let displayNumber: Int
   let panelWidth: CGFloat
+  let maxPanelHeight: CGFloat
   @Binding var text: String
   @Binding var color: RGBAColor
   @Binding var areaStyle: NotinhasAreaStyle
@@ -59,7 +60,9 @@ struct NotinhasNoteEditorView: View {
       }
     }
     .padding(12)
-    .frame(width: panelWidth)
+    .frame(width: panelWidth, alignment: .topLeading)
+    .frame(maxHeight: maxPanelHeight, alignment: .topLeading)
+    .fixedSize(horizontal: false, vertical: true)
     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     .onAppear { isFocused = true }
   }

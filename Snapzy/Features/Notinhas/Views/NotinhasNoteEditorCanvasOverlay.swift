@@ -1,11 +1,11 @@
 import SwiftUI
 
 /// SwiftUI overlay for editing Notinhas notes on the annotate canvas viewport.
+/// Empty space must not hit-test so canvas click-away still reaches `DrawingCanvasNSView`.
 struct NotinhasNoteEditorCanvasOverlay: View {
   @ObservedObject var state: AnnotateState
   let scale: CGFloat
   let canvasBounds: CGRect
-  let imageOffset: CGPoint
   let hostSize: CGSize
 
   @State private var draftNote: NotinhasVisualNote?
@@ -21,7 +21,6 @@ struct NotinhasNoteEditorCanvasOverlay: View {
         displayScale: scale,
         pinDiameter: note.pinDiameter
       )
-      .offsetBy(dx: imageOffset.x, dy: imageOffset.y)
       let panelSize = NotinhasNoteGeometry.editorPanelSize(
         isRectangular: note.target.isRectangular,
         in: hostBounds
@@ -33,16 +32,16 @@ struct NotinhasNoteEditorCanvasOverlay: View {
       )
       let displayNumber = state.notinhasDisplayNumber(for: editingID) ?? 1
 
+      // Layout host only — no full-bleed clear fill, so empty space passes hits to the canvas.
       ZStack(alignment: .topLeading) {
-        Color.clear
-
         NotinhasNoteEditorView(
           displayNumber: displayNumber,
           panelWidth: panelSize.width,
-          text: draftTextBinding,
-          color: draftColorBinding,
-          areaStyle: draftAreaStyleBinding,
-          areaStrokeWidth: draftAreaStrokeWidthBinding,
+          maxPanelHeight: panelSize.height,
+          text: draftTextBinding(for: note),
+          color: draftColorBinding(for: note),
+          areaStyle: draftAreaStyleBinding(for: note),
+          areaStrokeWidth: draftAreaStrokeWidthBinding(for: note),
           showsAreaStyle: note.target.isRectangular,
           onCommit: commitEditing,
           onCancel: cancelEditing,
@@ -50,64 +49,71 @@ struct NotinhasNoteEditorCanvasOverlay: View {
         )
         .offset(x: origin.x, y: origin.y)
       }
-      .frame(width: hostSize.width, height: hostSize.height)
-      .onAppear {
-        syncDraft(for: note)
-      }
-      .onChange(of: editingID) { _ in
-        if let current = state.notinhasNotes.first(where: { $0.id == editingID }) {
-          syncDraft(for: current)
-        }
+      .frame(width: hostSize.width, height: hostSize.height, alignment: .topLeading)
+      .task(id: editingID) {
+        ensureDraftSeeded(from: note)
       }
     }
   }
 
-  private var draftTextBinding: Binding<String> {
+  private func draftTextBinding(for note: NotinhasVisualNote) -> Binding<String> {
     Binding(
-      get: { draftNote?.text ?? "" },
+      get: { activeDraft(for: note).text },
       set: { newValue in
-        guard var updated = draftNote else { return }
-        updated.text = newValue
-        draftNote = updated
+        updateDraft(from: note) { $0.text = newValue }
       }
     )
   }
 
-  private var draftColorBinding: Binding<RGBAColor> {
+  private func draftColorBinding(for note: NotinhasVisualNote) -> Binding<RGBAColor> {
     Binding(
-      get: {
-        draftNote?.color ?? RGBAColor(red: 1, green: 0, blue: 0, alpha: 1)
-      },
+      get: { activeDraft(for: note).color },
       set: { newValue in
-        applyLiveAppearance(color: newValue, areaStyle: nil, areaStrokeWidth: nil)
+        applyLiveAppearance(from: note, color: newValue, areaStyle: nil, areaStrokeWidth: nil)
       }
     )
   }
 
-  private var draftAreaStyleBinding: Binding<NotinhasAreaStyle> {
+  private func draftAreaStyleBinding(for note: NotinhasVisualNote) -> Binding<NotinhasAreaStyle> {
     Binding(
-      get: { draftNote?.areaStyle ?? .outline },
+      get: { activeDraft(for: note).areaStyle },
       set: { newValue in
-        applyLiveAppearance(color: nil, areaStyle: newValue, areaStrokeWidth: nil)
+        applyLiveAppearance(from: note, color: nil, areaStyle: newValue, areaStrokeWidth: nil)
       }
     )
   }
 
-  private var draftAreaStrokeWidthBinding: Binding<CGFloat> {
+  private func draftAreaStrokeWidthBinding(for note: NotinhasVisualNote) -> Binding<CGFloat> {
     Binding(
-      get: {
-        draftNote?.areaStrokeWidth ?? NotinhasVisualNote.defaultAreaStrokeWidth
-      },
+      get: { activeDraft(for: note).areaStrokeWidth },
       set: { newValue in
-        applyLiveAppearance(color: nil, areaStyle: nil, areaStrokeWidth: newValue)
+        applyLiveAppearance(from: note, color: nil, areaStyle: nil, areaStrokeWidth: newValue)
       }
     )
   }
 
-  private func syncDraft(for note: NotinhasVisualNote) {
-    draftNote = note
-    openingSnapshot = note
-    state.notinhasEditorOpeningSnapshot = note
+  private func activeDraft(for note: NotinhasVisualNote) -> NotinhasVisualNote {
+    if let draftNote, draftNote.id == note.id {
+      return draftNote
+    }
+    return note
+  }
+
+  private func ensureDraftSeeded(from note: NotinhasVisualNote) {
+    if draftNote?.id != note.id {
+      draftNote = note
+    }
+    if openingSnapshot?.id != note.id {
+      openingSnapshot = note
+      state.notinhasEditorOpeningSnapshot = note
+    }
+  }
+
+  private func updateDraft(from note: NotinhasVisualNote, mutate: (inout NotinhasVisualNote) -> Void) {
+    ensureDraftSeeded(from: note)
+    guard var updated = draftNote, updated.id == note.id else { return }
+    mutate(&updated)
+    draftNote = updated
   }
 
   private func commitEditing() {
@@ -128,22 +134,24 @@ struct NotinhasNoteEditorCanvasOverlay: View {
   }
 
   private func applyLiveAppearance(
+    from note: NotinhasVisualNote,
     color: RGBAColor?,
     areaStyle: NotinhasAreaStyle?,
     areaStrokeWidth: CGFloat?
   ) {
-    guard var updated = draftNote else { return }
-    if let color {
-      updated.color = color
+    updateDraft(from: note) { updated in
+      if let color {
+        updated.color = color
+      }
+      if let areaStyle {
+        updated.areaStyle = areaStyle
+      }
+      if let areaStrokeWidth {
+        updated.areaStrokeWidth = NotinhasVisualNote.clampedAreaStrokeWidth(areaStrokeWidth)
+      }
     }
-    if let areaStyle {
-      updated.areaStyle = areaStyle
-    }
-    if let areaStrokeWidth {
-      updated.areaStrokeWidth = NotinhasVisualNote.clampedAreaStrokeWidth(areaStrokeWidth)
-    }
-    draftNote = updated
 
+    guard let updated = draftNote else { return }
     var liveNote = updated
     if let stateNote = state.notinhasNotes.first(where: { $0.id == updated.id }) {
       liveNote.text = stateNote.text

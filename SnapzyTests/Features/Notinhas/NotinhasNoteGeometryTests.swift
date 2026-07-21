@@ -125,6 +125,22 @@ final class NotinhasNoteGeometryTests: XCTestCase {
     XCTAssertEqual(origin.x, selection.maxX + 24, accuracy: 0.001)
   }
 
+  func testEditorOriginClampsWhenNeitherSideFits() {
+    let container = CGRect(x: 0, y: 0, width: 400, height: 300)
+    let selection = CGRect(x: 40, y: 40, width: 320, height: 120)
+    let panelSize = CGSize(width: 300, height: 200)
+    let origin = NotinhasNoteGeometry.editorOrigin(
+      forSelectionBounds: selection,
+      panelSize: panelSize,
+      in: container
+    )
+
+    XCTAssertGreaterThanOrEqual(origin.x, 12)
+    XCTAssertLessThanOrEqual(origin.x + panelSize.width, container.maxX - 12)
+    XCTAssertGreaterThanOrEqual(origin.y, 12)
+    XCTAssertLessThanOrEqual(origin.y + panelSize.height, container.maxY - 12)
+  }
+
   func testSelectionDisplayBoundsScalesAndFlipsY() {
     let canvasBounds = CGRect(x: 0, y: 0, width: 200, height: 100)
     let target = NotinhasNoteTarget.point(CGPoint(x: 50, y: 80))
@@ -147,7 +163,19 @@ final class NotinhasNoteGeometryTests: XCTestCase {
       in: container
     )
 
+    // Must not exceed container insets (260 - 24, 180 - 24).
     XCTAssertEqual(panelSize.width, 236, accuracy: 0.001)
-    XCTAssertEqual(panelSize.height, 160, accuracy: 0.001)
+    XCTAssertEqual(panelSize.height, 156, accuracy: 0.001)
+  }
+
+  func testEditorPanelSizeUsesPreferredWhenContainerIsLarge() {
+    let container = CGRect(x: 0, y: 0, width: 800, height: 600)
+    let pointSize = NotinhasNoteGeometry.editorPanelSize(isRectangular: false, in: container)
+    let rectSize = NotinhasNoteGeometry.editorPanelSize(isRectangular: true, in: container)
+
+    XCTAssertEqual(pointSize.width, 300, accuracy: 0.001)
+    XCTAssertEqual(pointSize.height, 200, accuracy: 0.001)
+    XCTAssertEqual(rectSize.width, 300, accuracy: 0.001)
+    XCTAssertEqual(rectSize.height, 280, accuracy: 0.001)
   }
 }

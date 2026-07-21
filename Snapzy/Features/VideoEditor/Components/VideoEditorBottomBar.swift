@@ -47,7 +47,7 @@ struct VideoEditorBottomBar: View {
             : (state.cloudKey != nil ? L10n.AnnotateUI.reuploadToCloud : L10n.AnnotateUI.uploadToCloud)
 
           VideoEditorBottomBarButton(
-            icon: alreadyUploadedToCloud ? "checkmark.icloud" : "icloud.and.arrow.up",
+            icon: alreadyUploadedToCloud ? "checkmark.cloud" : "cloud",
             tooltip: tooltip
           ) {
             if state.cloudKey != nil && !alreadyUploadedToCloud {

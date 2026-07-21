@@ -33,7 +33,7 @@ Use when the user asks to change Notinhas notes/pins/rects, note editor UX, note
 | Geometry (pure) | `Snapzy/Features/Notinhas/Services/NotinhasNoteGeometry.swift` |
 | Note model | `Snapzy/Features/Notinhas/Models/NotinhasVisualNote.swift` |
 | State mutations | `Snapzy/Features/Notinhas/Annotate/NotinhasAnnotateState.swift` |
-| Editor UI | `NotinhasNoteEditorView` / `NotinhasNoteEditorOverlay` |
+| Editor UI | `NotinhasNoteEditorView` / `NotinhasNoteEditorCanvasOverlay` |
 | Side panel | `NotinhasNotesSidePanelView` |
 | Composition | `NotinhasNotesComposer`, `NotinhasNoteRenderer` |
 | Export hook | `AnnotateExporter.composeNotinhasIfNeeded` |

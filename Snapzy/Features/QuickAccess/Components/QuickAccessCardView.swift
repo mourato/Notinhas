@@ -195,7 +195,7 @@ struct QuickAccessCardView: View {
   }
 
   private var cloudActionIcon: String {
-    alreadyUploadedToCloud ? "checkmark.icloud" : "icloud.and.arrow.up"
+    alreadyUploadedToCloud ? "checkmark.cloud" : "cloud"
   }
 
   private var canPerformCardActions: Bool {

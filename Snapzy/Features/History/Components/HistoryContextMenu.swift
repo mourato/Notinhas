@@ -54,11 +54,11 @@ struct HistoryContextMenu: View {
   private var uploadMenuIcon: String {
     switch manager.cloudUploadState(for: record) {
     case .uploading:
-      return "icloud.and.arrow.up"
+      return "cloud"
     case .completed:
-      return "checkmark.icloud"
+      return "checkmark.cloud"
     case nil:
-      return "icloud.and.arrow.up"
+      return "cloud"
     }
   }
 }

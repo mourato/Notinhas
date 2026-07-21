@@ -135,18 +135,20 @@ nonisolated enum NotinhasNoteGeometry {
     return CGPoint(x: originX, y: originY)
   }
 
+  /// Preferred editor size clamped so the panel never exceeds the container insets.
+  /// Height is an upper bound for placement; the SwiftUI editor sizes to its content up to this max.
   static func editorPanelSize(
     isRectangular: Bool,
     in containerBounds: CGRect,
     margin: CGFloat = 12,
     preferredWidth: CGFloat = 300,
-    minWidth: CGFloat = 220,
-    minHeight: CGFloat = 160
+    preferredPointHeight: CGFloat = 200,
+    preferredRectHeight: CGFloat = 280
   ) -> CGSize {
-    let maxWidth = max(minWidth, containerBounds.width - 2 * margin)
-    let maxHeight = max(minHeight, containerBounds.height - 2 * margin)
+    let maxWidth = max(0, containerBounds.width - 2 * margin)
+    let maxHeight = max(0, containerBounds.height - 2 * margin)
     let width = min(preferredWidth, maxWidth)
-    let preferredHeight: CGFloat = isRectangular ? 280 : 200
+    let preferredHeight = isRectangular ? preferredRectHeight : preferredPointHeight
     let height = min(preferredHeight, maxHeight)
     return CGSize(width: width, height: height)
   }
