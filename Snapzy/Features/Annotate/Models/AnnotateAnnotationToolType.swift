@@ -118,9 +118,9 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
   var supportsQuickPropertiesBar: Bool {
     switch self {
     case .rectangle, .filledRectangle, .oval, .arrow, .line, .text, .highlighter, .blur, .spotlight, .counter,
-         .watermark, .pencil:
+         .notinhasNote, .watermark, .pencil:
       true
-    case .selection, .crop, .mockup, .notinhasNote:
+    case .selection, .crop, .mockup:
       false
     }
   }

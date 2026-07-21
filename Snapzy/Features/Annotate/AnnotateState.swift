@@ -237,7 +237,11 @@ final class AnnotateState: ObservableObject {
     }
   }
 
-  @Published var editorMode: EditorMode = .annotate
+  @Published var editorMode: EditorMode = .annotate {
+    didSet {
+      refreshNotinhasExportPreview()
+    }
+  }
 
   // MARK: - UI State
 
@@ -1282,6 +1286,8 @@ final class AnnotateState: ObservableObject {
   @Published var notinhasExportPreviewImage: NSImage?
   @Published var notinhasSelectedNoteID: UUID?
   @Published var notinhasEditingNoteID: UUID?
+  /// Snapshot taken when the note editor opens; used to revert live appearance on cancel/dismiss.
+  var notinhasEditorOpeningSnapshot: NotinhasVisualNote?
   var notinhasDraftNote: NotinhasVisualNote?
   var notinhasIsDrawingNote = false
   var notinhasNoteDrawStart: CGPoint?
@@ -4983,7 +4989,7 @@ final class AnnotateState: ObservableObject {
       commitTextEditing()
     }
     if selectedTool == .notinhasNote, tool != .notinhasNote {
-      notinhasCloseEditor(discardIfEmpty: true)
+      notinhasCloseEditor(discardIfEmpty: true, revertLiveAppearance: true)
     }
     if tool != .selection {
       // A selected combined-image layer must not keep its handles or consume

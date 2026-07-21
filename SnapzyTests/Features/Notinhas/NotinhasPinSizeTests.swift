@@ -55,6 +55,20 @@ final class NotinhasPinSizeTests: XCTestCase {
     XCTAssertFalse(NotinhasNoteGeometry.hitTest(note: small, at: probe))
     XCTAssertTrue(NotinhasNoteGeometry.hitTest(note: large, at: probe))
   }
+
+  func testRectHitTestIncludesOversizedPin() {
+    let note = NotinhasVisualNote(
+      text: "Area",
+      target: .rect(CGRect(x: 100, y: 40, width: 80, height: 40)),
+      color: red,
+      pinControlValue: 10,
+      creationOrder: 1
+    )
+    // Pin sits on the left edge of the rect; a large diameter extends left of minX.
+    let probe = CGPoint(x: 100 - note.pinDiameter / 2 + 1, y: 60)
+
+    XCTAssertTrue(NotinhasNoteGeometry.hitTest(note: note, at: probe))
+  }
 }
 
 @MainActor
@@ -67,5 +81,14 @@ final class NotinhasPinSizeAnnotateStateTests: XCTestCase {
     state.notinhasBeginDrawing(at: CGPoint(x: 10, y: 10), color: RGBAColor(red: 1, green: 0, blue: 0, alpha: 1))
 
     XCTAssertEqual(state.notinhasDraftNote?.pinControlValue, 6)
+  }
+
+  func testNoteToolShowsQuickPropertiesBarWithSize() {
+    let state = AnnotateState(defaults: UserDefaultsFactory.make())
+    state.activateTool(.notinhasNote)
+
+    XCTAssertTrue(state.showsQuickPropertiesBar)
+    XCTAssertTrue(state.quickPropertiesSupportsStrokeWidth)
+    XCTAssertEqual(state.quickPropertiesTool, .notinhasNote)
   }
 }

@@ -18,16 +18,26 @@ extension AnnotateState {
     notinhasNotes[index] = note
   }
 
-  /// Commits an edited note and records one undo checkpoint back to `openingSnapshot`.
+  /// Commits editor-owned fields (text, color, areaStyle) and records one undo checkpoint
+  /// back to `openingSnapshot` for those fields. Preserves live `pinControlValue` and `target`.
   func notinhasCommitNoteEdit(draft: NotinhasVisualNote, openingSnapshot: NotinhasVisualNote) {
     guard let index = notinhasNotes.firstIndex(where: { $0.id == draft.id }) else { return }
-    guard notinhasNotes[index] != draft || openingSnapshot != draft else { return }
-    if openingSnapshot != draft {
+    var committed = notinhasNotes[index]
+    committed.text = draft.text
+    committed.color = draft.color
+    committed.areaStyle = draft.areaStyle
+
+    var checkpoint = openingSnapshot
+    checkpoint.pinControlValue = committed.pinControlValue
+    checkpoint.target = committed.target
+
+    guard committed != notinhasNotes[index] || checkpoint != committed else { return }
+    if checkpoint != committed {
       var checkpointNotes = notinhasNotes
-      checkpointNotes[index] = openingSnapshot
+      checkpointNotes[index] = checkpoint
       saveNotinhasNotesUndoCheckpoint(checkpointNotes)
     }
-    notinhasNotes[index] = draft
+    notinhasNotes[index] = committed
   }
 
   /// Mutates color and area style without creating an undo checkpoint. Text is not applied here.
@@ -41,10 +51,15 @@ extension AnnotateState {
     notinhasNotes[index] = updated
   }
 
-  /// Restores a note to the opening snapshot without creating an undo checkpoint.
+  /// Restores editor-owned fields from the opening snapshot without an undo checkpoint.
+  /// Preserves live `pinControlValue` and `target` (changed outside the editor).
   func notinhasRevertNote(to snapshot: NotinhasVisualNote) {
     guard let index = notinhasNotes.firstIndex(where: { $0.id == snapshot.id }) else { return }
-    notinhasNotes[index] = snapshot
+    var restored = snapshot
+    restored.pinControlValue = notinhasNotes[index].pinControlValue
+    restored.target = notinhasNotes[index].target
+    guard notinhasNotes[index] != restored else { return }
+    notinhasNotes[index] = restored
   }
 
   func notinhasDeleteNote(id: UUID) {
@@ -57,6 +72,7 @@ extension AnnotateState {
     if notinhasEditingNoteID == id {
       notinhasEditingNoteID = nil
     }
+    notinhasEditorOpeningSnapshot = nil
   }
 
   func notinhasSelectNote(id: UUID?, beginEditing: Bool = true) {
@@ -119,8 +135,13 @@ extension AnnotateState {
     notinhasMoveOriginalTarget = nil
   }
 
-  func notinhasCloseEditor(discardIfEmpty: Bool = true) {
+  /// Closes the note editor. Pass `revertLiveAppearance` to restore the opening snapshot
+  /// (Cancel, click-away, tool switch). Save commits first, then closes without reverting.
+  func notinhasCloseEditor(discardIfEmpty: Bool = true, revertLiveAppearance: Bool = false) {
     notinhasCancelMovingNote()
+    if revertLiveAppearance, let snapshot = notinhasEditorOpeningSnapshot {
+      notinhasRevertNote(to: snapshot)
+    }
     if discardIfEmpty,
        let editingID = notinhasEditingNoteID,
        let note = notinhasNotes.first(where: { $0.id == editingID }),
@@ -131,6 +152,7 @@ extension AnnotateState {
     notinhasDraftNote = nil
     notinhasIsDrawingNote = false
     notinhasNoteDrawStart = nil
+    notinhasEditorOpeningSnapshot = nil
   }
 
   func notinhasNote(at point: CGPoint) -> NotinhasVisualNote? {
@@ -152,6 +174,7 @@ extension AnnotateState {
     notinhasNotes = notes
     notinhasSelectedNoteID = nil
     notinhasEditingNoteID = nil
+    notinhasEditorOpeningSnapshot = nil
     notinhasDraftNote = nil
     notinhasIsDrawingNote = false
     notinhasNoteDrawStart = nil

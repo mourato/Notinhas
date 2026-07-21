@@ -213,6 +213,12 @@ final class DrawingCanvasNSView: NSView {
     state.$notinhasNotes
       .sink { [weak self] _ in self?.invalidateDrawing() }
       .store(in: &stateObservers)
+    state.$notinhasEditingNoteID
+      .sink { [weak self] editingID in
+        guard let self, editingID == nil, notinhasEditorOverlay != nil else { return }
+        dismissNotinhasEditor()
+      }
+      .store(in: &stateObservers)
     state.$selectedAnnotationIds
       .sink { [weak self] _ in self?.invalidateDrawing() }
       .store(in: &stateObservers)
@@ -1248,7 +1254,7 @@ final class DrawingCanvasNSView: NSView {
         self?.invalidateDrawing()
       },
       onCancel: { [weak self] in
-        self?.state.notinhasCloseEditor(discardIfEmpty: true)
+        self?.state.notinhasCloseEditor(discardIfEmpty: true, revertLiveAppearance: true)
         self?.dismissNotinhasEditor()
         self?.invalidateDrawing()
       },
@@ -1281,8 +1287,8 @@ final class DrawingCanvasNSView: NSView {
 
   private func handleNotinhasMouseDown(at imagePoint: CGPoint) -> Bool {
     if state.notinhasEditingNoteID != nil {
-      state.notinhasCloseEditor(discardIfEmpty: true)
-      dismissNotinhasEditor()
+      // Click-away matches Cancel: revert live appearance and discard uncommitted text.
+      notinhasEditorOverlay?.cancelEditing()
       clearNotinhasMoveGestureLocals()
       invalidateDrawing()
       return true

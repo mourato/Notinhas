@@ -131,14 +131,22 @@ nonisolated enum NotinhasNoteGeometry {
   ) -> CGRect {
     switch target {
     case .point(let point):
-      CGRect(
+      return CGRect(
         x: point.x - pinDiameter / 2,
         y: point.y - pinDiameter / 2,
         width: pinDiameter,
         height: pinDiameter
       )
     case .rect(let rect):
-      rect.standardized
+      let standardized = rect.standardized
+      let center = pinCenter(for: standardized)
+      let pinBounds = CGRect(
+        x: center.x - pinDiameter / 2,
+        y: center.y - pinDiameter / 2,
+        width: pinDiameter,
+        height: pinDiameter
+      )
+      return standardized.union(pinBounds)
     }
   }
 

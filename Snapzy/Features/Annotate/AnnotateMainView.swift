@@ -52,9 +52,6 @@ struct AnnotateMainView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .contentShape(Rectangle()) // Constrain hit-test area to frame bounds
         .clipped() // Prevent canvas content from overlapping toolbar/bottombar
-        .onChange(of: state.editorMode) { _ in
-          state.refreshNotinhasExportPreview()
-        }
         .onChange(of: state.notinhasNotes) { _ in
           if state.showsNotinhasExportPreview {
             state.refreshNotinhasExportPreview()

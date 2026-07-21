@@ -1536,6 +1536,8 @@ final class AnnotateCoreTests: XCTestCase {
     XCTAssertFalse(AnnotationToolType.crop.supportsQuickPropertiesBar)
     XCTAssertFalse(AnnotationToolType.mockup.supportsQuickPropertiesBar)
     XCTAssertTrue(AnnotationToolType.rectangle.supportsQuickPropertiesBar)
+    XCTAssertTrue(AnnotationToolType.notinhasNote.supportsQuickPropertiesBar)
+    XCTAssertTrue(AnnotationToolType.notinhasNote.supportsQuickStrokeWidth)
     XCTAssertTrue(AnnotationToolType.watermark.supportsQuickPropertiesBar)
     XCTAssertTrue(AnnotationToolType.filledRectangle.supportsQuickStrokeColor)
     XCTAssertFalse(AnnotationToolType.filledRectangle.supportsQuickFillColor)

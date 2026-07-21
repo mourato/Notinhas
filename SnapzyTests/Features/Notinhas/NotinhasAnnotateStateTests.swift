@@ -1,4 +1,5 @@
 @testable import Snapzy
+import SwiftUI
 import XCTest
 
 @MainActor
@@ -146,11 +147,15 @@ final class NotinhasAnnotateStateTests: XCTestCase {
     edited.text = "After"
     edited.color = RGBAColor(red: 0, green: 0, blue: 1, alpha: 1)
     edited.areaStyle = .hatched
+    edited.pinControlValue = 9
     state.notinhasNotes = [edited]
 
     state.notinhasRevertNote(to: original)
 
-    XCTAssertEqual(state.notinhasNotes, [original])
+    XCTAssertEqual(state.notinhasNotes[0].text, original.text)
+    XCTAssertEqual(state.notinhasNotes[0].color, original.color)
+    XCTAssertEqual(state.notinhasNotes[0].areaStyle, original.areaStyle)
+    XCTAssertEqual(state.notinhasNotes[0].pinControlValue, 9)
     XCTAssertFalse(state.canUndo)
   }
 
@@ -169,5 +174,42 @@ final class NotinhasAnnotateStateTests: XCTestCase {
     XCTAssertEqual(state.notinhasNotes[0].text, "After")
     state.undo()
     XCTAssertEqual(state.notinhasNotes, [original])
+  }
+
+  func testCloseEditorRevertsLiveAppearance() {
+    let state = makeState()
+    let original = makeNote(text: "Keep")
+    state.notinhasNotes = [original]
+    state.notinhasEditorOpeningSnapshot = original
+    state.notinhasEditingNoteID = original.id
+    var live = original
+    live.color = RGBAColor(red: 0, green: 0, blue: 1, alpha: 1)
+    state.notinhasApplyLiveAppearance(live)
+
+    state.notinhasCloseEditor(discardIfEmpty: true, revertLiveAppearance: true)
+
+    XCTAssertEqual(state.notinhasNotes[0].color, original.color)
+    XCTAssertNil(state.notinhasEditingNoteID)
+    XCTAssertNil(state.notinhasEditorOpeningSnapshot)
+    XCTAssertFalse(state.canUndo)
+  }
+
+  func testCommitNoteEditPreservesPinControlValue() {
+    let state = makeState()
+    var original = makeNote(text: "Before")
+    original.pinControlValue = 4
+    state.notinhasNotes = [original]
+    state.notinhasSelectedNoteID = original.id
+    state.activateTool(.notinhasNote)
+    state.quickStrokeWidthBinding.wrappedValue = 8
+
+    var draft = original
+    draft.text = "After"
+    draft.color = RGBAColor(red: 0, green: 1, blue: 0, alpha: 1)
+    state.notinhasCommitNoteEdit(draft: draft, openingSnapshot: original)
+
+    XCTAssertEqual(state.notinhasNotes[0].text, "After")
+    XCTAssertEqual(state.notinhasNotes[0].color, draft.color)
+    XCTAssertEqual(state.notinhasNotes[0].pinControlValue, 8)
   }
 }

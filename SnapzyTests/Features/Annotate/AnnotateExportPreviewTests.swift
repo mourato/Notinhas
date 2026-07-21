@@ -49,11 +49,20 @@ final class AnnotateExportPreviewTests: XCTestCase {
     let state = try makeStateWithImage()
     state.notinhasNotes = [makeRenderableNote()]
     state.editorMode = .preview
-    state.refreshNotinhasExportPreview()
     XCTAssertNotNil(state.notinhasExportPreviewImage)
 
     state.editorMode = .annotate
-    state.refreshNotinhasExportPreview()
     XCTAssertNil(state.notinhasExportPreviewImage)
+  }
+
+  func testEnteringPreviewBuildsExportImageSynchronously() throws {
+    let state = try makeStateWithImage()
+    state.notinhasNotes = [makeRenderableNote()]
+
+    state.editorMode = .preview
+
+    XCTAssertTrue(state.showsNotinhasExportPreview)
+    let previewImage = try XCTUnwrap(state.notinhasExportPreviewImage)
+    XCTAssertGreaterThan(previewImage.size.width, 200)
   }
 }

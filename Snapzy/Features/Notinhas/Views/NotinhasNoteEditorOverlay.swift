@@ -42,6 +42,7 @@ final class NotinhasNoteEditorOverlay: NSView {
 
     openingSnapshot = note
     draftNote = note
+    state.notinhasEditorOpeningSnapshot = note
     let displayNumber = state.notinhasDisplayNumber(for: noteID) ?? 1
     let editor = NotinhasNoteEditorView(
       displayNumber: displayNumber,
@@ -109,10 +110,7 @@ final class NotinhasNoteEditorOverlay: NSView {
   }
 
   func cancelEditing() {
-    if let openingSnapshot {
-      state.notinhasRevertNote(to: openingSnapshot)
-      onLiveAppearanceChanged()
-    }
+    // Canvas onCancel closes with revertLiveAppearance so Cancel and click-away share one path.
     onCancel()
   }
 
