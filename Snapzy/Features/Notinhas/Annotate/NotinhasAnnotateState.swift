@@ -190,4 +190,18 @@ extension AnnotateState {
     notinhasAddNote(draft)
     notinhasClearDrawingState()
   }
+
+  var showsNotinhasExportPreview: Bool {
+    editorMode == .preview
+      && !NotinhasNoteGeometry.orderedRenderableNotes(notinhasNotes).isEmpty
+  }
+
+  func refreshNotinhasExportPreview() {
+    guard showsNotinhasExportPreview else {
+      notinhasExportPreviewImage = nil
+      return
+    }
+    // Uses renderFinalImage(state:) verbatim so Copy and Preview cannot drift.
+    notinhasExportPreviewImage = AnnotateExporter.renderFinalImage(state: self)
+  }
 }

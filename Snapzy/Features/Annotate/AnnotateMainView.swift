@@ -32,7 +32,7 @@ struct AnnotateMainView: View {
 
       HStack(spacing: 0) {
         // Hide sidebar in preview mode
-        if state.showSidebar && state.editorMode != .preview {
+        if state.showSidebar, state.editorMode != .preview {
           AnnotateSidebarView(state: state)
             .equatable()
             .frame(width: 240)
@@ -42,10 +42,24 @@ struct AnnotateMainView: View {
             .background(Color.white.opacity(0.1))
         }
 
-        AnnotateCanvasView(state: state)
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .contentShape(Rectangle()) // Constrain hit-test area to frame bounds
-          .clipped() // Prevent canvas content from overlapping toolbar/bottombar
+        Group {
+          if state.showsNotinhasExportPreview, let previewImage = state.notinhasExportPreviewImage {
+            AnnotateExportPreviewView(image: previewImage)
+          } else {
+            AnnotateCanvasView(state: state)
+          }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle()) // Constrain hit-test area to frame bounds
+        .clipped() // Prevent canvas content from overlapping toolbar/bottombar
+        .onChange(of: state.editorMode) { _ in
+          state.refreshNotinhasExportPreview()
+        }
+        .onChange(of: state.notinhasNotes) { _ in
+          if state.showsNotinhasExportPreview {
+            state.refreshNotinhasExportPreview()
+          }
+        }
 
         if !state.notinhasNotes.isEmpty, state.editorMode != .preview {
           Divider()
