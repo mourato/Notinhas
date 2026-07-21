@@ -3020,6 +3020,16 @@ nonisolated enum L10n {
     static let imgbbInvalidResponse = string("annotate.notinhas.imgbb-invalid-response", defaultValue: "ImgBB returned an unexpected response.", comment: "ImgBB invalid response error")
     static let uploadToImgBB = string("annotate.notinhas.upload-to-imgbb", defaultValue: "Upload to ImgBB", comment: "Upload image to ImgBB")
     static let imgbbUploadFailed = string("annotate.notinhas.imgbb-upload-failed", defaultValue: "ImgBB upload failed", comment: "ImgBB upload failure alert title")
+    static let imgbbUploading = string(
+      "annotate.notinhas.imgbb-uploading",
+      defaultValue: "Uploading to ImgBB…",
+      comment: "Progress toast shown while an image uploads to ImgBB"
+    )
+    static let imgbbUploadedAndCopied = string(
+      "annotate.notinhas.imgbb-uploaded-and-copied",
+      defaultValue: "Uploaded to ImgBB and copied link",
+      comment: "Success toast shown after an ImgBB upload copies the link to the clipboard"
+    )
     static let selected = string("annotate.notinhas.selected", defaultValue: "Selected", comment: "Selected color swatch accessibility value")
     static let colorRed = string("annotate.notinhas.color-red", defaultValue: "Red", comment: "Notinhas palette color name")
     static let colorOrange = string("annotate.notinhas.color-orange", defaultValue: "Orange", comment: "Notinhas palette color name")

@@ -50,7 +50,6 @@ struct AnnotateBottomBarView: View {
 
   @State private var isCloudUploading = false
   @State private var isImgBBUploading = false
-  @State private var imgbbUploadError: String?
   @State private var lastImgBBURL: String?
   private let imgbbUploadCoordinator = NotinhasUploadCoordinator()
   @State private var cloudUploadProgress: Double = 0
@@ -100,14 +99,6 @@ struct AnnotateBottomBarView: View {
       Button(L10n.Common.cancel, role: .cancel) {}
     } message: {
       Text(L10n.AnnotateUI.overwriteCloudFileMessage)
-    }
-    .alert(NotinhasL10n.imgbbUploadFailed, isPresented: Binding(
-      get: { imgbbUploadError != nil },
-      set: { if !$0 { imgbbUploadError = nil } }
-    )) {
-      Button(L10n.Common.ok, role: .cancel) {}
-    } message: {
-      Text(imgbbUploadError ?? "")
     }
     .onReceive(NotificationCenter.default.publisher(for: .annotateCloudUpload)) { _ in
       // ⌘U shortcut: trigger cloud upload (with overwrite confirmation if needed)
@@ -537,15 +528,22 @@ struct AnnotateBottomBarView: View {
 
   private func handleImgBBUpload() {
     guard let apiKey = NotinhasImgBBConfiguration.apiKey else {
-      imgbbUploadError = NotinhasL10n.imgbbMissingAPIKey
+      AppToastManager.shared.show(message: NotinhasL10n.imgbbMissingAPIKey, style: .warning)
       return
     }
     guard let renderedImage = AnnotateExporter.renderFinalImage(state: state) else {
-      imgbbUploadError = NotinhasL10n.imgbbInvalidImageData
+      AppToastManager.shared.show(message: NotinhasL10n.imgbbInvalidImageData, style: .error)
       return
     }
 
     isImgBBUploading = true
+    let progressToast = AppToastManager.shared.show(
+      message: NotinhasL10n.imgbbUploading,
+      style: .info,
+      duration: nil,
+      iconMode: .spinner
+    )
+
     Task { @MainActor in
       defer { isImgBBUploading = false }
       let link = await imgbbUploadCoordinator.upload(
@@ -558,8 +556,19 @@ struct AnnotateBottomBarView: View {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(link, forType: .string)
+        SoundManager.play("Pop")
+        if let progressToast {
+          AppToastManager.shared.update(progressToast, message: NotinhasL10n.imgbbUploadedAndCopied, style: .success)
+        } else {
+          AppToastManager.shared.show(message: NotinhasL10n.imgbbUploadedAndCopied, style: .success)
+        }
       } else {
-        imgbbUploadError = imgbbUploadCoordinator.lastErrorMessage ?? NotinhasL10n.imgbbUploadFailed
+        let message = imgbbUploadCoordinator.lastErrorMessage ?? NotinhasL10n.imgbbUploadFailed
+        if let progressToast {
+          AppToastManager.shared.update(progressToast, message: message, style: .error)
+        } else {
+          AppToastManager.shared.show(message: message, style: .error)
+        }
       }
     }
   }
