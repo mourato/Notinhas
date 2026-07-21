@@ -1,15 +1,15 @@
 import Foundation
 
-enum NotinhasImgurConfiguration {
-  static let clientIDUserDefaultsKey = "notinhas.imgur.clientID"
+enum NotinhasImgBBConfiguration {
+  static let apiKeyUserDefaultsKey = "notinhas.imgbb.apiKey"
   static let panelSideUserDefaultsKey = PreferencesKeys.notinhasNotesPanelSide
 
-  static var clientID: String? {
-    if let stored = UserDefaults.standard.string(forKey: clientIDUserDefaultsKey)?
+  static var apiKey: String? {
+    if let stored = UserDefaults.standard.string(forKey: apiKeyUserDefaultsKey)?
       .trimmingCharacters(in: .whitespacesAndNewlines), !stored.isEmpty {
       return stored
     }
-    if let plist = Bundle.main.object(forInfoDictionaryKey: "IMGUR_CLIENT_ID") as? String {
+    if let plist = Bundle.main.object(forInfoDictionaryKey: "IMGBB_API_KEY") as? String {
       let trimmed = plist.trimmingCharacters(in: .whitespacesAndNewlines)
       if !trimmed.isEmpty {
         return trimmed

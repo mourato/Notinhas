@@ -49,10 +49,10 @@ struct AnnotateBottomBarView: View {
   @ObservedObject private var annotateShortcutManager = AnnotateShortcutManager.shared
 
   @State private var isCloudUploading = false
-  @State private var isImgurUploading = false
-  @State private var imgurUploadError: String?
-  @State private var lastImgurURL: String?
-  private let imgurUploadCoordinator = NotinhasUploadCoordinator()
+  @State private var isImgBBUploading = false
+  @State private var imgbbUploadError: String?
+  @State private var lastImgBBURL: String?
+  private let imgbbUploadCoordinator = NotinhasUploadCoordinator()
   @State private var cloudUploadProgress: Double = 0
   @State private var cloudUploadError: String?
   @State private var showCloudNotConfiguredAlert = false
@@ -101,13 +101,13 @@ struct AnnotateBottomBarView: View {
     } message: {
       Text(L10n.AnnotateUI.overwriteCloudFileMessage)
     }
-    .alert(NotinhasL10n.imgurUploadFailed, isPresented: Binding(
-      get: { imgurUploadError != nil },
-      set: { if !$0 { imgurUploadError = nil } }
+    .alert(NotinhasL10n.imgbbUploadFailed, isPresented: Binding(
+      get: { imgbbUploadError != nil },
+      set: { if !$0 { imgbbUploadError = nil } }
     )) {
       Button(L10n.Common.ok, role: .cancel) {}
     } message: {
-      Text(imgurUploadError ?? "")
+      Text(imgbbUploadError ?? "")
     }
     .onReceive(NotificationCenter.default.publisher(for: .annotateCloudUpload)) { _ in
       // ⌘U shortcut: trigger cloud upload (with overwrite confirmation if needed)
@@ -388,12 +388,12 @@ struct AnnotateBottomBarView: View {
       }
 
       BottomBarButton(
-        icon: isImgurUploading ? "hourglass" : "photo.on.rectangle.angled",
-        tooltip: NotinhasL10n.uploadToImgur
+        icon: isImgBBUploading ? "hourglass" : "photo.on.rectangle.angled",
+        tooltip: NotinhasL10n.uploadToImgBB
       ) {
-        handleImgurUpload()
+        handleImgBBUpload()
       }
-      .disabled(isImgurUploading)
+      .disabled(isImgBBUploading)
 
       // Cloud upload button
       if showCloudButton {
@@ -535,31 +535,31 @@ struct AnnotateBottomBarView: View {
   }
 
 
-  private func handleImgurUpload() {
-    guard let clientID = NotinhasImgurConfiguration.clientID else {
-      imgurUploadError = NotinhasL10n.imgurMissingClientID
+  private func handleImgBBUpload() {
+    guard let apiKey = NotinhasImgBBConfiguration.apiKey else {
+      imgbbUploadError = NotinhasL10n.imgbbMissingAPIKey
       return
     }
     guard let renderedImage = AnnotateExporter.renderFinalImage(state: state) else {
-      imgurUploadError = NotinhasL10n.imgurInvalidImageData
+      imgbbUploadError = NotinhasL10n.imgbbInvalidImageData
       return
     }
 
-    isImgurUploading = true
+    isImgBBUploading = true
     Task { @MainActor in
-      defer { isImgurUploading = false }
-      let link = await imgurUploadCoordinator.upload(
+      defer { isImgBBUploading = false }
+      let link = await imgbbUploadCoordinator.upload(
         finalImage: renderedImage,
         maxDimension: 2048,
-        clientID: clientID
+        apiKey: apiKey
       )
       if let link {
-        lastImgurURL = link
+        lastImgBBURL = link
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(link, forType: .string)
       } else {
-        imgurUploadError = imgurUploadCoordinator.lastErrorMessage ?? NotinhasL10n.imgurUploadFailed
+        imgbbUploadError = imgbbUploadCoordinator.lastErrorMessage ?? NotinhasL10n.imgbbUploadFailed
       }
     }
   }

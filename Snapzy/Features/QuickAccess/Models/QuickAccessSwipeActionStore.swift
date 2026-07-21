@@ -50,7 +50,7 @@ final class QuickAccessSwipeActionStore: ObservableObject {
       if rawValue == "none" {
         self.swipeLeftAction = nil
       } else {
-        self.swipeLeftAction = QuickAccessActionKind(rawValue: rawValue)
+        self.swipeLeftAction = QuickAccessActionKind.fromStoredRawValue(rawValue)
       }
     } else {
       self.swipeLeftAction = .dismiss
@@ -60,7 +60,7 @@ final class QuickAccessSwipeActionStore: ObservableObject {
       if rawValue == "none" {
         self.swipeRightAction = nil
       } else {
-        self.swipeRightAction = QuickAccessActionKind(rawValue: rawValue)
+        self.swipeRightAction = QuickAccessActionKind.fromStoredRawValue(rawValue)
       }
     } else {
       self.swipeRightAction = .dismiss

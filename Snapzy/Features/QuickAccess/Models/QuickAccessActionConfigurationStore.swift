@@ -131,7 +131,7 @@ final class QuickAccessActionConfigurationStore: ObservableObject {
     var ordered: [QuickAccessActionKind] = []
 
     for rawID in rawIDs ?? [] {
-      guard let action = QuickAccessActionKind(rawValue: rawID), !seen.contains(action) else { continue }
+      guard let action = QuickAccessActionKind.fromStoredRawValue(rawID), !seen.contains(action) else { continue }
       ordered.append(action)
       seen.insert(action)
     }
@@ -148,7 +148,7 @@ final class QuickAccessActionConfigurationStore: ObservableObject {
       return QuickAccessActionKind.defaultEnabledActions
     }
 
-    return Set(rawIDs.compactMap(QuickAccessActionKind.init(rawValue:)))
+    return Set(rawIDs.compactMap(QuickAccessActionKind.fromStoredRawValue))
   }
 
   private static func normalizedSlotAssignments(
@@ -164,7 +164,7 @@ final class QuickAccessActionConfigurationStore: ObservableObject {
     for slot in QuickAccessActionSlot.allCases {
       let action: QuickAccessActionKind?
       if let rawAction = rawAssignments[slot.rawValue] {
-        action = rawAction.isEmpty ? nil : QuickAccessActionKind(rawValue: rawAction)
+        action = rawAction.isEmpty ? nil : QuickAccessActionKind.fromStoredRawValue(rawAction)
       } else {
         action = QuickAccessActionSlot.defaultAssignments[slot]
       }

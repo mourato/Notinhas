@@ -17,7 +17,7 @@ struct AnnotateSettingsView: View {
   private var annotateQuickPropertiesSyncEnabled = true
   @AppStorage(PreferencesKeys.annotateCombineSaveAsEdit)
   private var annotateCombineSaveAsEdit = true
-  @AppStorage(PreferencesKeys.notinhasImgurClientID) private var notinhasImgurClientID = ""
+  @AppStorage(PreferencesKeys.notinhasImgBBAPIKey) private var notinhasImgBBAPIKey = ""
   @AppStorage(PreferencesKeys.notinhasNotesPanelSide) private var notinhasNotesPanelSide = NotinhasNotesPanelSide.default.rawValue
 
   var body: some View {
@@ -94,12 +94,12 @@ struct AnnotateSettingsView: View {
 
         SettingRow(
           icon: "photo.on.rectangle.angled",
-          title: NotinhasL10n.imgurClientIDTitle,
-          description: NotinhasL10n.imgurClientIDHelp
+          title: NotinhasL10n.imgbbAPIKeyTitle,
+          description: NotinhasL10n.imgbbAPIKeyHelp
         ) {
           TextField(
-            NotinhasL10n.imgurClientIDPlaceholder,
-            text: $notinhasImgurClientID
+            NotinhasL10n.imgbbAPIKeyPlaceholder,
+            text: $notinhasImgBBAPIKey
           )
             .textFieldStyle(.roundedBorder)
             .frame(width: 180)
@@ -108,7 +108,7 @@ struct AnnotateSettingsView: View {
     }
     .formStyle(.grouped)
     .onAppear {
-      NotinhasImgurConfiguration.migratePanelSideIfNeeded()
+      NotinhasImgBBConfiguration.migratePanelSideIfNeeded()
     }
   }
 }

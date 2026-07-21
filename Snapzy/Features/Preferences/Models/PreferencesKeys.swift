@@ -73,7 +73,7 @@ enum PreferencesKeys {
   static let annotateCombineSaveAsEdit = "annotate.combineSaveAsEdit"
   static let notinhasNotesPanelSide = "annotate.notinhasNotes.panelSide.v1"
   static let legacyNotinhasNotesPanelSide = "notinhas.notes.panelSide"
-  static let notinhasImgurClientID = "notinhas.imgur.clientID"
+  static let notinhasImgBBAPIKey = "notinhas.imgbb.apiKey"
   static let annotateCustomColors = "annotate.customColors.v1"
   static let annotateFavoriteColors = "annotate.favoriteColors.v1"
   static let ocrSuccessNotificationEnabled = "ocr.successNotificationEnabled"

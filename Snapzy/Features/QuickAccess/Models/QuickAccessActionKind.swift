@@ -45,7 +45,7 @@ enum QuickAccessActionSlot: String, CaseIterable, Codable, Hashable, Identifiabl
     .topTrailing: .dismiss,
     .topLeading: .delete,
     .bottomLeading: .edit,
-    .bottomTrailing: .uploadToImgur,
+    .bottomTrailing: .uploadToImgBB,
   ]
 
   var isCenterSlot: Bool {
@@ -77,7 +77,7 @@ enum QuickAccessActionKind: String, CaseIterable, Codable, Hashable, Identifiabl
   case delete
   case edit
   case uploadToCloud
-  case uploadToImgur
+  case uploadToImgBB
   case pinToScreen
 
   var id: String { rawValue }
@@ -89,7 +89,7 @@ enum QuickAccessActionKind: String, CaseIterable, Codable, Hashable, Identifiabl
     .delete,
     .edit,
     .uploadToCloud,
-    .uploadToImgur,
+    .uploadToImgBB,
     .pinToScreen,
   ]
 
@@ -99,7 +99,7 @@ enum QuickAccessActionKind: String, CaseIterable, Codable, Hashable, Identifiabl
     switch self {
     case .copy, .saveOrOpen:
       return .primary
-    case .dismiss, .delete, .edit, .uploadToCloud, .uploadToImgur, .pinToScreen:
+    case .dismiss, .delete, .edit, .uploadToCloud, .uploadToImgBB, .pinToScreen:
       return .corner
     }
   }
@@ -118,8 +118,8 @@ enum QuickAccessActionKind: String, CaseIterable, Codable, Hashable, Identifiabl
       return L10n.PreferencesQuickAccess.editAction
     case .uploadToCloud:
       return L10n.AnnotateUI.uploadToCloud
-    case .uploadToImgur:
-      return NotinhasL10n.uploadToImgur
+    case .uploadToImgBB:
+      return NotinhasL10n.uploadToImgBB
     case .pinToScreen:
       return L10n.PreferencesQuickAccess.pinToScreenAction
     }
@@ -138,7 +138,7 @@ enum QuickAccessActionKind: String, CaseIterable, Codable, Hashable, Identifiabl
     switch self {
     case .dismiss, .delete:
       return true
-    case .copy, .saveOrOpen, .edit, .uploadToCloud, .uploadToImgur, .pinToScreen:
+    case .copy, .saveOrOpen, .edit, .uploadToCloud, .uploadToImgBB, .pinToScreen:
       return false
     }
   }
@@ -163,10 +163,17 @@ enum QuickAccessActionKind: String, CaseIterable, Codable, Hashable, Identifiabl
       return "pencil"
     case .uploadToCloud:
       return "icloud.and.arrow.up"
-    case .uploadToImgur:
+    case .uploadToImgBB:
       return "photo.on.rectangle.angled"
     case .pinToScreen:
       return "pin"
     }
+  }
+
+  static func fromStoredRawValue(_ rawValue: String) -> QuickAccessActionKind? {
+    if rawValue == "uploadToImgur" {
+      return .uploadToImgBB
+    }
+    return QuickAccessActionKind(rawValue: rawValue)
   }
 }

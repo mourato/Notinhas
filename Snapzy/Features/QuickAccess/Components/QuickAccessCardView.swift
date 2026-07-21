@@ -27,9 +27,9 @@ struct QuickAccessCardView: View {
   @State private var swipeOffset: CGFloat = 0
   @State private var isCloudUploading = false
   @State private var cloudUploadProgress: Double = 0
-  @State private var isImgurUploading = false
-  @State private var imgurUploadError: String?
-  private let imgurUploadCoordinator = NotinhasUploadCoordinator()
+  @State private var isImgBBUploading = false
+  @State private var imgbbUploadError: String?
+  private let imgbbUploadCoordinator = NotinhasUploadCoordinator()
   @Environment(\.accessibilityReduceMotion) var reduceMotion
 
   private let cornerRadius: CGFloat = 16
@@ -66,7 +66,7 @@ struct QuickAccessCardView: View {
       }
 
       // Cloud upload progress overlay
-      if isCloudUploading || isImgurUploading {
+      if isCloudUploading || isImgBBUploading {
         QuickAccessProgressView(state: .processing(progress: isCloudUploading ? cloudUploadProgress : 0.8))
           .transition(.opacity)
       }
@@ -142,13 +142,13 @@ struct QuickAccessCardView: View {
         }
       }
     }
-    .alert(NotinhasL10n.imgurUploadFailed, isPresented: Binding(
-      get: { imgurUploadError != nil },
-      set: { if !$0 { imgurUploadError = nil } }
+    .alert(NotinhasL10n.imgbbUploadFailed, isPresented: Binding(
+      get: { imgbbUploadError != nil },
+      set: { if !$0 { imgbbUploadError = nil } }
     )) {
       Button(L10n.Common.ok, role: .cancel) {}
     } message: {
-      Text(imgurUploadError ?? "")
+      Text(imgbbUploadError ?? "")
     }
     .animation(QuickAccessAnimations.hoverOverlay, value: isHovering)
   }
@@ -345,8 +345,8 @@ struct QuickAccessCardView: View {
       return editActionTitle
     case .uploadToCloud:
       return cloudActionTitle
-    case .uploadToImgur:
-      return NotinhasL10n.uploadToImgur
+    case .uploadToImgBB:
+      return NotinhasL10n.uploadToImgBB
     case .pinToScreen:
       return item.isPinned ? L10n.PreferencesQuickAccess.unpinAction : L10n.PreferencesQuickAccess.pinToScreenAction
     }
@@ -358,7 +358,7 @@ struct QuickAccessCardView: View {
       return isTempFile ? "square.and.arrow.down" : "folder"
     case .uploadToCloud:
       return cloudActionIcon
-    case .uploadToImgur:
+    case .uploadToImgBB:
       return "photo.on.rectangle.angled"
     case .pinToScreen:
       return item.isPinned ? "pin.fill" : "pin"
@@ -380,8 +380,8 @@ struct QuickAccessCardView: View {
       return true
     case .uploadToCloud:
       return shouldShowCloudButton
-    case .uploadToImgur:
-      return NotinhasImgurConfiguration.clientID != nil
+    case .uploadToImgBB:
+      return NotinhasImgBBConfiguration.apiKey != nil
     case .delete:
       return true
     }
@@ -393,8 +393,8 @@ struct QuickAccessCardView: View {
       return !item.isVideo
     case .uploadToCloud:
       return shouldShowCloudButton && !alreadyUploadedToCloud && !isCloudUploading
-    case .uploadToImgur:
-      return NotinhasImgurConfiguration.clientID != nil && !item.isVideo && !isImgurUploading
+    case .uploadToImgBB:
+      return NotinhasImgBBConfiguration.apiKey != nil && !item.isVideo && !isImgBBUploading
     case .copy, .saveOrOpen, .dismiss, .delete, .edit:
       return true
     }
@@ -416,8 +416,8 @@ struct QuickAccessCardView: View {
       handleDoubleClick()
     case .uploadToCloud:
       uploadToCloud()
-    case .uploadToImgur:
-      uploadToImgur()
+    case .uploadToImgBB:
+      uploadToImgBB()
     case .pinToScreen:
       guard !item.isVideo else { return }
       manager.togglePin(id: item.id)
@@ -654,28 +654,28 @@ struct QuickAccessCardView: View {
     cloudManager.isConfigured
   }
 
-  private func uploadToImgur() {
-    guard let clientID = NotinhasImgurConfiguration.clientID else { return }
-    guard !isImgurUploading, let image = NSImage(contentsOf: item.url) else {
-      imgurUploadError = NotinhasL10n.imgurInvalidImageData
+  private func uploadToImgBB() {
+    guard let apiKey = NotinhasImgBBConfiguration.apiKey else { return }
+    guard !isImgBBUploading, let image = NSImage(contentsOf: item.url) else {
+      imgbbUploadError = NotinhasL10n.imgbbInvalidImageData
       return
     }
 
-    isImgurUploading = true
+    isImgBBUploading = true
     manager.pauseCountdownForActivity(item.id)
     Task { @MainActor in
       defer {
-        isImgurUploading = false
+        isImgBBUploading = false
         manager.resumeCountdownForActivity(item.id)
       }
 
-      let link = await imgurUploadCoordinator.upload(
+      let link = await imgbbUploadCoordinator.upload(
         finalImage: image,
         maxDimension: 2048,
-        clientID: clientID
+        apiKey: apiKey
       )
       guard let link else {
-        imgurUploadError = imgurUploadCoordinator.lastErrorMessage ?? NotinhasL10n.imgurUploadFailed
+        imgbbUploadError = imgbbUploadCoordinator.lastErrorMessage ?? NotinhasL10n.imgbbUploadFailed
         return
       }
 

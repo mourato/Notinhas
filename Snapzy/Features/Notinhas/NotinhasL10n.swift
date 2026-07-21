@@ -21,14 +21,14 @@ enum NotinhasL10n {
   static let panelSideDescription = L10n.Notinhas.panelSideDescription
   static let left = L10n.Notinhas.left
   static let right = L10n.Notinhas.right
-  static let imgurClientIDTitle = L10n.Notinhas.imgurClientIDTitle
-  static let imgurClientIDHelp = L10n.Notinhas.imgurClientIDHelp
-  static let imgurClientIDPlaceholder = L10n.Notinhas.imgurClientIDPlaceholder
-  static let imgurMissingClientID = L10n.Notinhas.imgurMissingClientID
-  static let imgurInvalidImageData = L10n.Notinhas.imgurInvalidImageData
-  static let imgurInvalidResponse = L10n.Notinhas.imgurInvalidResponse
-  static let uploadToImgur = L10n.Notinhas.uploadToImgur
-  static let imgurUploadFailed = L10n.Notinhas.imgurUploadFailed
+  static let imgbbAPIKeyTitle = L10n.Notinhas.imgbbAPIKeyTitle
+  static let imgbbAPIKeyHelp = L10n.Notinhas.imgbbAPIKeyHelp
+  static let imgbbAPIKeyPlaceholder = L10n.Notinhas.imgbbAPIKeyPlaceholder
+  static let imgbbMissingAPIKey = L10n.Notinhas.imgbbMissingAPIKey
+  static let imgbbInvalidImageData = L10n.Notinhas.imgbbInvalidImageData
+  static let imgbbInvalidResponse = L10n.Notinhas.imgbbInvalidResponse
+  static let uploadToImgBB = L10n.Notinhas.uploadToImgBB
+  static let imgbbUploadFailed = L10n.Notinhas.imgbbUploadFailed
   static let selected = L10n.Notinhas.selected
 
   static func colorSwatch(_ index: Int) -> String {

@@ -8,16 +8,16 @@ final class NotinhasUploadCoordinator: ObservableObject {
   @Published private(set) var lastUploadedURL: String?
   @Published private(set) var lastErrorMessage: String?
 
-  private let uploadService: NotinhasImgurUploadService
+  private let uploadService: NotinhasImgBBUploadService
 
-  init(uploadService: NotinhasImgurUploadService = .shared) {
+  init(uploadService: NotinhasImgBBUploadService = .shared) {
     self.uploadService = uploadService
   }
 
   func upload(
     finalImage: NSImage,
     maxDimension: CGFloat,
-    clientID: String
+    apiKey: String
   ) async -> String? {
     isUploading = true
     lastErrorMessage = nil
@@ -26,7 +26,7 @@ final class NotinhasUploadCoordinator: ObservableObject {
     let preparedImage = downscaled(finalImage, maximumDimension: maxDimension)
 
     do {
-      let result = try await uploadService.upload(image: preparedImage, clientID: clientID)
+      let result = try await uploadService.upload(image: preparedImage, apiKey: apiKey)
       lastUploadedURL = result.link
       return result.link
     } catch {
