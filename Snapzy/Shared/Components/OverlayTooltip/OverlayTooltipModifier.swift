@@ -1,5 +1,4 @@
 import AppKit
-import Combine
 import SwiftUI
 
 extension View {
@@ -19,27 +18,32 @@ extension View {
   }
 }
 
-private final class OverlayTooltipAnchorProxy: ObservableObject {
-  weak var view: NSView?
+enum OverlayTooltipScreenCoordinates {
+  /// Converts a SwiftUI `.global` rect (top-left origin, y down) to AppKit screen space.
+  static func screenFrame(fromSwiftUIGlobal global: CGRect) -> CGRect? {
+    guard global.width > 0, global.height > 0 else { return nil }
 
-  func screenFrame() -> CGRect? {
-    guard let view, let window = view.window else { return nil }
-    let inWindow = view.convert(view.bounds, to: nil)
-    return window.convertToScreen(inWindow)
-  }
-}
+    for window in NSApp.windows where window.isVisible && !window.isMiniaturized {
+      guard let contentView = window.contentView else { continue }
+      let contentHeight = contentView.bounds.height
+      let windowRect = CGRect(
+        x: global.minX,
+        y: contentHeight - global.maxY,
+        width: global.width,
+        height: global.height
+      )
+      let center = CGPoint(x: windowRect.midX, y: windowRect.midY)
+      guard contentView.bounds.contains(center) else { continue }
+      return window.convertToScreen(windowRect)
+    }
 
-private struct OverlayTooltipAnchorReader: NSViewRepresentable {
-  let proxy: OverlayTooltipAnchorProxy
-
-  func makeNSView(context _: Context) -> NSView {
-    let view = NSView()
-    DispatchQueue.main.async { [weak view] in proxy.view = view }
-    return view
-  }
-
-  func updateNSView(_ nsView: NSView, context _: Context) {
-    proxy.view = nsView
+    guard let screen = NSScreen.main else { return nil }
+    return CGRect(
+      x: global.minX,
+      y: screen.frame.maxY - global.maxY,
+      width: global.width,
+      height: global.height
+    )
   }
 }
 
@@ -48,13 +52,24 @@ private struct OverlayTooltipModifier: ViewModifier {
   let edge: OverlayTooltipEdge
   let delay: TimeInterval
 
-  @StateObject private var proxy = OverlayTooltipAnchorProxy()
+  @State private var anchorBounds: CGRect = .zero
   @State private var owner = UUID()
   @State private var showWorkItem: DispatchWorkItem?
 
   func body(content viewContent: Content) -> some View {
     viewContent
-      .background(OverlayTooltipAnchorReader(proxy: proxy))
+      .overlay {
+        GeometryReader { geometry in
+          Color.clear
+            .onAppear {
+              anchorBounds = geometry.frame(in: .global)
+            }
+            .onChange(of: geometry.frame(in: .global)) { newValue in
+              anchorBounds = newValue
+            }
+        }
+        .allowsHitTesting(false)
+      }
       .onHover { hovering in
         if hovering {
           scheduleShow()
@@ -68,7 +83,9 @@ private struct OverlayTooltipModifier: ViewModifier {
   private func scheduleShow() {
     showWorkItem?.cancel()
     let work = DispatchWorkItem {
-      guard let frame = proxy.screenFrame() else { return }
+      guard let frame = OverlayTooltipScreenCoordinates.screenFrame(fromSwiftUIGlobal: anchorBounds) else {
+        return
+      }
       OverlayTooltipPresenter.shared.show(
         content,
         anchorScreenFrame: frame,

@@ -15,6 +15,8 @@ struct NotinhasNoteEditorView: View {
 
   @FocusState private var isFocused: Bool
 
+  private let panelShape = RoundedRectangle(cornerRadius: 12, style: .continuous)
+
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(spacing: 8) {
@@ -66,7 +68,8 @@ struct NotinhasNoteEditorView: View {
     .frame(width: panelWidth, alignment: .topLeading)
     .frame(maxHeight: maxPanelHeight, alignment: .topLeading)
     .fixedSize(horizontal: false, vertical: true)
-    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    .background(.regularMaterial, in: panelShape)
+    .clipShape(panelShape)
     .onAppear { isFocused = true }
   }
 
