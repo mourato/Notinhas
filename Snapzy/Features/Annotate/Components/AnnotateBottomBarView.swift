@@ -357,6 +357,10 @@ struct AnnotateBottomBarView: View {
     }
   }
 
+  private var isImgBBConfigured: Bool {
+    NotinhasImgBBConfiguration.apiKey != nil
+  }
+
   private var annotateActionButtons: some View {
     let showCloudButton = cloudManager.isConfigured && QuickAccessActionConfigurationStore.shared.isEnabled(.uploadToCloud)
     let cloudUploadShortcut = annotateShortcutManager.isActionShortcutEnabled(for: .cloudUpload)
@@ -380,11 +384,12 @@ struct AnnotateBottomBarView: View {
 
       BottomBarButton(
         icon: isImgBBUploading ? "hourglass" : "icloud.and.arrow.up",
-        tooltip: NotinhasL10n.uploadToImgBB
+        tooltip: isImgBBConfigured ? NotinhasL10n.uploadToImgBB : NotinhasL10n.imgbbMissingAPIKey
       ) {
         handleImgBBUpload()
       }
-      .disabled(isImgBBUploading)
+      .disabled(isImgBBUploading || !isImgBBConfigured)
+      .opacity(isImgBBConfigured ? 1 : 0.5)
 
       // Cloud upload button
       if showCloudButton {
