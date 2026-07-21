@@ -1293,39 +1293,6 @@ nonisolated enum L10n {
     )
   }
 
-  enum Sponsor {
-    static let recurringSupport = string(
-      "sponsor.recurring-support",
-      defaultValue: "Recurring support",
-      comment: "Subtitle for GitHub Sponsors option"
-    )
-    static let oneTimeTip = string(
-      "sponsor.one-time-tip",
-      defaultValue: "One-time tip",
-      comment: "Subtitle for Ko-fi option"
-    )
-    static let directSupport = string(
-      "sponsor.direct-support",
-      defaultValue: "Direct support",
-      comment: "Subtitle for PayPal option"
-    )
-    static let buttonGithub = string(
-      "sponsor.button-github",
-      defaultValue: "Sponsor",
-      comment: "GitHub Sponsors action button label"
-    )
-    static let buttonKofi = string(
-      "sponsor.button-kofi",
-      defaultValue: "Tip",
-      comment: "Ko-fi action button label"
-    )
-    static let buttonPaypal = string(
-      "sponsor.button-paypal",
-      defaultValue: "Donate",
-      comment: "PayPal action button label"
-    )
-  }
-
   enum Onboarding {
     static let welcomeSubtitle = string(
       "onboarding.welcome.subtitle",
@@ -1629,22 +1596,6 @@ nonisolated enum L10n {
       "onboarding.skip.skip-setup",
       defaultValue: "Skip Setup",
       comment: "Button title to confirm skipping onboarding setup"
-    )
-
-    static let sponsorTitle = string(
-      "onboarding.sponsor.title",
-      defaultValue: "Sponsor the Author",
-      comment: "Onboarding sponsor step title"
-    )
-    static let sponsorDescription = string(
-      "onboarding.sponsor.description",
-      defaultValue: "Snapzy is now open-source. If it saves you time, consider supporting ongoing development.",
-      comment: "Onboarding sponsor step description"
-    )
-    static let sponsorOptionalNote = string(
-      "onboarding.sponsor.optional-note",
-      defaultValue: "Support is optional. Snapzy remains fully usable without sponsoring.",
-      comment: "Note under sponsor options"
     )
 
     static let completionTitle = string(
