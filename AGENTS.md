@@ -37,8 +37,10 @@ unrelated product skills from other apps.
 - `open Snapzy.xcodeproj` — develop and run in Xcode (`⌘R`).
 - `./scripts/build_and_run.sh` — build and launch the isolated debug app.
 - `./scripts/run-tests.sh` — run the XCTest suite with results in `build/`.
-- `./scripts/format.sh` — format Swift with SwiftFormat (two-space indent,
-  120-column maximum).
+- `swiftformat <paths…>` — format Swift in place (install once:
+  `brew install swiftformat`). Rules live in `.swiftformat` (two-space indent,
+  120-column maximum). Scope paths as needed, e.g. `swiftformat Snapzy
+  SnapzyTests` or `swiftformat Snapzy/Features/Notinhas`.
 
 Screen Recording and Accessibility permissions are required for affected
 manual checks. Test capture, annotation, clipboard output, and permission

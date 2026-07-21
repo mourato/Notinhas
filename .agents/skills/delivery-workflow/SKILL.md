@@ -16,7 +16,7 @@ Build/run failures, choosing verification depth, assessing merge readiness, or G
 | `open Snapzy.xcodeproj` | Develop and run in Xcode (`⌘R`) |
 | `./scripts/build_and_run.sh` | Build and launch the isolated debug app (codesign via `LOCAL_CODE_SIGN_IDENTITY`, default `Prisma Local Code Signing`) |
 | `./scripts/run-tests.sh` | Run the XCTest suite; results under `build/` |
-| `./scripts/format.sh` | Format Swift with SwiftFormat (`.swiftformat`: 2-space indent, 120 columns) |
+| `swiftformat <paths…>` | Format Swift in place (`brew install swiftformat`; `.swiftformat`: 2-space indent, 120 columns). Scope paths as needed — e.g. `swiftformat Snapzy SnapzyTests`. |
 
 Do **not** treat plain `swift build` as sufficient acceptance — Info.plist, signing, and Screen Recording permissions matter for capture flows.
 
@@ -28,7 +28,7 @@ Screen Recording and Accessibility TCC grants follow the code signature. Ad-hoc 
 
 ### Merge Gate (current)
 
-1. `./scripts/format.sh` when SwiftFormat is installed (or confirm no Swift changes)
+1. `swiftformat <paths…>` on the Swift paths you changed (or confirm no Swift changes). Typical scope: `swiftformat Snapzy SnapzyTests`.
 2. `./scripts/run-tests.sh` for logic touched, or filtered `-only-testing:` for focused suites
 3. Manual smoke appropriate to the diff (below)
 

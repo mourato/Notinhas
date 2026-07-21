@@ -12,7 +12,7 @@ Use when editing Swift under `Snapzy/` or `SnapzyTests/`.
 - Prefer descriptive names and small focused types or functions.
 - Use early returns; keep control flow shallow.
 - Avoid force unwraps unless failure is truly impossible and localized.
-- Match `.swiftformat` (2-space indent, 120-column max, Swift 5.9) via `./scripts/format.sh`.
+- Match `.swiftformat` (2-space indent, 120-column max, Swift 5.9) via `swiftformat <paths…>` from the repo root.
 - Use `// MARK:` in large types for navigation.
 - Keep Notinhas-specific code in `Snapzy/Features/Notinhas/`; keep Annotate/Capture integration thin.
 
@@ -25,8 +25,17 @@ Use when editing Swift under `Snapzy/` or `SnapzyTests/`.
 
 ## Tooling
 
+Install once: `brew install swiftformat`. Run from the repo root so `.swiftformat` applies.
+
 ```bash
-./scripts/format.sh
+# app + tests (typical)
+swiftformat Snapzy SnapzyTests
+
+# Notinhas-only
+swiftformat Snapzy/Features/Notinhas SnapzyTests/Features/Notinhas
+
+# lint without writing (CI-style)
+swiftformat --lint Snapzy SnapzyTests
 ```
 
 ## Related
