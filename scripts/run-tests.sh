@@ -3,6 +3,7 @@
 #
 # Usage:
 #   ./scripts/run-tests.sh
+#   ./scripts/run-tests.sh --video-module
 #   ./scripts/run-tests.sh -only-testing:SnapzyTests/SomeTests
 #   ./scripts/run-tests.sh --open-result
 
@@ -26,6 +27,11 @@ RESULT_BUNDLE_PATH="${RESULT_BUNDLE_PATH:-${BUILD_DIR}/ci-test.xcresult}"
 LOG_PATH="${LOG_PATH:-${BUILD_DIR}/ci-test.log}"
 KEEP_RESULT=0
 OPEN_RESULT=0
+ENABLE_VIDEO_MODULE="${ENABLE_VIDEO_MODULE:-}"
+VIDEO_MODULE_EXPLICIT=0
+if [[ -n "$ENABLE_VIDEO_MODULE" ]]; then
+  VIDEO_MODULE_EXPLICIT=1
+fi
 XCODEBUILD_ARGS=()
 
 if [ -t 1 ]; then
@@ -53,6 +59,22 @@ die() {
   exit 1
 }
 
+apply_video_module_settings() {
+  if [[ "${ENABLE_VIDEO_MODULE:-0}" == "1" ]]; then
+    SCHEME="Snapzy Video"
+    case "$CONFIGURATION" in
+      Debug)
+        CONFIGURATION="Debug+Video"
+        ;;
+      Release)
+        CONFIGURATION="Release+Video"
+        ;;
+    esac
+  else
+    SCHEME="Snapzy"
+  fi
+}
+
 usage() {
   cat <<EOF
 Usage: $0 [OPTIONS] [XCODEBUILD_TEST_OPTIONS]
@@ -68,10 +90,17 @@ Options:
   --result-bundle PATH   Result bundle path. Default: ${RESULT_BUNDLE_PATH}
   --source-packages PATH SwiftPM package cache path. Default: ${SOURCE_PACKAGES_PATH}
   --keep-result          Do not remove the previous result bundle before running.
+  --video-module         Run Recording/VideoEditor XCTests (Snapzy Video / Debug+Video).
+  --no-video-module      Explicit default: Snapzy scheme without Video module.
   -h, --help             Show this help.
+
+Environment:
+  ENABLE_VIDEO_MODULE    Set to 1 or 0 to enable/disable the Video module non-interactively.
 
 Examples:
   $0
+  $0 --video-module
+  ENABLE_VIDEO_MODULE=1 $0
   $0 -only-testing:SnapzyTests/CaptureOutputNamingTests
   SNAPZY_RUN_MICROPHONE_INTEGRATION=1 $0 -only-testing:SnapzyTests/MicrophoneAudioCapturerTests/testMicrophoneAudioCapturerStartStopRealMicrophoneIntegration
 EOF
@@ -126,6 +155,16 @@ while [ $# -gt 0 ]; do
       KEEP_RESULT=1
       shift
       ;;
+    --video-module)
+      ENABLE_VIDEO_MODULE=1
+      VIDEO_MODULE_EXPLICIT=1
+      shift
+      ;;
+    --no-video-module)
+      ENABLE_VIDEO_MODULE=0
+      VIDEO_MODULE_EXPLICIT=1
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -143,6 +182,10 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+if [[ "$VIDEO_MODULE_EXPLICIT" -eq 1 ]]; then
+  apply_video_module_settings
+fi
 
 if [ "$(uname -s)" != "Darwin" ]; then
   die "This script requires macOS."

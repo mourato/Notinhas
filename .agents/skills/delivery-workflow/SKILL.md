@@ -18,7 +18,7 @@ Build/run failures, choosing verification depth, assessing merge readiness, or G
 | `./scripts/build_and_run.sh --video-module` | Build with Recording + Video Editor (`Snapzy Video` scheme, **Debug+Video** / **Release+Video**). |
 | `./scripts/build_and_run.sh --no-video-module` | Explicit default: **Snapzy** scheme, module off. |
 | `./scripts/run-tests.sh` | Run the XCTest suite with default **Snapzy** scheme (**Debug**); results under `build/`. Recording/VideoEditor tests are **not** compiled in. |
-| `./scripts/run-tests.sh` with Video build | To run Recording/VideoEditor XCTests: `SCHEME="Snapzy Video" CONFIGURATION="Debug+Video" ./scripts/run-tests.sh` (or equivalent `xcodebuild test`). |
+| `./scripts/run-tests.sh --video-module` | Run Recording/VideoEditor XCTests (**Snapzy Video** / **Debug+Video**). Also: `ENABLE_VIDEO_MODULE=1` or `--no-video-module`. |
 | `swiftformat <paths…>` | Format Swift in place (`brew install swiftformat`; `.swiftformat`: 2-space indent, 120 columns). Scope paths as needed — e.g. `swiftformat Snapzy SnapzyTests`. |
 
 Do **not** treat plain `swift build` as sufficient acceptance — Info.plist, signing, and Screen Recording permissions matter for capture flows.
@@ -27,7 +27,7 @@ Do **not** treat plain `swift build` as sufficient acceptance — Info.plist, si
 
 - **Compile gate:** `NOTINHAS_VIDEO_MODULE` — set by **Snapzy Video** scheme configurations **Debug+Video** / **Release+Video**. Default **Snapzy** scheme excludes Recording and Video Editor sources and their XCTests (`#if NOTINHAS_VIDEO_MODULE`).
 - **Runtime gate:** `VideoModuleAvailability` — UserDefaults key `videoModule.enabled`, default off; Advanced preferences toggle when compiled in.
-- **Notinhas merge gate:** default `./scripts/run-tests.sh` (module off) is sufficient for capture/annotate/export work. Run Video-scheme tests only when touching Recording, Video Editor, or video-gated shell/prefs/history paths.
+- **Notinhas merge gate:** default `./scripts/run-tests.sh` (module off) is sufficient for capture/annotate/export work. Run `./scripts/run-tests.sh --video-module` when touching Recording, Video Editor, or video-gated shell/prefs/history paths.
 
 ## Signing Note
 

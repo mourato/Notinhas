@@ -373,7 +373,7 @@ struct QuickAccessCardView: View {
   ) -> Bool {
     switch action {
     case .edit:
-      return !item.isVideo || VideoModuleAvailability.isEnabled
+      return VideoModuleMediaRouting.isEditActionAvailable(isVideo: item.isVideo)
     case .copy, .dismiss:
       return true
     case .pinToScreen:
@@ -428,11 +428,14 @@ struct QuickAccessCardView: View {
 
   private func handleDoubleClick() {
     if item.isVideo {
-      guard VideoModuleAvailability.isEnabled else {
+      switch VideoModuleMediaRouting.quickAccessVideoOpenDestination() {
+      case .revealInFinder:
         manager.openInFinder(id: item.id)
-        return
+      case .videoEditor:
+        openVideoEditor()
+      case .annotate:
+        break
       }
-      openVideoEditor()
     } else {
       openAnnotation()
     }
@@ -446,7 +449,7 @@ struct QuickAccessCardView: View {
   }
 
   private func openVideoEditor() {
-    guard VideoModuleAvailability.isEnabled else { return }
+    guard VideoModuleMediaRouting.shouldDispatchVideoAction() else { return }
     #if NOTINHAS_VIDEO_MODULE
       Task { @MainActor in
         VideoEditorManager.shared.openEditor(for: item)

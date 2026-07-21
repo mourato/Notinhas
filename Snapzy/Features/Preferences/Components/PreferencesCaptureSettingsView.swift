@@ -146,8 +146,8 @@ struct CaptureSettingsView: View {
                 .labelsHidden()
             }
 
-            if videoModuleEnabled {
-              #if NOTINHAS_VIDEO_MODULE
+            #if NOTINHAS_VIDEO_MODULE
+              if videoModuleEnabled {
                 SettingRow(
                   icon: "video",
                   title: L10n.PreferencesCapture.includeInRecordingsTitle,
@@ -156,8 +156,8 @@ struct CaptureSettingsView: View {
                   Toggle("", isOn: $includeOwnAppInRecordings)
                     .labelsHidden()
                 }
-              #endif
-            }
+              }
+            #endif
           }
         }
 
@@ -340,8 +340,8 @@ struct CaptureSettingsView: View {
                 .frame(width: 260)
             }
 
-            if videoModuleEnabled {
-              #if NOTINHAS_VIDEO_MODULE
+            #if NOTINHAS_VIDEO_MODULE
+              if videoModuleEnabled {
                 SettingRow(
                   icon: "textformat.abc",
                   title: L10n.PreferencesCapture.recordingTemplateTitle,
@@ -351,8 +351,8 @@ struct CaptureSettingsView: View {
                     .textFieldStyle(.roundedBorder)
                     .frame(width: 260)
                 }
-              #endif
-            }
+              }
+            #endif
 
             HStack(alignment: .top, spacing: 6) {
               Image(systemName: "info.circle")
@@ -368,11 +368,11 @@ struct CaptureSettingsView: View {
 
             VStack(alignment: .leading, spacing: 2) {
               Text(L10n.PreferencesCapture.screenshotPreview(screenshotFilenamePreview))
-              if videoModuleEnabled {
-                #if NOTINHAS_VIDEO_MODULE
+              #if NOTINHAS_VIDEO_MODULE
+                if videoModuleEnabled {
                   Text(L10n.PreferencesCapture.recordingPreview(recordingFilenamePreview))
-                #endif
-              }
+                }
+              #endif
             }
             .font(.system(size: 11))
             .foregroundColor(.secondary)

@@ -36,7 +36,9 @@ unrelated product skills from other apps.
 
 - `open Snapzy.xcodeproj` — develop and run in Xcode (`⌘R`).
 - `./scripts/build_and_run.sh` — build and launch the isolated debug app.
-- `./scripts/run-tests.sh` — run the XCTest suite with results in `build/`.
+- `./scripts/run-tests.sh` — run the XCTest suite with results in `build/`
+  (default **Snapzy** scheme). Use `--video-module` (or `ENABLE_VIDEO_MODULE=1`)
+  for Recording/VideoEditor XCTests via **Snapzy Video** / **Debug+Video**.
 - `swiftformat <paths…>` — format Swift in place (install once:
   `brew install swiftformat`). Rules live in `.swiftformat` (two-space indent,
   120-column maximum). Scope paths as needed, e.g. `swiftformat Snapzy
@@ -56,9 +58,8 @@ Recording and Video Editor are optional. They compile only when
 `videoModule.enabled` defaults to off; when the module is compiled in, turn it
 on under **Preferences → Advanced** (`VideoModuleAvailability`). Notinhas
 capture → annotate → export does not require the Video module.
-`./scripts/run-tests.sh` uses the default **Snapzy** scheme, so
-Recording/VideoEditor XCTests are compiled out unless you run tests with the
-Video scheme and **Debug+Video** configuration.
+`./scripts/run-tests.sh` uses the default **Snapzy** scheme (module off). For
+Recording/VideoEditor XCTests: `./scripts/run-tests.sh --video-module`.
 
 ## Code and Tests
 
