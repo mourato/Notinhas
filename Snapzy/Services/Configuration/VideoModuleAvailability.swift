@@ -18,10 +18,6 @@ enum VideoModuleAvailability {
     return UserDefaults.standard.bool(forKey: PreferencesKeys.videoModuleEnabled)
   }
 
-  static var areVideoActionsAllowed: Bool {
-    isEnabled
-  }
-
   static func setEnabled(_ enabled: Bool) {
     guard isCompiledIn else { return }
     UserDefaults.standard.set(enabled, forKey: PreferencesKeys.videoModuleEnabled)

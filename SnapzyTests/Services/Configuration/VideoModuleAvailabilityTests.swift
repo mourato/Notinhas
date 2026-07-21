@@ -19,10 +19,11 @@ final class VideoModuleAvailabilityTests: XCTestCase {
     XCTAssertFalse(VideoModuleAvailability.isEnabled)
   }
 
-  func testSetEnabledRoundTrip() {
-    guard VideoModuleAvailability.isCompiledIn else {
-      return
-    }
+  func testSetEnabledRoundTrip() throws {
+    try XCTSkipUnless(
+      VideoModuleAvailability.isCompiledIn,
+      "Requires NOTINHAS_VIDEO_MODULE (Snapzy Video / Debug+Video)"
+    )
 
     XCTAssertFalse(VideoModuleAvailability.isEnabled)
 
@@ -33,11 +34,13 @@ final class VideoModuleAvailabilityTests: XCTestCase {
     XCTAssertFalse(VideoModuleAvailability.isEnabled)
   }
 
-  func testDisabledWhenNotCompiledIn() {
-    guard !VideoModuleAvailability.isCompiledIn else {
-      return
-    }
+  func testDisabledWhenNotCompiledIn() throws {
+    try XCTSkipUnless(
+      !VideoModuleAvailability.isCompiledIn,
+      "Only meaningful on default Snapzy builds without NOTINHAS_VIDEO_MODULE"
+    )
 
+    UserDefaults.standard.set(true, forKey: PreferencesKeys.videoModuleEnabled)
     VideoModuleAvailability.setEnabled(true)
     XCTAssertFalse(VideoModuleAvailability.isEnabled)
   }
