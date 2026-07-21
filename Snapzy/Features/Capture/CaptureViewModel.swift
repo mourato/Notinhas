@@ -1140,16 +1140,15 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       // which a post-release Cmd+Tab could recomposite the screen and change the captured
       // pixels. Empty when the fast path can't honor the capture options; the capture task
       // then falls back to captureArea() (status quo).
-      let mouseUpSnapshots: [FrozenDisplaySnapshot]
-      if case .rect = selection.target {
-        mouseUpSnapshots = self.captureLiveMouseUpSnapshots(
+      let mouseUpSnapshots: [FrozenDisplaySnapshot] = if case .rect = selection.target {
+        captureLiveMouseUpSnapshots(
           selection: selection,
           showCursor: showCursor,
           excludeDesktopIcons: excludeDesktopIcons,
           excludeDesktopWidgets: excludeDesktopWidgets
         )
       } else {
-        mouseUpSnapshots = []
+        []
       }
 
       // Secure pixels first: immediately after the snapshot is taken, we dismiss the overlay
@@ -1165,10 +1164,9 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
           exportDirectory: resolvedSaveDirectory
         )
 
-        let result: CaptureResult
-        switch selection.target {
+        let result: CaptureResult = switch selection.target {
         case .rect:
-          result = await self.captureLiveRectFromSnapshots(
+          await self.captureLiveRectFromSnapshots(
             selection: selection,
             snapshots: mouseUpSnapshots,
             saveDirectory: actualSaveDirectory,
@@ -1180,7 +1178,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
             selectionContext: selectionContext
           )
         case .window(let target):
-          result = await self.captureManager.captureWindow(
+          await self.captureManager.captureWindow(
             target: target,
             saveDirectory: actualSaveDirectory,
             format: self.resolvedFormat,
@@ -1253,7 +1251,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
         "Mouse-up fast snapshots grabbed",
         context: [
           "displays": "\(snapshots.count)",
-          "grabMs": "\(Int(Date().timeIntervalSince(grabStartedAt) * 1000))"
+          "grabMs": "\(Int(Date().timeIntervalSince(grabStartedAt) * 1000))",
         ]
       )
     }
@@ -1326,14 +1324,13 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
 
     do {
       let outputScaleFactor = preferredScreenshotOutputScaleFactor
-      let cropResult: FrozenAreaCropResult
-      if selection.spansMultipleDisplays {
-        cropResult = try frozenSession.cropCompositeImage(
+      let cropResult: FrozenAreaCropResult = if selection.spansMultipleDisplays {
+        try frozenSession.cropCompositeImage(
           for: selection,
           minimumOutputScaleFactor: outputScaleFactor
         )
       } else {
-        cropResult = try frozenSession.cropImage(
+        try frozenSession.cropImage(
           for: selection,
           minimumOutputScaleFactor: outputScaleFactor
         )
@@ -1352,7 +1349,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
         context: [
           "rect": "\(Int(selection.rect.width))x\(Int(selection.rect.height))",
           "spanMultiple": "\(selection.spansMultipleDisplays)",
-          "cropSaveMs": "\(durationMs)"
+          "cropSaveMs": "\(durationMs)",
         ]
       )
       return result
@@ -1595,13 +1592,13 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     excludeOwnApplication: Bool
   ) {
     guard activeAreaSelectionSessionID == sessionID else { return }
-    let currentDisplayIDs = Set(NSScreen.screens.compactMap { $0.displayID })
+    let currentDisplayIDs = Set(NSScreen.screens.compactMap(\.displayID))
     let displayIDs = frozenSession.displayIDs.intersection(currentDisplayIDs)
     guard !displayIDs.isEmpty else { return }
 
     for displayID in displayIDs {
       Task { @MainActor [weak self] in
-        guard let self, self.activeAreaSelectionSessionID == sessionID else { return }
+        guard let self, activeAreaSelectionSessionID == sessionID else { return }
         let startedAt = Date()
 
         // Fast CoreGraphics path when no cursor/desktop exclusions are needed. The overlay
@@ -1610,8 +1607,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
            let screen = NSScreen.screens.first(where: { $0.displayID == displayID }) {
           let screenFrame = screen.frame
           let backingScale = screen.backingScaleFactor
-          let colorSpaceName = self.captureManager.preferredCaptureColorSpaceName(for: screen)
-          let captureManager = self.captureManager
+          let colorSpaceName = captureManager.preferredCaptureColorSpaceName(for: screen)
+          let captureManager = captureManager
           let fastSnapshot = await AreaSelectionController.shared.withDisplayOverlayHiddenAsync(
             for: displayID
           ) {
@@ -1624,9 +1621,9 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
               )
             }.value
           }
-          guard self.activeAreaSelectionSessionID == sessionID else { return }
+          guard activeAreaSelectionSessionID == sessionID else { return }
           if let fastSnapshot {
-            self.applyLazyFrozenSnapshot(
+            applyLazyFrozenSnapshot(
               fastSnapshot,
               mode: "transition-refreeze-cg",
               displayID: displayID,
@@ -1640,7 +1637,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
 
         // ScreenCaptureKit path (exclusions on, or fast path unavailable).
         do {
-          let snapshots = try await self.captureManager.captureDisplaySnapshots(
+          let snapshots = try await captureManager.captureDisplaySnapshots(
             displayIDs: [displayID],
             showCursor: showCursor,
             excludeDesktopIcons: excludeDesktopIcons,
@@ -1648,9 +1645,9 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
             excludeOwnApplication: excludeOwnApplication,
             prefetchedContentTask: nil
           )
-          guard self.activeAreaSelectionSessionID == sessionID,
+          guard activeAreaSelectionSessionID == sessionID,
                 let snapshot = snapshots[displayID] else { return }
-          self.applyLazyFrozenSnapshot(
+          applyLazyFrozenSnapshot(
             snapshot,
             mode: "transition-refreeze-sck",
             displayID: displayID,
@@ -1779,16 +1776,19 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
   // MARK: - Recording
 
   func startRecordingFlow() {
+    guard VideoModuleAvailability.isEnabled else { return }
     startRecordingFlow(initialInteractionMode: .manualRegion)
   }
 
   func startApplicationRecordingFlow() {
+    guard VideoModuleAvailability.isEnabled else { return }
     startRecordingFlow(initialInteractionMode: .applicationWindow)
   }
 
   /// Pause/resume entry from global shortcut. No-op when no active recording.
   /// Reuses existing `ScreenRecordingManager.togglePause()` (already used by the menu bar).
   func togglePauseFromShortcut() {
+    guard VideoModuleAvailability.isEnabled else { return }
     let state = ScreenRecordingManager.shared.state
     guard state.isPauseResumeEligible else {
       DiagnosticLogger.shared.log(.debug, .recording, "Pause shortcut ignored: no active recording", context: [
@@ -1804,18 +1804,21 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
 
   /// Toggle pen/annotations overlay from global shortcut.
   func togglePenRecordingFromShortcut() {
+    guard VideoModuleAvailability.isEnabled else { return }
     guard RecordingCoordinator.shared.isActive else { return }
     RecordingCoordinator.shared.togglePenFromShortcut()
   }
 
   /// Restart/Re-record from global shortcut.
   func restartRecordingFromShortcut() {
+    guard VideoModuleAvailability.isEnabled else { return }
     guard RecordingCoordinator.shared.isActive else { return }
     RecordingCoordinator.shared.restartFromShortcut()
   }
 
   /// Cancel/Delete current recording from global shortcut.
   func deleteRecordingFromShortcut() {
+    guard VideoModuleAvailability.isEnabled else { return }
     guard RecordingCoordinator.shared.isActive else { return }
     RecordingCoordinator.shared.deleteFromShortcut()
   }
@@ -1824,6 +1827,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
   /// Reuses `RecordingCoordinator.stopFromStatusItem()` which is state-aware
   /// (`.recording`/`.paused` → stop, `.preparing` → cancel, `.idle`/`.stopping` → no-op).
   func toggleRecordingFromShortcut(initialInteractionMode: AreaSelectionInteractionMode) {
+    guard VideoModuleAvailability.isEnabled else { return }
     if RecordingCoordinator.shared.isActive {
       DiagnosticLogger.shared.log(.info, .recording, "Recording shortcut: stop", context: [
         "recorderState": "\(ScreenRecordingManager.shared.state)",
@@ -1839,6 +1843,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
   }
 
   private func startRecordingFlow(initialInteractionMode: AreaSelectionInteractionMode) {
+    guard VideoModuleAvailability.isEnabled else { return }
     guard hasPermission else {
       requestPermission()
       return

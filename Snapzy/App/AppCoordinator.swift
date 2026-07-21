@@ -67,7 +67,7 @@ final class AppCoordinator {
     startConfigurationSync(after: configurationAutoImportResult)
 
     LogCleanupScheduler.shared.start()
-    RecordingMetadataCleanupScheduler.shared.start()
+    syncRecordingMetadataCleanupScheduler()
     CaptureHistoryRetentionService.shared.start()
     DiagnosticLogger.shared.log(.debug, .lifecycle, "Background schedulers started")
 
@@ -123,6 +123,18 @@ final class AppCoordinator {
     }
 
     observers.append(onboardingObserver)
+
+    let videoModuleObserver = NotificationCenter.default.addObserver(
+      forName: .videoModuleAvailabilityDidChange,
+      object: nil,
+      queue: .main
+    ) { [weak self] _ in
+      Task { @MainActor in
+        self?.syncRecordingMetadataCleanupScheduler()
+      }
+    }
+    observers.append(videoModuleObserver)
+
     DiagnosticLogger.shared.log(
       .debug,
       .lifecycle,
@@ -131,13 +143,21 @@ final class AppCoordinator {
     )
   }
 
+  private func syncRecordingMetadataCleanupScheduler() {
+    if VideoModuleAvailability.isEnabled {
+      RecordingMetadataCleanupScheduler.shared.start()
+    } else {
+      RecordingMetadataCleanupScheduler.shared.stop()
+    }
+  }
+
   private func applyUserConfigurationIfNeeded() -> SnapzyConfigurationAutoImportResult {
     let result = SnapzyConfigurationAutoImporter.applyIfNeededOnLaunch()
     let context = [
       "file": result.fileURL.path,
       "changes": "\(result.appliedChangeCount)",
       "warnings": "\(result.warningCount)",
-      "errors": "\(result.errorCount)"
+      "errors": "\(result.errorCount)",
     ]
 
     switch result.status {
@@ -216,12 +236,12 @@ final class AppCoordinator {
     }
 
     SplashWindowController.shared.show()
-    
+
     // Automatically show the new feature intro once
     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
       // Cleanup legacy key
       UserDefaults.standard.removeObject(forKey: "hasSeenSmartElementIntro")
-      
+
       if let campaign = FeatureIntroManager.shared.getPendingCampaign() {
         FeatureIntroManager.shared.showCampaign(campaign)
       }

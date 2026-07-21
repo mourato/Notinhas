@@ -116,11 +116,21 @@ struct ShortcutConfig: Equatable, Codable {
   var displayString: String {
     var parts: [String] = []
 
-    if modifiers & UInt32(cmdKey) != 0 { parts.append("⌘") }
-    if modifiers & UInt32(shiftKey) != 0 { parts.append("⇧") }
-    if modifiers & UInt32(optionKey) != 0 { parts.append("⌥") }
-    if modifiers & UInt32(controlKey) != 0 { parts.append("⌃") }
-    if modifiers & Self.functionCarbonModifier != 0 { parts.append("fn") }
+    if modifiers & UInt32(cmdKey) != 0 {
+      parts.append("⌘")
+    }
+    if modifiers & UInt32(shiftKey) != 0 {
+      parts.append("⇧")
+    }
+    if modifiers & UInt32(optionKey) != 0 {
+      parts.append("⌥")
+    }
+    if modifiers & UInt32(controlKey) != 0 {
+      parts.append("⌃")
+    }
+    if modifiers & Self.functionCarbonModifier != 0 {
+      parts.append("fn")
+    }
 
     let keyChar = Self.keyCodeToDisplayString(keyCode)
 
@@ -131,11 +141,21 @@ struct ShortcutConfig: Equatable, Codable {
   /// Individual key parts for keycap-style rendering
   var displayParts: [String] {
     var parts: [String] = []
-    if modifiers & UInt32(cmdKey) != 0 { parts.append("⌘") }
-    if modifiers & UInt32(shiftKey) != 0 { parts.append("⇧") }
-    if modifiers & UInt32(optionKey) != 0 { parts.append("⌥") }
-    if modifiers & UInt32(controlKey) != 0 { parts.append("⌃") }
-    if modifiers & Self.functionCarbonModifier != 0 { parts.append("fn") }
+    if modifiers & UInt32(cmdKey) != 0 {
+      parts.append("⌘")
+    }
+    if modifiers & UInt32(shiftKey) != 0 {
+      parts.append("⇧")
+    }
+    if modifiers & UInt32(optionKey) != 0 {
+      parts.append("⌥")
+    }
+    if modifiers & UInt32(controlKey) != 0 {
+      parts.append("⌃")
+    }
+    if modifiers & Self.functionCarbonModifier != 0 {
+      parts.append("fn")
+    }
     parts.append(Self.keyCodeToDisplayString(keyCode))
     return parts
   }
@@ -146,10 +166,18 @@ struct ShortcutConfig: Equatable, Codable {
 
     // Convert Cocoa modifiers to Carbon modifiers
     var carbonModifiers: UInt32 = 0
-    if event.modifierFlags.contains(.command) { carbonModifiers |= UInt32(cmdKey) }
-    if event.modifierFlags.contains(.shift) { carbonModifiers |= UInt32(shiftKey) }
-    if event.modifierFlags.contains(.option) { carbonModifiers |= UInt32(optionKey) }
-    if event.modifierFlags.contains(.control) { carbonModifiers |= UInt32(controlKey) }
+    if event.modifierFlags.contains(.command) {
+      carbonModifiers |= UInt32(cmdKey)
+    }
+    if event.modifierFlags.contains(.shift) {
+      carbonModifiers |= UInt32(shiftKey)
+    }
+    if event.modifierFlags.contains(.option) {
+      carbonModifiers |= UInt32(optionKey)
+    }
+    if event.modifierFlags.contains(.control) {
+      carbonModifiers |= UInt32(controlKey)
+    }
     if event.modifierFlags.contains(.function) {
       carbonModifiers |= Self.functionCarbonModifier
     }
@@ -157,8 +185,8 @@ struct ShortcutConfig: Equatable, Codable {
     // Require at least one modifier
     guard carbonModifiers != 0 else { return nil }
 
-    self.keyCode = UInt32(event.keyCode)
-    self.modifiers = carbonModifiers
+    keyCode = UInt32(event.keyCode)
+    modifiers = carbonModifiers
   }
 
   /// Modifier flags that participate in shortcut matching (excludes capsLock, numericPad, etc.).
@@ -171,120 +199,130 @@ struct ShortcutConfig: Equatable, Codable {
     guard UInt32(event.keyCode) == keyCode else { return false }
     let flags = event.modifierFlags.intersection(Self.matchableEventModifiers)
     var expected: NSEvent.ModifierFlags = []
-    if modifiers & UInt32(cmdKey) != 0 { expected.insert(.command) }
-    if modifiers & UInt32(shiftKey) != 0 { expected.insert(.shift) }
-    if modifiers & UInt32(optionKey) != 0 { expected.insert(.option) }
-    if modifiers & UInt32(controlKey) != 0 { expected.insert(.control) }
-    if modifiers & Self.functionCarbonModifier != 0 { expected.insert(.function) }
+    if modifiers & UInt32(cmdKey) != 0 {
+      expected.insert(.command)
+    }
+    if modifiers & UInt32(shiftKey) != 0 {
+      expected.insert(.shift)
+    }
+    if modifiers & UInt32(optionKey) != 0 {
+      expected.insert(.option)
+    }
+    if modifiers & UInt32(controlKey) != 0 {
+      expected.insert(.control)
+    }
+    if modifiers & Self.functionCarbonModifier != 0 {
+      expected.insert(.function)
+    }
     return flags == expected
   }
 
   /// Map key code to display character
   static func keyCodeToString(_ keyCode: UInt32) -> String {
     switch Int(keyCode) {
-    case kVK_ANSI_0: return "0"
-    case kVK_ANSI_1: return "1"
-    case kVK_ANSI_2: return "2"
-    case kVK_ANSI_3: return "3"
-    case kVK_ANSI_4: return "4"
-    case kVK_ANSI_5: return "5"
-    case kVK_ANSI_6: return "6"
-    case kVK_ANSI_7: return "7"
-    case kVK_ANSI_8: return "8"
-    case kVK_ANSI_9: return "9"
-    case kVK_ANSI_A: return "A"
-    case kVK_ANSI_B: return "B"
-    case kVK_ANSI_C: return "C"
-    case kVK_ANSI_D: return "D"
-    case kVK_ANSI_E: return "E"
-    case kVK_ANSI_F: return "F"
-    case kVK_ANSI_G: return "G"
-    case kVK_ANSI_H: return "H"
-    case kVK_ANSI_I: return "I"
-    case kVK_ANSI_J: return "J"
-    case kVK_ANSI_K: return "K"
-    case kVK_ANSI_L: return "L"
-    case kVK_ANSI_M: return "M"
-    case kVK_ANSI_N: return "N"
-    case kVK_ANSI_O: return "O"
-    case kVK_ANSI_P: return "P"
-    case kVK_ANSI_Q: return "Q"
-    case kVK_ANSI_R: return "R"
-    case kVK_ANSI_S: return "S"
-    case kVK_ANSI_T: return "T"
-    case kVK_ANSI_U: return "U"
-    case kVK_ANSI_V: return "V"
-    case kVK_ANSI_W: return "W"
-    case kVK_ANSI_X: return "X"
-    case kVK_ANSI_Y: return "Y"
-    case kVK_ANSI_Z: return "Z"
-    case kVK_F1: return "F1"
-    case kVK_F2: return "F2"
-    case kVK_F3: return "F3"
-    case kVK_F4: return "F4"
-    case kVK_F5: return "F5"
-    case kVK_F6: return "F6"
-    case kVK_F7: return "F7"
-    case kVK_F8: return "F8"
-    case kVK_F9: return "F9"
-    case kVK_F10: return "F10"
-    case kVK_F11: return "F11"
-    case kVK_F12: return "F12"
-    case kVK_F13: return "F13"
-    case kVK_F14: return "F14"
-    case kVK_F15: return "F15"
-    case kVK_F16: return "F16"
-    case kVK_F17: return "F17"
-    case kVK_F18: return "F18"
-    case kVK_F19: return "F19"
-    case kVK_F20: return "F20"
-    case kVK_Space: return "Space"
-    case kVK_Return: return "↩"
-    case kVK_Tab: return "⇥"
-    case kVK_Delete: return "⌫"
-    case kVK_Escape: return "⎋"
-    case kVK_LeftArrow: return "←"
-    case kVK_RightArrow: return "→"
-    case kVK_UpArrow: return "↑"
-    case kVK_DownArrow: return "↓"
+    case kVK_ANSI_0: "0"
+    case kVK_ANSI_1: "1"
+    case kVK_ANSI_2: "2"
+    case kVK_ANSI_3: "3"
+    case kVK_ANSI_4: "4"
+    case kVK_ANSI_5: "5"
+    case kVK_ANSI_6: "6"
+    case kVK_ANSI_7: "7"
+    case kVK_ANSI_8: "8"
+    case kVK_ANSI_9: "9"
+    case kVK_ANSI_A: "A"
+    case kVK_ANSI_B: "B"
+    case kVK_ANSI_C: "C"
+    case kVK_ANSI_D: "D"
+    case kVK_ANSI_E: "E"
+    case kVK_ANSI_F: "F"
+    case kVK_ANSI_G: "G"
+    case kVK_ANSI_H: "H"
+    case kVK_ANSI_I: "I"
+    case kVK_ANSI_J: "J"
+    case kVK_ANSI_K: "K"
+    case kVK_ANSI_L: "L"
+    case kVK_ANSI_M: "M"
+    case kVK_ANSI_N: "N"
+    case kVK_ANSI_O: "O"
+    case kVK_ANSI_P: "P"
+    case kVK_ANSI_Q: "Q"
+    case kVK_ANSI_R: "R"
+    case kVK_ANSI_S: "S"
+    case kVK_ANSI_T: "T"
+    case kVK_ANSI_U: "U"
+    case kVK_ANSI_V: "V"
+    case kVK_ANSI_W: "W"
+    case kVK_ANSI_X: "X"
+    case kVK_ANSI_Y: "Y"
+    case kVK_ANSI_Z: "Z"
+    case kVK_F1: "F1"
+    case kVK_F2: "F2"
+    case kVK_F3: "F3"
+    case kVK_F4: "F4"
+    case kVK_F5: "F5"
+    case kVK_F6: "F6"
+    case kVK_F7: "F7"
+    case kVK_F8: "F8"
+    case kVK_F9: "F9"
+    case kVK_F10: "F10"
+    case kVK_F11: "F11"
+    case kVK_F12: "F12"
+    case kVK_F13: "F13"
+    case kVK_F14: "F14"
+    case kVK_F15: "F15"
+    case kVK_F16: "F16"
+    case kVK_F17: "F17"
+    case kVK_F18: "F18"
+    case kVK_F19: "F19"
+    case kVK_F20: "F20"
+    case kVK_Space: "Space"
+    case kVK_Return: "↩"
+    case kVK_Tab: "⇥"
+    case kVK_Delete: "⌫"
+    case kVK_Escape: "⎋"
+    case kVK_LeftArrow: "←"
+    case kVK_RightArrow: "→"
+    case kVK_UpArrow: "↑"
+    case kVK_DownArrow: "↓"
     // Punctuation & symbol keys
-    case kVK_ANSI_Semicolon: return ";"
-    case kVK_ANSI_Quote: return "'"
-    case kVK_ANSI_Comma: return ","
-    case kVK_ANSI_Period: return "."
-    case kVK_ANSI_Slash: return "/"
-    case kVK_ANSI_Backslash: return "\\"
-    case kVK_ANSI_LeftBracket: return "["
-    case kVK_ANSI_RightBracket: return "]"
-    case kVK_ANSI_Minus: return "-"
-    case kVK_ANSI_Equal: return "="
-    case kVK_ANSI_Grave: return "`"
+    case kVK_ANSI_Semicolon: ";"
+    case kVK_ANSI_Quote: "'"
+    case kVK_ANSI_Comma: ","
+    case kVK_ANSI_Period: "."
+    case kVK_ANSI_Slash: "/"
+    case kVK_ANSI_Backslash: "\\"
+    case kVK_ANSI_LeftBracket: "["
+    case kVK_ANSI_RightBracket: "]"
+    case kVK_ANSI_Minus: "-"
+    case kVK_ANSI_Equal: "="
+    case kVK_ANSI_Grave: "`"
     // Keypad keys
-    case kVK_ANSI_KeypadDecimal: return "."
-    case kVK_ANSI_KeypadMultiply: return "*"
-    case kVK_ANSI_KeypadPlus: return "+"
-    case kVK_ANSI_KeypadDivide: return "/"
-    case kVK_ANSI_KeypadMinus: return "-"
-    case kVK_ANSI_KeypadEquals: return "="
-    case kVK_ANSI_KeypadEnter: return "↩"
-    case kVK_ANSI_Keypad0: return "0"
-    case kVK_ANSI_Keypad1: return "1"
-    case kVK_ANSI_Keypad2: return "2"
-    case kVK_ANSI_Keypad3: return "3"
-    case kVK_ANSI_Keypad4: return "4"
-    case kVK_ANSI_Keypad5: return "5"
-    case kVK_ANSI_Keypad6: return "6"
-    case kVK_ANSI_Keypad7: return "7"
-    case kVK_ANSI_Keypad8: return "8"
-    case kVK_ANSI_Keypad9: return "9"
+    case kVK_ANSI_KeypadDecimal: "."
+    case kVK_ANSI_KeypadMultiply: "*"
+    case kVK_ANSI_KeypadPlus: "+"
+    case kVK_ANSI_KeypadDivide: "/"
+    case kVK_ANSI_KeypadMinus: "-"
+    case kVK_ANSI_KeypadEquals: "="
+    case kVK_ANSI_KeypadEnter: "↩"
+    case kVK_ANSI_Keypad0: "0"
+    case kVK_ANSI_Keypad1: "1"
+    case kVK_ANSI_Keypad2: "2"
+    case kVK_ANSI_Keypad3: "3"
+    case kVK_ANSI_Keypad4: "4"
+    case kVK_ANSI_Keypad5: "5"
+    case kVK_ANSI_Keypad6: "6"
+    case kVK_ANSI_Keypad7: "7"
+    case kVK_ANSI_Keypad8: "8"
+    case kVK_ANSI_Keypad9: "9"
     // Navigation keys
-    case kVK_ForwardDelete: return "⌦"
-    case kVK_Home: return "↖"
-    case kVK_End: return "↘"
-    case kVK_PageUp: return "⇞"
-    case kVK_PageDown: return "⇟"
-    case 0x3F: return "fn"
-    default: return "?"
+    case kVK_ForwardDelete: "⌦"
+    case kVK_Home: "↖"
+    case kVK_End: "↘"
+    case kVK_PageUp: "⇞"
+    case kVK_PageDown: "⇟"
+    case 0x3F: "fn"
+    default: "?"
     }
   }
 
@@ -304,85 +342,93 @@ extension ShortcutConfig {
   var menuKeyEquivalent: String? {
     switch Int(keyCode) {
     case kVK_Space:
-      return " "
+      " "
     case kVK_Return, kVK_ANSI_KeypadEnter:
-      return "\r"
+      "\r"
     case kVK_Tab:
-      return "\t"
+      "\t"
     case kVK_Delete:
-      return Self.unicodeScalarString(Int(NSDeleteCharacter))
+      Self.unicodeScalarString(Int(NSDeleteCharacter))
     case kVK_Escape:
-      return "\u{1B}"
+      "\u{1B}"
     case kVK_LeftArrow:
-      return Self.unicodeScalarString(Int(NSLeftArrowFunctionKey))
+      Self.unicodeScalarString(Int(NSLeftArrowFunctionKey))
     case kVK_RightArrow:
-      return Self.unicodeScalarString(Int(NSRightArrowFunctionKey))
+      Self.unicodeScalarString(Int(NSRightArrowFunctionKey))
     case kVK_UpArrow:
-      return Self.unicodeScalarString(Int(NSUpArrowFunctionKey))
+      Self.unicodeScalarString(Int(NSUpArrowFunctionKey))
     case kVK_DownArrow:
-      return Self.unicodeScalarString(Int(NSDownArrowFunctionKey))
+      Self.unicodeScalarString(Int(NSDownArrowFunctionKey))
     case kVK_F1:
-      return Self.unicodeScalarString(Int(NSF1FunctionKey))
+      Self.unicodeScalarString(Int(NSF1FunctionKey))
     case kVK_F2:
-      return Self.unicodeScalarString(Int(NSF2FunctionKey))
+      Self.unicodeScalarString(Int(NSF2FunctionKey))
     case kVK_F3:
-      return Self.unicodeScalarString(Int(NSF3FunctionKey))
+      Self.unicodeScalarString(Int(NSF3FunctionKey))
     case kVK_F4:
-      return Self.unicodeScalarString(Int(NSF4FunctionKey))
+      Self.unicodeScalarString(Int(NSF4FunctionKey))
     case kVK_F5:
-      return Self.unicodeScalarString(Int(NSF5FunctionKey))
+      Self.unicodeScalarString(Int(NSF5FunctionKey))
     case kVK_F6:
-      return Self.unicodeScalarString(Int(NSF6FunctionKey))
+      Self.unicodeScalarString(Int(NSF6FunctionKey))
     case kVK_F7:
-      return Self.unicodeScalarString(Int(NSF7FunctionKey))
+      Self.unicodeScalarString(Int(NSF7FunctionKey))
     case kVK_F8:
-      return Self.unicodeScalarString(Int(NSF8FunctionKey))
+      Self.unicodeScalarString(Int(NSF8FunctionKey))
     case kVK_F9:
-      return Self.unicodeScalarString(Int(NSF9FunctionKey))
+      Self.unicodeScalarString(Int(NSF9FunctionKey))
     case kVK_F10:
-      return Self.unicodeScalarString(Int(NSF10FunctionKey))
+      Self.unicodeScalarString(Int(NSF10FunctionKey))
     case kVK_F11:
-      return Self.unicodeScalarString(Int(NSF11FunctionKey))
+      Self.unicodeScalarString(Int(NSF11FunctionKey))
     case kVK_F12:
-      return Self.unicodeScalarString(Int(NSF12FunctionKey))
+      Self.unicodeScalarString(Int(NSF12FunctionKey))
     case kVK_F13:
-      return Self.unicodeScalarString(Int(NSF13FunctionKey))
+      Self.unicodeScalarString(Int(NSF13FunctionKey))
     case kVK_F14:
-      return Self.unicodeScalarString(Int(NSF14FunctionKey))
+      Self.unicodeScalarString(Int(NSF14FunctionKey))
     case kVK_F15:
-      return Self.unicodeScalarString(Int(NSF15FunctionKey))
+      Self.unicodeScalarString(Int(NSF15FunctionKey))
     case kVK_F16:
-      return Self.unicodeScalarString(Int(NSF16FunctionKey))
+      Self.unicodeScalarString(Int(NSF16FunctionKey))
     case kVK_F17:
-      return Self.unicodeScalarString(Int(NSF17FunctionKey))
+      Self.unicodeScalarString(Int(NSF17FunctionKey))
     case kVK_F18:
-      return Self.unicodeScalarString(Int(NSF18FunctionKey))
+      Self.unicodeScalarString(Int(NSF18FunctionKey))
     case kVK_F19:
-      return Self.unicodeScalarString(Int(NSF19FunctionKey))
+      Self.unicodeScalarString(Int(NSF19FunctionKey))
     case kVK_F20:
-      return Self.unicodeScalarString(Int(NSF20FunctionKey))
+      Self.unicodeScalarString(Int(NSF20FunctionKey))
     case kVK_ForwardDelete:
-      return Self.unicodeScalarString(Int(NSDeleteFunctionKey))
+      Self.unicodeScalarString(Int(NSDeleteFunctionKey))
     case kVK_Home:
-      return Self.unicodeScalarString(Int(NSHomeFunctionKey))
+      Self.unicodeScalarString(Int(NSHomeFunctionKey))
     case kVK_End:
-      return Self.unicodeScalarString(Int(NSEndFunctionKey))
+      Self.unicodeScalarString(Int(NSEndFunctionKey))
     case kVK_PageUp:
-      return Self.unicodeScalarString(Int(NSPageUpFunctionKey))
+      Self.unicodeScalarString(Int(NSPageUpFunctionKey))
     case kVK_PageDown:
-      return Self.unicodeScalarString(Int(NSPageDownFunctionKey))
+      Self.unicodeScalarString(Int(NSPageDownFunctionKey))
     default:
-      return Self.currentLayoutPrintableKeyEquivalent(for: keyCode)
+      Self.currentLayoutPrintableKeyEquivalent(for: keyCode)
         ?? Self.fallbackPrintableKeyEquivalent(for: keyCode)
     }
   }
 
   var menuModifierFlags: NSEvent.ModifierFlags {
     var flags: NSEvent.ModifierFlags = []
-    if modifiers & UInt32(cmdKey) != 0 { flags.insert(.command) }
-    if modifiers & UInt32(shiftKey) != 0 { flags.insert(.shift) }
-    if modifiers & UInt32(optionKey) != 0 { flags.insert(.option) }
-    if modifiers & UInt32(controlKey) != 0 { flags.insert(.control) }
+    if modifiers & UInt32(cmdKey) != 0 {
+      flags.insert(.command)
+    }
+    if modifiers & UInt32(shiftKey) != 0 {
+      flags.insert(.shift)
+    }
+    if modifiers & UInt32(optionKey) != 0 {
+      flags.insert(.option)
+    }
+    if modifiers & UInt32(controlKey) != 0 {
+      flags.insert(.control)
+    }
     return flags
   }
 
@@ -485,9 +531,9 @@ enum GlobalShortcutKind: String, CaseIterable, Codable {
   var isSystemConflictRelevant: Bool {
     switch self {
     case .fullscreen, .area, .recording:
-      return true
+      true
     default:
-      return false
+      false
     }
   }
 }
@@ -496,41 +542,41 @@ extension GlobalShortcutKind {
   var displayName: String {
     switch self {
     case .fullscreen:
-      return L10n.Actions.captureFullscreen
+      L10n.Actions.captureFullscreen
     case .area:
-      return L10n.Actions.captureArea
+      L10n.Actions.captureArea
     case .areaAnnotate:
-      return L10n.Actions.captureAreaAnnotate
+      L10n.Actions.captureAreaAnnotate
     case .activeWindow:
-      return L10n.Actions.captureActiveWindow
+      L10n.Actions.captureActiveWindow
     case .scrollingCapture:
-      return L10n.Actions.scrollingCapture
+      L10n.Actions.scrollingCapture
     case .recording:
-      return L10n.Actions.recordVideo
+      L10n.Actions.recordVideo
     case .pauseResumeRecording:
-      return L10n.Actions.pauseResumeRecording
+      L10n.Actions.pauseResumeRecording
     case .togglePenRecording:
-      return L10n.Actions.togglePenRecording
+      L10n.Actions.togglePenRecording
     case .restartRecording:
-      return L10n.Actions.restartRecording
+      L10n.Actions.restartRecording
     case .deleteRecording:
-      return L10n.Actions.deleteRecording
+      L10n.Actions.deleteRecording
     case .annotate:
-      return L10n.Actions.openAnnotate
+      L10n.Actions.openAnnotate
     case .videoEditor:
-      return L10n.Actions.openVideoEditor
+      L10n.Actions.openVideoEditor
     case .cloudUploads:
-      return L10n.Actions.cloudUploads
+      L10n.Actions.cloudUploads
     case .shortcutList:
-      return L10n.Actions.showShortcutList
+      L10n.Actions.showShortcutList
     case .ocr:
-      return L10n.Actions.captureTextOCR
+      L10n.Actions.captureTextOCR
     case .smartElement:
-      return L10n.Actions.captureSmartElement
+      L10n.Actions.captureSmartElement
     case .objectCutout:
-      return L10n.Actions.captureSubject
+      L10n.Actions.captureSubject
     case .history:
-      return L10n.Actions.openHistory
+      L10n.Actions.openHistory
     }
   }
 }
@@ -567,7 +613,6 @@ protocol KeyboardShortcutDelegate: AnyObject {
 /// Manager for registering and handling global keyboard shortcuts
 @MainActor
 final class KeyboardShortcutManager {
-
   static let shared = KeyboardShortcutManager()
 
   weak var delegate: KeyboardShortcutDelegate?
@@ -627,26 +672,26 @@ final class KeyboardShortcutManager {
   private var fnLocalMonitor: Any?
 
   // Hotkey IDs
-  private let fullscreenHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4631), id: 1)  // "ZSF1"
-  private let areaHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4632), id: 2)  // "ZSF2"
-  private let scrollingCaptureHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4633), id: 3)  // "ZSF3"
-  private let recordingHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4634), id: 4)  // "ZSF4"
-  private let annotateHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4635), id: 5)  // "ZSF5"
-  private let videoEditorHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4636), id: 6)  // "ZSF6"
-  private let ocrHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4637), id: 7)  // "ZSF7"
-  private let cloudUploadsHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4638), id: 8)  // "ZSF8"
-  private let objectCutoutHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4639), id: 9)  // "ZSF9"
-  private let shortcutListHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4641), id: 10)  // "ZSFA"
-  private let historyHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4642), id: 11)  // "ZSFB"
-  private let applicationCaptureHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4643), id: 12)  // "ZSFC"
-  private let applicationRecordingHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4644), id: 13)  // "ZSFD"
-  private let areaAnnotateHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4645), id: 14)  // "ZSFE"
-  private let activeWindowHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4646), id: 15)  // "ZSFF"
-  private let smartElementHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4647), id: 16)  // "ZSFG"
-  private let pauseResumeRecordingHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4648), id: 17)  // "ZSFH"
-  private let togglePenRecordingHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4649), id: 18)  // "ZSFI"
-  private let restartRecordingHotkeyID = EventHotKeyID(signature: OSType(0x5A53_464A), id: 19)    // "ZSFJ"
-  private let deleteRecordingHotkeyID = EventHotKeyID(signature: OSType(0x5A53_464B), id: 20)     // "ZSFK"
+  private let fullscreenHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4631), id: 1) // "ZSF1"
+  private let areaHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4632), id: 2) // "ZSF2"
+  private let scrollingCaptureHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4633), id: 3) // "ZSF3"
+  private let recordingHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4634), id: 4) // "ZSF4"
+  private let annotateHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4635), id: 5) // "ZSF5"
+  private let videoEditorHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4636), id: 6) // "ZSF6"
+  private let ocrHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4637), id: 7) // "ZSF7"
+  private let cloudUploadsHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4638), id: 8) // "ZSF8"
+  private let objectCutoutHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4639), id: 9) // "ZSF9"
+  private let shortcutListHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4641), id: 10) // "ZSFA"
+  private let historyHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4642), id: 11) // "ZSFB"
+  private let applicationCaptureHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4643), id: 12) // "ZSFC"
+  private let applicationRecordingHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4644), id: 13) // "ZSFD"
+  private let areaAnnotateHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4645), id: 14) // "ZSFE"
+  private let activeWindowHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4646), id: 15) // "ZSFF"
+  private let smartElementHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4647), id: 16) // "ZSFG"
+  private let pauseResumeRecordingHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4648), id: 17) // "ZSFH"
+  private let togglePenRecordingHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4649), id: 18) // "ZSFI"
+  private let restartRecordingHotkeyID = EventHotKeyID(signature: OSType(0x5A53_464A), id: 19) // "ZSFJ"
+  private let deleteRecordingHotkeyID = EventHotKeyID(signature: OSType(0x5A53_464B), id: 20) // "ZSFK"
 
   private var eventHandler: EventHandlerRef?
 
@@ -697,6 +742,7 @@ final class KeyboardShortcutManager {
     loadClearedShortcuts()
     seedDefaultClearedShortcutsOnFirstLaunchIfNeeded()
     setupEventHandler()
+    observeVideoModuleAvailability()
 
     // Auto-enable if previously enabled
     if UserDefaults.standard.bool(forKey: shortcutsEnabledKey) {
@@ -741,6 +787,43 @@ final class KeyboardShortcutManager {
 
   private var shouldRegisterShortcuts: Bool {
     isEnabled && !isTemporarilySuspended
+  }
+
+  private static let videoShortcutKinds: Set<GlobalShortcutKind> = [
+    .recording,
+    .pauseResumeRecording,
+    .togglePenRecording,
+    .restartRecording,
+    .deleteRecording,
+    .videoEditor,
+  ]
+
+  private func shouldRegisterGlobalShortcut(kind: GlobalShortcutKind) -> Bool {
+    guard isShortcutEnabled(for: kind) else { return false }
+    guard !Self.videoShortcutKinds.contains(kind) || VideoModuleAvailability.isEnabled else { return false }
+    return true
+  }
+
+  private func isVideoShortcutAction(_ action: ShortcutAction) -> Bool {
+    switch action {
+    case .recordVideo, .recordApplication, .pauseResumeRecording, .togglePenRecording,
+         .restartRecording, .deleteRecording, .openVideoEditor:
+      true
+    default:
+      false
+    }
+  }
+
+  private func observeVideoModuleAvailability() {
+    NotificationCenter.default.addObserver(
+      forName: .videoModuleAvailabilityDidChange,
+      object: nil,
+      queue: .main
+    ) { [weak self] _ in
+      Task { @MainActor in
+        self?.refreshShortcutRegistration()
+      }
+    }
   }
 
   func refreshShortcutRegistration() {
@@ -1086,93 +1169,75 @@ final class KeyboardShortcutManager {
   private func loadShortcuts() {
     let decoder = JSONDecoder()
     if let fullscreenData = UserDefaults.standard.data(forKey: fullscreenShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: fullscreenData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: fullscreenData) {
       fullscreenShortcut = config
     }
     if let areaData = UserDefaults.standard.data(forKey: areaShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: areaData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: areaData) {
       areaShortcut = config
     }
     if let areaAnnotateData = UserDefaults.standard.data(forKey: areaAnnotateShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: areaAnnotateData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: areaAnnotateData) {
       areaAnnotateShortcut = config
     }
     if let scrollingCaptureData = UserDefaults.standard.data(forKey: scrollingCaptureShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: scrollingCaptureData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: scrollingCaptureData) {
       scrollingCaptureShortcut = config
     }
     if let recordingData = UserDefaults.standard.data(forKey: recordingShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: recordingData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: recordingData) {
       recordingShortcut = config
     }
     if let pauseResumeRecordingData = UserDefaults.standard.data(forKey: pauseResumeRecordingShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: pauseResumeRecordingData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: pauseResumeRecordingData) {
       pauseResumeRecordingShortcut = config
     }
     if let togglePenRecordingData = UserDefaults.standard.data(forKey: togglePenRecordingShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: togglePenRecordingData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: togglePenRecordingData) {
       togglePenRecordingShortcut = config
     }
     if let restartRecordingData = UserDefaults.standard.data(forKey: restartRecordingShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: restartRecordingData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: restartRecordingData) {
       restartRecordingShortcut = config
     }
     if let deleteRecordingData = UserDefaults.standard.data(forKey: deleteRecordingShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: deleteRecordingData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: deleteRecordingData) {
       deleteRecordingShortcut = config
     }
     if let annotateData = UserDefaults.standard.data(forKey: annotateShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: annotateData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: annotateData) {
       annotateShortcut = config
     }
     if let videoEditorData = UserDefaults.standard.data(forKey: videoEditorShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: videoEditorData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: videoEditorData) {
       videoEditorShortcut = config
     }
     if let cloudUploadsData = UserDefaults.standard.data(forKey: cloudUploadsShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: cloudUploadsData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: cloudUploadsData) {
       cloudUploadsShortcut = config
     }
     if let shortcutListData = UserDefaults.standard.data(forKey: shortcutListShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: shortcutListData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: shortcutListData) {
       shortcutListShortcut = config
     }
     if let ocrData = UserDefaults.standard.data(forKey: ocrShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: ocrData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: ocrData) {
       ocrShortcut = config
     }
     if let smartElementData = UserDefaults.standard.data(forKey: smartElementShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: smartElementData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: smartElementData) {
       smartElementShortcut = config
     }
     if let objectCutoutData = UserDefaults.standard.data(forKey: objectCutoutShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: objectCutoutData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: objectCutoutData) {
       objectCutoutShortcut = config
     }
     if let historyData = UserDefaults.standard.data(forKey: historyShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: historyData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: historyData) {
       historyShortcut = config
     }
     if let activeWindowData = UserDefaults.standard.data(forKey: activeWindowShortcutKey),
-      let config = try? decoder.decode(ShortcutConfig.self, from: activeWindowData)
-    {
+       let config = try? decoder.decode(ShortcutConfig.self, from: activeWindowData) {
       activeWindowShortcut = config
     }
   }
@@ -1238,7 +1303,8 @@ final class KeyboardShortcutManager {
   private func setupEventHandler() {
     // Install Carbon event handler for hotkey events
     var eventType = EventTypeSpec(
-      eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
+      eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed)
+    )
 
     let handlerBlock: EventHandlerUPP = { _, event, _ -> OSStatus in
       var hotkeyID = EventHotKeyID()
@@ -1348,7 +1414,16 @@ final class KeyboardShortcutManager {
 
     DiagnosticLogger.shared.log(.info, .action, "Shortcut triggered: \(actionName)")
 
-    guard let delegate = delegate else {
+    if isVideoShortcutAction(action), !VideoModuleAvailability.isEnabled {
+      DiagnosticLogger.shared.log(
+        .info,
+        .action,
+        "Shortcut \(actionName) ignored: video module disabled"
+      )
+      return
+    }
+
+    guard let delegate else {
       DiagnosticLogger.shared.log(.warning, .action, "Shortcut \(actionName) ignored: delegate is nil")
       return
     }
@@ -1489,7 +1564,7 @@ final class KeyboardShortcutManager {
     hotkeyID: EventHotKeyID,
     ref: inout EventHotKeyRef?
   ) {
-    guard isShortcutEnabled(for: kind), let config else { return }
+    guard shouldRegisterGlobalShortcut(kind: kind), let config else { return }
 
     // Carbon cannot express the Fn modifier. Fn bindings are dispatched through
     // key event monitors (see updateFnMonitors) instead of RegisterEventHotKey,
@@ -1529,7 +1604,7 @@ final class KeyboardShortcutManager {
     hotkeyID: EventHotKeyID,
     ref: inout EventHotKeyRef?
   ) {
-    guard isShortcutEnabled(for: parentKind), let config else { return }
+    guard shouldRegisterGlobalShortcut(kind: parentKind), let config else { return }
 
     // Same Fn handling as registerShortcutIfNeeded: dispatch via key event monitors.
     guard config.modifiers & ShortcutConfig.functionCarbonModifier == 0 else {
@@ -1693,5 +1768,4 @@ final class KeyboardShortcutManager {
       historyHotkeyRef = nil
     }
   }
-
 }
