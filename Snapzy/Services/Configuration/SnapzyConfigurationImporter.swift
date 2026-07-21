@@ -282,6 +282,13 @@ enum SnapzyConfigurationImporter {
     collectDouble(&reader, "quick_access", "auto_dismiss_delay", range: 3...30, mutations: &mutations) { manager.autoDismissDelay = $0 }
     collectBool(&reader, "quick_access", "pause_countdown_on_hover", mutations: &mutations) { manager.pauseCountdownOnHover = $0 }
     collectDouble(&reader, "quick_access", "overlay_scale", range: 0.75...1.5, mutations: &mutations) { manager.overlayScale = $0 }
+    collectDouble(
+      &reader,
+      "quick_access",
+      "corner_button_scale",
+      range: QuickAccessCornerButtonMetrics.scaleRange,
+      mutations: &mutations
+    ) { manager.cornerButtonScale = $0 }
     collectBool(&reader, "quick_access", "drag_drop", mutations: &mutations) { manager.dragDropEnabled = $0 }
     collectBool(&reader, "quick_access", "two_finger_swipe_to_dismiss", mutations: &mutations) { manager.twoFingerSwipeToDismissEnabled = $0 }
     collectDouble(&reader, "quick_access", "swipe_sensitivity", range: 0.5...3.0, mutations: &mutations) { manager.swipeSensitivity = $0 }

@@ -44,6 +44,29 @@ struct QuickAccessSettingsView: View {
               .foregroundColor(.secondary)
           }
         }
+
+        SettingRow(
+          icon: "circle.grid.cross",
+          title: L10n.PreferencesQuickAccess.cornerButtonSizeTitle,
+          description: L10n.PreferencesQuickAccess.cornerButtonSizeDescription
+        ) {
+          HStack(spacing: 8) {
+            Text(verbatim: "S")
+              .font(.caption)
+              .foregroundColor(.secondary)
+            Slider(
+              value: $manager.cornerButtonScale.stepped(
+                by: 0.25,
+                in: QuickAccessCornerButtonMetrics.scaleRange
+              ),
+              in: QuickAccessCornerButtonMetrics.scaleRange
+            )
+            .frame(width: 100)
+            Text(verbatim: "L")
+              .font(.caption)
+              .foregroundColor(.secondary)
+          }
+        }
       }
 
       Section(L10n.PreferencesQuickAccess.behaviorsSection) {

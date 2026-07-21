@@ -51,9 +51,9 @@ enum NotinhasNoteRenderer {
         rect: rect,
         style: note.areaStyle,
         color: note.color.nsColor,
+        strokeWidth: note.areaStrokeWidth,
         displayNumber: displayNumber,
         pinRadius: pinRadius,
-        isSelected: isSelected,
         in: context
       )
     }
@@ -96,36 +96,31 @@ enum NotinhasNoteRenderer {
     rect: CGRect,
     style: NotinhasAreaStyle,
     color: NSColor,
+    strokeWidth: CGFloat = NotinhasVisualNote.defaultAreaStrokeWidth,
     displayNumber: Int,
     pinRadius: CGFloat = defaultPinRadius,
-    isSelected: Bool,
     in context: CGContext
   ) {
     context.saveGState()
     let standardized = rect.standardized
+    let lineWidth = NotinhasVisualNote.clampedAreaStrokeWidth(strokeWidth)
 
     switch style {
     case .outline:
       context.setStrokeColor(color.withAlphaComponent(0.95).cgColor)
-      context.setLineWidth(2)
+      context.setLineWidth(lineWidth)
       context.stroke(standardized)
     case .tinted:
       context.setFillColor(color.withAlphaComponent(0.18).cgColor)
       context.fill(standardized)
       context.setStrokeColor(color.withAlphaComponent(0.95).cgColor)
-      context.setLineWidth(1.5)
+      context.setLineWidth(lineWidth)
       context.stroke(standardized)
     case .hatched:
       context.setStrokeColor(color.withAlphaComponent(0.95).cgColor)
-      context.setLineWidth(2)
+      context.setLineWidth(lineWidth)
       context.stroke(standardized)
       drawHatch(in: standardized, color: color, context: context)
-    }
-
-    if isSelected {
-      context.setStrokeColor(NSColor.white.cgColor)
-      context.setLineWidth(selectionStrokeWidth)
-      context.stroke(standardized.insetBy(dx: -2, dy: -2))
     }
 
     let pinCenter = NotinhasNoteGeometry.pinCenter(for: standardized)

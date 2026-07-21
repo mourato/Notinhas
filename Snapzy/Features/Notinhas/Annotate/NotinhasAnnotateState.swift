@@ -18,14 +18,16 @@ extension AnnotateState {
     notinhasNotes[index] = note
   }
 
-  /// Commits editor-owned fields (text, color, areaStyle) and records one undo checkpoint
-  /// back to `openingSnapshot` for those fields. Preserves live `pinControlValue` and `target`.
+  /// Commits editor-owned fields (text, color, areaStyle, areaStrokeWidth) and records one
+  /// undo checkpoint back to `openingSnapshot` for those fields. Preserves live
+  /// `pinControlValue` and `target`.
   func notinhasCommitNoteEdit(draft: NotinhasVisualNote, openingSnapshot: NotinhasVisualNote) {
     guard let index = notinhasNotes.firstIndex(where: { $0.id == draft.id }) else { return }
     var committed = notinhasNotes[index]
     committed.text = draft.text
     committed.color = draft.color
     committed.areaStyle = draft.areaStyle
+    committed.areaStrokeWidth = NotinhasVisualNote.clampedAreaStrokeWidth(draft.areaStrokeWidth)
 
     var checkpoint = openingSnapshot
     checkpoint.pinControlValue = committed.pinControlValue
@@ -40,14 +42,17 @@ extension AnnotateState {
     notinhasNotes[index] = committed
   }
 
-  /// Mutates color and area style without creating an undo checkpoint. Text is not applied here.
+  /// Mutates color, area style, and stroke width without creating an undo checkpoint.
+  /// Text is not applied here.
   func notinhasApplyLiveAppearance(_ note: NotinhasVisualNote) {
     guard let index = notinhasNotes.firstIndex(where: { $0.id == note.id }) else { return }
     var updated = notinhasNotes[index]
     updated.color = note.color
     updated.areaStyle = note.areaStyle
+    updated.areaStrokeWidth = NotinhasVisualNote.clampedAreaStrokeWidth(note.areaStrokeWidth)
     guard notinhasNotes[index].color != updated.color
-      || notinhasNotes[index].areaStyle != updated.areaStyle else { return }
+      || notinhasNotes[index].areaStyle != updated.areaStyle
+      || notinhasNotes[index].areaStrokeWidth != updated.areaStrokeWidth else { return }
     notinhasNotes[index] = updated
   }
 

@@ -16,6 +16,14 @@
     "annotate.notinhas.area-style-tinted": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Tinted" } } } },
     "annotate.notinhas.area-style-hatched": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Hatched" } } } },
     "annotate.notinhas.area-style-picker": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Style" } } } },
+    "annotate.notinhas.area-stroke-width": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Stroke" } } } },
+    "annotate.notinhas.note-editor-color-button": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Note color" } } } },
+    "annotate.notinhas.color-red": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Red" } } } },
+    "annotate.notinhas.color-orange": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Orange" } } } },
+    "annotate.notinhas.color-blue": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Blue" } } } },
+    "annotate.notinhas.color-green": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Green" } } } },
+    "annotate.notinhas.color-purple": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Purple" } } } },
+    "annotate.notinhas.color-black": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Black" } } } },
     "annotate.notinhas.settings-section": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Notinhas" } } } },
     "annotate.notinhas.panel-side-title": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Notes panel side" } } } },
     "annotate.notinhas.panel-side-description": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Choose where the exported notes panel appears." } } } },
@@ -30,7 +38,6 @@
     "annotate.notinhas.upload-to-imgbb": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Upload to ImgBB" } } } },
     "annotate.notinhas.imgbb-upload-failed": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "ImgBB upload failed" } } } },
     "annotate.notinhas.selected": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Selected" } } } },
-    "annotate.notinhas.color-swatch": { "localizations": { "en": { "stringUnit": { "state": "translated", "value": "Color %d" } } } },
     "annotate-context.defaults": {
       "extractionState": "stale",
       "localizations": {

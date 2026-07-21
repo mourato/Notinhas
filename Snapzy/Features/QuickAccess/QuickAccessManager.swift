@@ -86,6 +86,21 @@ final class QuickAccessManager: ObservableObject {
       refreshPanelInteractionMetrics()
     }
   }
+  /// Scales corner icon buttons (glyph + circular hit target) independently of overlay size.
+  /// Display size is further clamped so opposite corners never overlap on the scaled card.
+  @Published var cornerButtonScale: Double = 1.0 {
+    didSet {
+      let clamped = min(
+        max(cornerButtonScale, QuickAccessCornerButtonMetrics.scaleRange.lowerBound),
+        QuickAccessCornerButtonMetrics.scaleRange.upperBound
+      )
+      if clamped != cornerButtonScale {
+        cornerButtonScale = clamped
+        return
+      }
+      UserDefaults.standard.set(cornerButtonScale, forKey: PreferencesKeys.quickAccessCornerButtonScale)
+    }
+  }
   @Published var dragDropEnabled: Bool = true {
     didSet {
       UserDefaults.standard.set(dragDropEnabled, forKey: Keys.dragDropEnabled)
@@ -197,6 +212,12 @@ final class QuickAccessManager: ObservableObject {
       UserDefaults.standard.object(forKey: Keys.autoDismissDelay) as? Double ?? 10
     overlayScale =
       UserDefaults.standard.object(forKey: Keys.overlayScale) as? Double ?? 1.0
+    let savedCornerButtonScale =
+      UserDefaults.standard.object(forKey: PreferencesKeys.quickAccessCornerButtonScale) as? Double ?? 1.0
+    cornerButtonScale = min(
+      max(savedCornerButtonScale, QuickAccessCornerButtonMetrics.scaleRange.lowerBound),
+      QuickAccessCornerButtonMetrics.scaleRange.upperBound
+    )
     dragDropEnabled =
       UserDefaults.standard.object(forKey: Keys.dragDropEnabled) as? Bool ?? true
     twoFingerSwipeToDismissEnabled =

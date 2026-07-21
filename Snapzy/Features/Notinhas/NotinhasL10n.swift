@@ -17,6 +17,13 @@ enum NotinhasL10n {
   static let areaStyleTinted = L10n.Notinhas.areaStyleTinted
   static let areaStyleHatched = L10n.Notinhas.areaStyleHatched
   static let areaStylePickerLabel = L10n.Notinhas.areaStylePicker
+  static let areaStrokeWidthLabel = L10n.Notinhas.areaStrokeWidthLabel
+  static let colorRed = L10n.Notinhas.colorRed
+  static let colorOrange = L10n.Notinhas.colorOrange
+  static let colorBlue = L10n.Notinhas.colorBlue
+  static let colorGreen = L10n.Notinhas.colorGreen
+  static let colorPurple = L10n.Notinhas.colorPurple
+  static let colorBlack = L10n.Notinhas.colorBlack
   static let settingsSection = L10n.Notinhas.settingsSection
   static let panelSideTitle = L10n.Notinhas.panelSideTitle
   static let panelSideDescription = L10n.Notinhas.panelSideDescription
@@ -31,8 +38,4 @@ enum NotinhasL10n {
   static let uploadToImgBB = L10n.Notinhas.uploadToImgBB
   static let imgbbUploadFailed = L10n.Notinhas.imgbbUploadFailed
   static let selected = L10n.Notinhas.selected
-
-  static func colorSwatch(_ index: Int) -> String {
-    L10n.Notinhas.colorSwatch(index)
-  }
 }

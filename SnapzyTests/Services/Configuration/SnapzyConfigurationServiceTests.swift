@@ -80,6 +80,18 @@ final class SnapzyConfigurationServiceTests: XCTestCase {
     XCTAssertEqual(document.value(at: "quick_access", "two_finger_swipe_to_dismiss")?.boolValue, false)
   }
 
+  func testExportIncludesQuickAccessCornerButtonScale() throws {
+    let manager = QuickAccessManager.shared
+    let original = manager.cornerButtonScale
+    manager.cornerButtonScale = 1.5
+    defer { manager.cornerButtonScale = original }
+
+    let source = SnapzyConfigurationExporter.exportTOML(defaults: UserDefaultsFactory.make())
+    let document = try SimpleTOMLParser.parse(source)
+
+    XCTAssertEqual(document.value(at: "quick_access", "corner_button_scale")?.doubleValue, 1.5)
+  }
+
   func testEnsureConfigExistsDoesNotOverwriteExistingFile() throws {
     let homeDirectory = temporaryHomeDirectory()
     defer { try? FileManager.default.removeItem(at: homeDirectory) }

@@ -132,6 +132,7 @@ enum SnapzyConfigurationExporter {
     writer.value("auto_dismiss_delay", manager.autoDismissDelay)
     writer.value("pause_countdown_on_hover", manager.pauseCountdownOnHover)
     writer.value("overlay_scale", manager.overlayScale)
+    writer.value("corner_button_scale", manager.cornerButtonScale)
     writer.value("drag_drop", manager.dragDropEnabled)
     writer.value("two_finger_swipe_to_dismiss", manager.twoFingerSwipeToDismissEnabled)
     writer.value("swipe_sensitivity", manager.swipeSensitivity)

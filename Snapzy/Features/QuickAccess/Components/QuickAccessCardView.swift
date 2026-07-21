@@ -585,13 +585,20 @@ struct QuickAccessCardView: View {
   }
 
   private func cornerButton(_ action: QuickAccessActionKind, delay: Int) -> some View {
-    QuickAccessIconButton(
+    let metrics = QuickAccessCornerButtonMetrics(
+      scale: QuickAccessCornerButtonMetrics.resolvedScale(
+        cornerButtonScale: CGFloat(manager.cornerButtonScale),
+        overlayScale: CGFloat(manager.overlayScale)
+      )
+    )
+    return QuickAccessIconButton(
       icon: actionIcon(for: action),
       action: { performAction(action) },
-      helpText: actionTitle(for: action)
+      helpText: actionTitle(for: action),
+      sizeScale: metrics.scale
     )
     .transition(cornerButtonTransition(delay: delay))
-    .padding(6)
+    .padding(metrics.padding)
     .disabled(!isActionEnabled(action))
     .opacity(isActionEnabled(action) ? 1 : 0.6)
   }

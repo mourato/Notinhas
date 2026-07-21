@@ -65,14 +65,19 @@ struct QuickAccessPreviewIconSlot: View {
   let isEnabled: Bool
   let isTargeted: Bool
   let onHover: (Bool) -> Void
+  var sizeScale: CGFloat = 1
+
+  private var metrics: QuickAccessCornerButtonMetrics {
+    QuickAccessCornerButtonMetrics(scale: sizeScale)
+  }
 
   var body: some View {
     Group {
       if let action {
         Image(systemName: action.systemImage)
-          .font(.system(size: 10, weight: .bold))
+          .font(.system(size: metrics.iconFontSize, weight: .bold))
           .foregroundColor(.white)
-          .frame(width: 20, height: 20)
+          .frame(width: metrics.touchSize, height: metrics.touchSize)
           .background(Circle().fill(Color.black.opacity(0.62)))
           .opacity(isEnabled ? 1 : 0.45)
           .help("\(action.settingsTitle) - \(slot.settingsTitle)")
@@ -80,11 +85,11 @@ struct QuickAccessPreviewIconSlot: View {
         Circle()
           .stroke(Color.white.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
           .overlay(plusIcon)
-          .frame(width: 20, height: 20)
+          .frame(width: metrics.touchSize, height: metrics.touchSize)
           .help(slot.settingsTitle)
       }
     }
-    .frame(width: 24, height: 24)
+    .frame(width: metrics.touchSize + 4, height: metrics.touchSize + 4)
     .overlay(Circle().stroke(isTargeted ? Color(nsColor: .controlAccentColor) : Color.clear, lineWidth: 2))
     .contentShape(Circle())
     .onHover(perform: onHover)
@@ -92,7 +97,7 @@ struct QuickAccessPreviewIconSlot: View {
 
   private var plusIcon: some View {
     Image(systemName: "plus")
-      .font(.system(size: 9, weight: .bold))
+      .font(.system(size: max(8, metrics.iconFontSize - 1), weight: .bold))
       .foregroundColor(.white.opacity(0.8))
   }
 }

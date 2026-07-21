@@ -131,12 +131,46 @@ final class NotinhasAnnotateStateTests: XCTestCase {
     state.notinhasNotes = [note]
     var live = note
     live.color = RGBAColor(red: 0, green: 0, blue: 1, alpha: 1)
+    live.areaStrokeWidth = 5
 
     state.notinhasApplyLiveAppearance(live)
 
     XCTAssertEqual(state.notinhasNotes[0].color, live.color)
+    XCTAssertEqual(state.notinhasNotes[0].areaStrokeWidth, 5)
     XCTAssertEqual(state.notinhasNotes[0].text, note.text)
     XCTAssertFalse(state.canUndo)
+  }
+
+  func testLiveAppearanceClampsAreaStrokeWidth() {
+    let state = makeState()
+    let note = makeNote()
+    state.notinhasNotes = [note]
+    var live = note
+    live.areaStrokeWidth = 99
+
+    state.notinhasApplyLiveAppearance(live)
+
+    XCTAssertEqual(
+      state.notinhasNotes[0].areaStrokeWidth,
+      NotinhasVisualNote.areaStrokeWidthRange.upperBound,
+      accuracy: 0.001
+    )
+  }
+
+  func testCommitNoteEditClampsAreaStrokeWidth() {
+    let state = makeState()
+    let original = makeNote(text: "Before")
+    state.notinhasNotes = [original]
+    var draft = original
+    draft.areaStrokeWidth = 0
+
+    state.notinhasCommitNoteEdit(draft: draft, openingSnapshot: original)
+
+    XCTAssertEqual(
+      state.notinhasNotes[0].areaStrokeWidth,
+      NotinhasVisualNote.areaStrokeWidthRange.lowerBound,
+      accuracy: 0.001
+    )
   }
 
   func testRevertNoteRestoresOpeningSnapshot() {

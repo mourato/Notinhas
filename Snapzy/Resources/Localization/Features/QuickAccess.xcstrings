@@ -1561,6 +1561,38 @@
         }
       }
     },
+    "preferences-quick-access.corner-button-size-title": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Corner Button Size"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamanho dos botões dos cantos"
+          }
+        }
+      }
+    },
+    "preferences-quick-access.corner-button-size-description": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icon and tap target size for buttons in each corner"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamanho do ícone e da área de toque dos botões em cada canto"
+          }
+        }
+      }
+    },
     "preferences-quick-access.pause-on-hover-description": {
       "extractionState": "stale",
       "localizations": {

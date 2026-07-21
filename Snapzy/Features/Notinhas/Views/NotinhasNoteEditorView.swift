@@ -5,21 +5,13 @@ struct NotinhasNoteEditorView: View {
   @Binding var text: String
   @Binding var color: RGBAColor
   @Binding var areaStyle: NotinhasAreaStyle
+  @Binding var areaStrokeWidth: CGFloat
   let showsAreaStyle: Bool
   let onCommit: () -> Void
   let onCancel: () -> Void
   let onDelete: () -> Void
 
   @FocusState private var isFocused: Bool
-
-  private let palette: [RGBAColor] = [
-    RGBAColor(red: 0.95, green: 0.23, blue: 0.21, alpha: 1),
-    RGBAColor(red: 0.98, green: 0.55, blue: 0.09, alpha: 1),
-    RGBAColor(red: 0.20, green: 0.60, blue: 0.95, alpha: 1),
-    RGBAColor(red: 0.30, green: 0.69, blue: 0.31, alpha: 1),
-    RGBAColor(red: 0.61, green: 0.35, blue: 0.71, alpha: 1),
-    RGBAColor(red: 0.13, green: 0.13, blue: 0.13, alpha: 1),
-  ]
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
@@ -35,32 +27,7 @@ struct NotinhasNoteEditorView: View {
 
         Spacer(minLength: 0)
 
-        Menu {
-          ForEach(Array(palette.enumerated()), id: \.offset) { index, swatch in
-            Button {
-              color = swatch
-            } label: {
-              Label {
-                Text(NotinhasL10n.colorSwatch(index + 1))
-              } icon: {
-                Circle()
-                  .fill(swatch.color)
-                  .frame(width: 14, height: 14)
-              }
-            }
-          }
-        } label: {
-          Circle()
-            .fill(color.color)
-            .frame(width: 22, height: 22)
-            .overlay {
-              Circle()
-                .stroke(Color.primary.opacity(0.25), lineWidth: 1)
-            }
-        }
-        .menuStyle(.borderlessButton)
-        .fixedSize()
-        .accessibilityLabel(NotinhasL10n.noteEditorColorButton)
+        colorMenu
       }
 
       TextField(NotinhasL10n.noteEditorPlaceholder, text: $text, axis: .vertical)
@@ -71,12 +38,8 @@ struct NotinhasNoteEditorView: View {
         .onSubmit(onCommit)
 
       if showsAreaStyle {
-        Picker(NotinhasL10n.areaStylePickerLabel, selection: $areaStyle) {
-          Text(NotinhasL10n.areaStyleOutline).tag(NotinhasAreaStyle.outline)
-          Text(NotinhasL10n.areaStyleTinted).tag(NotinhasAreaStyle.tinted)
-          Text(NotinhasL10n.areaStyleHatched).tag(NotinhasAreaStyle.hatched)
-        }
-        .pickerStyle(.segmented)
+        areaStyleControls
+        areaStrokeWidthControl
       }
 
       HStack {
@@ -98,5 +61,87 @@ struct NotinhasNoteEditorView: View {
     .frame(width: 300)
     .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     .onAppear { isFocused = true }
+  }
+
+  private var colorMenu: some View {
+    // Menu-styled Picker keeps AppKit checkmarks for the active swatch.
+    Picker(selection: paletteSelection) {
+      ForEach(NotinhasPaletteColor.allCases) { swatch in
+        Label {
+          Text(swatch.localizedName)
+        } icon: {
+          // `Image(nsImage:)` survives AppKit menu bridging; SwiftUI `Circle` icons do not.
+          Image(nsImage: swatch.menuImage())
+        }
+        .tag(Optional(swatch))
+      }
+    } label: {
+      Image(nsImage: NotinhasPaletteColor.makeSwatchImage(color: color.nsColor, diameter: 18))
+        .resizable()
+        .frame(width: 18, height: 18)
+    }
+    .labelsHidden()
+    .pickerStyle(.menu)
+    .fixedSize()
+    .accessibilityLabel(NotinhasL10n.noteEditorColorButton)
+    .accessibilityValue(NotinhasPaletteColor.matching(color)?.localizedName ?? NotinhasL10n.selected)
+  }
+
+  private var paletteSelection: Binding<NotinhasPaletteColor?> {
+    Binding(
+      get: { NotinhasPaletteColor.matching(color) },
+      set: { selection in
+        guard let selection else { return }
+        color = selection.rgba
+      }
+    )
+  }
+
+  private var areaStyleControls: some View {
+    VStack(alignment: .leading, spacing: 6) {
+      Text(NotinhasL10n.areaStylePickerLabel)
+        .font(.system(size: 11, weight: .medium))
+        .foregroundStyle(.secondary)
+
+      HStack(spacing: 6) {
+        ForEach(NotinhasAreaStyle.allCases) { style in
+          NotinhasAreaStylePreviewButton(
+            style: style,
+            isSelected: areaStyle == style,
+            color: color.color,
+            action: { areaStyle = style }
+          )
+        }
+        Spacer(minLength: 0)
+      }
+    }
+  }
+
+  private var areaStrokeWidthControl: some View {
+    HStack(spacing: 8) {
+      Text(NotinhasL10n.areaStrokeWidthLabel)
+        .font(.system(size: 11, weight: .medium))
+        .foregroundStyle(.secondary)
+
+      Slider(
+        value: $areaStrokeWidth,
+        in: NotinhasVisualNote.areaStrokeWidthRange,
+        step: 0.5
+      )
+
+      Text(areaStrokeWidthLabel)
+        .font(.system(size: 11, weight: .medium).monospacedDigit())
+        .foregroundStyle(.secondary)
+        .frame(width: 28, alignment: .trailing)
+    }
+    .accessibilityElement(children: .combine)
+    .accessibilityLabel(NotinhasL10n.areaStrokeWidthLabel)
+  }
+
+  private var areaStrokeWidthLabel: String {
+    if areaStrokeWidth.truncatingRemainder(dividingBy: 1) == 0 {
+      return String(Int(areaStrokeWidth))
+    }
+    return String(format: "%.1f", areaStrokeWidth)
   }
 }

@@ -62,7 +62,7 @@ final class NotinhasNoteEditorOverlay: NSView {
             ?? RGBAColor(red: 1, green: 0, blue: 0, alpha: 1)
         },
         set: { [self] newValue in
-          applyLiveAppearance(color: newValue, areaStyle: nil)
+          applyLiveAppearance(color: newValue, areaStyle: nil, areaStrokeWidth: nil)
         }
       ),
       areaStyle: Binding(
@@ -70,7 +70,15 @@ final class NotinhasNoteEditorOverlay: NSView {
           draftNote?.areaStyle ?? .outline
         },
         set: { [self] newValue in
-          applyLiveAppearance(color: nil, areaStyle: newValue)
+          applyLiveAppearance(color: nil, areaStyle: newValue, areaStrokeWidth: nil)
+        }
+      ),
+      areaStrokeWidth: Binding(
+        get: { [self] in
+          draftNote?.areaStrokeWidth ?? NotinhasVisualNote.defaultAreaStrokeWidth
+        },
+        set: { [self] newValue in
+          applyLiveAppearance(color: nil, areaStyle: nil, areaStrokeWidth: newValue)
         }
       ),
       showsAreaStyle: note.target.isRectangular,
@@ -90,9 +98,14 @@ final class NotinhasNoteEditorOverlay: NSView {
     hosting.translatesAutoresizingMaskIntoConstraints = false
     addSubview(hosting)
     hostingView = hosting
+    hosting.layoutSubtreeIfNeeded()
 
     let anchor = NotinhasNoteGeometry.pinAnchor(for: note.target)
-    let panelSize = CGSize(width: 300, height: note.target.isRectangular ? 260 : 240)
+    let fitting = hosting.fittingSize
+    let width = max(300, ceil(fitting.width))
+    let preferredHeight = max(note.target.isRectangular ? 280 : 200, ceil(fitting.height))
+    let maxHeight = max(200, containerBounds.height - 24)
+    let panelSize = CGSize(width: width, height: min(preferredHeight, maxHeight))
     var origin = CGPoint(x: anchor.x + 24, y: anchor.y - panelSize.height / 2)
 
     if origin.x + panelSize.width > containerBounds.maxX - 12 {
@@ -122,13 +135,20 @@ final class NotinhasNoteEditorOverlay: NSView {
     removeFromSuperview()
   }
 
-  private func applyLiveAppearance(color: RGBAColor?, areaStyle: NotinhasAreaStyle?) {
+  private func applyLiveAppearance(
+    color: RGBAColor?,
+    areaStyle: NotinhasAreaStyle?,
+    areaStrokeWidth: CGFloat?
+  ) {
     guard var updated = draftNote else { return }
     if let color {
       updated.color = color
     }
     if let areaStyle {
       updated.areaStyle = areaStyle
+    }
+    if let areaStrokeWidth {
+      updated.areaStrokeWidth = NotinhasVisualNote.clampedAreaStrokeWidth(areaStrokeWidth)
     }
     draftNote = updated
 

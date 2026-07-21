@@ -10,6 +10,7 @@ import UniformTypeIdentifiers
 
 struct QuickAccessSettingsPreviewCard: View {
   let scale: CGFloat
+  var cornerButtonScale: CGFloat = 1
   @ObservedObject var actionStore: QuickAccessActionConfigurationStore
   @ObservedObject var swipeActionStore: QuickAccessSwipeActionStore
   let isReordering: Bool
@@ -244,15 +245,22 @@ struct QuickAccessSettingsPreviewCard: View {
   }
 
   private func cornerSlot(_ slot: QuickAccessActionSlot) -> some View {
+    let metrics = QuickAccessCornerButtonMetrics(
+      scale: QuickAccessCornerButtonMetrics.resolvedScale(
+        cornerButtonScale: cornerButtonScale,
+        overlayScale: scale
+      )
+    )
     let slotView = QuickAccessPreviewIconSlot(
       slot: slot,
       action: actionStore.action(in: slot),
       isEnabled: actionStore.action(in: slot).map(actionStore.isEnabled) ?? false,
       isTargeted: dropTargetSlot == slot,
-      onHover: { updateHover($0, slot: slot) }
+      onHover: { updateHover($0, slot: slot) },
+      sizeScale: metrics.scale
     )
     return draggableSlot(slotView, slot: slot)
-      .padding(6)
+      .padding(metrics.padding)
       .onDrop(
         of: isReordering ? [] : QuickAccessActionDragPayload.typeIdentifiers,
         isTargeted: dropTargetBinding(for: slot)

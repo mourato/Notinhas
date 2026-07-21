@@ -117,6 +117,7 @@ enum SnapzyConfigurationDefaultDocument {
     writer.value("auto_dismiss_delay", 10)
     writer.value("pause_countdown_on_hover", true)
     writer.value("overlay_scale", 1.0)
+    writer.value("corner_button_scale", 1.0)
     writer.value("drag_drop", true)
     writer.value("two_finger_swipe_to_dismiss", true)
     writer.value("swipe_sensitivity", 1.0)

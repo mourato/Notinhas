@@ -85,6 +85,7 @@ enum PreferencesKeys {
   static let floatingAutoDismissEnabled = "floatingScreenshot.autoDismissEnabled"
   static let floatingAutoDismissDelay = "floatingScreenshot.autoDismissDelay"
   static let floatingOverlayScale = "floatingScreenshot.overlayScale"
+  static let quickAccessCornerButtonScale = "quickAccess.cornerButtonScale"
   static let floatingDragDropEnabled = "floatingScreenshot.dragDropEnabled"
   static let floatingTwoFingerSwipeToDismissEnabled = "floatingScreenshot.twoFingerSwipeToDismissEnabled"
   static let floatingSwipeSensitivity = "floatingScreenshot.swipeSensitivity"

@@ -2205,6 +2205,16 @@ nonisolated enum L10n {
       defaultValue: "Adjust the floating preview size",
       comment: "Quick access preferences setting description"
     )
+    static let cornerButtonSizeTitle = string(
+      "preferences-quick-access.corner-button-size-title",
+      defaultValue: "Corner Button Size",
+      comment: "Quick access preferences setting title for corner action buttons"
+    )
+    static let cornerButtonSizeDescription = string(
+      "preferences-quick-access.corner-button-size-description",
+      defaultValue: "Icon and tap target size for buttons in each corner",
+      comment: "Quick access preferences setting description for corner action buttons"
+    )
     static let floatingOverlayTitle = string(
       "preferences-quick-access.floating-overlay-title",
       defaultValue: "Floating Overlay",
@@ -3011,9 +3021,17 @@ nonisolated enum L10n {
     static let uploadToImgBB = string("annotate.notinhas.upload-to-imgbb", defaultValue: "Upload to ImgBB", comment: "Upload image to ImgBB")
     static let imgbbUploadFailed = string("annotate.notinhas.imgbb-upload-failed", defaultValue: "ImgBB upload failed", comment: "ImgBB upload failure alert title")
     static let selected = string("annotate.notinhas.selected", defaultValue: "Selected", comment: "Selected color swatch accessibility value")
-    static func colorSwatch(_ index: Int) -> String {
-      format("annotate.notinhas.color-swatch", defaultValue: "Color %d", comment: "Notinhas color swatch accessibility label. %d is the palette position.", index)
-    }
+    static let colorRed = string("annotate.notinhas.color-red", defaultValue: "Red", comment: "Notinhas palette color name")
+    static let colorOrange = string("annotate.notinhas.color-orange", defaultValue: "Orange", comment: "Notinhas palette color name")
+    static let colorBlue = string("annotate.notinhas.color-blue", defaultValue: "Blue", comment: "Notinhas palette color name")
+    static let colorGreen = string("annotate.notinhas.color-green", defaultValue: "Green", comment: "Notinhas palette color name")
+    static let colorPurple = string("annotate.notinhas.color-purple", defaultValue: "Purple", comment: "Notinhas palette color name")
+    static let colorBlack = string("annotate.notinhas.color-black", defaultValue: "Black", comment: "Notinhas palette color name")
+    static let areaStrokeWidthLabel = string(
+      "annotate.notinhas.area-stroke-width",
+      defaultValue: "Stroke",
+      comment: "Notinhas area stroke width control label"
+    )
   }
 
   enum PreferencesShortcuts {

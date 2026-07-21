@@ -22,6 +22,7 @@ struct QuickAccessActionCustomizationView: View {
         Spacer()
         QuickAccessSettingsPreviewCard(
           scale: CGFloat(manager.overlayScale),
+          cornerButtonScale: CGFloat(manager.cornerButtonScale),
           actionStore: actionStore,
           swipeActionStore: swipeActionStore,
           isReordering: draggedAction != nil

@@ -617,6 +617,29 @@ final class QuickAccessCoreTests: XCTestCase {
     XCTAssertFalse(panel.containsInteractivePoint(NSPoint(x: 150, y: panel.frame.maxY - 10)))
   }
 
+  func testCornerButtonMetrics_resolvedScalePreventsOppositeCornerOverlap() {
+    let overlayScale: CGFloat = 0.75
+    let resolved = QuickAccessCornerButtonMetrics.resolvedScale(
+      cornerButtonScale: 1.75,
+      overlayScale: overlayScale
+    )
+    let cardHeight = QuickAccessLayout.scaledCardHeight(overlayScale)
+    let totalExtent = 2 * QuickAccessCornerButtonMetrics.edgeExtent(forScale: resolved)
+    XCTAssertLessThanOrEqual(totalExtent, cardHeight + 0.001)
+    XCTAssertLessThanOrEqual(
+      resolved,
+      QuickAccessCornerButtonMetrics.maximumScale(forOverlayScale: overlayScale) + 0.001
+    )
+  }
+
+  func testCornerButtonMetrics_resolvedScaleKeepsPreferredWhenItFits() {
+    let resolved = QuickAccessCornerButtonMetrics.resolvedScale(
+      cornerButtonScale: 1.0,
+      overlayScale: 1.0
+    )
+    XCTAssertEqual(resolved, 1.0, accuracy: 0.001)
+  }
+
   func testQuickAccessActionConfigurationStore_usesDefaultOrderAndEnabledActions() {
     let defaults = makeIsolatedDefaults()
     let store = makeActionConfigurationStore(defaults: defaults)
