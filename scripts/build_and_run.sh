@@ -17,6 +17,7 @@ CONFIGURATION="${CONFIGURATION:-Debug}"
 LOG_LEVEL="${LOG_LEVEL:-default,error,fault}"
 CLEAN=0
 QUIET=1
+ENABLE_VIDEO_MODULE="${ENABLE_VIDEO_MODULE:-}"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DERIVED_DATA_PATH="${DERIVED_DATA_PATH:-$ROOT_DIR/.build/xcode-derived-data}"
@@ -57,16 +58,39 @@ ${BOLD}Options:${NC}
   --configuration C   Build configuration. Local builds use LOCAL_CODE_SIGN_IDENTITY.
   --derived-data PATH Build DerivedData path. Default: .build/xcode-derived-data
   --log-level LEVELS  default,info,debug,error,fault,all. Default: default,error,fault
+  --video-module      Build with the optional Video module (recording + video editor).
+  --no-video-module   Build without the optional Video module (default).
   --clean             Clean before building
   --verbose           Show full xcodebuild output (warnings, notes, progress)
   --help, -h          Show this help
+
+${BOLD}Environment:${NC}
+  ENABLE_VIDEO_MODULE Set to 1 or 0 to enable/disable the Video module non-interactively.
 
 ${BOLD}Examples:${NC}
   $0
   $0 --verify
   $0 --logs --log-level all
   $0 --configuration Release
+  ENABLE_VIDEO_MODULE=1 $0
+  $0 --video-module --configuration Debug+Video
 USAGE
+}
+
+apply_video_module_settings() {
+  if [[ "${ENABLE_VIDEO_MODULE:-0}" == "1" ]]; then
+    SCHEME="Snapzy Video"
+    case "$CONFIGURATION" in
+      Debug)
+        CONFIGURATION="Debug+Video"
+        ;;
+      Release)
+        CONFIGURATION="Release+Video"
+        ;;
+    esac
+  else
+    SCHEME="Snapzy"
+  fi
 }
 
 require_macos() {
@@ -113,6 +137,19 @@ configure_interactive_build() {
       CLEAN=1
       ;;
   esac
+
+  printf "Include optional Video module (recording + video editor)? [y/N]: "
+  local video_choice
+  read -r video_choice || exit 0
+  case "$video_choice" in
+    y|Y|yes|YES)
+      ENABLE_VIDEO_MODULE=1
+      ;;
+    *)
+      ENABLE_VIDEO_MODULE=0
+      ;;
+  esac
+  apply_video_module_settings
 }
 
 parse_args() {
@@ -159,6 +196,14 @@ parse_args() {
         CLEAN=1
         shift
         ;;
+      --video-module)
+        ENABLE_VIDEO_MODULE=1
+        shift
+        ;;
+      --no-video-module)
+        ENABLE_VIDEO_MODULE=0
+        shift
+        ;;
       --verbose)
         QUIET=0
         shift
@@ -175,6 +220,8 @@ parse_args() {
 
   if [[ "$argument_count" -eq 0 && -t 0 && -t 1 ]]; then
     configure_interactive_build
+  elif [[ -n "$ENABLE_VIDEO_MODULE" ]]; then
+    apply_video_module_settings
   fi
 }
 
@@ -223,7 +270,7 @@ build_products_dir() {
 
 app_bundle_path() {
   local bundle_name="$APP_NAME"
-  if [[ "$CONFIGURATION" == "Debug" ]]; then
+  if [[ "$CONFIGURATION" == "Debug" || "$CONFIGURATION" == "Debug+Video" ]]; then
     bundle_name="$DEBUG_BUNDLE_NAME"
   fi
 
@@ -290,7 +337,7 @@ run_xcodebuild() {
     "DEVELOPMENT_TEAM="
     "ENABLE_HARDENED_RUNTIME=$LOCAL_ENABLE_HARDENED_RUNTIME"
   )
-  if [[ "$CONFIGURATION" != "Debug" ]]; then
+  if [[ "$CONFIGURATION" != Debug* ]]; then
     # Xcode 17's Swift 6.3.3 whole-module optimizer crashes while compiling
     # this project. Keep Release optimization enabled while disabling only the
     # failing SIL performance pass.

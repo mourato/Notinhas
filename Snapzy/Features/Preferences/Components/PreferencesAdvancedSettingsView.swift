@@ -11,7 +11,8 @@ import UniformTypeIdentifiers
 
 struct AdvancedSettingsView: View {
   @AppStorage(PreferencesKeys.diagnosticsEnabled) private var diagnosticsEnabled = true
-  @AppStorage(PreferencesKeys.diagnosticsRetentionDays) private var diagnosticsRetentionDays = LogCleanupScheduler.defaultRetentionDays
+  @AppStorage(PreferencesKeys.diagnosticsRetentionDays) private var diagnosticsRetentionDays = LogCleanupScheduler
+    .defaultRetentionDays
   @AppStorage(PreferencesKeys.urlSchemeEnabled) private var urlSchemeEnabled = true
 
   @State private var needsConfigAccess = SnapzyConfigurationService.shared.needsUserSelectedConfigAccess
@@ -122,6 +123,12 @@ struct AdvancedSettingsView: View {
         }
       }
 
+      #if NOTINHAS_VIDEO_MODULE
+        Section(L10n.PreferencesAdvanced.optionalModulesSection) {
+          VideoModuleToggleRow()
+        }
+      #endif
+
       Section(L10n.PreferencesAdvanced.diagnosticsSection) {
         SettingRow(
           icon: "doc.text.magnifyingglass",
@@ -221,21 +228,21 @@ struct AdvancedSettingsView: View {
   private var configSyncStatusDescription: String {
     switch effectiveConfigSyncStatus {
     case .idle:
-      return L10n.PreferencesAdvanced.configSyncIdleDescription
+      L10n.PreferencesAdvanced.configSyncIdleDescription
     case .scheduled:
-      return L10n.PreferencesAdvanced.configSyncQueuedDescription
+      L10n.PreferencesAdvanced.configSyncQueuedDescription
     case .syncing:
-      return L10n.PreferencesAdvanced.configSyncWritingDescription
+      L10n.PreferencesAdvanced.configSyncWritingDescription
     case .upToDate(let date):
-      return L10n.PreferencesAdvanced.configSyncUpToDateDescription(configSyncTimeText(date))
+      L10n.PreferencesAdvanced.configSyncUpToDateDescription(configSyncTimeText(date))
     case .synced(let date):
-      return L10n.PreferencesAdvanced.configSyncSyncedDescription(configSyncTimeText(date))
+      L10n.PreferencesAdvanced.configSyncSyncedDescription(configSyncTimeText(date))
     case .needsPermission:
-      return L10n.PreferencesAdvanced.configAccessRequiredToast
+      L10n.PreferencesAdvanced.configAccessRequiredToast
     case .conflict:
-      return L10n.PreferencesAdvanced.configSyncNeedsConfirmation
+      L10n.PreferencesAdvanced.configSyncNeedsConfirmation
     case .failed(let message):
-      return message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         ? L10n.PreferencesAdvanced.openConfigUnavailable
         : message
     }
@@ -244,37 +251,37 @@ struct AdvancedSettingsView: View {
   private var configSyncBadgeConfiguration: StatusBadge.Configuration {
     switch effectiveConfigSyncStatus {
     case .idle, .upToDate, .synced:
-      return StatusBadge.Configuration(
+      StatusBadge.Configuration(
         label: L10n.PreferencesAdvanced.configSyncBadgeSynced,
         systemImage: "checkmark.circle.fill",
         tint: .green
       )
     case .scheduled:
-      return StatusBadge.Configuration(
+      StatusBadge.Configuration(
         label: L10n.PreferencesAdvanced.configSyncBadgeQueued,
         systemImage: "clock.fill",
         tint: .blue
       )
     case .syncing:
-      return StatusBadge.Configuration(
+      StatusBadge.Configuration(
         label: L10n.PreferencesAdvanced.configSyncBadgeSyncing,
         tint: .blue,
         showsProgress: true
       )
     case .needsPermission:
-      return StatusBadge.Configuration(
+      StatusBadge.Configuration(
         label: L10n.PreferencesAdvanced.configSyncBadgeAccessNeeded,
         systemImage: "lock.fill",
         tint: .orange
       )
     case .conflict:
-      return StatusBadge.Configuration(
+      StatusBadge.Configuration(
         label: L10n.PreferencesAdvanced.configSyncBadgeReviewNeeded,
         systemImage: "exclamationmark.triangle.fill",
         tint: .orange
       )
     case .failed:
-      return StatusBadge.Configuration(
+      StatusBadge.Configuration(
         label: L10n.PreferencesAdvanced.configSyncBadgeFailed,
         systemImage: "xmark.octagon.fill",
         tint: .red
@@ -394,11 +401,15 @@ struct AdvancedSettingsView: View {
       access.stop()
       DispatchQueue.main.async {
         if let error {
-          self.showNotice(error.localizedDescription, fallback: L10n.PreferencesAdvanced.openConfigUnavailable, style: .error)
+          showNotice(
+            error.localizedDescription,
+            fallback: L10n.PreferencesAdvanced.openConfigUnavailable,
+            style: .error
+          )
           return
         }
 
-        self.showNotice(L10n.PreferencesAdvanced.openConfigSucceeded, style: .success)
+        showNotice(L10n.PreferencesAdvanced.openConfigSucceeded, style: .success)
       }
     }
   }
@@ -521,14 +532,12 @@ struct AdvancedSettingsView: View {
   private func showGrantNotice(for grantResult: SnapzyConfigurationAccessGrantResult) {
     let issues = issues(for: grantResult.autoImportResult)
     let style = noticeStyle(for: issues)
-    let message: String
-
-    if let importResult = grantResult.autoImportResult.importResult {
-      message = noticeSummary(for: importResult, successMessage: L10n.PreferencesAdvanced.configAccessReady)
+    let message: String = if let importResult = grantResult.autoImportResult.importResult {
+      noticeSummary(for: importResult, successMessage: L10n.PreferencesAdvanced.configAccessReady)
     } else if grantResult.autoImportResult.status == .failed {
-      message = issues.first?.message ?? L10n.PreferencesAdvanced.openConfigUnavailable
+      issues.first?.message ?? L10n.PreferencesAdvanced.openConfigUnavailable
     } else {
-      message = L10n.PreferencesAdvanced.configAccessReady
+      L10n.PreferencesAdvanced.configAccessReady
     }
 
     showNotice(message, style: style)
@@ -602,8 +611,48 @@ struct AdvancedSettingsView: View {
       duration: style == .success ? 2.4 : 4.0
     )
   }
-
 }
+
+#if NOTINHAS_VIDEO_MODULE
+  private struct VideoModuleToggleRow: View {
+    @ObservedObject private var recorder = ScreenRecordingManager.shared
+    @State private var isEnabled = VideoModuleAvailability.isEnabled
+
+    private var isRecordingActive: Bool {
+      recorder.isActive
+    }
+
+    private var toggleBinding: Binding<Bool> {
+      Binding(
+        get: { isEnabled },
+        set: { newValue in
+          if !newValue, isRecordingActive {
+            return
+          }
+          isEnabled = newValue
+          VideoModuleAvailability.setEnabled(newValue)
+        }
+      )
+    }
+
+    var body: some View {
+      SettingRow(
+        icon: "video.fill",
+        title: L10n.PreferencesAdvanced.videoModuleTitle,
+        description: isRecordingActive && isEnabled
+          ? L10n.PreferencesAdvanced.videoModuleDisabledWhileRecording
+          : L10n.PreferencesAdvanced.videoModuleDescription
+      ) {
+        Toggle("", isOn: toggleBinding)
+          .labelsHidden()
+          .disabled(isRecordingActive && isEnabled)
+      }
+      .onReceive(NotificationCenter.default.publisher(for: .videoModuleAvailabilityDidChange)) { _ in
+        isEnabled = VideoModuleAvailability.isEnabled
+      }
+    }
+  }
+#endif
 
 private struct AdvancedConfigAccessWarningRow: View {
   let onGrant: () -> Void

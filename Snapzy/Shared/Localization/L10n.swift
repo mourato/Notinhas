@@ -207,6 +207,26 @@ nonisolated enum L10n {
       defaultValue: "Integration",
       comment: "Advanced preferences integration section title"
     )
+    static let optionalModulesSection = string(
+      "preferences-advanced.optional-modules-section",
+      defaultValue: "Optional modules",
+      comment: "Advanced preferences optional modules section title"
+    )
+    static let videoModuleTitle = string(
+      "preferences-advanced.video-module-title",
+      defaultValue: "Video recording & editor",
+      comment: "Advanced preferences video module toggle title"
+    )
+    static let videoModuleDescription = string(
+      "preferences-advanced.video-module-description",
+      defaultValue: "Enable screen recording, GIF capture, and the video editor. Off by default.",
+      comment: "Advanced preferences video module toggle description"
+    )
+    static let videoModuleDisabledWhileRecording = string(
+      "preferences-advanced.video-module-disabled-while-recording",
+      defaultValue: "Stop the active recording before disabling the video module",
+      comment: "Help text when the video module toggle is disabled during recording"
+    )
     static let urlSchemeTitle = string(
       "preferences-advanced.url-scheme-title",
       defaultValue: "URL Scheme integration",
