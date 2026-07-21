@@ -1,30 +1,32 @@
 ---
 name: testing-xctest
-description: XCTest guidance for Picker — color math, store encode/decode, and FontLoader routing when a test target exists.
+description: XCTest guidance for Notinhas — geometry, composer, annotate state, ImgBB parsing, and SnapzyTests layout.
 ---
 
 # Testing (XCTest)
 
-Use when adding or changing automated tests. The upstream package currently has **no** test target — verify by build + manual runs until tests are introduced.
+Use when adding or changing automated tests under `SnapzyTests/`.
 
 ## When Adding Tests
 
-- Prefer pure logic first: YIQ/contrast helpers, HEX/RGB/HSL conversions, store duplicate/cap/reorder rules, Find URL routing.
-- Keep UI/AppKit lifecycle (status item, event tap, AX) as manual checks unless a seam is introduced.
-- Use fakes for `UserDefaults` / file URL registration boundaries so `--demo` semantics stay testable.
+- Prefer pure logic first: `NotinhasNoteGeometry`, `NotinhasNotesComposer`, `NotinhasNoteRenderer`, `NotinhasAnnotateState` undo/move, ImgBB response parsing.
+- Keep UI/AppKit lifecycle (status item, capture overlay, full annotate window) as manual checks unless a seam is introduced.
+- Use fakes for `UserDefaults` or network boundaries when testing configuration/upload services.
 - Mark UI-touching tests `@MainActor` when they construct views or main-actor types.
 
 ## Structure
 
-- Mirror source names under a future `Tests/PickerTests/` (or package test target) once added.
+- Mirror source names: `SnapzyTests/Features/Notinhas/NotinhasNoteGeometryTests.swift`, etc.
 - One behavior per test name; assert observable outcomes, not private implementation details.
 
-## Until a Test Target Exists
+## Commands
 
-- Document manual verification in the PR for touched flows.
-- Do not claim merge-ready automated coverage that is not wired in `Package.swift`.
+```bash
+./scripts/run-tests.sh
+./scripts/run-tests.sh -only-testing:SnapzyTests/NotinhasNoteGeometryTests
+```
 
 ## Related
 
-- Persistence rules → `data-persistence`
-- Delivery gates → `delivery-workflow`
+- Delivery gate → `delivery-workflow`
+- Domain behavior under test → `capture-annotate-export` (when present)

@@ -1,32 +1,35 @@
 ---
 name: debugging-diagnostics
-description: Debugging guidance for Picker — crashes, AX/Chrome Grab Font failures, event taps, and FontLoader network issues.
+description: Debugging guidance for Notinhas — capture permission failures, signing/TCC resets, annotate/export issues, and ImgBB upload errors.
 ---
 
 # Debugging Diagnostics
 
-Use for crashes, flaky sampling/font grab, permission failures, or unexplained UI state.
+Use for crashes, flaky capture/annotate, permission failures, wrong export output, or unexplained UI state.
 
 ## Method
 
-1. Reproduce with a clear signature (action, app under cursor, OS permission state, signed vs ad-hoc build).
-2. Narrow: panel shell vs color loupe vs font overlay vs persistence vs FontLoader.
-3. Fix with a regression note in the PR/commit; prefer a focused test when logic is pure (color math, decode).
+1. Reproduce with a clear signature (action, permission state, signed vs ad-hoc build).
+2. Narrow: status bar menu vs capture overlay vs Annotate canvas vs Notinhas export vs persistence vs ImgBB upload.
+3. Fix with a regression note in the PR/commit; prefer a focused test when logic is pure (geometry, composer, decode).
 
-## Picker Hotspots
+## Notinhas Hotspots
 
-- **Accessibility not granted** — Grab Font toast; grant is tied to code signature (ad-hoc resign resets it).
-- **Chrome/Chromium** — needs Automation + “Allow JavaScript from Apple Events”; AX geometry + `NSAppleScript` path differs from Safari/WebKit.
-- **Event tap** — session tap must consume moves/clicks without freezing the cursor; teardown on Esc/dismiss must remove the tap.
-- **FontLoader** — network/catalog failures should fall back cleanly; do not leave the specimen in a half-registered state.
-- **Persistence** — corrupted UserDefaults JSON should fail soft.
+- **Screen Recording not granted** — capture menu disabled or flows blocked (`ScreenCaptureManager`, `ScreenCaptureViewModel` / `CaptureViewModel`).
+- **Accessibility not granted** — Smart Element, scrolling capture, or window resolver paths fail (`SmartElementQueryService`, `ActiveWindowResolver`).
+- **Signing identity changes** — TCC grants reset; re-grant Screen Recording / Accessibility after ad-hoc resign.
+- **Export / clipboard** — notes panel missing from copied image; check `AnnotateExporter.composeNotinhasIfNeeded` and renderable note filter.
+- **Geometry / hit-testing** — wrong pin order, move/delete not registering; check `NotinhasNoteGeometry` and `NotinhasAnnotateState`.
+- **ImgBB upload** — missing API key (`notinhas.imgbb.apiKey`), network/API errors; never log key values.
+- **Persistence** — corrupted annotation session JSON should fail soft; Notinhas payload on `PersistedAnnotationSession`.
 
 ## Logging Hygiene
 
-- Prefer temporary, high-signal logs while diagnosing; do not ship noisy AX dumps.
-- Never log full page script results or unrelated personal screen content.
+- Prefer temporary, high-signal logs while diagnosing; do not ship noisy dumps.
+- Never log full screenshots, page content, or API keys.
 
 ## Related
 
-- AX contracts → `accessibility-audit`
+- AX / contrast → `accessibility-audit`
 - Build/sign → `delivery-workflow`
+- Domain paths → `capture-annotate-export` (when present)

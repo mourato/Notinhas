@@ -1,6 +1,6 @@
 ---
 name: delivery-workflow
-description: Delivery and verification workflow for Picker — ./build.sh, signing, manual menu-bar gates, and Git evidence.
+description: Delivery and verification workflow for Notinhas — scripts/build_and_run.sh, XCTest, signing, manual capture/annotate gates, and Git evidence.
 ---
 
 # Delivery Workflow
@@ -13,43 +13,41 @@ Build/run failures, choosing verification depth, assessing merge readiness, or G
 
 | Command | Purpose |
 | ------- | ------- |
-| `./build.sh` | Release app bundle under `build/Picker.app` + codesign |
-| `./build.sh debug` | Debug app bundle |
-| `open build/Picker.app` | Launch menu-bar agent |
-| `build/Picker.app/Contents/MacOS/Picker --demo` | Seeded UI, in-memory stores, sticky panel |
-| `swift format lint --configuration .swift-format --recursive Sources` | Format check |
-| `swift format --in-place --configuration .swift-format --recursive Sources` | Format fix |
+| `open Snapzy.xcodeproj` | Develop and run in Xcode (`⌘R`) |
+| `./scripts/build_and_run.sh` | Build and launch the isolated debug app (codesign via `LOCAL_CODE_SIGN_IDENTITY`, default `Prisma Local Code Signing`) |
+| `./scripts/run-tests.sh` | Run the XCTest suite; results under `build/` |
+| `./scripts/format.sh` | Format Swift with SwiftFormat (`.swiftformat`: 2-space indent, 120 columns) |
 
-Do **not** treat plain `swift build` as sufficient acceptance — Info.plist and signing are required for glass and the loupe.
+Do **not** treat plain `swift build` as sufficient acceptance — Info.plist, signing, and Screen Recording permissions matter for capture flows.
 
 ## Signing Note
 
-`build.sh` prefers `Prisma Local Code Signing` (override with `PICKER_CODE_SIGN_IDENTITY`), otherwise ad-hoc. Accessibility grants follow the signing identity — stable signing avoids re-prompting every rebuild.
+Screen Recording and Accessibility TCC grants follow the code signature. Ad-hoc or changed signing identities can reset grants. See `scripts/test-tcc-local.sh` when debugging permission regressions after rebuilds.
 
 ## Validation Scope
 
 ### Merge Gate (current)
 
-1. `swift format lint --configuration .swift-format --recursive Sources`
-2. `./build.sh`
+1. `./scripts/format.sh` when SwiftFormat is installed (or confirm no Swift changes)
+2. `./scripts/run-tests.sh` for logic touched, or filtered `-only-testing:` for focused suites
 3. Manual smoke appropriate to the diff (below)
 
 ### Scope Matrix
 
-- Pure refactor: build + open panel once (`--demo` OK).
-- Panel / design / section switch: `--demo` UI pass + Reduce Motion glance if motion changed.
-- Color sampling / formats / contrast: pick a color; verify HEX/RGB/HSL copy and ink on a saturated swatch.
-- Grab Font / AX: grant path or toast; grab in Safari and, if touched, Chrome prerequisites.
-- Persistence: relaunch without `--demo`; confirm `--demo` does not write real stores.
-- FontLoader / Find: grab a missing face; confirm specimen or graceful fallback and Find destination.
+- Pure refactor / docs: tests relevant to change + `./scripts/build_and_run.sh` once if shell paths touched.
+- Notinhas notes / export / geometry: run `SnapzyTests/Features/Notinhas/*` suites; manual capture → annotate → copy brief.
+- Capture / permissions: confirm Screen Recording grant path; menu items disabled when permission missing.
+- Persistence: relaunch; confirm Notinhas session restore and ImgBB key round-trip (key name only in logs).
+- Upstream Snapzy merge: `./scripts/run-tests.sh` + capture/annotate smoke; preserve `Snapzy/Features/Notinhas/`.
 
 ## Git Evidence
 
-- Prefer granular commits (one logical change).
+- Prefer granular commits (one logical change); Conventional Commits (`feat(notinhas):`, `fix:`, `docs(agents):`).
 - Summarize what was built and which manual checks ran.
-- Do not commit secrets or personal palette dumps.
+- Do not commit secrets, API keys, or personal capture dumps.
 
 ## Related
 
-- Domain behavior → narrowest skill in `.agents/SKILLS_INDEX.md`
-- Strict review → `global:thermo-nuclear-code-quality-review` + `.agents/review-profiles/thermo-picker.md`
+- Domain behavior → narrowest skill in `.agents/skills/` (see `project-standards` / `SKILLS_INDEX.md` when present)
+- Capture → annotate → export loop → `capture-annotate-export` (when added)
+- Strict review → global `thermo-nuclear-code-quality-review` if available in the executor environment

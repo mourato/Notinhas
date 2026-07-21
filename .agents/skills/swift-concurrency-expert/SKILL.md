@@ -1,27 +1,28 @@
 ---
 name: swift-concurrency-expert
-description: Swift concurrency guidance for Picker — MainActor UI, async FontLoader work, and Sendable across sampling boundaries.
+description: Swift concurrency guidance for Notinhas — MainActor UI, image export/composition, and Sendable across capture boundaries.
 ---
 
 # Swift Concurrency Expert
 
-Use for actor isolation, `Sendable`, async/await, or Swift 6 concurrency diagnostics in Picker.
+Use for actor isolation, `Sendable`, async/await, or Swift 6 concurrency diagnostics in Notinhas/Snapzy.
 
 ## Invariants
 
-- UI and AppKit panel/status-item ownership stay on the **MainActor**.
-- Font download/registration (`FontLoader`) may be async — hop back to the main actor before updating specimen UI or stores.
-- Do not block the main thread on network or font registration.
-- Event-tap and AX callbacks must not assume unconstrained isolation; marshal UI updates explicitly.
-- Prefer structured concurrency over detached unstructured tasks for feature work unless lifetime is truly fire-and-forget and documented.
+- UI, `AppStatusBarController`, and Annotate/Notinhas views stay on the **MainActor**.
+- Pure geometry (`NotinhasNoteGeometry`) and export helpers may be `nonisolated` — match existing patterns.
+- ImgBB upload (`NotinhasImgBBUploadService` actor, `NotinhasUploadCoordinator` on MainActor) — hop back to main actor before updating UI or publish state.
+- Do not block the main thread on network, image composition, or file IO.
+- Capture callbacks and exporters must marshal UI updates explicitly.
+- Prefer structured concurrency over detached unstructured tasks unless lifetime is truly fire-and-forget and documented.
 
 ## Checklist
 
 - Are `@MainActor` boundaries clear at SwiftUI/AppKit edges?
-- Is shared mutable state (stores, panel flags) isolated?
-- Do cancellation paths tear down overlays/taps without races on dismiss?
+- Does new async work have a cancellation path when the annotate window closes?
+- Are cross-thread image snapshots `Sendable` or copied before crossing actors?
 
 ## Related
 
-- UI structure → `macos-app-engineering`
-- FontLoader failures → `debugging-diagnostics`
+- Export failures → `debugging-diagnostics`
+- Tests → `testing-xctest`

@@ -1,32 +1,33 @@
 ---
 name: data-persistence
-description: Palette and font-list persistence for Picker — UserDefaults JSON keys, caps, duplicate rules, and --demo isolation.
+description: Notinhas and annotation session persistence — PersistedNotinhasNotesSession, UserDefaults keys, and session restore.
 ---
 
 # Data Persistence
 
-Use when changing saved colors, saved fonts, UserDefaults keys, migration, or demo seeding.
+Use when changing saved Notinhas notes, annotation session restore, UserDefaults keys, or ImgBB configuration storage.
 
 ## Invariants
 
-- Colors: JSON under `picker.pickedColors.v1`, capped at **60**; consecutive duplicate samples via `add` **update** rather than append. Multi-pick loupe sessions use `appendAlways` (1:1 with each click) and restore a pre-session snapshot via `replaceAll` on cancel.
-- Fonts: JSON under `picker.pickedFonts.v1`, capped at **60**; re-grabbing a family **moves it to the front**.
-- `--demo` sets `persistenceEnabled = false` on both stores so seeded data never touches real user data.
-- Prefer additive schema evolution (new fields with defaults) over silent key renames; bump the `.vN` suffix when breaking.
+- Notinhas notes persist inside annotation sessions via `PersistedNotinhasNotesSession` on `PersistedAnnotationSession`.
+- ImgBB API key UserDefaults key: `notinhas.imgbb.apiKey` (`NotinhasImgBBConfiguration.apiKeyUserDefaultsKey`) — store key name only in docs/logs; never commit or log secret values.
+- Notes panel side: `PreferencesKeys.notinhasNotesPanelSide` / `NotinhasImgBBConfiguration.panelSideUserDefaultsKey`.
+- Prefer additive Codable evolution (new fields with defaults) over silent key renames.
+- Decoding should fail soft on corrupt JSON — do not crash Annotate on bad session data.
 
 ## Checklist
 
-- Does a normal run still round-trip palette/fonts across relaunch?
-- Does `--demo` leave real UserDefaults unchanged?
-- Are caps and duplicate/reorder rules preserved?
-- Is decoding resilient to partially corrupted JSON (fail soft, do not crash the panel)?
+- Does a normal annotate session with Notinhas notes round-trip across save/reopen?
+- Does panel side preference survive relaunch?
+- Are migrations additive and backward-compatible with older sessions?
 
 ## Validation
 
-- Run without `--demo`, add items, quit, relaunch.
-- Run with `--demo`, quit, relaunch normal — confirm real stores untouched.
+- Save annotated screenshot with notes, close Annotate, reopen from history — notes restore.
+- Change panel side in preferences, export — side matches preference.
 
 ## Related
 
 - UI binding → `macos-app-engineering`
 - Tests for encode/decode → `testing-xctest`
+- ImgBB upload flow → `capture-annotate-export` (when present)

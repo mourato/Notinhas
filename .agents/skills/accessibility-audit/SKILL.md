@@ -1,35 +1,33 @@
 ---
 name: accessibility-audit
-description: Accessibility review for Picker — YIQ ink contrast, VoiceOver labels, Grab Font AX overlay, and permission prompts.
+description: Accessibility review for Notinhas — VoiceOver labels, permission prompts, overlay dismissal, and annotate/Notinhas controls.
 ---
 
 # Accessibility Audit
 
-Use when changing the panel UI, copy affordances, Grab Font overlay, contrast ink, or permission/toast flows.
+Use when changing annotate UI, Notinhas note controls, permission/toast flows, or export affordances.
 
 ## Minimum Bar
 
 - Interactive controls need useful accessibility labels.
-- Color is not the only state signal (copy confirmation, section switch, empty states).
-- Transient UI dismisses predictably with `Esc` where applicable (font picker overlay).
+- Color is not the only state signal (selected note, tool active, copy confirmation, empty states).
+- Transient UI dismisses predictably with `Esc` where applicable (note editor overlay, modals).
 - Respect Reduce Motion, Reduce Transparency, Bold Text, Increase Contrast.
 
-## Picker Focus
+## Notinhas Focus
 
-- **YIQ ink** (`0.299·R + 0.587·G + 0.114·B`) chooses black/white text on swatches — do not silently replace with WCAG luminance alone.
-- Grab Font overlay is **click-through and accessibility-invisible** so system-wide AX hit-testing reads *through* it to the target text.
-- Highlight must hug the `AXStaticText` run, not a surrounding container.
-- Until Accessibility is granted, Grab Font shows a clear toast — do not fail silently.
-- Status item and panel actions should remain understandable with VoiceOver.
+- Note tool, editor fields, color/style controls, and side-panel list rows need action-oriented labels.
+- Permission rows in onboarding/preferences should state what is blocked until granted (Screen Recording for capture; Accessibility for smart-element/scrolling paths).
+- Export/copy/upload actions should announce success or failure without relying on color alone.
 
-## Review Checklist
+## Checklist
 
-- Can the user open the panel, copy a format, and dismiss without a pointer?
-- Does Esc / right-click / non-text click cancel Grab Font cleanly?
-- Are permission and Chrome Automation requirements discoverable in UI or docs when flows fail?
-- Do saturated reds/blues still get readable ink?
+- Are new Notinhas controls reachable and labeled for VoiceOver?
+- Does Esc dismiss the note editor without leaving stale focus?
+- Do permission toasts explain how to grant access in System Settings?
 
 ## Related
 
-- Overlay / status item → `menubar`
-- Diagnostics for AX failures → `debugging-diagnostics`
+- Platform UI → `macos-app-engineering`
+- Permission debugging → `debugging-diagnostics`
+- Localized strings → `localization`

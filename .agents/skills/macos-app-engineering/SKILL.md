@@ -1,43 +1,43 @@
 ---
 name: macos-app-engineering
-description: macOS SwiftUI/AppKit implementation for Picker — panel hosting, lifecycle, glass, sampling bridges, and previews.
+description: macOS SwiftUI/AppKit implementation for Notinhas — menu bar shell, capture overlays, Annotate windows, Quick Access, and previews.
 ---
 
 # macOS App Engineering
 
 ## When to Use
 
-Ordinary SwiftUI or AppKit work: panel content, AppKit bridges, lifecycle, Liquid Glass surfaces, or preview coverage.
+SwiftUI or AppKit work: menu bar shell, capture/annotate UI, floating panels, overlays, lifecycle, or preview coverage.
 
 ## Responsibilities
 
 - Menu-bar agent lifecycle (`LSUIElement`, no Dock).
-- `NSPanel` + `NSHostingController` ownership and sizing.
-- SwiftUI ↔ AppKit boundaries (`NSColorSampler`, overlays, event taps).
-- Design-system reuse from `DesignSystem.swift`.
+- `AppStatusBarController` — `NSStatusItem` + `NSMenu` for capture actions.
+- Capture overlays, Annotate windows/panels, Quick Access floating UI.
+- SwiftUI ↔ AppKit bridges at thin adapters; do not leak AppKit into every view file.
 - Main-actor coordination for UI state.
 
 ## Platform Rules
 
-- One clear owner for the status item and the floating panel.
-- Cross SwiftUI/AppKit at a thin adapter; do not leak AppKit into every view file.
-- Keep the panel non-activating so sampling does not steal focus.
-- Prefer platform APIs already in use (`NSColorSampler`, `glassEffect`) over custom reimplementations.
+- One clear owner for the status item and each major window/panel flow.
+- Prefer platform APIs already in use over custom reimplementations.
 - Respect Reduce Motion, Reduce Transparency, and Increase Contrast when touching materials or motion.
+- Image capture and processing off the main actor where the existing code already does; hop back to MainActor for UI updates.
 
-## Picker Focus
+## Notinhas Focus
 
-- Color path: loupe sampling → formats (HEX/RGB/HSL) → copy affordances → palette strip.
-- Font path: Grab Font overlay → specimen / Find → saved fonts strip.
-- Section switch (Colors / Fonts) should keep layout stable — sliding pill, no label reflow.
+- Area capture → Annotate with Notinhas note tool (`AnnotationToolType.notinhasNote`).
+- Note editor overlay (`NotinhasNoteEditorOverlay`) and side panel (`NotinhasNotesSidePanelView`).
+- Export preview and clipboard-ready composition via `AnnotateExporter`.
 
 ## Preview Expectations
 
-- Add `#Preview` for new isolated SwiftUI views when practical.
-- Full status-item/panel flows: verify with `./build.sh` and `--demo`.
+- Add `#Preview` for new isolated SwiftUI views under Notinhas/Annotate when practical.
+- Full status-item / capture / annotate flows: verify with `./scripts/build_and_run.sh`.
 
 ## Related
 
 - Menu-bar contracts → `menubar`
-- Motion / glass feel → `apple-design`
-- AX / contrast → `accessibility-audit`
+- Motion / materials → `apple-design`
+- AX / permissions → `accessibility-audit`
+- Visual handoff domain → `capture-annotate-export` (when present)

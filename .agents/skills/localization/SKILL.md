@@ -1,27 +1,27 @@
 ---
 name: localization
-description: Localization guidance for Picker — user-facing panel copy, tooltips, toasts, and accessible strings.
+description: Localization guidance for Notinhas — user-facing annotate/Notinhas copy, tooltips, toasts, and accessible strings.
 ---
 
 # Localization
 
-Use when adding or changing user-visible strings, tooltips, permission toasts, or empty-state copy.
+Use when adding or changing user-visible strings, tooltips, permission toasts, or empty-state copy for Notinhas or shared Annotate UI.
 
 ## Rules
 
-- Keep user-facing text centralized and consistent in tone (short, direct).
-- When introducing localization files, use stable keys; do not concatenate sentences in code for grammar-sensitive languages.
-- Accessible labels should describe the action (“Copy HEX”, “Grab Font”), not only the visual glyph.
-- Format examples (HEX/RGB/HSL) stay locale-stable as technical tokens; surrounding UI chrome can localize.
-- Avoid hard-coded English in new permission/error toasts if a strings table exists — if none exists yet, keep strings easy to extract later.
+- User-facing text lives in Snapzy localization (`*.xcstrings`) and `NotinhasL10n` where Notinhas-specific.
+- Keep tone short and direct — designer handoff, not marketing prose.
+- Use stable keys; do not concatenate sentences in code for grammar-sensitive languages.
+- Accessible labels should describe the action (“Add note”, “Copy to clipboard”, “Upload image”), not only the visual glyph.
+- Technical tokens (HEX in upstream features, file formats) may stay locale-stable; surrounding chrome can localize.
+- Avoid hard-coded English in new permission/error toasts when a strings table exists.
 
 ## Checklist
 
-- Are new strings reachable for future `Localizable.strings` extraction?
-- Do VoiceOver labels match visible intent?
-- Are technical format names left unambiguous across locales?
+- Are new strings reachable for `Localizable.strings` / xcstrings extraction?
+- Do Notinhas note editor labels localize consistently with Annotate chrome?
 
 ## Related
 
-- A11y labels → `accessibility-audit`
-- Docs / README → `documentation`
+- AX labels → `accessibility-audit`
+- Docs ownership → `documentation`
