@@ -16,7 +16,7 @@ final class CaptureStorageManager {
   static let shared = CaptureStorageManager()
 
   private let fileManager = FileManager.default
-  private let appSupportFolderName = "Snapzy"
+  private let appSupportFolderName = NotinhasStoragePaths.destinationAppSupportFolderName
   private let capturesFolderName = "Captures"
 
   private init() {}

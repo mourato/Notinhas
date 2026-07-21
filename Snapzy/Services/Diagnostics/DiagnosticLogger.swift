@@ -14,8 +14,8 @@ final class DiagnosticLogger {
 
   // MARK: - Configuration
 
-  private let logDirectoryName = "Snapzy"
-  private let filePrefix = "snapzy_"
+  private let logDirectoryName = NotinhasStoragePaths.destinationLogsFolderName
+  private let filePrefix = NotinhasStoragePaths.destinationLogFilePrefix
   private let fileExtension = "txt"
 
   // MARK: - State

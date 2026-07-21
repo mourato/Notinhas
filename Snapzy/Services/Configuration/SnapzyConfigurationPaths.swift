@@ -41,7 +41,7 @@ nonisolated enum SnapzyConfigurationPaths {
   static func suggestedConfigDirectoryURL(homeDirectory: URL) -> URL {
     homeDirectory
       .appendingPathComponent(".config", isDirectory: true)
-      .appendingPathComponent("snapzy", isDirectory: true)
+      .appendingPathComponent(NotinhasStoragePaths.destinationConfigFolderName, isDirectory: true)
   }
 
   static func collapsingHomePath(_ path: String) -> String {

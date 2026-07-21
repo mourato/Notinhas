@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import Security
 import os.log
+import Security
 
 enum CloudKeychainItem {
   case accessKey
@@ -20,28 +20,40 @@ enum CloudKeychainItem {
   var account: String {
     switch self {
     case .accessKey:
-      return "com.trongduong.snapzy.cloud.accessKey"
+      "com.mourato.notinhas.cloud.accessKey"
     case .secretKey:
-      return "com.trongduong.snapzy.cloud.secretKey"
+      "com.mourato.notinhas.cloud.secretKey"
     case .passwordHash:
-      return "com.trongduong.snapzy.cloud.passwordHash"
+      "com.mourato.notinhas.cloud.passwordHash"
     case .googleRefreshToken:
-      return "com.trongduong.snapzy.cloud.google.refreshToken"
+      "com.mourato.notinhas.cloud.google.refreshToken"
     case .googleClientId:
-      return "com.trongduong.snapzy.cloud.google.clientId"
+      "com.mourato.notinhas.cloud.google.clientId"
     case .googleClientSecret:
-      return "com.trongduong.snapzy.cloud.google.clientSecret"
+      "com.mourato.notinhas.cloud.google.clientSecret"
     }
   }
 
   var legacyAccounts: [String] {
     switch self {
     case .accessKey:
-      return ["com.snapzy.cloud.accessKey"]
+      [
+        "com.trongduong.snapzy.cloud.accessKey",
+        "com.snapzy.cloud.accessKey",
+      ]
     case .secretKey:
-      return ["com.snapzy.cloud.secretKey"]
-    case .passwordHash, .googleRefreshToken, .googleClientId, .googleClientSecret:
-      return []
+      [
+        "com.trongduong.snapzy.cloud.secretKey",
+        "com.snapzy.cloud.secretKey",
+      ]
+    case .passwordHash:
+      ["com.trongduong.snapzy.cloud.passwordHash"]
+    case .googleRefreshToken:
+      ["com.trongduong.snapzy.cloud.google.refreshToken"]
+    case .googleClientId:
+      ["com.trongduong.snapzy.cloud.google.clientId"]
+    case .googleClientSecret:
+      ["com.trongduong.snapzy.cloud.google.clientSecret"]
     }
   }
 }
@@ -59,7 +71,7 @@ struct CloudKeychainDeleteIssue {
   let status: OSStatus
 }
 
-struct CloudKeychainStore {
+enum CloudKeychainStore {
   private struct Location: Equatable {
     let service: String
     let account: String
@@ -77,8 +89,11 @@ struct CloudKeychainStore {
   }
 
   private static let logger = Logger(subsystem: "Snapzy", category: "CloudKeychainStore")
-  private static let currentService = "com.trongduong.snapzy.cloud"
-  private static let legacyService = "com.snapzy.cloud"
+  private static let currentService = NotinhasStoragePaths.destinationKeychainService
+  private static let legacyServices = [
+    NotinhasStoragePaths.legacyCurrentKeychainService,
+    NotinhasStoragePaths.legacyOlderKeychainService,
+  ]
 
   static func read(item: CloudKeychainItem, context: String) -> CloudKeychainReadOutcome {
     let primaryLocation = Location(
@@ -107,7 +122,6 @@ struct CloudKeychainStore {
           "status": "\(status)",
         ]
       )
-      break
     case .authRequired, .interactionNotAllowed, .error:
       return primaryOutcome
     }
@@ -238,12 +252,14 @@ struct CloudKeychainStore {
 
   private static func legacyLocations(for item: CloudKeychainItem) -> [Location] {
     var locations = [
-      Location(service: currentService, account: item.account, usesDataProtection: false)
+      Location(service: currentService, account: item.account, usesDataProtection: false),
     ]
 
-    // Legacy service + legacy account names
-    for account in item.legacyAccounts {
-      locations.append(Location(service: legacyService, account: account, usesDataProtection: false))
+    for service in legacyServices {
+      locations.append(Location(service: service, account: item.account, usesDataProtection: false))
+      for account in item.legacyAccounts where account != item.account {
+        locations.append(Location(service: service, account: account, usesDataProtection: false))
+      }
     }
 
     return locations
@@ -363,7 +379,7 @@ struct CloudKeychainStore {
 
   private static func updateAttributes(for location: Location, data: Data) -> [String: Any] {
     var attributes: [String: Any] = [
-      kSecValueData as String: data
+      kSecValueData as String: data,
     ]
     if location.usesDataProtection {
       attributes[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
@@ -380,28 +396,28 @@ struct CloudKeychainStore {
   private static func keychainError(for result: UpsertAttemptResult) -> CloudError {
     switch result {
     case .success:
-      return CloudError.keychainError(L10n.CloudOperation.secItemAddFailed(Int(errSecInternalError)))
+      CloudError.keychainError(L10n.CloudOperation.secItemAddFailed(Int(errSecInternalError)))
     case .updateFailed(let status):
-      return CloudError.keychainError(L10n.CloudOperation.secItemUpdateFailed(Int(status)))
+      CloudError.keychainError(L10n.CloudOperation.secItemUpdateFailed(Int(status)))
     case .addFailed(let status):
-      return CloudError.keychainError(L10n.CloudOperation.secItemAddFailed(Int(status)))
+      CloudError.keychainError(L10n.CloudOperation.secItemAddFailed(Int(status)))
     }
   }
 
   private static func itemDiagnosticName(_ item: CloudKeychainItem) -> String {
     switch item {
     case .accessKey:
-      return "accessKey"
+      "accessKey"
     case .secretKey:
-      return "secretKey"
+      "secretKey"
     case .passwordHash:
-      return "passwordHash"
+      "passwordHash"
     case .googleRefreshToken:
-      return "googleRefreshToken"
+      "googleRefreshToken"
     case .googleClientId:
-      return "googleClientId"
+      "googleClientId"
     case .googleClientSecret:
-      return "googleClientSecret"
+      "googleClientSecret"
     }
   }
 }

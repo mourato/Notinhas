@@ -10,7 +10,7 @@ import Foundation
 final class LogCleanupScheduler {
   static let shared = LogCleanupScheduler()
   static let defaultRetentionDays = 3
-  static let retentionDaysRange = 1...30
+  static let retentionDaysRange = 1 ... 30
 
   private let cleanupInterval: TimeInterval = 30 * 60 // 30 minutes
   private var timer: Timer?
@@ -33,9 +33,9 @@ final class LogCleanupScheduler {
     // Schedule periodic cleanup
     DispatchQueue.main.async { [weak self] in
       guard let self else { return }
-      self.timer?.invalidate()
-      self.timer = Timer.scheduledTimer(
-        withTimeInterval: self.cleanupInterval,
+      timer?.invalidate()
+      timer = Timer.scheduledTimer(
+        withTimeInterval: cleanupInterval,
         repeats: true
       ) { [weak self] _ in
         self?.performCleanup()
@@ -57,7 +57,7 @@ final class LogCleanupScheduler {
   private func performCleanup() {
     DispatchQueue.global(qos: .utility).async { [weak self] in
       guard let self else { return }
-      self.deleteOldFiles()
+      deleteOldFiles()
     }
   }
 
@@ -85,13 +85,22 @@ final class LogCleanupScheduler {
   }
 
   private static func date(fromLogFileName fileName: String) -> Date? {
-    guard fileName.hasPrefix("snapzy_"), fileName.hasSuffix(".txt") else { return nil }
+    let prefixes = [
+      NotinhasStoragePaths.destinationLogFilePrefix,
+      NotinhasStoragePaths.legacyLogFilePrefix,
+    ]
+    guard
+      fileName.hasSuffix(".txt"),
+      let prefix = prefixes.first(where: { fileName.hasPrefix($0) })
+    else {
+      return nil
+    }
 
-    let start = fileName.index(fileName.startIndex, offsetBy: "snapzy_".count)
+    let start = fileName.index(fileName.startIndex, offsetBy: prefix.count)
     let end = fileName.index(fileName.endIndex, offsetBy: -".txt".count)
     guard start < end else { return nil }
 
-    let dateString = String(fileName[start..<end])
+    let dateString = String(fileName[start ..< end])
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd"
     formatter.locale = Locale(identifier: "en_US_POSIX")

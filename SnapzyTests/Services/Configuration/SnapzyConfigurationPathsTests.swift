@@ -16,7 +16,7 @@ final class SnapzyConfigurationPathsTests: XCTestCase {
 
     let url = SnapzyConfigurationPaths.suggestedConfigURL(homeDirectory: home)
 
-    XCTAssertEqual(url.path, "/Users/example/.config/snapzy/config.toml")
+    XCTAssertEqual(url.path, "/Users/example/.config/notinhas/config.toml")
   }
 
   func testSuggestedConfigDirectoryURLUsesProvidedHomeDirectory() {
@@ -24,7 +24,7 @@ final class SnapzyConfigurationPathsTests: XCTestCase {
 
     let url = SnapzyConfigurationPaths.suggestedConfigDirectoryURL(homeDirectory: home)
 
-    XCTAssertEqual(url.path, "/Users/example/.config/snapzy")
+    XCTAssertEqual(url.path, "/Users/example/.config/notinhas")
   }
 
   func testCollapsingHomePathConvertsAbsolutePathToTilde() {

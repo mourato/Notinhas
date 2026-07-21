@@ -40,7 +40,12 @@ enum DatabaseInitializationError: LocalizedError {
   var databaseURL: URL {
     switch self {
     case let .directoryCreationFailed(directoryURL, _):
-      return directoryURL.appendingPathComponent("snapzy.db")
+      return directoryURL.appendingPathComponent(
+        NotinhasStoragePaths.databaseFileName(
+          baseName: NotinhasStoragePaths.destinationDatabaseBaseName,
+          suffix: ""
+        )
+      )
     case let .openOrMigrationFailed(databaseURL, _):
       return databaseURL
     }
@@ -53,7 +58,11 @@ final class DatabaseManager: @unchecked Sendable {
   private static let stateLock = NSLock()
   private static var sharedInstance: DatabaseManager?
   private static var sharedFailure: DatabaseInitializationError?
-  private static let databaseFileNames = ["snapzy.db", "snapzy.db-wal", "snapzy.db-shm"]
+  private static let databaseFileNames = [
+    NotinhasStoragePaths.databaseFileName(baseName: NotinhasStoragePaths.destinationDatabaseBaseName, suffix: ""),
+    NotinhasStoragePaths.databaseFileName(baseName: NotinhasStoragePaths.destinationDatabaseBaseName, suffix: "-wal"),
+    NotinhasStoragePaths.databaseFileName(baseName: NotinhasStoragePaths.destinationDatabaseBaseName, suffix: "-shm"),
+  ]
 
   let dbPool: DatabasePool
   let databaseURL: URL
@@ -146,7 +155,12 @@ final class DatabaseManager: @unchecked Sendable {
   }
 
   static var defaultDatabaseURL: URL {
-    databaseDirectory().appendingPathComponent("snapzy.db")
+    databaseDirectory().appendingPathComponent(
+      NotinhasStoragePaths.databaseFileName(
+        baseName: NotinhasStoragePaths.destinationDatabaseBaseName,
+        suffix: ""
+      )
+    )
   }
 
   private static func databaseDirectory() -> URL {
@@ -163,7 +177,10 @@ final class DatabaseManager: @unchecked Sendable {
     let appSupport = FileManager.default.urls(
       for: .applicationSupportDirectory, in: .userDomainMask
     ).first!
-    return appSupport.appendingPathComponent("Snapzy", isDirectory: true)
+    return appSupport.appendingPathComponent(
+      NotinhasStoragePaths.destinationAppSupportFolderName,
+      isDirectory: true
+    )
   }
 
   static var isRunningUnderXCTest: Bool {

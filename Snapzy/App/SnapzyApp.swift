@@ -46,7 +46,7 @@ struct AppLaunchPolicy {
   }
 
   var shouldStartInteractiveApplication: Bool {
-    if isRunningUnderXCTest && !allowsInteractiveXCTestHost {
+    if isRunningUnderXCTest, !allowsInteractiveXCTestHost {
       return false
     }
 
@@ -77,7 +77,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   private var didFinishLaunching = false
 
   override init() {
-    self.launchPolicyProvider = { AppLaunchPolicy() }
+    launchPolicyProvider = { AppLaunchPolicy() }
     super.init()
   }
 
@@ -86,7 +86,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     super.init()
   }
 
-  func applicationWillFinishLaunching(_ notification: Notification) {
+  func applicationWillFinishLaunching(_: Notification) {
     NSAppleEventManager.shared().setEventHandler(
       self,
       andSelector: #selector(handleGetURLEvent(_:withReplyEvent:)),
@@ -95,7 +95,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     )
   }
 
-  func applicationDidFinishLaunching(_ notification: Notification) {
+  func applicationDidFinishLaunching(_: Notification) {
     guard launchPolicyProvider().shouldStartInteractiveApplication else {
       return
     }
@@ -103,6 +103,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     AppIdentityManager.shared.refresh()
 
     guard ensureSandboxOffDataMigrationReadyForLaunch() else {
+      return
+    }
+
+    guard ensureNotinhasIdentityMigrationReadyForLaunch() else {
       return
     }
 
@@ -121,7 +125,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     flushPendingOpenFileURLs()
   }
 
-  func applicationWillTerminate(_ notification: Notification) {
+  func applicationWillTerminate(_: Notification) {
     NSAppleEventManager.shared().removeEventHandler(
       forEventClass: AEEventClass(kInternetEventClass),
       andEventID: AEEventID(kAEGetURL)
@@ -129,7 +133,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     coordinator?.applicationWillTerminate()
   }
 
-  func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+  func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool) -> Bool {
     guard didFinishLaunching else { return true }
     let showsMenuBarIcon = UserDefaults.standard.object(forKey: PreferencesKeys.showMenuBarIcon) as? Bool ?? true
     guard !showsMenuBarIcon else { return true }
@@ -215,13 +219,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     alert.messageText = "Snapzy could not migrate your existing data."
 
     var informativeText = """
-      Snapzy needs to move data from the old sandboxed storage before opening the unsandboxed version.
+    Snapzy needs to move data from the old sandboxed storage before opening the unsandboxed version.
 
-      No new database was opened yet, so your existing data has not been replaced.
+    No new database was opened yet, so your existing data has not been replaced.
 
-      Error:
-      \(error.localizedDescription)
-      """
+    Error:
+    \(error.localizedDescription)
+    """
     if let note {
       informativeText += "\n\n\(note)"
     }
@@ -247,14 +251,133 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     alert.alertStyle = .critical
     alert.messageText = "Start Fresh Without Old Data?"
     alert.informativeText = """
-      Snapzy will launch with default settings and an empty capture history.
+    Snapzy will launch with default settings and an empty capture history.
 
-      Your old data remains in the sandbox container and is not deleted. You can access it manually at:
-      ~/Library/Containers/\(Bundle.main.bundleIdentifier ?? "com.duongductrong.Snapzy")
+    Your old data remains in the sandbox container and is not deleted. You can access it manually at:
+    ~/Library/Containers/\(Bundle.main.bundleIdentifier ?? "com.duongductrong.Snapzy")
 
-      Current error:
-      \(error.localizedDescription)
-      """
+    Current error:
+    \(error.localizedDescription)
+    """
+    alert.addButton(withTitle: "Start Fresh")
+    alert.addButton(withTitle: "Cancel")
+    return alert.runModal() == .alertFirstButtonReturn
+  }
+
+  private enum NotinhasIdentityMigrationRecoveryAction {
+    case retry
+    case startFresh
+    case quit
+  }
+
+  private func ensureNotinhasIdentityMigrationReadyForLaunch() -> Bool {
+    var note: String?
+
+    while true {
+      do {
+        let result = try NotinhasIdentityMigrationService.shared.runIfNeeded()
+        if result.didRun {
+          DiagnosticLogger.shared.log(
+            .info,
+            .lifecycle,
+            "Notinhas identity migration completed",
+            context: [
+              "appSupportCopied": "\(result.copiedApplicationSupportItems)",
+              "appSupportSkipped": "\(result.skippedApplicationSupportItems)",
+              "appSupportErrorSkipped": "\(result.errorSkippedApplicationSupportItems)",
+              "databaseFilesMigrated": "\(result.migratedDatabaseFiles)",
+              "preferencesImported": "\(result.importedPreferenceKeys)",
+              "preferencesSkipped": "\(result.skippedPreferenceKeys)",
+              "logsCopied": "\(result.copiedLogItems)",
+              "configCopied": "\(result.copiedConfigItems)",
+              "keychainMigrated": "\(result.migratedKeychainItems)",
+            ]
+          )
+        }
+        return true
+      } catch {
+        switch presentNotinhasIdentityMigrationRecoveryAlert(error: error, note: note) {
+        case .retry:
+          note = "Previous attempt also failed. If this keeps happening, Start Fresh will let you use Snapzy without old data."
+          continue
+
+        case .startFresh:
+          guard confirmNotinhasIdentityMigrationSkip(error: error) else {
+            note = nil
+            continue
+          }
+          do {
+            try NotinhasIdentityMigrationService.shared.skipMigration()
+            DiagnosticLogger.shared.log(
+              .warning,
+              .lifecycle,
+              "Notinhas identity migration skipped by user (Start Fresh)"
+            )
+            return true
+          } catch {
+            note = "Could not mark migration as skipped: \(error.localizedDescription)"
+            continue
+          }
+
+        case .quit:
+          NSApp.terminate(nil)
+          return false
+        }
+      }
+    }
+  }
+
+  private func presentNotinhasIdentityMigrationRecoveryAlert(
+    error: Error,
+    note: String? = nil
+  ) -> NotinhasIdentityMigrationRecoveryAction {
+    NSApp.activate(ignoringOtherApps: true)
+
+    let alert = NSAlert()
+    alert.alertStyle = .critical
+    alert.messageText = "Snapzy could not migrate your existing data to Notinhas storage."
+
+    var informativeText = """
+    Snapzy needs to move data from the old Snapzy storage paths before opening the Notinhas version.
+
+    No new database was opened yet, so your existing data has not been replaced.
+
+    Error:
+    \(error.localizedDescription)
+    """
+    if let note {
+      informativeText += "\n\n\(note)"
+    }
+    informativeText += "\n\nTry again if the error is temporary. Start Fresh launches Snapzy with default settings — your old data stays in place and is not deleted."
+    alert.informativeText = informativeText
+
+    alert.addButton(withTitle: "Try Again")
+    alert.addButton(withTitle: "Start Fresh…")
+    alert.addButton(withTitle: "Quit Snapzy")
+
+    switch alert.runModal() {
+    case .alertFirstButtonReturn:
+      return .retry
+    case .alertSecondButtonReturn:
+      return .startFresh
+    default:
+      return .quit
+    }
+  }
+
+  private func confirmNotinhasIdentityMigrationSkip(error: Error) -> Bool {
+    let alert = NSAlert()
+    alert.alertStyle = .critical
+    alert.messageText = "Start Fresh Without Old Data?"
+    alert.informativeText = """
+    Snapzy will launch with default settings and an empty capture history.
+
+    Your old data remains in the previous Snapzy storage locations and is not deleted. You can access it manually at:
+    ~/Library/Application Support/Snapzy
+
+    Current error:
+    \(error.localizedDescription)
+    """
     alert.addButton(withTitle: "Start Fresh")
     alert.addButton(withTitle: "Cancel")
     return alert.runModal() == .alertFirstButtonReturn
@@ -263,9 +386,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   private func ensureDatabaseReadyForLaunch() -> Bool {
     switch DatabaseManager.prepare() {
     case .success:
-      return true
+      true
     case let .failure(error):
-      return presentDatabaseRecoveryFlow(startingWith: error)
+      presentDatabaseRecoveryFlow(startingWith: error)
     }
   }
 
@@ -330,14 +453,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     alert.messageText = "Snapzy could not open its database."
 
     var informativeText = """
-      Snapzy needs this database for capture history and cloud upload records.
+    Snapzy needs this database for capture history and cloud upload records.
 
-      Database:
-      \(DatabaseManager.defaultDatabaseURL.path)
+    Database:
+    \(DatabaseManager.defaultDatabaseURL.path)
 
-      Error:
-      \(error.localizedDescription)
-      """
+    Error:
+    \(error.localizedDescription)
+    """
     if let note {
       informativeText += "\n\n\(note)"
     }
@@ -363,16 +486,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     alert.alertStyle = .critical
     alert.messageText = "Reset Snapzy Database?"
     alert.informativeText = """
-      Snapzy will move the current database files into a recovery folder, then create a new empty database.
+    Snapzy will move the current database files into a recovery folder, then create a new empty database.
 
-      This resets capture history and cloud upload history inside Snapzy. Capture files on disk and cloud files are not deleted.
+    This resets capture history and cloud upload history inside Snapzy. Capture files on disk and cloud files are not deleted.
 
-      Database:
-      \(DatabaseManager.defaultDatabaseURL.path)
+    Database:
+    \(DatabaseManager.defaultDatabaseURL.path)
 
-      Current error:
-      \(error.localizedDescription)
-      """
+    Current error:
+    \(error.localizedDescription)
+    """
     alert.addButton(withTitle: "Reset Database")
     alert.addButton(withTitle: "Cancel")
     return alert.runModal() == .alertFirstButtonReturn
@@ -380,7 +503,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
   @objc private func handleGetURLEvent(
     _ event: NSAppleEventDescriptor,
-    withReplyEvent replyEvent: NSAppleEventDescriptor
+    withReplyEvent _: NSAppleEventDescriptor
   ) {
     guard
       let urlString = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue,
@@ -419,8 +542,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   /// `application(_:openFiles:)`, and the latter is silently skipped on
   /// recent OS releases. We only act on file URLs here so that the existing
   /// Apple Event handler for `snapzy://` deep links keeps working.
-  func application(_ application: NSApplication, open urls: [URL]) {
-    let fileURLs = urls.filter { $0.isFileURL }
+  func application(_: NSApplication, open urls: [URL]) {
+    let fileURLs = urls.filter(\.isFileURL)
     guard !fileURLs.isEmpty else { return }
 
     DiagnosticLogger.shared.log(

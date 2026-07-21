@@ -16,6 +16,7 @@ enum PreferencesKeys {
   static let splashSkipOnceAfterOnboardingRelaunch = "splash.skipOnceAfterOnboardingRelaunch"
   static let legacyLicenseCleanupCompleted = "legacyLicenseCleanupCompleted"
   static let sandboxOffMigrationCompleted = "migration.sandboxOff.completed"
+  static let notinhasIdentityMigrationCompleted = "migration.notinhasIdentity.completed"
 
   // General
   static let playSounds = "playSounds"
