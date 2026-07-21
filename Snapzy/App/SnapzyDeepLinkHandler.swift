@@ -68,8 +68,16 @@ struct SnapzyDeepLinkHandler {
     case .captureObjectCutout:
       screenCaptureViewModel.captureObjectCutout()
     case .recordScreen:
+      guard VideoModuleAvailability.isEnabled else {
+        logIgnoredVideoDeepLink(action: action)
+        return
+      }
       screenCaptureViewModel.startRecordingFlow()
     case .recordApplication:
+      guard VideoModuleAvailability.isEnabled else {
+        logIgnoredVideoDeepLink(action: action)
+        return
+      }
       screenCaptureViewModel.startApplicationRecordingFlow()
     case .openAnnotate:
       AnnotateManager.shared.openEmptyAnnotation()
@@ -82,6 +90,10 @@ struct SnapzyDeepLinkHandler {
       }
       NSApp.activate(ignoringOtherApps: true)
     case .openVideoEditor:
+      guard VideoModuleAvailability.isEnabled else {
+        logIgnoredVideoDeepLink(action: action)
+        return
+      }
       VideoEditorManager.shared.openEmptyEditor()
       NSApp.activate(ignoringOtherApps: true)
     case .openCloudUploads:
@@ -95,6 +107,15 @@ struct SnapzyDeepLinkHandler {
     case .openSettings(let tab):
       AppStatusBarController.shared.openPreferencesWindow(tab: tab)
     }
+  }
+
+  private func logIgnoredVideoDeepLink(action: SnapzyDeepLinkAction) {
+    DiagnosticLogger.shared.log(
+      .info,
+      .action,
+      "Ignored deeplink because video module is disabled",
+      context: ["action": action.logName]
+    )
   }
 }
 
@@ -135,7 +156,7 @@ enum SnapzyDeepLinkAction: Equatable {
     case "capture/application", "capture/window", "application-capture", "window-capture", "screenshot/window":
       self = .captureApplication
     case "capture/active-window", "capture/focused-window", "active-window-capture",
-      "active-window", "screenshot/active-window":
+         "active-window", "screenshot/active-window":
       self = .captureActiveWindow
     case "capture/area-annotate", "capture-area-annotate", "area-annotate", "screenshot/area-annotate":
       self = .captureAreaAnnotate
@@ -176,24 +197,24 @@ enum SnapzyDeepLinkAction: Equatable {
 
   var logName: String {
     switch self {
-    case .captureFullscreen: return "captureFullscreen"
-    case .captureArea: return "captureArea"
-    case .captureApplication: return "captureApplication"
-    case .captureActiveWindow: return "captureActiveWindow"
-    case .captureAreaAnnotate: return "captureAreaAnnotate"
-    case .captureScrolling: return "captureScrolling"
-    case .captureOCR: return "captureOCR"
-    case .captureSmartElement: return "captureSmartElement"
-    case .captureObjectCutout: return "captureObjectCutout"
-    case .recordScreen: return "recordScreen"
-    case .recordApplication: return "recordApplication"
-    case .openAnnotate: return "openAnnotate"
-    case .openCombine(let fileURLs): return "openCombine(\(fileURLs.count))"
-    case .openVideoEditor: return "openVideoEditor"
-    case .openCloudUploads: return "openCloudUploads"
-    case .openHistory: return "openHistory"
-    case .showShortcuts: return "showShortcuts"
-    case .openSettings(let tab): return "openSettings(\(String(describing: tab)))"
+    case .captureFullscreen: "captureFullscreen"
+    case .captureArea: "captureArea"
+    case .captureApplication: "captureApplication"
+    case .captureActiveWindow: "captureActiveWindow"
+    case .captureAreaAnnotate: "captureAreaAnnotate"
+    case .captureScrolling: "captureScrolling"
+    case .captureOCR: "captureOCR"
+    case .captureSmartElement: "captureSmartElement"
+    case .captureObjectCutout: "captureObjectCutout"
+    case .recordScreen: "recordScreen"
+    case .recordApplication: "recordApplication"
+    case .openAnnotate: "openAnnotate"
+    case .openCombine(let fileURLs): "openCombine(\(fileURLs.count))"
+    case .openVideoEditor: "openVideoEditor"
+    case .openCloudUploads: "openCloudUploads"
+    case .openHistory: "openHistory"
+    case .showShortcuts: "showShortcuts"
+    case .openSettings(let tab): "openSettings(\(String(describing: tab)))"
     }
   }
 
@@ -222,27 +243,27 @@ enum SnapzyDeepLinkAction: Equatable {
   private static func preferencesTab(named name: String?) -> PreferencesTab? {
     switch name {
     case "general":
-      return .general
+      .general
     case "capture", "screenshots", "screenshot":
-      return .capture
+      .capture
     case "annotate", "annotation", "annotations":
-      return .annotate
+      .annotate
     case "quick-access", "quickaccess":
-      return .quickAccess
+      .quickAccess
     case "history":
-      return .history
+      .history
     case "shortcuts", "keyboard-shortcuts":
-      return .shortcuts
+      .shortcuts
     case "permissions", "privacy":
-      return .permissions
+      .permissions
     case "cloud", "uploads":
-      return .cloud
+      .cloud
     case "advanced", "configuration", "config", "toml":
-      return .advanced
+      .advanced
     case "about":
-      return .about
+      .about
     default:
-      return nil
+      nil
     }
   }
 }

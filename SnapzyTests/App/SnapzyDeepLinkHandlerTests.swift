@@ -5,11 +5,10 @@
 //  Unit tests for snapzy:// automation URL parsing.
 //
 
-import XCTest
 @testable import Snapzy
+import XCTest
 
 final class SnapzyDeepLinkHandlerTests: XCTestCase {
-
   func testCanonicalRoutesParseExpectedActions() throws {
     let cases: [(String, SnapzyDeepLinkAction)] = [
       ("snapzy://capture/fullscreen", .captureFullscreen),
@@ -150,5 +149,33 @@ final class SnapzyDeepLinkHandlerTests: XCTestCase {
     let handler = SnapzyDeepLinkHandler(screenCaptureViewModel: viewModel)
     let url = try XCTUnwrap(URL(string: "snapzy://capture/fullscreen"))
     handler.handle(url)
+  }
+
+  func testVideoDeepLinksIgnoredWhenModuleDisabled() throws {
+    let defaults = UserDefaults.standard
+    let originalModuleValue = defaults.object(forKey: PreferencesKeys.videoModuleEnabled)
+    defer {
+      if let originalModuleValue {
+        defaults.set(originalModuleValue, forKey: PreferencesKeys.videoModuleEnabled)
+      } else {
+        defaults.removeObject(forKey: PreferencesKeys.videoModuleEnabled)
+      }
+    }
+
+    defaults.set(false, forKey: PreferencesKeys.videoModuleEnabled)
+    XCTAssertFalse(VideoModuleAvailability.isEnabled)
+
+    let viewModel = ScreenCaptureViewModel()
+    let handler = SnapzyDeepLinkHandler(screenCaptureViewModel: viewModel)
+    let urls = [
+      "snapzy://record/screen",
+      "snapzy://record/application",
+      "snapzy://open/video-editor",
+    ]
+
+    for urlString in urls {
+      let url = try XCTUnwrap(URL(string: urlString))
+      handler.handle(url)
+    }
   }
 }

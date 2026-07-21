@@ -12,13 +12,13 @@ import SwiftUI
 
 @MainActor
 final class AppStatusBarController: ObservableObject {
-
   static let shared = AppStatusBarController()
 
   // MARK: - Properties
 
   private var statusItem: NSStatusItem?
   private var cancellables = Set<AnyCancellable>()
+  private var recordingStateCancellables = Set<AnyCancellable>()
   private let recorder = ScreenRecordingManager.shared
   private lazy var idleStatusImage = makeIdleStatusImage()
   private lazy var recordingStopImage = makeRecordingStopImage()
@@ -51,7 +51,7 @@ final class AppStatusBarController: ObservableObject {
   func setup(viewModel: ScreenCaptureViewModel, updater: SPUUpdater, didCrash: Bool = false) {
     self.viewModel = viewModel
     self.updater = updater
-    self.didDetectCrash = didCrash
+    didDetectCrash = didCrash
 
     syncStatusItemVisibility()
     buildMenu()
@@ -165,7 +165,7 @@ final class AppStatusBarController: ObservableObject {
     self.statusItem = nil
   }
 
-  @objc private func statusBarButtonClicked(_ sender: NSStatusBarButton) {
+  @objc private func statusBarButtonClicked(_: NSStatusBarButton) {
     guard let event = NSApp.currentEvent else { return }
     switch event.type {
     case .leftMouseUp:
@@ -188,10 +188,10 @@ final class AppStatusBarController: ObservableObject {
 
   private func showMenu() {
     guard let button = statusItem?.button else { return }
-    buildMenu()  // Rebuild to update state
+    buildMenu() // Rebuild to update state
     statusItem?.menu = menu
     button.performClick(nil)
-    statusItem?.menu = nil  // Reset to allow custom click handling
+    statusItem?.menu = nil // Reset to allow custom click handling
   }
 
   // MARK: - Recording UI Preferences
@@ -211,26 +211,52 @@ final class AppStatusBarController: ObservableObject {
   /// True while the menu bar item acts as the direct stop control
   /// (recording/paused AND the hover bar is hidden).
   private var isMenuBarActingAsStopControl: Bool {
-    (recorder.state == .recording || recorder.state == .paused) && !isHoverBarVisible
+    guard isVideoModuleEnabled || recorder.state == .recording || recorder.state == .paused else {
+      return false
+    }
+    return (recorder.state == .recording || recorder.state == .paused) && !isHoverBarVisible
+  }
+
+  private var isVideoModuleEnabled: Bool {
+    VideoModuleAvailability.isEnabled
   }
 
   // MARK: - State Observation
 
   private func observeRecordingState() {
+    NotificationCenter.default.publisher(for: .videoModuleAvailabilityDidChange)
+      .receive(on: RunLoop.main)
+      .sink { [weak self] _ in
+        self?.syncRecordingStateObservation()
+      }
+      .store(in: &cancellables)
+
+    syncRecordingStateObservation()
+  }
+
+  private func syncRecordingStateObservation() {
+    recordingStateCancellables.removeAll()
+
+    let isRecordingActive = recorder.state == .recording || recorder.state == .paused
+    guard isVideoModuleEnabled || isRecordingActive else {
+      renderStatusItem()
+      return
+    }
+
     recorder.$state
       .receive(on: RunLoop.main)
       .sink { [weak self] _ in
         self?.renderStatusItem()
         self?.syncTrackedPreferencesWindowExclusion()
       }
-      .store(in: &cancellables)
+      .store(in: &recordingStateCancellables)
 
     recorder.$elapsedSeconds
       .receive(on: RunLoop.main)
       .sink { [weak self] _ in
         self?.renderStatusItem()
       }
-      .store(in: &cancellables)
+      .store(in: &recordingStateCancellables)
 
     // Re-render when recording UI preferences change (e.g. toggled in Settings mid-recording).
     NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
@@ -238,7 +264,7 @@ final class AppStatusBarController: ObservableObject {
       .sink { [weak self] _ in
         self?.renderStatusItem()
       }
-      .store(in: &cancellables)
+      .store(in: &recordingStateCancellables)
   }
 
   private func renderStatusItem() {
@@ -270,6 +296,10 @@ final class AppStatusBarController: ObservableObject {
   }
 
   private func statusItemAttributedTitle(for state: RecordingState) -> NSAttributedString {
+    guard isVideoModuleEnabled else {
+      return NSAttributedString(string: "")
+    }
+
     let title = Self.menuBarTitleString(
       for: state,
       duration: recorder.formattedDuration,
@@ -300,6 +330,7 @@ final class AppStatusBarController: ObservableObject {
     if isMenuBarActingAsStopControl {
       return L10n.RecordingToolbar.clickToStop(recorder.formattedDuration)
     }
+    guard isVideoModuleEnabled else { return "Snapzy" }
     switch state {
     case .recording:
       return "\(L10n.RecordingToolbar.recordingInProgress) (\(recorder.formattedDuration))"
@@ -365,7 +396,7 @@ final class AppStatusBarController: ObservableObject {
     menu = NSMenu()
     menu?.autoenablesItems = false
 
-    guard let viewModel = viewModel else {
+    guard let viewModel else {
       DiagnosticLogger.shared.log(.warning, .ui, "Status bar menu requested before view model setup")
       return
     }
@@ -448,7 +479,8 @@ final class AppStatusBarController: ObservableObject {
     applyConfiguredShortcut(captureFullscreenItem, for: .fullscreen, using: shortcutManager)
     captureFullscreenItem.target = self
     captureFullscreenItem.image = NSImage(
-      systemSymbolName: "rectangle.dashed", accessibilityDescription: nil)
+      systemSymbolName: "rectangle.dashed", accessibilityDescription: nil
+    )
     captureFullscreenItem.isEnabled = viewModel.hasPermission
     menu?.addItem(captureFullscreenItem)
 
@@ -460,7 +492,8 @@ final class AppStatusBarController: ObservableObject {
     applyConfiguredShortcut(captureActiveWindowItem, for: .activeWindow, using: shortcutManager)
     captureActiveWindowItem.target = self
     captureActiveWindowItem.image = NSImage(
-      systemSymbolName: "macwindow.on.rectangle", accessibilityDescription: nil)
+      systemSymbolName: "macwindow.on.rectangle", accessibilityDescription: nil
+    )
     captureActiveWindowItem.isEnabled = viewModel.hasPermission
     menu?.addItem(captureActiveWindowItem)
 
@@ -512,39 +545,43 @@ final class AppStatusBarController: ObservableObject {
     }
     menu?.addItem(captureObjectCutoutItem)
 
-    menu?.addItem(NSMenuItem.separator())
+    if isVideoModuleEnabled {
+      menu?.addItem(NSMenuItem.separator())
 
-    // Recording
-    let recordItem = NSMenuItem(
-      title: L10n.Menu.recordScreen,
-      action: #selector(recordScreenAction),
-      keyEquivalent: ""
-    )
-    applyConfiguredShortcut(recordItem, for: .recording, using: shortcutManager)
-    recordItem.target = self
-    recordItem.image = NSImage(systemSymbolName: "record.circle", accessibilityDescription: nil)
-    recordItem.isEnabled = viewModel.hasPermission && !recorder.isActive
-    menu?.addItem(recordItem)
+      // Recording
+      let recordItem = NSMenuItem(
+        title: L10n.Menu.recordScreen,
+        action: #selector(recordScreenAction),
+        keyEquivalent: ""
+      )
+      applyConfiguredShortcut(recordItem, for: .recording, using: shortcutManager)
+      recordItem.target = self
+      recordItem.image = NSImage(systemSymbolName: "record.circle", accessibilityDescription: nil)
+      recordItem.isEnabled = viewModel.hasPermission && !recorder.isActive
+      menu?.addItem(recordItem)
 
-    let applicationRecordingShortcut = CaptureOverlayShortcutSettings.recordingApplicationCaptureShortcut
-    let applicationRecordingItem = NSMenuItem(
-      title: L10n.PreferencesShortcuts.applicationRecordingTitle,
-      action: #selector(recordApplicationAction),
-      keyEquivalent: ""
-    )
-    configureOverlayMenuItem(
-      applicationRecordingItem,
-      base: L10n.PreferencesShortcuts.applicationRecordingTitle,
-      shortcut: applicationRecordingShortcut,
-      parentKind: .recording,
-      using: shortcutManager
-    )
-    applicationRecordingItem.target = self
-    applicationRecordingItem.image = NSImage(systemSymbolName: "square.on.square", accessibilityDescription: nil)
-    applicationRecordingItem.isEnabled = viewModel.hasPermission && !recorder.isActive
-    menu?.addItem(applicationRecordingItem)
+      let applicationRecordingShortcut = CaptureOverlayShortcutSettings.recordingApplicationCaptureShortcut
+      let applicationRecordingItem = NSMenuItem(
+        title: L10n.PreferencesShortcuts.applicationRecordingTitle,
+        action: #selector(recordApplicationAction),
+        keyEquivalent: ""
+      )
+      configureOverlayMenuItem(
+        applicationRecordingItem,
+        base: L10n.PreferencesShortcuts.applicationRecordingTitle,
+        shortcut: applicationRecordingShortcut,
+        parentKind: .recording,
+        using: shortcutManager
+      )
+      applicationRecordingItem.target = self
+      applicationRecordingItem.image = NSImage(systemSymbolName: "square.on.square", accessibilityDescription: nil)
+      applicationRecordingItem.isEnabled = viewModel.hasPermission && !recorder.isActive
+      menu?.addItem(applicationRecordingItem)
 
-    menu?.addItem(NSMenuItem.separator())
+      menu?.addItem(NSMenuItem.separator())
+    } else {
+      menu?.addItem(NSMenuItem.separator())
+    }
 
     // Tools
     let annotateItem = NSMenuItem(
@@ -555,7 +592,8 @@ final class AppStatusBarController: ObservableObject {
     applyConfiguredShortcut(annotateItem, for: .annotate, using: shortcutManager)
     annotateItem.target = self
     annotateItem.image = NSImage(
-      systemSymbolName: "pencil.and.outline", accessibilityDescription: nil)
+      systemSymbolName: "pencil.and.outline", accessibilityDescription: nil
+    )
     annotateItem.isEnabled = true
     menu?.addItem(annotateItem)
 
@@ -566,20 +604,23 @@ final class AppStatusBarController: ObservableObject {
     )
     combineImagesItem.target = self
     combineImagesItem.image = NSImage(
-      systemSymbolName: "rectangle.3.group", accessibilityDescription: nil)
+      systemSymbolName: "rectangle.3.group", accessibilityDescription: nil
+    )
     combineImagesItem.isEnabled = true
     menu?.addItem(combineImagesItem)
 
-    let editVideoItem = NSMenuItem(
-      title: L10n.Menu.editVideo,
-      action: #selector(editVideoAction),
-      keyEquivalent: ""
-    )
-    applyConfiguredShortcut(editVideoItem, for: .videoEditor, using: shortcutManager)
-    editVideoItem.target = self
-    editVideoItem.image = NSImage(systemSymbolName: "film", accessibilityDescription: nil)
-    editVideoItem.isEnabled = true
-    menu?.addItem(editVideoItem)
+    if isVideoModuleEnabled {
+      let editVideoItem = NSMenuItem(
+        title: L10n.Menu.editVideo,
+        action: #selector(editVideoAction),
+        keyEquivalent: ""
+      )
+      applyConfiguredShortcut(editVideoItem, for: .videoEditor, using: shortcutManager)
+      editVideoItem.target = self
+      editVideoItem.image = NSImage(systemSymbolName: "film", accessibilityDescription: nil)
+      editVideoItem.isEnabled = true
+      menu?.addItem(editVideoItem)
+    }
 
     let cloudUploadsItem = NSMenuItem(
       title: L10n.Actions.cloudUploads,
@@ -625,7 +666,8 @@ final class AppStatusBarController: ObservableObject {
       )
       permissionItem.target = self
       permissionItem.image = NSImage(
-        systemSymbolName: "lock.shield", accessibilityDescription: nil)
+        systemSymbolName: "lock.shield", accessibilityDescription: nil
+      )
       permissionItem.isEnabled = true
       menu?.addItem(permissionItem)
       menu?.addItem(NSMenuItem.separator())
@@ -652,7 +694,8 @@ final class AppStatusBarController: ObservableObject {
     )
     updateItem.target = self
     updateItem.image = NSImage(
-      systemSymbolName: "arrow.triangle.2.circlepath", accessibilityDescription: nil)
+      systemSymbolName: "arrow.triangle.2.circlepath", accessibilityDescription: nil
+    )
     updateItem.isEnabled = true
     menu?.addItem(updateItem)
 
@@ -887,13 +930,13 @@ final class AppStatusBarController: ObservableObject {
     // Check if any visible windows remain (excluding status bar popover and the closing window)
     let visibleWindows = NSApp.windows.filter { window in
       window.isVisible &&
-      window !== closingWindow &&
-      window.className != "NSStatusBarWindow" &&
-      window.level == .normal
+        window !== closingWindow &&
+        window.className != "NSStatusBarWindow" &&
+        window.level == .normal
     }
 
     // If no visible windows, revert to accessory (menu bar only) mode
-    if visibleWindows.isEmpty && didElevateForSettings {
+    if visibleWindows.isEmpty, didElevateForSettings {
       NSApp.setActivationPolicy(.accessory)
       didElevateForSettings = false
       DiagnosticLogger.shared.log(.debug, .ui, "Activation policy restored after preferences closed")
@@ -1014,9 +1057,9 @@ final class AppStatusBarController: ObservableObject {
 
     if let candidate = NSApp.windows.first(where: {
       $0.isVisible &&
-      $0.level == .normal &&
-      $0.className != "NSStatusBarWindow" &&
-      !existingWindowNumbers.contains($0.windowNumber)
+        $0.level == .normal &&
+        $0.className != "NSStatusBarWindow" &&
+        !existingWindowNumbers.contains($0.windowNumber)
     }) {
       trackedPreferencesWindow = candidate
       DiagnosticLogger.shared.log(
@@ -1071,9 +1114,9 @@ final class AppStatusBarController: ObservableObject {
     Task { @MainActor [weak self] in
       guard let self else { return }
       if let previousWindowID, previousWindowID != windowID {
-        await self.recorder.removeRuntimeExcludedWindow(windowID: previousWindowID)
+        await recorder.removeRuntimeExcludedWindow(windowID: previousWindowID)
       }
-      await self.recorder.addRuntimeExcludedWindow(windowID: windowID)
+      await recorder.addRuntimeExcludedWindow(windowID: windowID)
     }
   }
 
@@ -1089,7 +1132,7 @@ final class AppStatusBarController: ObservableObject {
 
     Task { @MainActor [weak self] in
       guard let self else { return }
-      await self.recorder.removeRuntimeExcludedWindow(windowID: windowID)
+      await recorder.removeRuntimeExcludedWindow(windowID: windowID)
     }
   }
 
@@ -1108,7 +1151,12 @@ final class AppStatusBarController: ObservableObject {
       windowDidClose(notification)
     }
 
-    var isHoverBarVisibleForTesting: Bool { isHoverBarVisible }
-    var showsRecordingTimeOnMenuBarForTesting: Bool { showsRecordingTimeOnMenuBar }
+    var isHoverBarVisibleForTesting: Bool {
+      isHoverBarVisible
+    }
+
+    var showsRecordingTimeOnMenuBarForTesting: Bool {
+      showsRecordingTimeOnMenuBar
+    }
   #endif
 }
