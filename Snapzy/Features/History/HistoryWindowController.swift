@@ -23,7 +23,7 @@ final class HistoryWindow: NSWindow {
 
     let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
 
-    if event.keyCode == 8 && flags == .command {
+    if event.keyCode == 8, flags == .command {
       if isTextInputActive {
         return super.performKeyEquivalent(with: event)
       }
@@ -32,7 +32,7 @@ final class HistoryWindow: NSWindow {
       return true
     }
 
-    if event.keyCode == 0 && flags == .command {
+    if event.keyCode == 0, flags == .command {
       if isTextInputActive {
         return super.performKeyEquivalent(with: event)
       }
@@ -44,7 +44,7 @@ final class HistoryWindow: NSWindow {
     if HistoryFloatingManager.shared.isToggleModeShortcutEnabled,
        let toggleShortcut = HistoryFloatingManager.shared.toggleModeShortcut,
        let eventShortcut = ShortcutConfig(from: event) {
-      if eventShortcut.keyCode == toggleShortcut.keyCode && eventShortcut.modifiers == toggleShortcut.modifiers {
+      if eventShortcut.keyCode == toggleShortcut.keyCode, eventShortcut.modifiers == toggleShortcut.modifiers {
         if isTextInputActive {
           return super.performKeyEquivalent(with: event)
         }
@@ -59,7 +59,7 @@ final class HistoryWindow: NSWindow {
   override func keyDown(with event: NSEvent) {
     let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
 
-    if !isTextInputActive, flags.isEmpty, (event.keyCode == 51 || event.keyCode == 117) {
+    if !isTextInputActive, flags.isEmpty, event.keyCode == 51 || event.keyCode == 117 {
       NotificationCenter.default.post(name: .historyDeleteSelection, object: self)
       return
     }
@@ -143,6 +143,11 @@ final class HistoryWindowController {
       return
     }
 
+    if record.captureType != .screenshot, !VideoModuleAvailability.isEnabled {
+      revealRecordInFinder(record)
+      return
+    }
+
     HistoryFloatingManager.shared.hide()
 
     Task { @MainActor in
@@ -173,6 +178,18 @@ final class HistoryWindowController {
         VideoEditorManager.shared.openEditor(for: item)
       }
     }
+  }
+
+  private func revealRecordInFinder(_ record: CaptureHistoryRecord) {
+    let scopedAccess = SandboxFileAccessManager.shared.beginAccessingURL(record.fileURL)
+    defer { scopedAccess.stop() }
+    NSWorkspace.shared.activateFileViewerSelecting([record.fileURL])
+    DiagnosticLogger.shared.log(
+      .info,
+      .history,
+      "History revealed media in Finder; video module disabled",
+      context: ["fileName": record.fileName, "type": record.captureType.rawValue]
+    )
   }
 
   @discardableResult

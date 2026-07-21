@@ -19,6 +19,7 @@ struct PermissionsView: View {
   @State private var microphoneGranted = false
   @State private var accessibilityGranted = false
   @State private var exportFolderGranted = false
+  @State private var videoModuleEnabled = VideoModuleAvailability.isEnabled
   private let fileAccessManager = SandboxFileAccessManager.shared
 
   /// System Settings URLs
@@ -80,17 +81,19 @@ struct PermissionsView: View {
           }
         )
 
-        // Microphone - Optional
-        PermissionRow(
-          icon: "mic.fill",
-          title: microphoneTitle,
-          description: optionalForVoiceRecordingTitle,
-          status: microphoneGranted ? .granted : .needsAction(buttonTitle: grantAccessTitle),
-          isRequired: false,
-          onGrant: {
-            requestMicrophonePermission()
-          }
-        )
+        if videoModuleEnabled {
+          // Microphone - Optional
+          PermissionRow(
+            icon: "mic.fill",
+            title: microphoneTitle,
+            description: optionalForVoiceRecordingTitle,
+            status: microphoneGranted ? .granted : .needsAction(buttonTitle: grantAccessTitle),
+            isRequired: false,
+            onGrant: {
+              requestMicrophonePermission()
+            }
+          )
+        }
 
         // Accessibility - Optional
         PermissionRow(
@@ -149,6 +152,9 @@ struct PermissionsView: View {
         await refreshPermissions()
       }
     }
+    .onReceive(NotificationCenter.default.publisher(for: .videoModuleAvailabilityDidChange)) { _ in
+      videoModuleEnabled = VideoModuleAvailability.isEnabled
+    }
   }
 
   // MARK: - Permission Checking
@@ -168,11 +174,14 @@ struct PermissionsView: View {
   }
 
   private var screenRecordingDescription: String {
+    let capturesDescription = videoModuleEnabled
+      ? requiredForCapturesTitle
+      : requiredForScreenshotsTitle
     switch screenCaptureManager.permissionStatus {
     case .granted:
-      requiredForCapturesTitle
+      capturesDescription
     case .notGranted:
-      requiredForCapturesTitle
+      capturesDescription
     case .grantedButUnavailableDueToAppIdentity:
       screenRecordingIdentityBlockedTitle
     }
@@ -320,6 +329,10 @@ struct PermissionsView: View {
       defaultValue: "Required for screenshots and recordings",
       comment: "Permission description for required capture-related permissions"
     )
+  }
+
+  private var requiredForScreenshotsTitle: String {
+    L10n.Onboarding.requiredForScreenshots
   }
 
   private var optionalForVoiceRecordingTitle: String {

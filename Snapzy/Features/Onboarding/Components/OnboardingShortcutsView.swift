@@ -18,6 +18,7 @@ struct ShortcutsView: View {
   @State private var pollTimer: Timer?
   @State private var shakeOffset: CGFloat = 0
   @State private var conflictCardHighlight: Bool = false
+  @State private var videoModuleEnabled = VideoModuleAvailability.isEnabled
 
   var body: some View {
     OnboardingStepContainer(onBack: onBack) {
@@ -46,14 +47,13 @@ struct ShortcutsView: View {
           ShortcutItem(keys: "⇧⌘2", action: captureTextOCRTitle),
         ])
 
-        ShortcutGroup(title: recordingSectionTitle, shortcuts: [
-          ShortcutItem(keys: "⇧⌘5", action: recordScreenTitle),
-        ])
+        if videoModuleEnabled {
+          ShortcutGroup(title: recordingSectionTitle, shortcuts: [
+            ShortcutItem(keys: "⇧⌘5", action: recordScreenTitle),
+          ])
+        }
 
-        ShortcutGroup(title: toolsSectionTitle, shortcuts: [
-          ShortcutItem(keys: "⇧⌘A", action: openAnnotateTitle),
-          ShortcutItem(keys: "⇧⌘E", action: openVideoEditorTitle),
-        ])
+        ShortcutGroup(title: toolsSectionTitle, shortcuts: toolsShortcuts)
       }
       .frame(maxWidth: 380)
       .padding(.top, 20)
@@ -199,6 +199,19 @@ struct ShortcutsView: View {
     .onDisappear {
       stopPolling()
     }
+    .onReceive(NotificationCenter.default.publisher(for: .videoModuleAvailabilityDidChange)) { _ in
+      videoModuleEnabled = VideoModuleAvailability.isEnabled
+    }
+  }
+
+  private var toolsShortcuts: [ShortcutItem] {
+    var shortcuts = [
+      ShortcutItem(keys: "⇧⌘A", action: openAnnotateTitle),
+    ]
+    if videoModuleEnabled {
+      shortcuts.append(ShortcutItem(keys: "⇧⌘E", action: openVideoEditorTitle))
+    }
+    return shortcuts
   }
 
   // MARK: - Conflict Status

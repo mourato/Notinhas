@@ -1,5 +1,5 @@
 //
-//  WelcomeView.swift
+//  OnboardingWelcomeView.swift
 //  Snapzy
 //
 //  Welcome screen for onboarding flow
@@ -9,6 +9,8 @@ import SwiftUI
 
 struct WelcomeView: View {
   let onContinue: () -> Void
+
+  @State private var videoModuleEnabled = VideoModuleAvailability.isEnabled
 
   var body: some View {
     VStack(spacing: 24) {
@@ -32,7 +34,9 @@ struct WelcomeView: View {
       // Feature highlights
       VStack(alignment: .leading, spacing: 12) {
         FeatureRow(icon: "crop", text: L10n.Onboarding.welcomeFeatureCapture)
-        FeatureRow(icon: "video", text: L10n.Onboarding.welcomeFeatureRecord)
+        if videoModuleEnabled {
+          FeatureRow(icon: "video", text: L10n.Onboarding.welcomeFeatureRecord)
+        }
         FeatureRow(icon: "pencil.and.outline", text: L10n.Onboarding.welcomeFeatureAnnotate)
       }
       .padding(.top, 8)
@@ -50,6 +54,9 @@ struct WelcomeView: View {
     }
     .padding(40)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .onReceive(NotificationCenter.default.publisher(for: .videoModuleAvailabilityDidChange)) { _ in
+      videoModuleEnabled = VideoModuleAvailability.isEnabled
+    }
   }
 }
 

@@ -1416,6 +1416,11 @@ nonisolated enum L10n {
       defaultValue: "Required for screenshots and recordings",
       comment: "Permission description for required capture-related permissions"
     )
+    static let requiredForScreenshots = string(
+      "onboarding.permissions.required-for-screenshots",
+      defaultValue: "Required for screenshots",
+      comment: "Permission description for screen recording when video module is disabled"
+    )
     static let optionalForVoiceRecording = string(
       "onboarding.permissions.optional-voice-recording",
       defaultValue: "Optional for voice recording",
