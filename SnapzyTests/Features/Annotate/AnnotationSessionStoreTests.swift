@@ -6,13 +6,12 @@
 //
 
 import AppKit
+@testable import Snapzy
 import SwiftUI
 import XCTest
-@testable import Snapzy
 
 @MainActor
 final class AnnotationSessionStoreTests: XCTestCase {
-
   private var tempDirectory: URL!
   private var sessionsDirectory: URL!
   private var sourceDirectory: URL!
@@ -138,6 +137,7 @@ final class AnnotationSessionStoreTests: XCTestCase {
       text: "Increase contrast",
       target: .point(CGPoint(x: 40, y: 60)),
       color: RGBAColor(red: 1, green: 0, blue: 0, alpha: 1),
+      pinControlValue: 6,
       creationOrder: 1
     )
     sessionData.notinhasNotes = PersistedNotinhasNotesSession(notes: [note])
@@ -146,6 +146,7 @@ final class AnnotationSessionStoreTests: XCTestCase {
     let loaded = try XCTUnwrap(store.load(for: sourceURL))
     XCTAssertEqual(loaded.notinhasNotes?.notes.count, 1)
     XCTAssertEqual(loaded.notinhasNotes?.notes.first?.text, "Increase contrast")
+    XCTAssertEqual(loaded.notinhasNotes?.notes.first?.pinControlValue, 6)
   }
 
   func testPersistedSession_ignoresMalformedNotinhasPayload() throws {
@@ -218,7 +219,7 @@ final class AnnotationSessionStoreTests: XCTestCase {
           type: .embeddedImage(assetId),
           bounds: CGRect(x: 2, y: 3, width: 12, height: 9),
           properties: AnnotationProperties()
-        )
+        ),
       ],
       canvasEffects: AnnotationCanvasEffects(
         backgroundStyle: .gradient(.blueGreen),

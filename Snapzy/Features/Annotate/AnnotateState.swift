@@ -3843,6 +3843,12 @@ final class AnnotateState: ObservableObject {
     return properties
   }
 
+  func defaultNotinhasPinControlValue() -> CGFloat {
+    AnnotationProperties.clampedControlValue(
+      defaultAnnotationProperties(for: .notinhasNote).strokeWidth
+    )
+  }
+
   private func baseAnnotationProperties(for tool: AnnotationToolType) -> AnnotationProperties {
     if tool == .spotlight {
       var properties = AnnotationProperties(
@@ -4743,7 +4749,7 @@ final class AnnotateState: ObservableObject {
     let controlValue = quickStrokeWidthValue
 
     switch quickStrokeWidthSemanticTool {
-    case .counter:
+    case .counter, .notinhasNote:
       return "\(Int(AnnotationProperties.counterDiameter(for: controlValue).rounded()))"
     case .blur:
       let value: CGFloat = switch activeBlurType {
@@ -4772,7 +4778,7 @@ final class AnnotateState: ObservableObject {
 
   private var quickStrokeWidthUsesSizeLabel: Bool {
     switch quickStrokeWidthSemanticTool {
-    case .blur, .counter:
+    case .blur, .counter, .notinhasNote:
       true
     default:
       false
@@ -4790,7 +4796,14 @@ final class AnnotateState: ObservableObject {
   }
 
   private var quickStrokeWidthValue: CGFloat {
-    quickSelectionTargets(matching: { $0.supportsQuickStrokeWidth }).first?.properties.strokeWidth
+    if selectedTool == .notinhasNote {
+      if let selectedID = notinhasSelectedNoteID,
+         let note = notinhasNotes.first(where: { $0.id == selectedID }) {
+        return note.pinControlValue
+      }
+      return defaultAnnotationProperties(for: .notinhasNote).strokeWidth
+    }
+    return quickSelectionTargets(matching: { $0.supportsQuickStrokeWidth }).first?.properties.strokeWidth
       ?? defaultAnnotationProperties(for: quickPropertiesTool).strokeWidth
   }
 
@@ -4869,11 +4882,31 @@ final class AnnotateState: ObservableObject {
     Binding(
       get: { [weak self] in
         guard let self else { return 3 }
+        if selectedTool == .notinhasNote {
+          if let selectedID = notinhasSelectedNoteID,
+             let note = notinhasNotes.first(where: { $0.id == selectedID }) {
+            return note.pinControlValue
+          }
+          return defaultAnnotationProperties(for: .notinhasNote).strokeWidth
+        }
         return quickSelectionTargets(matching: { $0.supportsQuickStrokeWidth }).first?.properties.strokeWidth
           ?? defaultAnnotationProperties(for: quickPropertiesTool).strokeWidth
       },
       set: { [weak self] newWidth in
         guard let self else { return }
+        if selectedTool == .notinhasNote {
+          let clampedWidth = AnnotationProperties.clampedControlValue(newWidth)
+          if let selectedID = notinhasSelectedNoteID,
+             let index = notinhasNotes.firstIndex(where: { $0.id == selectedID }) {
+            var note = notinhasNotes[index]
+            guard note.pinControlValue != clampedWidth else { return }
+            note.pinControlValue = clampedWidth
+            notinhasUpdateNote(note)
+          } else {
+            rememberAnnotationStrokeWidth(clampedWidth, for: .notinhasNote)
+          }
+          return
+        }
         if !updateQuickSelectionProperties(
           strokeWidth: newWidth,
           recordsUndo: true,

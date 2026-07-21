@@ -169,6 +169,7 @@ extension AnnotateState {
     notinhasDraftNote = NotinhasVisualNote(
       target: .point(point),
       color: color,
+      pinControlValue: defaultNotinhasPinControlValue(),
       creationOrder: NotinhasNoteGeometry.nextCreationOrder(in: notinhasNotes)
     )
   }

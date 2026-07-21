@@ -8,11 +8,15 @@
 import Foundation
 
 nonisolated struct NotinhasVisualNote: Codable, Equatable, Identifiable {
+  static let legacyDefaultPinControlValue: CGFloat = 4
+
   let id: UUID
   var text: String
   var target: NotinhasNoteTarget
   var color: RGBAColor
   var areaStyle: NotinhasAreaStyle
+  /// Quick-bar Size control value; diameter via `AnnotationProperties.counterDiameter(for:)`.
+  var pinControlValue: CGFloat
   let creationOrder: Int
 
   init(
@@ -21,6 +25,7 @@ nonisolated struct NotinhasVisualNote: Codable, Equatable, Identifiable {
     target: NotinhasNoteTarget,
     color: RGBAColor,
     areaStyle: NotinhasAreaStyle = .outline,
+    pinControlValue: CGFloat = legacyDefaultPinControlValue,
     creationOrder: Int
   ) {
     self.id = id
@@ -28,10 +33,48 @@ nonisolated struct NotinhasVisualNote: Codable, Equatable, Identifiable {
     self.target = target
     self.color = color
     self.areaStyle = areaStyle
+    self.pinControlValue = pinControlValue
     self.creationOrder = creationOrder
+  }
+
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    id = try container.decode(UUID.self, forKey: .id)
+    text = try container.decode(String.self, forKey: .text)
+    target = try container.decode(NotinhasNoteTarget.self, forKey: .target)
+    color = try container.decode(RGBAColor.self, forKey: .color)
+    areaStyle = try container.decodeIfPresent(NotinhasAreaStyle.self, forKey: .areaStyle) ?? .outline
+    pinControlValue = try container.decodeIfPresent(CGFloat.self, forKey: .pinControlValue)
+      ?? Self.legacyDefaultPinControlValue
+    creationOrder = try container.decode(Int.self, forKey: .creationOrder)
+  }
+
+  func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(id, forKey: .id)
+    try container.encode(text, forKey: .text)
+    try container.encode(target, forKey: .target)
+    try container.encode(color, forKey: .color)
+    try container.encode(areaStyle, forKey: .areaStyle)
+    try container.encode(pinControlValue, forKey: .pinControlValue)
+    try container.encode(creationOrder, forKey: .creationOrder)
+  }
+
+  var pinDiameter: CGFloat {
+    AnnotationProperties.counterDiameter(for: pinControlValue)
   }
 
   var hasRenderableContent: Bool {
     !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case id
+    case text
+    case target
+    case color
+    case areaStyle
+    case pinControlValue
+    case creationOrder
   }
 }

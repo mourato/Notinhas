@@ -1,5 +1,5 @@
 //
-//  AnnotationToolType.swift
+//  AnnotateAnnotationToolType.swift
 //  Snapzy
 //
 //  Enum defining all available annotation tools
@@ -26,99 +26,102 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
   case pencil
   case mockup
 
-  var id: String { rawValue }
+  var id: String {
+    rawValue
+  }
 
   /// Annotation tools that create or edit drawable items on the image canvas.
   /// Shared by the full Annotate window and inline area-annotate overlay so the
   /// two surfaces stay in sync when tools are added.
   static let drawableTools: [AnnotationToolType] = [
     .rectangle, .filledRectangle, .oval, .arrow, .line, .text, .highlighter,
-    .blur, .spotlight, .counter, .watermark, .pencil
+    .blur, .spotlight, .counter, .watermark, .pencil,
   ]
 
   static let inlineAnnotateTools: [AnnotationToolType] = [.selection] + drawableTools
 
   private static let inlineShapeToolSet: Set<AnnotationToolType> = [
-    .rectangle, .filledRectangle, .oval, .arrow, .line
+    .rectangle, .filledRectangle, .oval, .arrow, .line,
   ]
 
   static let inlineToolGroups: [[AnnotationToolType]] = [
     [.selection],
     drawableTools.filter { inlineShapeToolSet.contains($0) },
-    drawableTools.filter { !inlineShapeToolSet.contains($0) }
+    drawableTools.filter { !inlineShapeToolSet.contains($0) },
   ]
 
   var icon: String {
     switch self {
-    case .selection: return "cursorarrow"
-    case .crop: return "crop"
-    case .rectangle: return "rectangle"
-    case .filledRectangle: return "rectangle.fill"
-    case .oval: return "circle"
-    case .arrow: return "arrow.up.right"
-    case .line: return "line.diagonal"
-    case .text: return "character.textbox"
-    case .highlighter: return "highlighter"
-    case .blur: return "eye.slash"
-    case .spotlight: return "viewfinder"
-    case .counter: return "list.number"
-    case .notinhasNote: return "pin.circle.fill"
-    case .watermark: return "seal"
-    case .pencil: return "pencil"
-    case .mockup: return "cube.transparent"
+    case .selection: "cursorarrow"
+    case .crop: "crop"
+    case .rectangle: "rectangle"
+    case .filledRectangle: "rectangle.fill"
+    case .oval: "circle"
+    case .arrow: "arrow.up.right"
+    case .line: "line.diagonal"
+    case .text: "character.textbox"
+    case .highlighter: "highlighter"
+    case .blur: "eye.slash"
+    case .spotlight: "viewfinder"
+    case .counter: "list.number"
+    case .notinhasNote: "pin.circle.fill"
+    case .watermark: "seal"
+    case .pencil: "pencil"
+    case .mockup: "cube.transparent"
     }
   }
 
   /// Default keyboard shortcut for this tool
   var defaultShortcut: Character {
     switch self {
-    case .selection: return "v"
-    case .crop: return "c"
-    case .rectangle: return "r"
-    case .filledRectangle: return "f"
-    case .oval: return "o"
-    case .arrow: return "a"
-    case .line: return "l"
-    case .text: return "t"
-    case .highlighter: return "h"
-    case .blur: return "b"
-    case .spotlight: return "s"
-    case .counter: return "n"
-    case .notinhasNote: return "i"
-    case .watermark: return "w"
-    case .pencil: return "p"
-    case .mockup: return "m"
+    case .selection: "v"
+    case .crop: "c"
+    case .rectangle: "r"
+    case .filledRectangle: "f"
+    case .oval: "o"
+    case .arrow: "a"
+    case .line: "l"
+    case .text: "t"
+    case .highlighter: "h"
+    case .blur: "b"
+    case .spotlight: "s"
+    case .counter: "n"
+    case .notinhasNote: "i"
+    case .watermark: "w"
+    case .pencil: "p"
+    case .mockup: "m"
     }
   }
 
   /// Display name for the tool
   var displayName: String {
     switch self {
-    case .selection: return L10n.Annotate.selectionTool
-    case .crop: return L10n.Annotate.cropTool
-    case .rectangle: return L10n.Annotate.rectangleTool
-    case .filledRectangle: return L10n.Annotate.filledRectangleTool
-    case .oval: return L10n.Annotate.ovalTool
-    case .arrow: return L10n.Annotate.arrowTool
-    case .line: return L10n.Annotate.lineTool
-    case .text: return L10n.Annotate.textTool
-    case .highlighter: return L10n.Annotate.highlighterTool
-    case .blur: return L10n.Annotate.blurTool
-    case .spotlight: return L10n.Annotate.spotlightTool
-    case .counter: return L10n.Annotate.counterTool
-    case .notinhasNote: return NotinhasL10n.noteTool
-    case .watermark: return L10n.Annotate.watermarkTool
-    case .pencil: return L10n.Annotate.pencilTool
-    case .mockup: return L10n.Annotate.mockupTool
+    case .selection: L10n.Annotate.selectionTool
+    case .crop: L10n.Annotate.cropTool
+    case .rectangle: L10n.Annotate.rectangleTool
+    case .filledRectangle: L10n.Annotate.filledRectangleTool
+    case .oval: L10n.Annotate.ovalTool
+    case .arrow: L10n.Annotate.arrowTool
+    case .line: L10n.Annotate.lineTool
+    case .text: L10n.Annotate.textTool
+    case .highlighter: L10n.Annotate.highlighterTool
+    case .blur: L10n.Annotate.blurTool
+    case .spotlight: L10n.Annotate.spotlightTool
+    case .counter: L10n.Annotate.counterTool
+    case .notinhasNote: NotinhasL10n.noteTool
+    case .watermark: L10n.Annotate.watermarkTool
+    case .pencil: L10n.Annotate.pencilTool
+    case .mockup: L10n.Annotate.mockupTool
     }
   }
 
   var supportsQuickPropertiesBar: Bool {
     switch self {
-    case .rectangle, .filledRectangle, .oval, .arrow, .line, .text, .highlighter, .blur, .spotlight, .counter, .watermark, .pencil:
-      return true
+    case .rectangle, .filledRectangle, .oval, .arrow, .line, .text, .highlighter, .blur, .spotlight, .counter,
+         .watermark, .pencil:
+      true
     case .selection, .crop, .mockup, .notinhasNote:
-      return false
+      false
     }
   }
 
@@ -128,18 +131,18 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
   var requiresDragToCreateAnnotation: Bool {
     switch self {
     case .rectangle, .filledRectangle, .oval, .arrow, .line, .blur, .spotlight, .watermark:
-      return true
+      true
     case .selection, .crop, .text, .highlighter, .counter, .pencil, .mockup, .notinhasNote:
-      return false
+      false
     }
   }
 
   var supportsQuickStrokeColor: Bool {
     switch self {
     case .rectangle, .filledRectangle, .oval, .arrow, .line, .text, .highlighter, .counter, .watermark, .pencil:
-      return true
+      true
     case .selection, .crop, .blur, .spotlight, .mockup, .notinhasNote:
-      return false
+      false
     }
   }
 
@@ -149,19 +152,20 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
 
   var supportsQuickStrokeWidth: Bool {
     switch self {
-    case .rectangle, .filledRectangle, .oval, .arrow, .line, .highlighter, .blur, .counter, .pencil:
-      return true
-    case .selection, .crop, .text, .watermark, .spotlight, .mockup, .notinhasNote:
-      return false
+    case .rectangle, .filledRectangle, .oval, .arrow, .line, .highlighter, .blur, .counter, .pencil, .notinhasNote:
+      true
+    case .selection, .crop, .text, .watermark, .spotlight, .mockup:
+      false
     }
   }
 
   var supportsQuickCornerRadius: Bool {
     switch self {
     case .rectangle, .filledRectangle, .text, .spotlight:
-      return true
-    case .selection, .crop, .oval, .arrow, .line, .highlighter, .blur, .counter, .watermark, .pencil, .mockup, .notinhasNote:
-      return false
+      true
+    case .selection, .crop, .oval, .arrow, .line, .highlighter, .blur, .counter, .watermark, .pencil, .mockup,
+         .notinhasNote:
+      false
     }
   }
 }

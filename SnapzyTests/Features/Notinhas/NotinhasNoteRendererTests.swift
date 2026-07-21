@@ -40,7 +40,7 @@ final class NotinhasNoteRendererTests: XCTestCase {
     )
     NSGraphicsContext.restoreGraphicsState()
 
-    let sampleX = Int(center.x + NotinhasNoteRenderer.pinRadius * 0.6)
+    let sampleX = Int(center.x + NotinhasNoteRenderer.defaultPinRadius * 0.6)
     let sampleY = Int(center.y)
     guard let color = bitmap.colorAt(x: sampleX, y: sampleY) else {
       XCTFail("Expected color at sample point")

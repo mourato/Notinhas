@@ -63,18 +63,7 @@ nonisolated enum NotinhasNoteTarget: Codable, Equatable {
   }
 
   var selectionBounds: CGRect {
-    switch self {
-    case .point(let point):
-      let diameter = NotinhasNoteGeometry.pinDiameter
-      return CGRect(
-        x: point.x - diameter / 2,
-        y: point.y - diameter / 2,
-        width: diameter,
-        height: diameter
-      )
-    case .rect(let rect):
-      return rect.standardized
-    }
+    NotinhasNoteGeometry.selectionBounds(for: self)
   }
 
   func rotated(oldSize: CGSize, clockwise: Bool) -> NotinhasNoteTarget {

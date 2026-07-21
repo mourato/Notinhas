@@ -116,7 +116,30 @@ nonisolated enum NotinhasNoteGeometry {
   }
 
   static func hitTest(note: NotinhasVisualNote, at point: CGPoint) -> Bool {
-    note.target.selectionBounds.insetBy(dx: -6, dy: -6).contains(point)
+    selectionBounds(for: note)
+      .insetBy(dx: -6, dy: -6)
+      .contains(point)
+  }
+
+  static func selectionBounds(for note: NotinhasVisualNote) -> CGRect {
+    selectionBounds(for: note.target, pinDiameter: note.pinDiameter)
+  }
+
+  static func selectionBounds(
+    for target: NotinhasNoteTarget,
+    pinDiameter: CGFloat = pinDiameter
+  ) -> CGRect {
+    switch target {
+    case .point(let point):
+      CGRect(
+        x: point.x - pinDiameter / 2,
+        y: point.y - pinDiameter / 2,
+        width: pinDiameter,
+        height: pinDiameter
+      )
+    case .rect(let rect):
+      rect.standardized
+    }
   }
 
   static func exportTransformed(

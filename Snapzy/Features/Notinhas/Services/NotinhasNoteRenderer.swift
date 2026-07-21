@@ -2,7 +2,7 @@ import AppKit
 import CoreGraphics
 
 enum NotinhasNoteRenderer {
-  static let pinRadius: CGFloat = 14
+  static let defaultPinRadius: CGFloat = NotinhasNoteGeometry.pinDiameter / 2
   static let selectionStrokeWidth: CGFloat = 2
 
   static func draw(
@@ -35,12 +35,14 @@ enum NotinhasNoteRenderer {
     in context: CGContext,
     imageBounds _: CGRect
   ) {
+    let pinRadius = note.pinDiameter / 2
     switch note.target {
     case .point(let center):
       drawPointTarget(
         center: center,
         color: note.color.nsColor,
         displayNumber: displayNumber,
+        pinRadius: pinRadius,
         isSelected: isSelected,
         in: context
       )
@@ -50,6 +52,7 @@ enum NotinhasNoteRenderer {
         style: note.areaStyle,
         color: note.color.nsColor,
         displayNumber: displayNumber,
+        pinRadius: pinRadius,
         isSelected: isSelected,
         in: context
       )
@@ -60,6 +63,7 @@ enum NotinhasNoteRenderer {
     center: CGPoint,
     color: NSColor,
     displayNumber: Int,
+    pinRadius: CGFloat = defaultPinRadius,
     isSelected: Bool,
     in context: CGContext
   ) {
@@ -93,6 +97,7 @@ enum NotinhasNoteRenderer {
     style: NotinhasAreaStyle,
     color: NSColor,
     displayNumber: Int,
+    pinRadius: CGFloat = defaultPinRadius,
     isSelected: Bool,
     in context: CGContext
   ) {
