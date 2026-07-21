@@ -68,7 +68,7 @@ struct SnapzyDeepLinkHandler {
     case .captureObjectCutout:
       screenCaptureViewModel.captureObjectCutout()
     case .recordScreen:
-      guard VideoModuleAvailability.isEnabled else {
+      guard VideoModuleMediaRouting.shouldDispatchVideoAction() else {
         logIgnoredVideoDeepLink(action: action)
         return
       }
@@ -76,7 +76,7 @@ struct SnapzyDeepLinkHandler {
         screenCaptureViewModel.startRecordingFlow()
       #endif
     case .recordApplication:
-      guard VideoModuleAvailability.isEnabled else {
+      guard VideoModuleMediaRouting.shouldDispatchVideoAction() else {
         logIgnoredVideoDeepLink(action: action)
         return
       }
@@ -94,7 +94,7 @@ struct SnapzyDeepLinkHandler {
       }
       NSApp.activate(ignoringOtherApps: true)
     case .openVideoEditor:
-      guard VideoModuleAvailability.isEnabled else {
+      guard VideoModuleMediaRouting.shouldDispatchVideoAction() else {
         logIgnoredVideoDeepLink(action: action)
         return
       }

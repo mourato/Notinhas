@@ -1281,7 +1281,8 @@ final class QuickAccessManager: ObservableObject {
   func openEditorForNewestItem() -> Bool {
     guard isEnabled, panelController.isVisible, let item = items.first else { return false }
     if item.isVideo {
-      guard VideoModuleAvailability.isEnabled else {
+      switch VideoModuleMediaRouting.quickAccessVideoOpenDestination() {
+      case .revealInFinder:
         openInFinder(id: item.id)
         DiagnosticLogger.shared.log(
           .info,
@@ -1290,10 +1291,13 @@ final class QuickAccessManager: ObservableObject {
           context: ["itemId": item.id.uuidString]
         )
         return true
+      case .videoEditor:
+        #if NOTINHAS_VIDEO_MODULE
+          VideoEditorManager.shared.openEditor(for: item)
+        #endif
+      case .annotate:
+        break
       }
-      #if NOTINHAS_VIDEO_MODULE
-        VideoEditorManager.shared.openEditor(for: item)
-      #endif
     } else {
       AnnotateManager.shared.openAnnotation(for: item)
     }

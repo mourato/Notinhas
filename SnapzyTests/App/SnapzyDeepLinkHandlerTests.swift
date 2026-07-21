@@ -167,6 +167,10 @@ final class SnapzyDeepLinkHandlerTests: XCTestCase {
       VideoModuleAvailability.isEnabled,
       "Video deep-link handlers must see the module as disabled"
     )
+    XCTAssertFalse(
+      VideoModuleMediaRouting.shouldDispatchVideoAction(),
+      "Routing gate must refuse video deep links when the module is off"
+    )
 
     let viewModel = ScreenCaptureViewModel()
     let handler = SnapzyDeepLinkHandler(screenCaptureViewModel: viewModel)
@@ -178,9 +182,18 @@ final class SnapzyDeepLinkHandlerTests: XCTestCase {
 
     for urlString in urls {
       let url = try XCTUnwrap(URL(string: urlString))
+      // URLs still parse; the handler must gate dispatch, not drop parsing.
+      XCTAssertNotNil(SnapzyDeepLinkAction(url: url), urlString)
       handler.handle(url)
-      // Smoke: handlers must no-op without throwing / starting capture when disabled.
-      XCTAssertFalse(VideoModuleAvailability.isEnabled)
+      XCTAssertFalse(
+        VideoModuleMediaRouting.shouldDispatchVideoAction(),
+        "Module must stay disabled after handling \(urlString)"
+      )
     }
+  }
+
+  func testVideoDeepLinkRoutingGateMatchesExplicitFlags() {
+    XCTAssertFalse(VideoModuleMediaRouting.shouldDispatchVideoAction(videoModuleEnabled: false))
+    XCTAssertTrue(VideoModuleMediaRouting.shouldDispatchVideoAction(videoModuleEnabled: true))
   }
 }

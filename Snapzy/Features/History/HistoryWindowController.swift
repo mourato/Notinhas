@@ -143,9 +143,12 @@ final class HistoryWindowController {
       return
     }
 
-    if record.captureType != .screenshot, !VideoModuleAvailability.isEnabled {
+    switch VideoModuleMediaRouting.historyOpenDestination(for: record.captureType) {
+    case .revealInFinder:
       revealRecordInFinder(record)
       return
+    case .annotate, .videoEditor:
+      break
     }
 
     HistoryFloatingManager.shared.hide()
@@ -155,8 +158,8 @@ final class HistoryWindowController {
         return
       }
 
-      switch record.captureType {
-      case .screenshot:
+      switch VideoModuleMediaRouting.historyOpenDestination(for: record.captureType) {
+      case .annotate:
         DiagnosticLogger.shared.log(
           .info,
           .history,
@@ -164,7 +167,7 @@ final class HistoryWindowController {
           context: ["fileName": record.fileName, "itemId": item.id.uuidString]
         )
         AnnotateManager.shared.openAnnotation(for: item)
-      case .video, .gif:
+      case .videoEditor:
         DiagnosticLogger.shared.log(
           .info,
           .history,
@@ -178,6 +181,8 @@ final class HistoryWindowController {
         #if NOTINHAS_VIDEO_MODULE
           VideoEditorManager.shared.openEditor(for: item)
         #endif
+      case .revealInFinder:
+        revealRecordInFinder(record)
       }
     }
   }
