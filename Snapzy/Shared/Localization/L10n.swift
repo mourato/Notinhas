@@ -2992,6 +2992,11 @@ nonisolated enum L10n {
 
   enum Notinhas {
     static let noteTool = string("annotate.notinhas.note-tool", defaultValue: "Note", comment: "Notinhas note tool")
+    static let noteToolGestureHint = string(
+      "annotate.notinhas.note-tool-gesture-hint",
+      defaultValue: "Click to pin · Drag for area",
+      comment: "Tooltip hint explaining the Notinhas note tool: a click places a numbered pin, a drag creates an area rectangle"
+    )
     static let noteEditorTitle = string("annotate.notinhas.note-editor-title", defaultValue: "Note", comment: "Notinhas note editor title")
     static let noteEditorPlaceholder = string("annotate.notinhas.note-editor-placeholder", defaultValue: "Describe the change...", comment: "Notinhas note editor placeholder")
     static let save = string("annotate.notinhas.save", defaultValue: "Save", comment: "Save Notinhas note")

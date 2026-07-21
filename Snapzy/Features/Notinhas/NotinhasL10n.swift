@@ -2,6 +2,7 @@ import Foundation
 
 enum NotinhasL10n {
   static let noteTool = L10n.Notinhas.noteTool
+  static let noteToolGestureHint = L10n.Notinhas.noteToolGestureHint
   static let noteEditorTitle = L10n.Notinhas.noteEditorTitle
   static let noteEditorPlaceholder = L10n.Notinhas.noteEditorPlaceholder
   static let save = L10n.Notinhas.save

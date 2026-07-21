@@ -15,6 +15,7 @@ private enum AnnotateToolbarActionRegistration: Equatable {
 /// Top toolbar containing all annotation tools
 struct AnnotateToolbarView: View {
   @ObservedObject var state: AnnotateState
+  @ObservedObject private var annotateShortcutManager = AnnotateShortcutManager.shared
   @AppStorage(PreferencesKeys.backgroundCutoutAutoCropEnabled) private var backgroundCutoutAutoCropEnabled = true
 
   var body: some View {
@@ -133,7 +134,26 @@ struct AnnotateToolbarView: View {
   }
 
   private var notinhasNoteButton: some View {
-    annotationToolButton(for: .notinhasNote)
+    ToolbarButton(
+      icon: AnnotationToolType.notinhasNote.icon,
+      isSelected: state.selectedTool == .notinhasNote
+    ) {
+      state.activateTool(.notinhasNote)
+    }
+    .help(notinhasNoteTooltip)
+    .disabled(state.editorMode == .mockup)
+    .opacity(state.editorMode == .mockup ? 0.4 : 1)
+  }
+
+  private var notinhasNoteTooltip: String {
+    let base: String
+    if annotateShortcutManager.isShortcutEnabled(for: .notinhasNote),
+       let key = annotateShortcutManager.shortcut(for: .notinhasNote) {
+      base = L10n.Common.withShortcut(NotinhasL10n.noteTool, String(key).uppercased())
+    } else {
+      base = NotinhasL10n.noteTool
+    }
+    return "\(base) · \(NotinhasL10n.noteToolGestureHint)"
   }
 
   private var backgroundCutoutButton: some View {
