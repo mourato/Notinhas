@@ -21,7 +21,7 @@ on:
           - beta
 
   push:
-    branches: [master]
+    branches: [main]
 
 concurrency:
   group: release-prepare-${{ github.ref }}
@@ -160,7 +160,7 @@ jobs:
             echo "Updated existing PR #${EXISTING_PR}"
           else
             gh pr create \
-              --base master \
+              --base main \
               --head "$BRANCH" \
               --title "chore: release ${VERSION}" \
               --body-file build/pr-body.md
