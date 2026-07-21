@@ -14,10 +14,14 @@ nonisolated enum NotinhasNoteGeometry {
   static let minimumRectSize: CGFloat = 24
 
   static func shouldCreateRect(dragDistance: CGFloat) -> Bool {
-    dragDistance >= dragThreshold
+    exceedsDragThreshold(dragDistance)
   }
 
   static func shouldBeginMove(dragDistance: CGFloat) -> Bool {
+    exceedsDragThreshold(dragDistance)
+  }
+
+  private static func exceedsDragThreshold(_ dragDistance: CGFloat) -> Bool {
     dragDistance >= dragThreshold
   }
 

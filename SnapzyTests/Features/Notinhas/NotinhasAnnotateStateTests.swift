@@ -89,7 +89,38 @@ final class NotinhasAnnotateStateTests: XCTestCase {
     state.notinhasCancelMovingNote()
 
     XCTAssertEqual(state.notinhasNotes[0].target, note.target)
-    state.undo()
-    XCTAssertEqual(state.notinhasNotes, [note])
+    XCTAssertFalse(state.canUndo)
+  }
+
+  func testCloseEditorCancelsInProgressMove() {
+    let state = makeState()
+    let note = makeNote()
+    state.notinhasNotes = [note]
+    let bounds = CGRect(x: 0, y: 0, width: 200, height: 200)
+
+    state.activateTool(.notinhasNote)
+    state.notinhasBeginMovingNote(id: note.id)
+    state.notinhasUpdateMovingNote(
+      to: CGPoint(x: 40, y: 10),
+      imageBounds: bounds,
+      from: .zero
+    )
+    state.activateTool(.selection)
+
+    XCTAssertEqual(state.notinhasNotes[0].target, note.target)
+    XCTAssertNil(state.notinhasMovingNoteID)
+    XCTAssertFalse(state.canUndo)
+  }
+
+  func testSelectNoteWithoutEditingClearsEditingID() {
+    let state = makeState()
+    let note = makeNote()
+    state.notinhasNotes = [note]
+    state.notinhasSelectNote(id: note.id, beginEditing: true)
+    XCTAssertEqual(state.notinhasEditingNoteID, note.id)
+
+    state.notinhasSelectNote(id: note.id, beginEditing: false)
+    XCTAssertEqual(state.notinhasSelectedNoteID, note.id)
+    XCTAssertNil(state.notinhasEditingNoteID)
   }
 }

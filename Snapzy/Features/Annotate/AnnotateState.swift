@@ -2254,6 +2254,19 @@ final class AnnotateState: ObservableObject {
     pushUndoSnapshot(currentSnapshot(), annotationCount: annotations.count)
   }
 
+  /// Pushes an undo checkpoint with a custom Notinhas notes array without mutating live state.
+  /// Used so move-commit can record pre-move geometry without flickering published notes.
+  func saveNotinhasNotesUndoCheckpoint(_ notes: [NotinhasVisualNote]) {
+    pushUndoSnapshot(
+      AnnotationSnapshot(
+        annotations: annotations,
+        embeddedImageAssets: embeddedImageAssets,
+        notinhasNotes: notes
+      ),
+      annotationCount: annotations.count
+    )
+  }
+
   private func pushUndoSnapshot(_ snapshot: AnnotationSnapshot, annotationCount: Int) {
     DiagnosticLogger.shared.log(.debug, .annotate, "Undo checkpoint", context: ["annotations": "\(annotationCount)"])
     undoStack.append(.annotations(snapshot))

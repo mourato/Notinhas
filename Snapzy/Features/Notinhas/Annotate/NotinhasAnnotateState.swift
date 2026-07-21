@@ -34,6 +34,8 @@ extension AnnotateState {
     notinhasSelectedNoteID = id
     if beginEditing, let id {
       notinhasEditingNoteID = id
+    } else {
+      notinhasEditingNoteID = nil
     }
   }
 
@@ -69,9 +71,9 @@ extension AnnotateState {
 
     let finalTarget = notinhasNotes[index].target
     if finalTarget != original {
-      notinhasNotes[index].target = original
-      saveState()
-      notinhasNotes[index].target = finalTarget
+      var checkpointNotes = notinhasNotes
+      checkpointNotes[index].target = original
+      saveNotinhasNotesUndoCheckpoint(checkpointNotes)
     }
 
     notinhasMovingNoteID = nil
@@ -89,6 +91,7 @@ extension AnnotateState {
   }
 
   func notinhasCloseEditor(discardIfEmpty: Bool = true) {
+    notinhasCancelMovingNote()
     if discardIfEmpty,
        let editingID = notinhasEditingNoteID,
        let note = notinhasNotes.first(where: { $0.id == editingID }),
@@ -99,8 +102,6 @@ extension AnnotateState {
     notinhasDraftNote = nil
     notinhasIsDrawingNote = false
     notinhasNoteDrawStart = nil
-    notinhasMovingNoteID = nil
-    notinhasMoveOriginalTarget = nil
   }
 
   func notinhasNote(at point: CGPoint) -> NotinhasVisualNote? {
@@ -118,6 +119,7 @@ extension AnnotateState {
   }
 
   func notinhasRestoreNotes(_ notes: [NotinhasVisualNote]) {
+    notinhasCancelMovingNote()
     notinhasNotes = notes
     notinhasSelectedNoteID = nil
     notinhasEditingNoteID = nil

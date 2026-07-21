@@ -386,21 +386,12 @@ nonisolated struct AnnotationRenderer {
       rect = bounds.standardized
     }
 
-    context.setFillColor(NSColor(properties.strokeColor).cgColor)
-    context.fillEllipse(in: rect)
-
-    let fontSize = min(max(rect.height * 0.5, 11), 56)
-    let attributes: [NSAttributedString.Key: Any] = [
-      .font: NSFont.systemFont(ofSize: fontSize, weight: .bold),
-      .foregroundColor: NSColor.white,
-    ]
-    let text = "\(value)" as NSString
-    let textSize = text.size(withAttributes: attributes)
-    let textPoint = CGPoint(
-      x: rect.midX - textSize.width / 2,
-      y: rect.midY - textSize.height / 2
+    AnnotationNumberedBadgeDrawer.draw(
+      value: value,
+      in: rect,
+      fillColor: NSColor(properties.strokeColor),
+      in: context
     )
-    text.draw(at: textPoint, withAttributes: attributes)
   }
 
   private func drawText(_ content: String, in bounds: CGRect, properties: AnnotationProperties) {

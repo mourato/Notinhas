@@ -1264,15 +1264,26 @@ final class DrawingCanvasNSView: NSView {
     notinhasEditorOverlay = nil
   }
 
+  private func clearNotinhasMoveGestureLocals() {
+    notinhasMoveStartPoint = nil
+    notinhasIsMovingNote = false
+  }
+
   private func handleNotinhasMouseDown(at imagePoint: CGPoint) -> Bool {
     if state.notinhasEditingNoteID != nil {
       state.notinhasCloseEditor(discardIfEmpty: true)
       dismissNotinhasEditor()
+      clearNotinhasMoveGestureLocals()
       invalidateDrawing()
       return true
     }
 
     guard state.selectedTool == .notinhasNote else { return false }
+
+    // Drop stale move locals if the session was cancelled externally (e.g. tool switch).
+    if state.notinhasMovingNoteID == nil {
+      clearNotinhasMoveGestureLocals()
+    }
 
     if let note = state.notinhasNote(at: imagePoint) {
       state.notinhasSelectNote(id: note.id, beginEditing: false)
@@ -1314,7 +1325,10 @@ final class DrawingCanvasNSView: NSView {
   }
 
   private func handleNotinhasMouseUp(at imagePoint: CGPoint) -> Bool {
-    guard state.selectedTool == .notinhasNote else { return false }
+    guard state.selectedTool == .notinhasNote else {
+      clearNotinhasMoveGestureLocals()
+      return false
+    }
 
     if state.notinhasMovingNoteID != nil {
       if notinhasIsMovingNote {
@@ -1326,10 +1340,14 @@ final class DrawingCanvasNSView: NSView {
           presentNotinhasEditor(for: selectedID)
         }
       }
-      notinhasMoveStartPoint = nil
-      notinhasIsMovingNote = false
+      clearNotinhasMoveGestureLocals()
       invalidateDrawing()
       return true
+    }
+
+    // Tool switch / closeEditor may cancel the move session while the mouse is still down.
+    if notinhasMoveStartPoint != nil {
+      clearNotinhasMoveGestureLocals()
     }
 
     guard state.notinhasIsDrawingNote else { return false }
