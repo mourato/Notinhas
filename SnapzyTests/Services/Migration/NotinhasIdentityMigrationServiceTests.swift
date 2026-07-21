@@ -148,13 +148,41 @@ final class NotinhasIdentityMigrationServiceTests: XCTestCase {
     )
   }
 
+  func testRunIfNeeded_migratesLegacySandboxContainerStorage() throws {
+    let sandboxAppSupport = homeDirectory
+      .appendingPathComponent("Library/Containers", isDirectory: true)
+      .appendingPathComponent(NotinhasStoragePaths.legacyReleaseBundleIdentifier, isDirectory: true)
+      .appendingPathComponent("Data/Library/Application Support/Snapzy", isDirectory: true)
+    try FileManager.default.createDirectory(
+      at: sandboxAppSupport.appendingPathComponent("Captures", isDirectory: true),
+      withIntermediateDirectories: true
+    )
+    try Data("sandbox-db".utf8).write(to: sandboxAppSupport.appendingPathComponent("snapzy.db"))
+    try Data("sandbox-capture".utf8).write(
+      to: sandboxAppSupport.appendingPathComponent("Captures/capture.png")
+    )
+
+    let result = try makeService().runIfNeeded()
+
+    XCTAssertEqual(result.migratedDatabaseFiles, 1)
+    XCTAssertEqual(result.copiedApplicationSupportItems, 1)
+    XCTAssertEqual(
+      try String(contentsOf: destinationAppSupport().appendingPathComponent("notinhas.db")),
+      "sandbox-db"
+    )
+    XCTAssertEqual(
+      try String(contentsOf: destinationAppSupport().appendingPathComponent("Captures/capture.png")),
+      "sandbox-capture"
+    )
+    XCTAssertTrue(FileManager.default.fileExists(atPath: sandboxAppSupport.path))
+  }
+
   func testRunIfNeeded_preservesExistingDestinationFilesAndPreferences() throws {
     let legacyAppSupport = legacyAppSupportDirectory()
     try FileManager.default.createDirectory(
       at: legacyAppSupport.appendingPathComponent("Captures", isDirectory: true),
       withIntermediateDirectories: true
     )
-    try Data("legacy database".utf8).write(to: legacyAppSupport.appendingPathComponent("snapzy.db"))
     try Data("legacy capture".utf8).write(to: legacyAppSupport.appendingPathComponent("Captures/capture.png"))
 
     try FileManager.default.createDirectory(

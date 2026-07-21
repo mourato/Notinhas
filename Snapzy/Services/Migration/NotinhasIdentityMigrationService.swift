@@ -133,7 +133,6 @@ struct LiveNotinhasIdentityKeychainAdapter: NotinhasIdentityKeychainAdapting {
   }
 }
 
-@MainActor
 final class NotinhasIdentityMigrationService {
   struct Configuration {
     var homeDirectory: URL
@@ -210,24 +209,27 @@ final class NotinhasIdentityMigrationService {
       return .skipped
     }
 
-    let legacyAppSupport = legacyAppSupportDirectory(configuration)
     let destinationAppSupport = destinationAppSupportDirectory(configuration)
-    let hasLegacyAppSupport = configuration.fileManager.fileExists(atPath: legacyAppSupport.path)
-    let hasLegacyLogs = configuration.fileManager.fileExists(
-      atPath: legacyLogsDirectory(configuration).path
-    )
+    let legacyAppSupportDirectories = legacyApplicationSupportDirectories(configuration)
+    let legacyLogDirectories = legacyLogsDirectories(configuration)
+    let hasLegacyAppSupport = legacyAppSupportDirectories.contains {
+      configuration.fileManager.fileExists(atPath: $0.path)
+    }
+    let hasLegacyLogs = legacyLogDirectories.contains {
+      configuration.fileManager.fileExists(atPath: $0.path)
+    }
     let hasLegacyConfig = configuration.fileManager.fileExists(
       atPath: legacyConfigDirectory(configuration).path
     )
-    let hasLegacyPreferences = NotinhasStoragePaths.legacyPreferenceBundleIdentifiers.contains {
-      configuration.fileManager.fileExists(atPath: legacyPreferencesURL(configuration, bundleIdentifier: $0).path)
+    let hasLegacyPreferences = legacyPreferenceURLs(configuration).contains {
+      configuration.fileManager.fileExists(atPath: $0.path)
     }
     let hasLegacyKeychain = hasLegacyKeychainItems(configuration: configuration)
 
     guard
       hasLegacyAppSupport || hasLegacyLogs || hasLegacyConfig || hasLegacyPreferences || hasLegacyKeychain
     else {
-      markCompleted(configuration)
+      try markCompleted(configuration)
       return NotinhasIdentityMigrationResult(
         didRun: true,
         copiedApplicationSupportItems: 0,
@@ -243,7 +245,8 @@ final class NotinhasIdentityMigrationService {
     }
 
     var applicationSupportSummary = DirectoryMergeSummary()
-    if hasLegacyAppSupport {
+    for legacyAppSupport in legacyAppSupportDirectories
+      where configuration.fileManager.fileExists(atPath: legacyAppSupport.path) {
       try mergeApplicationSupport(
         from: legacyAppSupport,
         to: destinationAppSupport,
@@ -252,49 +255,41 @@ final class NotinhasIdentityMigrationService {
       )
     }
 
-    let migratedDatabaseFiles = try migrateDatabaseFiles(
-      from: legacyAppSupport,
-      to: destinationAppSupport,
-      configuration: configuration
-    )
+    var migratedDatabaseFiles = 0
+    for legacyAppSupport in legacyAppSupportDirectories
+      where configuration.fileManager.fileExists(atPath: legacyAppSupport.path) {
+      migratedDatabaseFiles += try migrateDatabaseFiles(
+        from: legacyAppSupport,
+        to: destinationAppSupport,
+        configuration: configuration
+      )
+    }
 
     var logSummary = DirectoryMergeSummary()
-    if hasLegacyLogs {
-      do {
-        try mergeDirectoryIfPresent(
-          from: legacyLogsDirectory(configuration),
-          to: destinationLogsDirectory(configuration),
-          configuration: configuration,
-          summary: &logSummary
-        )
-      } catch {
-        identityMigrationLogger.warning(
-          "Log migration skipped: \(error.localizedDescription, privacy: .public)"
-        )
-      }
+    for legacyLogs in legacyLogDirectories where configuration.fileManager.fileExists(atPath: legacyLogs.path) {
+      try mergeDirectoryIfPresent(
+        from: legacyLogs,
+        to: destinationLogsDirectory(configuration),
+        configuration: configuration,
+        summary: &logSummary
+      )
     }
 
     let preferencesSummary = migratePreferences(configuration: configuration)
 
     var configSummary = DirectoryMergeSummary()
     if hasLegacyConfig {
-      do {
-        try mergeDirectoryIfPresent(
-          from: legacyConfigDirectory(configuration),
-          to: destinationConfigDirectory(configuration),
-          configuration: configuration,
-          summary: &configSummary
-        )
-      } catch {
-        identityMigrationLogger.warning(
-          "Config migration skipped: \(error.localizedDescription, privacy: .public)"
-        )
-      }
+      try mergeDirectoryIfPresent(
+        from: legacyConfigDirectory(configuration),
+        to: destinationConfigDirectory(configuration),
+        configuration: configuration,
+        summary: &configSummary
+      )
     }
 
-    let migratedKeychainItems = migrateKeychainItems(configuration: configuration)
+    let migratedKeychainItems = try migrateKeychainItems(configuration: configuration)
 
-    markCompleted(configuration)
+    try markCompleted(configuration)
 
     let result = NotinhasIdentityMigrationResult(
       didRun: true,
@@ -320,7 +315,7 @@ final class NotinhasIdentityMigrationService {
     }
 
     identityMigrationLogger.info("Notinhas identity migration skipped by user (Start Fresh).")
-    markCompleted(configuration)
+    try markCompleted(configuration)
   }
 
   private struct DirectoryMergeSummary {
@@ -339,6 +334,25 @@ final class NotinhasIdentityMigrationService {
       .appendingPathComponent(NotinhasStoragePaths.legacyAppSupportFolderName, isDirectory: true)
   }
 
+  private func legacySandboxDataDirectories(_ configuration: Configuration) -> [URL] {
+    NotinhasStoragePaths.legacyPreferenceBundleIdentifiers.map {
+      configuration.homeDirectory
+        .appendingPathComponent("Library", isDirectory: true)
+        .appendingPathComponent("Containers", isDirectory: true)
+        .appendingPathComponent($0, isDirectory: true)
+        .appendingPathComponent("Data", isDirectory: true)
+    }
+  }
+
+  private func legacyApplicationSupportDirectories(_ configuration: Configuration) -> [URL] {
+    [legacyAppSupportDirectory(configuration)] + legacySandboxDataDirectories(configuration).map {
+      $0
+        .appendingPathComponent("Library", isDirectory: true)
+        .appendingPathComponent("Application Support", isDirectory: true)
+        .appendingPathComponent(NotinhasStoragePaths.legacyAppSupportFolderName, isDirectory: true)
+    }
+  }
+
   private func destinationAppSupportDirectory(_ configuration: Configuration) -> URL {
     configuration.applicationSupportDirectory
       .appendingPathComponent(NotinhasStoragePaths.destinationAppSupportFolderName, isDirectory: true)
@@ -348,6 +362,15 @@ final class NotinhasIdentityMigrationService {
     configuration.libraryDirectory
       .appendingPathComponent("Logs", isDirectory: true)
       .appendingPathComponent(NotinhasStoragePaths.legacyLogsFolderName, isDirectory: true)
+  }
+
+  private func legacyLogsDirectories(_ configuration: Configuration) -> [URL] {
+    [legacyLogsDirectory(configuration)] + legacySandboxDataDirectories(configuration).map {
+      $0
+        .appendingPathComponent("Library", isDirectory: true)
+        .appendingPathComponent("Logs", isDirectory: true)
+        .appendingPathComponent(NotinhasStoragePaths.legacyLogsFolderName, isDirectory: true)
+    }
   }
 
   private func destinationLogsDirectory(_ configuration: Configuration) -> URL {
@@ -374,6 +397,21 @@ final class NotinhasIdentityMigrationService {
       .appendingPathComponent("\(bundleIdentifier).plist")
   }
 
+  private func legacyPreferenceURLs(_ configuration: Configuration) -> [URL] {
+    let directURLs = NotinhasStoragePaths.legacyPreferenceBundleIdentifiers.map {
+      legacyPreferencesURL(configuration, bundleIdentifier: $0)
+    }
+    let sandboxURLs = legacySandboxDataDirectories(configuration).flatMap { dataDirectory in
+      NotinhasStoragePaths.legacyPreferenceBundleIdentifiers.map {
+        dataDirectory
+          .appendingPathComponent("Library", isDirectory: true)
+          .appendingPathComponent("Preferences", isDirectory: true)
+          .appendingPathComponent("\($0).plist")
+      }
+    }
+    return directURLs + sandboxURLs
+  }
+
   private func markerFileURL(_ configuration: Configuration) -> URL {
     destinationAppSupportDirectory(configuration)
       .appendingPathComponent(NotinhasStoragePaths.markerFileName)
@@ -384,23 +422,16 @@ final class NotinhasIdentityMigrationService {
       || configuration.fileManager.fileExists(atPath: markerFileURL(configuration).path)
   }
 
-  private func markCompleted(_ configuration: Configuration) {
+  private func markCompleted(_ configuration: Configuration) throws {
     let destinationDirectory = destinationAppSupportDirectory(configuration)
     let markerURL = markerFileURL(configuration)
     let marker = "completedAt=\(ISO8601DateFormatter().string(from: Date()))"
 
-    do {
-      try configuration.fileManager.createDirectory(
-        at: destinationDirectory,
-        withIntermediateDirectories: true
-      )
-      try marker.write(to: markerURL, atomically: true, encoding: .utf8)
-    } catch {
-      identityMigrationLogger.error(
-        "Identity migration marker write failed: \(error.localizedDescription, privacy: .public)"
-      )
-      return
-    }
+    try configuration.fileManager.createDirectory(
+      at: destinationDirectory,
+      withIntermediateDirectories: true
+    )
+    try marker.write(to: markerURL, atomically: true, encoding: .utf8)
 
     configuration.userDefaults.set(true, forKey: completedKey)
     configuration.userDefaults.synchronize()
@@ -442,25 +473,12 @@ final class NotinhasIdentityMigrationService {
         continue
       }
 
-      do {
-        try mergeItem(
-          from: sourceItem,
-          to: destinationDirectory.appendingPathComponent(sourceItem.lastPathComponent),
-          configuration: configuration,
-          summary: &summary
-        )
-      } catch {
-        if error.isPermissionDenied {
-          identityMigrationLogger.warning(
-            "Skipping item (permission denied): \(sourceItem.lastPathComponent, privacy: .public)"
-          )
-        } else {
-          identityMigrationLogger.error(
-            "Skipping item (unexpected error): \(sourceItem.lastPathComponent, privacy: .public) — \(error.localizedDescription, privacy: .public)"
-          )
-        }
-        summary.errorSkippedItems += 1
-      }
+      try mergeItem(
+        from: sourceItem,
+        to: destinationDirectory.appendingPathComponent(sourceItem.lastPathComponent),
+        configuration: configuration,
+        summary: &summary
+      )
     }
   }
 
@@ -505,7 +523,9 @@ final class NotinhasIdentityMigrationService {
     }
 
     if existingDestinationFiles.contains(where: { $0.0 == 0 }) {
-      return 0
+      throw MigrationError.unsafeSQLiteDestinationCollision(
+        existing: existingDestinationFiles.map(\.1.lastPathComponent)
+      )
     }
 
     if !existingDestinationFiles.isEmpty {
@@ -543,25 +563,12 @@ final class NotinhasIdentityMigrationService {
     )
 
     for sourceItem in sourceItems {
-      do {
-        try mergeItem(
-          from: sourceItem,
-          to: destinationDirectory.appendingPathComponent(sourceItem.lastPathComponent),
-          configuration: configuration,
-          summary: &summary
-        )
-      } catch {
-        if error.isPermissionDenied {
-          identityMigrationLogger.warning(
-            "Skipping item (permission denied): \(sourceItem.lastPathComponent, privacy: .public)"
-          )
-        } else {
-          identityMigrationLogger.error(
-            "Skipping item (unexpected error): \(sourceItem.lastPathComponent, privacy: .public) — \(error.localizedDescription, privacy: .public)"
-          )
-        }
-        summary.errorSkippedItems += 1
-      }
+      try mergeItem(
+        from: sourceItem,
+        to: destinationDirectory.appendingPathComponent(sourceItem.lastPathComponent),
+        configuration: configuration,
+        summary: &summary
+      )
     }
   }
 
@@ -633,10 +640,9 @@ final class NotinhasIdentityMigrationService {
 
   private func migratePreferences(configuration: Configuration) -> PreferencesMigrationSummary {
     var summary = PreferencesMigrationSummary()
-    let existingPreferences = configuration.userDefaults.dictionaryRepresentation()
+    var existingPreferences = configuration.userDefaults.dictionaryRepresentation()
 
-    for bundleIdentifier in NotinhasStoragePaths.legacyPreferenceBundleIdentifiers {
-      let sourcePreferencesURL = legacyPreferencesURL(configuration, bundleIdentifier: bundleIdentifier)
+    for sourcePreferencesURL in legacyPreferenceURLs(configuration) {
       guard
         configuration.fileManager.fileExists(atPath: sourcePreferencesURL.path),
         let sourcePreferences = NSDictionary(contentsOf: sourcePreferencesURL) as? [String: Any]
@@ -652,6 +658,7 @@ final class NotinhasIdentityMigrationService {
         }
 
         configuration.userDefaults.set(value, forKey: key)
+        existingPreferences[key] = value
         summary.importedKeys += 1
       }
     }
@@ -663,7 +670,7 @@ final class NotinhasIdentityMigrationService {
     return summary
   }
 
-  private func migrateKeychainItems(configuration: Configuration) -> Int {
+  private func migrateKeychainItems(configuration: Configuration) throws -> Int {
     var migratedCount = 0
 
     for item in CloudKeychainItem.allCases {
@@ -692,9 +699,7 @@ final class NotinhasIdentityMigrationService {
         migratedCount += 1
         identityMigrationLogger.info("Migrated keychain item: \(item.diagnosticName, privacy: .public)")
       } catch {
-        identityMigrationLogger.error(
-          "Keychain migration failed for \(item.diagnosticName, privacy: .public): \(error.localizedDescription, privacy: .public)"
-        )
+        throw error
       }
     }
 

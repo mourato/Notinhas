@@ -270,12 +270,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     case quit
   }
 
+  private func runNotinhasIdentityMigration() throws -> NotinhasIdentityMigrationResult {
+    guard Thread.isMainThread else {
+      return try NotinhasIdentityMigrationService.shared.runIfNeeded()
+    }
+
+    return try DispatchQueue.global(qos: .userInitiated).sync {
+      try NotinhasIdentityMigrationService.shared.runIfNeeded()
+    }
+  }
+
   private func ensureNotinhasIdentityMigrationReadyForLaunch() -> Bool {
     var note: String?
 
     while true {
       do {
-        let result = try NotinhasIdentityMigrationService.shared.runIfNeeded()
+        let result = try runNotinhasIdentityMigration()
         if result.didRun {
           DiagnosticLogger.shared.log(
             .info,
