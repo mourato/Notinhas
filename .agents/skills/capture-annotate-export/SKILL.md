@@ -15,6 +15,7 @@ Canonical owner for Notinhas visual-handoff behavior: capture an area, place num
 - Delegate menu-bar shell details to `menubar` / `macos-app-engineering`.
 - Delegate generic Swift style, concurrency, tests, and delivery commands to their skills.
 - Do **not** use this skill to grow broad screen recording, generic markup toolbelts, or unrelated cloud features unless the change directly serves the handoff loop.
+- Screen recording and Video Editor are **optional** upstream Snapzy features, gated at compile time (`NOTINHAS_VIDEO_MODULE`) and runtime (`VideoModuleAvailability` / `videoModule.enabled`, default off). Notinhas handoff work does not require them; see `delivery-workflow` for build/test with the Video module on.
 
 ## When to Use
 
