@@ -1,6 +1,6 @@
 import Foundation
-import XCTest
 @testable import Snapzy
+import XCTest
 
 final class ErrorPermissionDeniedTests: XCTestCase {
   func testCocoaReadPermissionError() {
