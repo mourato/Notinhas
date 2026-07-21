@@ -13,7 +13,7 @@ Start here to route work to the narrowest skill. For governance (where docs live
 
 | Skill | Owns | Reach for when… |
 |-------|------|-----------------|
-| `capture-annotate-export` | Visual handoff loop | *(planned — see `plans/011-capture-annotate-export-skill.md`)* |
+| `capture-annotate-export` | Visual handoff loop | Notinhas pins/notes, export composition, clipboard brief, ImgBB from annotate, scope questions |
 | `project-standards` | Guidance governance | Updating AGENTS, skill registry, docs routing, known limitations |
 | `delivery-workflow` | Build, test, format, signing | Merge gates, `./scripts/*`, manual smoke scope |
 | `documentation` | README, AGENTS, docs/, MARK | Project docs ownership and agent guide edits |
