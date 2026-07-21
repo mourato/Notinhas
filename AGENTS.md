@@ -46,6 +46,20 @@ Screen Recording and Accessibility permissions are required for affected
 manual checks. Test capture, annotation, clipboard output, and permission
 prompts on macOS whenever they change.
 
+### Optional Video Module
+
+Recording and Video Editor are optional. They compile only when
+`NOTINHAS_VIDEO_MODULE` is set (scheme **Snapzy Video** with **Debug+Video** /
+**Release+Video**). The default **Snapzy** scheme keeps the module off.
+`./scripts/build_and_run.sh` prompts interactively or accepts `--video-module`,
+`--no-video-module`, or `ENABLE_VIDEO_MODULE=1|0`. At runtime,
+`videoModule.enabled` defaults to off; when the module is compiled in, turn it
+on under **Preferences → Advanced** (`VideoModuleAvailability`). Notinhas
+capture → annotate → export does not require the Video module.
+`./scripts/run-tests.sh` uses the default **Snapzy** scheme, so
+Recording/VideoEditor XCTests are compiled out unless you run tests with the
+Video scheme and **Debug+Video** configuration.
+
 ## Code and Tests
 
 Use Swift 5.9 conventions: `UpperCamelCase` types, `lowerCamelCase` members,
