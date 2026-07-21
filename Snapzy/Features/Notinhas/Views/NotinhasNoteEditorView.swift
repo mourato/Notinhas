@@ -44,7 +44,7 @@ struct NotinhasNoteEditorView: View {
         areaStrokeWidthControl
       }
 
-      HStack {
+      HStack(spacing: 8) {
         Button(role: .destructive) { onDelete() } label: {
           Image(systemName: "trash")
         }
@@ -53,10 +53,21 @@ struct NotinhasNoteEditorView: View {
 
         Spacer()
 
-        Button(NotinhasL10n.cancel) { onCancel() }
-          .keyboardShortcut(.cancelAction)
-        Button(NotinhasL10n.save) { onCommit() }
-          .keyboardShortcut(.defaultAction)
+        HStack(spacing: 5) {
+          Button(NotinhasL10n.cancel) { onCancel() }
+            .keyboardShortcut(.cancelAction)
+            .help(L10n.Common.withShortcut(NotinhasL10n.cancel, "esc"))
+          KeyCapView(symbol: "esc", fontSize: 10)
+            .accessibilityHidden(true)
+        }
+
+        HStack(spacing: 5) {
+          Button(NotinhasL10n.save) { onCommit() }
+            .keyboardShortcut(.defaultAction)
+            .help(L10n.Common.withShortcut(NotinhasL10n.save, "⌘⏎"))
+          KeyCapGroupView(parts: ["⌘", "⏎"], fontSize: 10)
+            .accessibilityHidden(true)
+        }
       }
     }
     .padding(12)
