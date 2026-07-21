@@ -58,7 +58,7 @@ ${BOLD}Options:${NC}
   --derived-data PATH Build DerivedData path. Default: .build/xcode-derived-data
   --log-level LEVELS  default,info,debug,error,fault,all. Default: default,error,fault
   --clean             Clean before building
-  --verbose           Show full xcodebuild output
+  --verbose           Show full xcodebuild output (warnings, notes, progress)
   --help, -h          Show this help
 
 ${BOLD}Examples:${NC}
@@ -246,6 +246,29 @@ stop_app() {
   fi
 }
 
+filter_xcodebuild_output() {
+  local warning_count=0
+  local line
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    case "$line" in
+      *" error:"*|error:*|"clang: error:"*|*"ld: error:"*)
+        printf '%s\n' "$line"
+        ;;
+      *"warning:"*)
+        warning_count=$((warning_count + 1))
+        ;;
+      *"** BUILD FAILED **"*|*"** BUILD SUCCEEDED **"*)
+        printf '%s\n' "$line"
+        ;;
+    esac
+  done
+
+  if [[ "$warning_count" -gt 0 ]]; then
+    info "Build finished with $warning_count compiler warning(s). Re-run with --verbose to see them."
+  fi
+}
+
 run_xcodebuild() {
   local action="$1"
   local args=(
@@ -274,11 +297,28 @@ run_xcodebuild() {
     args+=('OTHER_SWIFT_FLAGS=$(inherited) -Xfrontend -disable-sil-perf-optzns')
   fi
 
+  args+=("$action")
+
   if [[ "$QUIET" -eq 1 ]]; then
     args+=(-quiet)
+    local build_log
+    build_log="$(mktemp "${TMPDIR:-/tmp}/snapzy-xcodebuild.XXXXXX.log")"
+
+    set +e
+    "${args[@]}" 2>&1 | tee "$build_log" | filter_xcodebuild_output
+    local exit_code=${PIPESTATUS[0]}
+    set -e
+
+    if [[ "$exit_code" -ne 0 ]]; then
+      cat "$build_log" >&2
+      rm -f "$build_log"
+      fail "xcodebuild $action failed with exit code $exit_code."
+    fi
+
+    rm -f "$build_log"
+    return 0
   fi
 
-  args+=("$action")
   "${args[@]}"
 }
 
