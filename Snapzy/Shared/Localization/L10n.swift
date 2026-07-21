@@ -103,7 +103,7 @@ nonisolated enum L10n {
     _ key: String,
     defaultValue: String,
     localeIdentifier: String,
-    comment: String
+    comment _: String
   ) -> String {
     let lookupBundle = bundle(for: localeIdentifier)
     return lookupBundle.localizedString(
@@ -207,6 +207,26 @@ nonisolated enum L10n {
       defaultValue: "Integration",
       comment: "Advanced preferences integration section title"
     )
+    static let optionalModulesSection = string(
+      "preferences-advanced.optional-modules-section",
+      defaultValue: "Optional modules",
+      comment: "Advanced preferences optional modules section title"
+    )
+    static let videoModuleTitle = string(
+      "preferences-advanced.video-module-title",
+      defaultValue: "Video module",
+      comment: "Advanced preferences video module toggle title"
+    )
+    static let videoModuleDescription = string(
+      "preferences-advanced.video-module-description",
+      defaultValue: "Enable screen recording and the video editor",
+      comment: "Advanced preferences video module toggle description"
+    )
+    static let videoModuleDisabledWhileRecording = string(
+      "preferences-advanced.video-module-disabled-while-recording",
+      defaultValue: "Stop the active recording before disabling the video module",
+      comment: "Help text when the video module toggle is disabled during recording"
+    )
     static let urlSchemeTitle = string(
       "preferences-advanced.url-scheme-title",
       defaultValue: "URL Scheme integration",
@@ -225,6 +245,7 @@ nonisolated enum L10n {
     static func logRetentionDescription(_ days: Int) -> String {
       PreferencesGeneral.logRetentionDescription(days)
     }
+
     static let openFolderButton = PreferencesGeneral.openFolderButton
     static let calculating = PreferencesGeneral.calculating
     static let noLogs = PreferencesGeneral.noLogs
@@ -346,6 +367,7 @@ nonisolated enum L10n {
         time
       )
     }
+
     static func configSyncSyncedDescription(_ time: String) -> String {
       format(
         "preferences-advanced.config-sync-synced-description",
@@ -354,6 +376,7 @@ nonisolated enum L10n {
         time
       )
     }
+
     static let configAccessWarningTitle = string(
       "preferences-advanced.config-access-warning-title",
       defaultValue: "Config folder access needed",
@@ -367,6 +390,7 @@ nonisolated enum L10n {
         path
       )
     }
+
     static let grantConfigAccessButton = string(
       "preferences-advanced.grant-config-access-button",
       defaultValue: "Grant Access",
@@ -470,6 +494,7 @@ nonisolated enum L10n {
         path
       )
     }
+
     static let configDirectoryPanelPrompt = string(
       "preferences-advanced.config-directory-panel-prompt",
       defaultValue: "Grant Access",
@@ -483,6 +508,7 @@ nonisolated enum L10n {
         path
       )
     }
+
     static func configDirectoryMismatch(_ path: String) -> String {
       format(
         "preferences-advanced.config-directory-mismatch",
@@ -491,6 +517,7 @@ nonisolated enum L10n {
         path
       )
     }
+
     static func exported(_ path: String) -> String {
       format(
         "preferences-advanced.exported",
@@ -499,6 +526,7 @@ nonisolated enum L10n {
         path
       )
     }
+
     static func openedConfig(_ path: String) -> String {
       format(
         "preferences-advanced.opened-config",
@@ -507,6 +535,7 @@ nonisolated enum L10n {
         path
       )
     }
+
     static func configAccessGranted(_ path: String) -> String {
       format(
         "preferences-advanced.config-access-granted",
@@ -515,6 +544,7 @@ nonisolated enum L10n {
         path
       )
     }
+
     static func openConfigMissing(_ path: String) -> String {
       format(
         "preferences-advanced.open-config-missing",
@@ -523,6 +553,7 @@ nonisolated enum L10n {
         path
       )
     }
+
     static func openConfigFailed(_ path: String) -> String {
       format(
         "preferences-advanced.open-config-failed",
@@ -531,6 +562,7 @@ nonisolated enum L10n {
         path
       )
     }
+
     static let exportFailed = string(
       "preferences-advanced.export-failed",
       defaultValue: "Config export failed.",
@@ -564,6 +596,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static func imported(_ count: Int) -> String {
       format(
         "preferences-advanced.imported",
@@ -572,6 +605,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static func importedWithWarnings(_ count: Int, _ warningCount: Int) -> String {
       format(
         "preferences-advanced.imported-with-warnings",
@@ -730,28 +764,81 @@ nonisolated enum L10n {
 
   enum Combine {
     static let mode = string("combine.mode", defaultValue: "Combine mode", comment: "Label for combine mode picker")
-    static let autoStitch = string("combine.auto-stitch", defaultValue: "Auto Stitch", comment: "Automatic image stitching mode")
-    static let freeCanvas = string("combine.free-canvas", defaultValue: "Free Canvas", comment: "Free image arrangement mode")
-    static let arrangement = string("combine.arrangement", defaultValue: "Arrangement", comment: "Combine arrangement section title")
+    static let autoStitch = string(
+      "combine.auto-stitch",
+      defaultValue: "Auto Stitch",
+      comment: "Automatic image stitching mode"
+    )
+    static let freeCanvas = string(
+      "combine.free-canvas",
+      defaultValue: "Free Canvas",
+      comment: "Free image arrangement mode"
+    )
+    static let arrangement = string(
+      "combine.arrangement",
+      defaultValue: "Arrangement",
+      comment: "Combine arrangement section title"
+    )
     static let spacing = string("combine.spacing", defaultValue: "Spacing", comment: "Combine spacing section title")
     static let imageGap = string("combine.image-gap", defaultValue: "Image Gap", comment: "Gap between combined images")
     static let images = string("combine.images", defaultValue: "Images", comment: "Combined image list title")
     static func image(_ index: Int) -> String {
       format("combine.image-index", defaultValue: "Image %d", comment: "Combined image list item", index)
     }
-    static let moveEarlier = string("combine.move-earlier", defaultValue: "Move Earlier", comment: "Move combined image earlier")
-    static let moveLater = string("combine.move-later", defaultValue: "Move Later", comment: "Move combined image later")
+
+    static let moveEarlier = string(
+      "combine.move-earlier",
+      defaultValue: "Move Earlier",
+      comment: "Move combined image earlier"
+    )
+    static let moveLater = string(
+      "combine.move-later",
+      defaultValue: "Move Later",
+      comment: "Move combined image later"
+    )
     static let smart = string("combine.smart", defaultValue: "Smart", comment: "Smart combine direction")
-    static let horizontal = string("combine.horizontal", defaultValue: "Horizontal", comment: "Horizontal combine direction")
+    static let horizontal = string(
+      "combine.horizontal",
+      defaultValue: "Horizontal",
+      comment: "Horizontal combine direction"
+    )
     static let vertical = string("combine.vertical", defaultValue: "Vertical", comment: "Vertical combine direction")
     static let open = string("combine.open", defaultValue: "Combine Images", comment: "Open combine images action")
-    static let pickerTitle = string("combine.picker-title", defaultValue: "Choose Images to Combine", comment: "Combine image picker title")
-    static let pickerMessage = string("combine.picker-message", defaultValue: "Select two or more images.", comment: "Combine image picker message")
-    static let pickerConfirm = string("combine.picker-confirm", defaultValue: "Combine", comment: "Combine image picker confirmation")
-    static let saveTitle = string("combine.save-title", defaultValue: "Save Combined Image", comment: "Combine save dialog title")
-    static let saveMessage = string("combine.save-message", defaultValue: "Choose how to export the stitched result.", comment: "Combine save dialog message")
-    static let saveToFile = string("combine.save-to-file", defaultValue: "Save to File…", comment: "Save combined image to file")
-    static let copyToClipboard = string("combine.copy-to-clipboard", defaultValue: "Copy to Clipboard", comment: "Copy combined image to clipboard")
+    static let pickerTitle = string(
+      "combine.picker-title",
+      defaultValue: "Choose Images to Combine",
+      comment: "Combine image picker title"
+    )
+    static let pickerMessage = string(
+      "combine.picker-message",
+      defaultValue: "Select two or more images.",
+      comment: "Combine image picker message"
+    )
+    static let pickerConfirm = string(
+      "combine.picker-confirm",
+      defaultValue: "Combine",
+      comment: "Combine image picker confirmation"
+    )
+    static let saveTitle = string(
+      "combine.save-title",
+      defaultValue: "Save Combined Image",
+      comment: "Combine save dialog title"
+    )
+    static let saveMessage = string(
+      "combine.save-message",
+      defaultValue: "Choose how to export the stitched result.",
+      comment: "Combine save dialog message"
+    )
+    static let saveToFile = string(
+      "combine.save-to-file",
+      defaultValue: "Save to File…",
+      comment: "Save combined image to file"
+    )
+    static let copyToClipboard = string(
+      "combine.copy-to-clipboard",
+      defaultValue: "Copy to Clipboard",
+      comment: "Copy combined image to clipboard"
+    )
   }
 
   enum Common {
@@ -1350,6 +1437,7 @@ nonisolated enum L10n {
         languageName
       )
     }
+
     static let languageApplyLater = string(
       "onboarding.language.apply-later",
       defaultValue: "Continue and Apply on Finish",
@@ -1718,6 +1806,7 @@ nonisolated enum L10n {
         shortcut
       )
     }
+
     static func applicationRecording(_ shortcut: String) -> String {
       format(
         "shortcut-overlay.application-recording",
@@ -1726,6 +1815,7 @@ nonisolated enum L10n {
         shortcut
       )
     }
+
     static let saveDone = string(
       "shortcut-overlay.save-done",
       defaultValue: "Save (Done)",
@@ -2047,6 +2137,7 @@ nonisolated enum L10n {
         days
       )
     }
+
     static let openFolderButton = string(
       "preferences-general.open-folder-button",
       defaultValue: "Open Folder",
@@ -2070,6 +2161,7 @@ nonisolated enum L10n {
         destination
       )
     }
+
     static let restartOnboardingTitle = string(
       "preferences-general.restart-onboarding-title",
       defaultValue: "Restart Onboarding",
@@ -2108,6 +2200,7 @@ nonisolated enum L10n {
         folderName
       )
     }
+
     static let chooseSaveLocationMessage = string(
       "preferences-general.choose-save-location-message",
       defaultValue: "Choose where Snapzy saves captures",
@@ -2169,7 +2262,7 @@ nonisolated enum L10n {
       defaultValue: "Scale & Fade",
       comment: "Quick access animation style option"
     )
-    
+
     static let behaviorsSection = string(
       "preferences-quick-access.section-behaviors",
       defaultValue: "Behaviors",
@@ -2303,6 +2396,7 @@ nonisolated enum L10n {
         seconds
       )
     }
+
     static let keepOpenUntilDismissed = string(
       "preferences-quick-access.keep-open",
       defaultValue: "Keep overlay open until dismissed",
@@ -2677,6 +2771,7 @@ nonisolated enum L10n {
         preview
       )
     }
+
     static func recordingPreview(_ preview: String) -> String {
       format(
         "preferences-capture.recording-preview",
@@ -2685,6 +2780,7 @@ nonisolated enum L10n {
         preview
       )
     }
+
     static let resetNamingDefaults = string(
       "preferences-capture.reset-naming-defaults",
       defaultValue: "Reset Naming Defaults",
@@ -2763,6 +2859,7 @@ nonisolated enum L10n {
         pixels
       )
     }
+
     static let animationDurationTitle = string(
       "preferences-capture.animation-duration-title",
       defaultValue: "Animation Duration",
@@ -2776,6 +2873,7 @@ nonisolated enum L10n {
         seconds
       )
     }
+
     static let rippleCountTitle = string(
       "preferences-capture.ripple-count-title",
       defaultValue: "Ripple Count",
@@ -2809,6 +2907,7 @@ nonisolated enum L10n {
         percent
       )
     }
+
     static let fontSizeTitle = string(
       "preferences-capture.font-size-title",
       defaultValue: "Font Size",
@@ -2822,6 +2921,7 @@ nonisolated enum L10n {
         points
       )
     }
+
     static let positionTitle = string(
       "preferences-capture.position-title",
       defaultValue: "Position",
@@ -2845,6 +2945,7 @@ nonisolated enum L10n {
         seconds
       )
     }
+
     static let systemAudioTitle = string(
       "preferences-capture.system-audio-title",
       defaultValue: "System Audio",
@@ -3006,34 +3107,135 @@ nonisolated enum L10n {
         gestureHint
       )
     }
-    static let noteEditorTitle = string("annotate.notinhas.note-editor-title", defaultValue: "Note", comment: "Notinhas note editor title")
-    static let noteEditorPlaceholder = string("annotate.notinhas.note-editor-placeholder", defaultValue: "Describe the change...", comment: "Notinhas note editor placeholder")
+
+    static let noteEditorTitle = string(
+      "annotate.notinhas.note-editor-title",
+      defaultValue: "Note",
+      comment: "Notinhas note editor title"
+    )
+    static let noteEditorPlaceholder = string(
+      "annotate.notinhas.note-editor-placeholder",
+      defaultValue: "Describe the change...",
+      comment: "Notinhas note editor placeholder"
+    )
     static let save = string("annotate.notinhas.save", defaultValue: "Save", comment: "Save Notinhas note")
-    static let cancel = string("annotate.notinhas.cancel", defaultValue: "Cancel", comment: "Cancel Notinhas note editing")
-    static let sidePanelTitle = string("annotate.notinhas.side-panel-title", defaultValue: "Notes", comment: "Notinhas notes panel title")
-    static let sidePanelEmpty = string("annotate.notinhas.side-panel-empty", defaultValue: "No notes yet", comment: "Empty Notinhas notes panel")
-    static let emptyNoteLabel = string("annotate.notinhas.empty-note", defaultValue: "Empty note", comment: "Empty Notinhas note")
-    static let deleteNote = string("annotate.notinhas.delete-note", defaultValue: "Delete note", comment: "Delete Notinhas note")
-    static let noteEditorColorButton = string("annotate.notinhas.note-editor-color-button", defaultValue: "Note color", comment: "Notinhas note editor color button accessibility label")
-    static let pointTargetLabel = string("annotate.notinhas.point-target", defaultValue: "Point", comment: "Notinhas point target")
-    static let areaTargetLabel = string("annotate.notinhas.area-target", defaultValue: "Area", comment: "Notinhas area target")
-    static let areaStyleOutline = string("annotate.notinhas.area-style-outline", defaultValue: "Outline", comment: "Notinhas area outline style")
-    static let areaStyleTinted = string("annotate.notinhas.area-style-tinted", defaultValue: "Tinted", comment: "Notinhas area tinted style")
-    static let areaStyleHatched = string("annotate.notinhas.area-style-hatched", defaultValue: "Hatched", comment: "Notinhas area hatched style")
-    static let areaStylePicker = string("annotate.notinhas.area-style-picker", defaultValue: "Style", comment: "Notinhas area style picker")
-    static let settingsSection = string("annotate.notinhas.settings-section", defaultValue: "Notinhas", comment: "Notinhas settings section")
-    static let panelSideTitle = string("annotate.notinhas.panel-side-title", defaultValue: "Notes panel side", comment: "Notinhas export panel side setting")
-    static let panelSideDescription = string("annotate.notinhas.panel-side-description", defaultValue: "Choose where the exported notes panel appears.", comment: "Notinhas export panel side setting description")
+    static let cancel = string(
+      "annotate.notinhas.cancel",
+      defaultValue: "Cancel",
+      comment: "Cancel Notinhas note editing"
+    )
+    static let sidePanelTitle = string(
+      "annotate.notinhas.side-panel-title",
+      defaultValue: "Notes",
+      comment: "Notinhas notes panel title"
+    )
+    static let sidePanelEmpty = string(
+      "annotate.notinhas.side-panel-empty",
+      defaultValue: "No notes yet",
+      comment: "Empty Notinhas notes panel"
+    )
+    static let emptyNoteLabel = string(
+      "annotate.notinhas.empty-note",
+      defaultValue: "Empty note",
+      comment: "Empty Notinhas note"
+    )
+    static let deleteNote = string(
+      "annotate.notinhas.delete-note",
+      defaultValue: "Delete note",
+      comment: "Delete Notinhas note"
+    )
+    static let noteEditorColorButton = string(
+      "annotate.notinhas.note-editor-color-button",
+      defaultValue: "Note color",
+      comment: "Notinhas note editor color button accessibility label"
+    )
+    static let pointTargetLabel = string(
+      "annotate.notinhas.point-target",
+      defaultValue: "Point",
+      comment: "Notinhas point target"
+    )
+    static let areaTargetLabel = string(
+      "annotate.notinhas.area-target",
+      defaultValue: "Area",
+      comment: "Notinhas area target"
+    )
+    static let areaStyleOutline = string(
+      "annotate.notinhas.area-style-outline",
+      defaultValue: "Outline",
+      comment: "Notinhas area outline style"
+    )
+    static let areaStyleTinted = string(
+      "annotate.notinhas.area-style-tinted",
+      defaultValue: "Tinted",
+      comment: "Notinhas area tinted style"
+    )
+    static let areaStyleHatched = string(
+      "annotate.notinhas.area-style-hatched",
+      defaultValue: "Hatched",
+      comment: "Notinhas area hatched style"
+    )
+    static let areaStylePicker = string(
+      "annotate.notinhas.area-style-picker",
+      defaultValue: "Style",
+      comment: "Notinhas area style picker"
+    )
+    static let settingsSection = string(
+      "annotate.notinhas.settings-section",
+      defaultValue: "Notinhas",
+      comment: "Notinhas settings section"
+    )
+    static let panelSideTitle = string(
+      "annotate.notinhas.panel-side-title",
+      defaultValue: "Notes panel side",
+      comment: "Notinhas export panel side setting"
+    )
+    static let panelSideDescription = string(
+      "annotate.notinhas.panel-side-description",
+      defaultValue: "Choose where the exported notes panel appears.",
+      comment: "Notinhas export panel side setting description"
+    )
     static let left = string("annotate.notinhas.left", defaultValue: "Left", comment: "Notinhas left panel side")
     static let right = string("annotate.notinhas.right", defaultValue: "Right", comment: "Notinhas right panel side")
-    static let imgbbAPIKeyTitle = string("annotate.notinhas.imgbb-api-key-title", defaultValue: "ImgBB API Key", comment: "ImgBB API key setting title")
-    static let imgbbAPIKeyHelp = string("annotate.notinhas.imgbb-api-key-help", defaultValue: "Used for anonymous image uploads from Annotate.", comment: "ImgBB API key setting description")
-    static let imgbbAPIKeyPlaceholder = string("annotate.notinhas.imgbb-api-key-placeholder", defaultValue: "API Key", comment: "ImgBB API key input placeholder")
-    static let imgbbMissingAPIKey = string("annotate.notinhas.imgbb-missing-api-key", defaultValue: "Add an ImgBB API Key in Settings before uploading.", comment: "ImgBB missing API key error")
-    static let imgbbInvalidImageData = string("annotate.notinhas.imgbb-invalid-image-data", defaultValue: "Could not prepare the image for upload.", comment: "ImgBB invalid image error")
-    static let imgbbInvalidResponse = string("annotate.notinhas.imgbb-invalid-response", defaultValue: "ImgBB returned an unexpected response.", comment: "ImgBB invalid response error")
-    static let uploadToImgBB = string("annotate.notinhas.upload-to-imgbb", defaultValue: "Upload to ImgBB", comment: "Upload image to ImgBB")
-    static let imgbbUploadFailed = string("annotate.notinhas.imgbb-upload-failed", defaultValue: "ImgBB upload failed", comment: "ImgBB upload failure toast message")
+    static let imgbbAPIKeyTitle = string(
+      "annotate.notinhas.imgbb-api-key-title",
+      defaultValue: "ImgBB API Key",
+      comment: "ImgBB API key setting title"
+    )
+    static let imgbbAPIKeyHelp = string(
+      "annotate.notinhas.imgbb-api-key-help",
+      defaultValue: "Used for anonymous image uploads from Annotate.",
+      comment: "ImgBB API key setting description"
+    )
+    static let imgbbAPIKeyPlaceholder = string(
+      "annotate.notinhas.imgbb-api-key-placeholder",
+      defaultValue: "API Key",
+      comment: "ImgBB API key input placeholder"
+    )
+    static let imgbbMissingAPIKey = string(
+      "annotate.notinhas.imgbb-missing-api-key",
+      defaultValue: "Add an ImgBB API Key in Settings before uploading.",
+      comment: "ImgBB missing API key error"
+    )
+    static let imgbbInvalidImageData = string(
+      "annotate.notinhas.imgbb-invalid-image-data",
+      defaultValue: "Could not prepare the image for upload.",
+      comment: "ImgBB invalid image error"
+    )
+    static let imgbbInvalidResponse = string(
+      "annotate.notinhas.imgbb-invalid-response",
+      defaultValue: "ImgBB returned an unexpected response.",
+      comment: "ImgBB invalid response error"
+    )
+    static let uploadToImgBB = string(
+      "annotate.notinhas.upload-to-imgbb",
+      defaultValue: "Upload to ImgBB",
+      comment: "Upload image to ImgBB"
+    )
+    static let imgbbUploadFailed = string(
+      "annotate.notinhas.imgbb-upload-failed",
+      defaultValue: "ImgBB upload failed",
+      comment: "ImgBB upload failure toast message"
+    )
     static let imgbbUploading = string(
       "annotate.notinhas.imgbb-uploading",
       defaultValue: "Uploading to ImgBB…",
@@ -3044,13 +3246,41 @@ nonisolated enum L10n {
       defaultValue: "Uploaded to ImgBB and copied link",
       comment: "Success toast shown after an ImgBB upload copies the link to the clipboard"
     )
-    static let selected = string("annotate.notinhas.selected", defaultValue: "Selected", comment: "Selected color swatch accessibility value")
-    static let colorRed = string("annotate.notinhas.color-red", defaultValue: "Red", comment: "Notinhas palette color name")
-    static let colorOrange = string("annotate.notinhas.color-orange", defaultValue: "Orange", comment: "Notinhas palette color name")
-    static let colorBlue = string("annotate.notinhas.color-blue", defaultValue: "Blue", comment: "Notinhas palette color name")
-    static let colorGreen = string("annotate.notinhas.color-green", defaultValue: "Green", comment: "Notinhas palette color name")
-    static let colorPurple = string("annotate.notinhas.color-purple", defaultValue: "Purple", comment: "Notinhas palette color name")
-    static let colorBlack = string("annotate.notinhas.color-black", defaultValue: "Black", comment: "Notinhas palette color name")
+    static let selected = string(
+      "annotate.notinhas.selected",
+      defaultValue: "Selected",
+      comment: "Selected color swatch accessibility value"
+    )
+    static let colorRed = string(
+      "annotate.notinhas.color-red",
+      defaultValue: "Red",
+      comment: "Notinhas palette color name"
+    )
+    static let colorOrange = string(
+      "annotate.notinhas.color-orange",
+      defaultValue: "Orange",
+      comment: "Notinhas palette color name"
+    )
+    static let colorBlue = string(
+      "annotate.notinhas.color-blue",
+      defaultValue: "Blue",
+      comment: "Notinhas palette color name"
+    )
+    static let colorGreen = string(
+      "annotate.notinhas.color-green",
+      defaultValue: "Green",
+      comment: "Notinhas palette color name"
+    )
+    static let colorPurple = string(
+      "annotate.notinhas.color-purple",
+      defaultValue: "Purple",
+      comment: "Notinhas palette color name"
+    )
+    static let colorBlack = string(
+      "annotate.notinhas.color-black",
+      defaultValue: "Black",
+      comment: "Notinhas palette color name"
+    )
     static let areaStrokeWidthLabel = string(
       "annotate.notinhas.area-stroke-width",
       defaultValue: "Stroke",
@@ -3355,6 +3585,7 @@ nonisolated enum L10n {
         appVersion
       )
     }
+
     static let checkedLabel = string(
       "preferences-about.checked-label",
       defaultValue: "Checked",
@@ -3516,6 +3747,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static let clearAllHistory = string(
       "preferences-cloud-history.clear-all-history",
       defaultValue: "Clear all history",
@@ -3570,6 +3802,7 @@ nonisolated enum L10n {
         message
       )
     }
+
     static func someFilesCouldNotBeDeleted(_ message: String) -> String {
       format(
         "preferences-cloud-history.some-files-could-not-be-deleted",
@@ -3578,6 +3811,7 @@ nonisolated enum L10n {
         message
       )
     }
+
     static let expired = string(
       "preferences-cloud-history.expired",
       defaultValue: "Expired",
@@ -3728,6 +3962,7 @@ nonisolated enum L10n {
         bucket
       )
     }
+
     static func minimumPassphrase(_ count: Int) -> String {
       format(
         "cloud-transfer.minimum-passphrase",
@@ -3736,6 +3971,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static let confirmPassphrase = string(
       "cloud-transfer.confirm-passphrase",
       defaultValue: "Confirm Passphrase",
@@ -3759,6 +3995,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static let passphrasesDoNotMatch = string(
       "cloud-transfer.passphrases-do-not-match",
       defaultValue: "Passphrases do not match.",
@@ -3782,6 +4019,7 @@ nonisolated enum L10n {
         path
       )
     }
+
     static let importedCredentialsLoaded = string(
       "cloud-transfer.imported-credentials-loaded",
       defaultValue: "Imported credentials loaded. Review the values, then click Save & Test to apply them.",
@@ -3795,6 +4033,7 @@ nonisolated enum L10n {
         minimumLength
       )
     }
+
     static let invalidArchive = string(
       "cloud-transfer.error.invalid-archive",
       defaultValue: "The selected file is not a valid Snapzy cloud credential archive.",
@@ -3808,6 +4047,7 @@ nonisolated enum L10n {
         version
       )
     }
+
     static let unsupportedArchiveFormat = string(
       "cloud-transfer.error.unsupported-archive-format",
       defaultValue: "This archive uses an unsupported encryption format.",
@@ -3906,6 +4146,7 @@ nonisolated enum L10n {
         message
       )
     }
+
     static func networkError(_ message: String) -> String {
       format(
         "cloud-operation.network-error",
@@ -3914,6 +4155,7 @@ nonisolated enum L10n {
         message
       )
     }
+
     static func fileNotFound(_ fileName: String) -> String {
       format(
         "cloud-operation.file-not-found",
@@ -3922,6 +4164,7 @@ nonisolated enum L10n {
         fileName
       )
     }
+
     static func signingFailed(_ reason: String) -> String {
       format(
         "cloud-operation.signing-failed",
@@ -3930,6 +4173,7 @@ nonisolated enum L10n {
         reason
       )
     }
+
     static let invalidResponse = string(
       "cloud-operation.invalid-response",
       defaultValue: "Invalid response from cloud provider.",
@@ -3943,6 +4187,7 @@ nonisolated enum L10n {
         reason
       )
     }
+
     static let bucketValidationFailed = string(
       "cloud-operation.bucket-validation-failed",
       defaultValue: "Bucket validation failed",
@@ -3956,6 +4201,7 @@ nonisolated enum L10n {
         body
       )
     }
+
     static func getLifecycleConfigFailed(_ body: String) -> String {
       format(
         "cloud-operation.get-lifecycle-config-failed",
@@ -3964,6 +4210,7 @@ nonisolated enum L10n {
         body
       )
     }
+
     static func setLifecycleConfigFailed(_ body: String) -> String {
       format(
         "cloud-operation.set-lifecycle-config-failed",
@@ -3972,6 +4219,7 @@ nonisolated enum L10n {
         body
       )
     }
+
     static func deleteLifecycleConfigFailed(_ body: String) -> String {
       format(
         "cloud-operation.delete-lifecycle-config-failed",
@@ -3980,6 +4228,7 @@ nonisolated enum L10n {
         body
       )
     }
+
     static let failedToEncodeKeychainValue = string(
       "cloud-operation.failed-to-encode-keychain-value",
       defaultValue: "Failed to encode keychain value",
@@ -3993,6 +4242,7 @@ nonisolated enum L10n {
         status
       )
     }
+
     static func secItemAddFailed(_ status: Int) -> String {
       format(
         "cloud-operation.sec-item-add-failed",
@@ -4001,6 +4251,7 @@ nonisolated enum L10n {
         status
       )
     }
+
     static let invalidRequestURLOrMethod = string(
       "cloud-operation.invalid-request-url-or-method",
       defaultValue: "Invalid request URL or method",
@@ -4095,6 +4346,7 @@ nonisolated enum L10n {
         days
       )
     }
+
     static let freeTier = string(
       "cloud-usage.free-tier",
       defaultValue: "Free tier",
@@ -4174,6 +4426,7 @@ nonisolated enum L10n {
         bucket
       )
     }
+
     static let accessKey = string(
       "cloud-settings.access-key",
       defaultValue: "Access Key",
@@ -4247,6 +4500,7 @@ nonisolated enum L10n {
         email
       )
     }
+
     static let googleFolderSection = string(
       "cloud-settings.google-folder-section",
       defaultValue: "Google Drive Folder",
@@ -4355,6 +4609,7 @@ nonisolated enum L10n {
         attempts
       )
     }
+
     static let protectCredentialsTitle = string(
       "cloud-settings.protect-credentials-title",
       defaultValue: "Protect Your Cloud Credentials",
@@ -4408,6 +4663,7 @@ nonisolated enum L10n {
         minimumLength
       )
     }
+
     static func failedToSavePassword(_ message: String) -> String {
       format(
         "cloud-settings.failed-to-save-password",
@@ -4416,6 +4672,7 @@ nonisolated enum L10n {
         message
       )
     }
+
     static let transferSection = string(
       "cloud-settings.transfer-section",
       defaultValue: "Transfer",
@@ -4589,6 +4846,7 @@ nonisolated enum L10n {
         minimumLength
       )
     }
+
     static func lifecycleRuleFailed(_ message: String) -> String {
       format(
         "cloud-settings.lifecycle-rule-failed",
@@ -4597,6 +4855,7 @@ nonisolated enum L10n {
         message
       )
     }
+
     static func configurationSavedButPasswordSetupFailed(_ message: String) -> String {
       format(
         "cloud-settings.configuration-saved-password-setup-failed",
@@ -4646,6 +4905,7 @@ nonisolated enum L10n {
         shortcut
       )
     }
+
     static let modeAnnotate = string(
       "annotate.mode-annotate",
       defaultValue: "Annotate",
@@ -4744,6 +5004,7 @@ nonisolated enum L10n {
         filename
       )
     }
+
     static let backgroundCutoutTitle = string(
       "annotate.background-cutout-title",
       defaultValue: "Background Cutout",
@@ -4807,6 +5068,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static let backgroundRemovedClickToRestore = string(
       "annotate.background-removed-click-to-restore",
       defaultValue: "Background Removed (Click to restore)",
@@ -4985,6 +5247,7 @@ nonisolated enum L10n {
         presetName
       )
     }
+
     static let deletePresetTitle = string(
       "annotate.delete-preset-title",
       defaultValue: "Delete Preset",
@@ -4998,6 +5261,7 @@ nonisolated enum L10n {
         presetName
       )
     }
+
     static let presetNamePlaceholder = string(
       "annotate.preset-name-placeholder",
       defaultValue: "Preset name",
@@ -5354,6 +5618,7 @@ nonisolated enum L10n {
         message
       )
     }
+
     static let couldNotReadFile = string(
       "video-editor.could-not-read-file",
       defaultValue: "Could not read file",
@@ -5367,6 +5632,7 @@ nonisolated enum L10n {
         message
       )
     }
+
     static let fileNotFound = string(
       "video-editor.file-not-found",
       defaultValue: "File not found",
@@ -5670,6 +5936,7 @@ nonisolated enum L10n {
         filename
       )
     }
+
     static let replaceOriginal = string(
       "video-editor.replace-original",
       defaultValue: "Replace Original",
@@ -5693,6 +5960,7 @@ nonisolated enum L10n {
         filename
       )
     }
+
     static let saveGIFTitle = string(
       "video-editor.save-gif-title",
       defaultValue: "Save GIF",
@@ -5776,6 +6044,7 @@ nonisolated enum L10n {
         targetHeight
       )
     }
+
     static let resizingGIF = string(
       "video-editor.resizing-gif",
       defaultValue: "Resizing GIF...",
@@ -5824,6 +6093,7 @@ nonisolated enum L10n {
         details
       )
     }
+
     static func smallerFileSizeHint(_ reduction: Int) -> String {
       format(
         "video-editor.smaller-file-size-hint",
@@ -5832,6 +6102,7 @@ nonisolated enum L10n {
         reduction
       )
     }
+
     static let gifInfo = string(
       "video-editor.gif-info",
       defaultValue: "GIF Info",
@@ -5845,6 +6116,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static let keepOriginal = string(
       "video-editor.keep-original",
       defaultValue: "Keep Original",
@@ -5893,6 +6165,7 @@ nonisolated enum L10n {
         index
       )
     }
+
     static func additionalAudioTrackShort(_ index: Int) -> String {
       format(
         "video-editor.additional-audio-track-short",
@@ -5901,6 +6174,7 @@ nonisolated enum L10n {
         index
       )
     }
+
     static let videoDetails = string(
       "video-editor.video-details",
       defaultValue: "Video Details",
@@ -5950,6 +6224,7 @@ nonisolated enum L10n {
         height
       )
     }
+
     static let showVideoInfoHint = string(
       "video-editor.show-video-info-hint",
       defaultValue: "Show Video Info (I)",
@@ -6306,6 +6581,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static let captionStartCaptureToLockFirstFrame = string(
       "scrolling-capture.caption-start-capture-to-lock-first-frame",
       defaultValue: "Start Capture to lock the first frame",
@@ -6334,6 +6610,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static func framesStitchedHeightLimitReached(_ count: Int) -> String {
       format(
         "scrolling-capture.caption-frames-stitched-height-limit-reached",
@@ -6342,6 +6619,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static let captionLivePreviewRunning = string(
       "scrolling-capture.caption-live-preview-running",
       defaultValue: "Live preview running while Snapzy locks the stitched frame.",
@@ -6366,6 +6644,7 @@ nonisolated enum L10n {
         delta
       )
     }
+
     static func finalizingFramesLocked(_ count: Int) -> String {
       format(
         "scrolling-capture.caption-finalizing-frames-locked",
@@ -6374,6 +6653,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static func finalFrameLocked(_ count: Int, _ delta: Int) -> String {
       format(
         "scrolling-capture.caption-final-frame-locked",
@@ -6383,6 +6663,7 @@ nonisolated enum L10n {
         delta
       )
     }
+
     static let captionFinalizingCurrentResultNoNewContent = string(
       "scrolling-capture.caption-finalizing-current-result-no-new-content",
       defaultValue: "Finalizing current result • no new content",
@@ -6499,6 +6780,7 @@ nonisolated enum L10n {
         mode
       )
     }
+
     static let startRecordingHint = string(
       "recording-toolbar.start-recording-hint",
       defaultValue: "Begins screen recording with current settings",
@@ -6517,6 +6799,7 @@ nonisolated enum L10n {
         duration
       )
     }
+
     static let stopRecordingHint = string(
       "recording-toolbar.stop-recording-hint",
       defaultValue: "Stops and saves the recording",
@@ -6530,6 +6813,7 @@ nonisolated enum L10n {
         duration
       )
     }
+
     static let statusBarAccessibility = string(
       "recording-toolbar.status-bar-accessibility",
       defaultValue: "Recording status bar",
@@ -6714,6 +6998,7 @@ nonisolated enum L10n {
         message
       )
     }
+
     static func setupFailed(_ message: String) -> String {
       format(
         "recording.error.setup-failed",
@@ -6722,6 +7007,7 @@ nonisolated enum L10n {
         message
       )
     }
+
     static let failedToStartWriting = string(
       "recording.error.failed-to-start-writing",
       defaultValue: "Failed to start writing",
@@ -6760,6 +7046,7 @@ nonisolated enum L10n {
         message
       )
     }
+
     static let cancelled = string(
       "recording.error.cancelled",
       defaultValue: "Recording cancelled",
@@ -7047,6 +7334,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static let modifierShift = string(
       "recording-annotation.modifier-shift",
       defaultValue: "Shift (⇧)",
@@ -7126,6 +7414,7 @@ nonisolated enum L10n {
         message
       )
     }
+
     nonisolated static let webpEncodingFailed = string(
       "screen-capture.webp-encoding-failed",
       defaultValue: "WebP encoding failed",
@@ -7149,6 +7438,7 @@ nonisolated enum L10n {
         fileName
       )
     }
+
     nonisolated static let selectionOutsideDisplayBounds = string(
       "screen-capture.selection-outside-display-bounds",
       defaultValue: "The selected area is outside the display bounds",
@@ -7177,6 +7467,7 @@ nonisolated enum L10n {
         shortcut
       )
     }
+
     static func manualModeHint(_ shortcut: String) -> String {
       format(
         "screen-capture.manual-mode-hint",
@@ -7185,6 +7476,7 @@ nonisolated enum L10n {
         shortcut
       )
     }
+
     static func captureFailed(_ reason: String) -> String {
       format(
         "screen-capture.capture-failed",
@@ -7193,6 +7485,7 @@ nonisolated enum L10n {
         reason
       )
     }
+
     static func saveFailed(_ reason: String) -> String {
       format(
         "screen-capture.save-failed",
@@ -7201,6 +7494,7 @@ nonisolated enum L10n {
         reason
       )
     }
+
     static let cancelled = string(
       "screen-capture.cancelled",
       defaultValue: "Capture was cancelled",
@@ -7242,6 +7536,7 @@ nonisolated enum L10n {
         message
       )
     }
+
     static let linkDetectedTitle = string(
       "ocr.link-detected-title",
       defaultValue: "Link detected",
@@ -7255,6 +7550,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static func openLinkAccessibility(_ link: String) -> String {
       format(
         "ocr.open-link-accessibility",
@@ -7327,6 +7623,7 @@ nonisolated enum L10n {
         message
       )
     }
+
     static let imageConversionFailed = string(
       "foreground-cutout.image-conversion-failed",
       defaultValue: "Unable to convert cutout result to image.",
@@ -7500,6 +7797,7 @@ nonisolated enum L10n {
         outputHeight
       )
     }
+
     static let endReachedNoNewContent = string(
       "scrolling-capture-status.end-reached-no-new-content",
       defaultValue: "No new content detected. You're probably at the end of the scrollable content. Press Done to save.",
@@ -7528,6 +7826,7 @@ nonisolated enum L10n {
         maxHeight
       )
     }
+
     static let previewRefreshFailed = string(
       "scrolling-capture-status.preview-refresh-failed",
       defaultValue: "Preview refresh failed. You can Cancel and try again.",
@@ -7546,6 +7845,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static let finalizingNoNewContent = string(
       "scrolling-capture-status.finalizing-no-new-content",
       defaultValue: "No new content was detected. Snapzy is saving the current stitched result.",
@@ -7736,6 +8036,7 @@ nonisolated enum L10n {
         days
       )
     }
+
     static let keepForever = string(
       "preferences-history.keep-forever",
       defaultValue: "Keep captures forever",
@@ -7804,6 +8105,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static let selectAll = string(
       "preferences-history.select-all",
       defaultValue: "Select All",
@@ -7827,6 +8129,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static func deletedCaptures(_ count: Int) -> String {
       format(
         "preferences-history.deleted-captures",
@@ -7835,6 +8138,7 @@ nonisolated enum L10n {
         count
       )
     }
+
     static let uploadToCloud = string(
       "preferences-history.upload-to-cloud",
       defaultValue: "Upload to Cloud",
@@ -7897,6 +8201,7 @@ nonisolated enum L10n {
       comment: "History background style option"
     )
   }
+
   enum WhatsNew {
     static let title = string(
       "whats-new.title",
@@ -7911,6 +8216,7 @@ nonisolated enum L10n {
         version
       )
     }
+
     static let notarizationTitle = string(
       "whats-new.notarization.title",
       defaultValue: "Apple Notarization",

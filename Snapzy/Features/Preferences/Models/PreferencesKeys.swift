@@ -35,7 +35,7 @@ enum PreferencesKeys {
   /// Appearance
   static let appearanceMode = "appearanceMode"
 
-  // Updates
+  /// Updates
   static let updateChannel = "updates.channel"
 
   // Shortcuts
@@ -118,6 +118,7 @@ enum PreferencesKeys {
   static let recordingShowTimeOnMenuBar = "recording.showTimeOnMenuBar"
   static let recordingHoverBarFrameOrigin = "recording.hoverBarFrameOrigin"
   static let videoEditorZoomTransitionDuration = "videoEditor.zoom.transitionDuration"
+  static let videoModuleEnabled = "videoModule.enabled"
 
   // Mouse Highlight Customization
   static let mouseHighlightSize = "recording.mouseHighlight.size"
