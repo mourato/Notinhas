@@ -2997,6 +2997,15 @@ nonisolated enum L10n {
       defaultValue: "Click to pin · Drag for area",
       comment: "Tooltip hint explaining the Notinhas note tool: a click places a numbered pin, a drag creates an area rectangle"
     )
+    static func noteToolTooltip(title: String, gestureHint: String) -> String {
+      L10n.format(
+        "annotate.notinhas.note-tool-tooltip",
+        defaultValue: "%@ · %@",
+        comment: "Notinhas note tool tooltip. First %@ is the tool title (optionally with shortcut), second %@ is the click/drag gesture hint.",
+        title,
+        gestureHint
+      )
+    }
     static let noteEditorTitle = string("annotate.notinhas.note-editor-title", defaultValue: "Note", comment: "Notinhas note editor title")
     static let noteEditorPlaceholder = string("annotate.notinhas.note-editor-placeholder", defaultValue: "Describe the change...", comment: "Notinhas note editor placeholder")
     static let save = string("annotate.notinhas.save", defaultValue: "Save", comment: "Save Notinhas note")
@@ -3024,7 +3033,7 @@ nonisolated enum L10n {
     static let imgbbInvalidImageData = string("annotate.notinhas.imgbb-invalid-image-data", defaultValue: "Could not prepare the image for upload.", comment: "ImgBB invalid image error")
     static let imgbbInvalidResponse = string("annotate.notinhas.imgbb-invalid-response", defaultValue: "ImgBB returned an unexpected response.", comment: "ImgBB invalid response error")
     static let uploadToImgBB = string("annotate.notinhas.upload-to-imgbb", defaultValue: "Upload to ImgBB", comment: "Upload image to ImgBB")
-    static let imgbbUploadFailed = string("annotate.notinhas.imgbb-upload-failed", defaultValue: "ImgBB upload failed", comment: "ImgBB upload failure alert title")
+    static let imgbbUploadFailed = string("annotate.notinhas.imgbb-upload-failed", defaultValue: "ImgBB upload failed", comment: "ImgBB upload failure toast message")
     static let imgbbUploading = string(
       "annotate.notinhas.imgbb-uploading",
       defaultValue: "Uploading to ImgBB…",

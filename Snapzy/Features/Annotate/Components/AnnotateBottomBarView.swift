@@ -50,7 +50,8 @@ struct AnnotateBottomBarView: View {
 
   @State private var isCloudUploading = false
   @State private var isImgBBUploading = false
-  @State private var lastImgBBURL: String?
+  /// Observed so Preferences → ImgBB key writes re-enable the button without reopening Annotate.
+  @AppStorage(PreferencesKeys.notinhasImgBBAPIKey) private var imgbbAPIKeyStorage = ""
   private let imgbbUploadCoordinator = NotinhasUploadCoordinator()
   @State private var cloudUploadProgress: Double = 0
   @State private var cloudUploadError: String?
@@ -358,7 +359,8 @@ struct AnnotateBottomBarView: View {
   }
 
   private var isImgBBConfigured: Bool {
-    NotinhasImgBBConfiguration.apiKey != nil
+    _ = imgbbAPIKeyStorage
+    return NotinhasImgBBConfiguration.apiKey != nil
   }
 
   private var annotateActionButtons: some View {
@@ -557,7 +559,6 @@ struct AnnotateBottomBarView: View {
         apiKey: apiKey
       )
       if let link {
-        lastImgBBURL = link
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.setString(link, forType: .string)

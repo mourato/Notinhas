@@ -44,28 +44,25 @@ struct NotinhasNoteEditorView: View {
         areaStrokeWidthControl
       }
 
-      HStack(spacing: 8) {
+      HStack(spacing: 6) {
         Button(role: .destructive) { onDelete() } label: {
           Image(systemName: "trash")
         }
         .help(NotinhasL10n.deleteNote)
         .accessibilityLabel(NotinhasL10n.deleteNote)
 
-        Spacer()
+        Spacer(minLength: 4)
 
-        HStack(spacing: 5) {
-          Button(NotinhasL10n.cancel) { onCancel() }
-            .keyboardShortcut(.cancelAction)
-            .help(L10n.Common.withShortcut(NotinhasL10n.cancel, "esc"))
-          KeyCapView(symbol: "esc", fontSize: 10)
-            .accessibilityHidden(true)
-        }
+        Button(NotinhasL10n.cancel) { onCancel() }
+          .keyboardShortcut(.cancelAction)
+          .help(L10n.Common.withShortcut(NotinhasL10n.cancel, "esc"))
 
-        HStack(spacing: 5) {
+        HStack(spacing: 4) {
           Button(NotinhasL10n.save) { onCommit() }
             .keyboardShortcut(.defaultAction)
             .help(L10n.Common.withShortcut(NotinhasL10n.save, "⌘⏎"))
-          KeyCapGroupView(parts: ["⌘", "⏎"], fontSize: 10)
+          // Compact keycap only on Save — Cancel keeps esc in the tooltip to avoid footer clip.
+          KeyCapGroupView(parts: ["⌘", "⏎"], fontSize: 9)
             .accessibilityHidden(true)
         }
       }

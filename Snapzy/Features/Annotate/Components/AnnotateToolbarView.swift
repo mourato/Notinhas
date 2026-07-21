@@ -59,7 +59,11 @@ struct AnnotateToolbarView: View {
       L10n.AnnotateUI.backgroundCutoutTitle,
       isPresented: Binding(
         get: { state.cutoutErrorMessage != nil },
-        set: { if !$0 { state.cutoutErrorMessage = nil } }
+        set: {
+          if !$0 {
+            state.cutoutErrorMessage = nil
+          }
+        }
       )
     ) {
       Button(L10n.Common.ok, role: .cancel) {}
@@ -134,26 +138,17 @@ struct AnnotateToolbarView: View {
   }
 
   private var notinhasNoteButton: some View {
-    ToolbarButton(
-      icon: AnnotationToolType.notinhasNote.icon,
-      isSelected: state.selectedTool == .notinhasNote
-    ) {
-      state.activateTool(.notinhasNote)
-    }
-    .help(notinhasNoteTooltip)
-    .disabled(state.editorMode == .mockup)
-    .opacity(state.editorMode == .mockup ? 0.4 : 1)
+    annotationToolButton(for: .notinhasNote, help: notinhasNoteTooltip)
   }
 
   private var notinhasNoteTooltip: String {
-    let base: String
-    if annotateShortcutManager.isShortcutEnabled(for: .notinhasNote),
-       let key = annotateShortcutManager.shortcut(for: .notinhasNote) {
-      base = L10n.Common.withShortcut(NotinhasL10n.noteTool, String(key).uppercased())
+    let title: String = if annotateShortcutManager.isShortcutEnabled(for: .notinhasNote),
+                           let key = annotateShortcutManager.shortcut(for: .notinhasNote) {
+      L10n.Common.withShortcut(NotinhasL10n.noteTool, String(key).uppercased())
     } else {
-      base = NotinhasL10n.noteTool
+      NotinhasL10n.noteTool
     }
-    return "\(base) · \(NotinhasL10n.noteToolGestureHint)"
+    return NotinhasL10n.noteToolTooltip(title: title)
   }
 
   private var backgroundCutoutButton: some View {
@@ -177,15 +172,14 @@ struct AnnotateToolbarView: View {
     )
   }
 
-  @ViewBuilder
-  private func annotationToolButton(for tool: AnnotationToolType) -> some View {
+  private func annotationToolButton(for tool: AnnotationToolType, help: String? = nil) -> some View {
     ToolbarButton(
       icon: tool.icon,
       isSelected: state.selectedTool == tool
     ) {
       state.activateTool(tool)
     }
-    .help(tool.displayName)
+    .help(help ?? tool.displayName)
     .disabled(state.editorMode == .mockup && tool != .selection)
     .opacity(state.editorMode == .mockup && tool != .selection ? 0.4 : 1)
   }
@@ -209,7 +203,7 @@ struct AnnotateToolbarView: View {
   }
 
   private var activeActionRegistration: AnnotateToolbarActionRegistration {
-    if state.selectedTool == .crop && state.isCropActive {
+    if state.selectedTool == .crop, state.isCropActive {
       return .crop
     }
 
