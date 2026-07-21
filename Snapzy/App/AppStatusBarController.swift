@@ -7,7 +7,6 @@
 
 import AppKit
 import Combine
-import Sparkle
 import SwiftUI
 
 @MainActor
@@ -25,11 +24,9 @@ final class AppStatusBarController: ObservableObject {
   #endif
   private lazy var idleStatusImage = makeIdleStatusImage()
   private var menu: NSMenu?
-  private var didDetectCrash = false
 
-  // Dependencies injected after setup
+  /// Dependencies injected after setup
   private var viewModel: ScreenCaptureViewModel?
-  private var updater: SPUUpdater?
 
   var screenCaptureViewModel: ScreenCaptureViewModel? {
     viewModel
@@ -50,10 +47,8 @@ final class AppStatusBarController: ObservableObject {
   // MARK: - Public API
 
   /// Setup the status bar item with required dependencies
-  func setup(viewModel: ScreenCaptureViewModel, updater: SPUUpdater, didCrash: Bool = false) {
+  func setup(viewModel: ScreenCaptureViewModel) {
     self.viewModel = viewModel
-    self.updater = updater
-    didDetectCrash = didCrash
 
     syncStatusItemVisibility()
     buildMenu()
@@ -61,12 +56,7 @@ final class AppStatusBarController: ObservableObject {
 
     // Pre-allocate area selection windows for instant activation (<150ms)
     AreaSelectionController.shared.prepareWindowPool()
-    DiagnosticLogger.shared.log(
-      .info,
-      .ui,
-      "Status bar item initialized",
-      context: ["previousCrashPrompt": didCrash ? "true" : "false"]
-    )
+    DiagnosticLogger.shared.log(.info, .ui, "Status bar item initialized")
   }
 
   func stopRecording() {
@@ -203,183 +193,183 @@ final class AppStatusBarController: ObservableObject {
   // MARK: - Recording UI Preferences
 
   #if NOTINHAS_VIDEO_MODULE
-  /// Whether the floating recording controls bar is shown during recording.
-  /// When hidden, the menu bar becomes the primary stop control (macOS ⌘⇧5 parity).
-  /// Shared source of truth with `RecordingCoordinator` via `RecordingToolbarPreferences`.
-  private var isHoverBarVisible: Bool {
-    RecordingToolbarPreferences.hoverBarVisible()
-  }
-
-  /// Whether the elapsed recording time is shown next to the menu bar icon. Defaults to `true`.
-  private var showsRecordingTimeOnMenuBar: Bool {
-    RecordingToolbarPreferences.showTimeOnMenuBar()
-  }
-
-  /// True while the menu bar item acts as the direct stop control
-  /// (recording/paused AND the hover bar is hidden).
-  private var isMenuBarActingAsStopControl: Bool {
-    guard isVideoModuleEnabled || recorder.state == .recording || recorder.state == .paused else {
-      return false
+    /// Whether the floating recording controls bar is shown during recording.
+    /// When hidden, the menu bar becomes the primary stop control (macOS ⌘⇧5 parity).
+    /// Shared source of truth with `RecordingCoordinator` via `RecordingToolbarPreferences`.
+    private var isHoverBarVisible: Bool {
+      RecordingToolbarPreferences.hoverBarVisible()
     }
-    return (recorder.state == .recording || recorder.state == .paused) && !isHoverBarVisible
-  }
 
-  private var isVideoModuleEnabled: Bool {
-    VideoModuleAvailability.isEnabled
-  }
+    /// Whether the elapsed recording time is shown next to the menu bar icon. Defaults to `true`.
+    private var showsRecordingTimeOnMenuBar: Bool {
+      RecordingToolbarPreferences.showTimeOnMenuBar()
+    }
 
-  // MARK: - State Observation
-
-  private func observeRecordingState() {
-    NotificationCenter.default.publisher(for: .videoModuleAvailabilityDidChange)
-      .receive(on: RunLoop.main)
-      .sink { [weak self] _ in
-        self?.syncRecordingStateObservation()
+    /// True while the menu bar item acts as the direct stop control
+    /// (recording/paused AND the hover bar is hidden).
+    private var isMenuBarActingAsStopControl: Bool {
+      guard isVideoModuleEnabled || recorder.state == .recording || recorder.state == .paused else {
+        return false
       }
-      .store(in: &cancellables)
-
-    syncRecordingStateObservation()
-  }
-
-  private func syncRecordingStateObservation() {
-    recordingStateCancellables.removeAll()
-
-    let isRecordingActive = recorder.state == .recording || recorder.state == .paused
-    guard isVideoModuleEnabled || isRecordingActive else {
-      renderStatusItem()
-      return
+      return (recorder.state == .recording || recorder.state == .paused) && !isHoverBarVisible
     }
 
-    recorder.$state
-      .receive(on: RunLoop.main)
-      .sink { [weak self] _ in
-        self?.renderStatusItem()
-        self?.syncTrackedPreferencesWindowExclusion()
+    private var isVideoModuleEnabled: Bool {
+      VideoModuleAvailability.isEnabled
+    }
+
+    // MARK: - State Observation
+
+    private func observeRecordingState() {
+      NotificationCenter.default.publisher(for: .videoModuleAvailabilityDidChange)
+        .receive(on: RunLoop.main)
+        .sink { [weak self] _ in
+          self?.syncRecordingStateObservation()
+        }
+        .store(in: &cancellables)
+
+      syncRecordingStateObservation()
+    }
+
+    private func syncRecordingStateObservation() {
+      recordingStateCancellables.removeAll()
+
+      let isRecordingActive = recorder.state == .recording || recorder.state == .paused
+      guard isVideoModuleEnabled || isRecordingActive else {
+        renderStatusItem()
+        return
       }
-      .store(in: &recordingStateCancellables)
 
-    recorder.$elapsedSeconds
-      .receive(on: RunLoop.main)
-      .sink { [weak self] _ in
-        self?.renderStatusItem()
+      recorder.$state
+        .receive(on: RunLoop.main)
+        .sink { [weak self] _ in
+          self?.renderStatusItem()
+          self?.syncTrackedPreferencesWindowExclusion()
+        }
+        .store(in: &recordingStateCancellables)
+
+      recorder.$elapsedSeconds
+        .receive(on: RunLoop.main)
+        .sink { [weak self] _ in
+          self?.renderStatusItem()
+        }
+        .store(in: &recordingStateCancellables)
+
+      // Re-render when recording UI preferences change (e.g. toggled in Settings mid-recording).
+      NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+        .receive(on: RunLoop.main)
+        .sink { [weak self] _ in
+          self?.renderStatusItem()
+        }
+        .store(in: &recordingStateCancellables)
+    }
+
+    private func renderStatusItem() {
+      guard let button = statusItem?.button else { return }
+      // When the hover bar is hidden during recording, the menu bar item becomes the stop
+      // control and shows a distinct stop glyph (macOS ⌘⇧5 parity). Otherwise use the app icon.
+      button.image = isMenuBarActingAsStopControl ? (recordingStopImage ?? idleStatusImage) : idleStatusImage
+      button.contentTintColor = nil
+      button.attributedTitle = statusItemAttributedTitle(for: recorder.state)
+      button.toolTip = statusItemTooltip(for: recorder.state)
+    }
+
+    /// Pure decision for the menu bar title text. Empty when the time display is off or there is
+    /// nothing to show. Extracted for deterministic testing of the optional-time gating.
+    nonisolated static func menuBarTitleString(
+      for state: RecordingState,
+      duration: String,
+      showTime: Bool
+    ) -> String {
+      guard showTime else { return "" }
+      switch state {
+      case .recording:
+        return duration
+      case .paused:
+        return "|| \(duration)"
+      case .idle, .preparing, .stopping:
+        return ""
       }
-      .store(in: &recordingStateCancellables)
+    }
 
-    // Re-render when recording UI preferences change (e.g. toggled in Settings mid-recording).
-    NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
-      .receive(on: RunLoop.main)
-      .sink { [weak self] _ in
-        self?.renderStatusItem()
+    private func statusItemAttributedTitle(for state: RecordingState) -> NSAttributedString {
+      guard isVideoModuleEnabled else {
+        return NSAttributedString(string: "")
       }
-      .store(in: &recordingStateCancellables)
-  }
 
-  private func renderStatusItem() {
-    guard let button = statusItem?.button else { return }
-    // When the hover bar is hidden during recording, the menu bar item becomes the stop
-    // control and shows a distinct stop glyph (macOS ⌘⇧5 parity). Otherwise use the app icon.
-    button.image = isMenuBarActingAsStopControl ? (recordingStopImage ?? idleStatusImage) : idleStatusImage
-    button.contentTintColor = nil
-    button.attributedTitle = statusItemAttributedTitle(for: recorder.state)
-    button.toolTip = statusItemTooltip(for: recorder.state)
-  }
+      let title = Self.menuBarTitleString(
+        for: state,
+        duration: recorder.formattedDuration,
+        showTime: showsRecordingTimeOnMenuBar
+      )
 
-  /// Pure decision for the menu bar title text. Empty when the time display is off or there is
-  /// nothing to show. Extracted for deterministic testing of the optional-time gating.
-  nonisolated static func menuBarTitleString(
-    for state: RecordingState,
-    duration: String,
-    showTime: Bool
-  ) -> String {
-    guard showTime else { return "" }
-    switch state {
-    case .recording:
-      return duration
-    case .paused:
-      return "|| \(duration)"
-    case .idle, .preparing, .stopping:
-      return ""
-    }
-  }
+      guard !title.isEmpty else {
+        return NSAttributedString(string: "")
+      }
 
-  private func statusItemAttributedTitle(for state: RecordingState) -> NSAttributedString {
-    guard isVideoModuleEnabled else {
-      return NSAttributedString(string: "")
+      let menuBarFont = NSFont.menuBarFont(ofSize: 0)
+      let monospacedDigitsFont = NSFont.monospacedDigitSystemFont(
+        ofSize: menuBarFont.pointSize,
+        weight: .regular
+      )
+
+      return NSAttributedString(
+        string: title,
+        attributes: [
+          .font: monospacedDigitsFont,
+          .foregroundColor: NSColor.labelColor,
+        ]
+      )
     }
 
-    let title = Self.menuBarTitleString(
-      for: state,
-      duration: recorder.formattedDuration,
-      showTime: showsRecordingTimeOnMenuBar
-    )
-
-    guard !title.isEmpty else {
-      return NSAttributedString(string: "")
+    private func statusItemTooltip(for state: RecordingState) -> String {
+      // When the menu bar is the stop control, tell the user a click stops the recording.
+      if isMenuBarActingAsStopControl {
+        return L10n.RecordingToolbar.clickToStop(recorder.formattedDuration)
+      }
+      guard isVideoModuleEnabled else { return "Snapzy" }
+      switch state {
+      case .recording:
+        return "\(L10n.RecordingToolbar.recordingInProgress) (\(recorder.formattedDuration))"
+      case .paused:
+        return "\(L10n.RecordingToolbar.recordingPaused) (\(recorder.formattedDuration))"
+      case .preparing:
+        return "Snapzy"
+      case .stopping:
+        return "Snapzy"
+      case .idle:
+        return "Snapzy"
+      }
     }
 
-    let menuBarFont = NSFont.menuBarFont(ofSize: 0)
-    let monospacedDigitsFont = NSFont.monospacedDigitSystemFont(
-      ofSize: menuBarFont.pointSize,
-      weight: .regular
-    )
-
-    return NSAttributedString(
-      string: title,
-      attributes: [
-        .font: monospacedDigitsFont,
-        .foregroundColor: NSColor.labelColor,
-      ]
-    )
-  }
-
-  private func statusItemTooltip(for state: RecordingState) -> String {
-    // When the menu bar is the stop control, tell the user a click stops the recording.
-    if isMenuBarActingAsStopControl {
-      return L10n.RecordingToolbar.clickToStop(recorder.formattedDuration)
+    private func makeRecordingStopImage() -> NSImage? {
+      let config = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
+      // Actionable a11y cue matching the icon's behavior (a click stops the recording).
+      let image = NSImage(
+        systemSymbolName: "stop.circle.fill",
+        accessibilityDescription: L10n.RecordingToolbar.stopRecordingHint
+      )?.withSymbolConfiguration(config)
+      image?.isTemplate = true
+      return image
     }
-    guard isVideoModuleEnabled else { return "Snapzy" }
-    switch state {
-    case .recording:
-      return "\(L10n.RecordingToolbar.recordingInProgress) (\(recorder.formattedDuration))"
-    case .paused:
-      return "\(L10n.RecordingToolbar.recordingPaused) (\(recorder.formattedDuration))"
-    case .preparing:
-      return "Snapzy"
-    case .stopping:
-      return "Snapzy"
-    case .idle:
-      return "Snapzy"
-    }
-  }
-
-  private func makeRecordingStopImage() -> NSImage? {
-    let config = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
-    // Actionable a11y cue matching the icon's behavior (a click stops the recording).
-    let image = NSImage(
-      systemSymbolName: "stop.circle.fill",
-      accessibilityDescription: L10n.RecordingToolbar.stopRecordingHint
-    )?.withSymbolConfiguration(config)
-    image?.isTemplate = true
-    return image
-  }
   #else
-  private var isVideoModuleEnabled: Bool {
-    false
-  }
+    private var isVideoModuleEnabled: Bool {
+      false
+    }
 
-  private func observeRecordingState() {}
+    private func observeRecordingState() {}
 
-  private func syncRecordingStateObservation() {
-    renderStatusItem()
-  }
+    private func syncRecordingStateObservation() {
+      renderStatusItem()
+    }
 
-  private func renderStatusItem() {
-    guard let button = statusItem?.button else { return }
-    button.image = idleStatusImage
-    button.contentTintColor = nil
-    button.attributedTitle = NSAttributedString(string: "")
-    button.toolTip = "Snapzy"
-  }
+    private func renderStatusItem() {
+      guard let button = statusItem?.button else { return }
+      button.image = idleStatusImage
+      button.contentTintColor = nil
+      button.attributedTitle = NSAttributedString(string: "")
+      button.toolTip = "Snapzy"
+    }
   #endif
 
   private func makeIdleStatusImage() -> NSImage? {
@@ -429,31 +419,31 @@ final class AppStatusBarController: ObservableObject {
     // Recording status indicator (when recording)
     #if NOTINHAS_VIDEO_MODULE
       if recorder.state == .recording || recorder.state == .paused {
-      let stopItem = NSMenuItem(
-        title: L10n.Menu.stopRecording(recorder.formattedDuration),
-        action: #selector(stopRecordingAction),
-        keyEquivalent: ""
-      )
-      stopItem.target = self
-      stopItem.image = NSImage(systemSymbolName: "stop.fill", accessibilityDescription: nil)
-      stopItem.isEnabled = true
-      menu?.addItem(stopItem)
+        let stopItem = NSMenuItem(
+          title: L10n.Menu.stopRecording(recorder.formattedDuration),
+          action: #selector(stopRecordingAction),
+          keyEquivalent: ""
+        )
+        stopItem.target = self
+        stopItem.image = NSImage(systemSymbolName: "stop.fill", accessibilityDescription: nil)
+        stopItem.isEnabled = true
+        menu?.addItem(stopItem)
 
-      let pauseResumeItem = NSMenuItem(
-        title: recorder.isPaused ? L10n.RecordingToolbar.resumeRecording : L10n.RecordingToolbar.pauseRecording,
-        action: #selector(togglePauseRecordingAction),
-        keyEquivalent: ""
-      )
-      pauseResumeItem.target = self
-      pauseResumeItem.image = NSImage(
-        systemSymbolName: recorder.isPaused ? "play.fill" : "pause.fill",
-        accessibilityDescription: nil
-      )
-      pauseResumeItem.isEnabled = recorder.state == .recording || recorder.state == .paused
-      menu?.addItem(pauseResumeItem)
+        let pauseResumeItem = NSMenuItem(
+          title: recorder.isPaused ? L10n.RecordingToolbar.resumeRecording : L10n.RecordingToolbar.pauseRecording,
+          action: #selector(togglePauseRecordingAction),
+          keyEquivalent: ""
+        )
+        pauseResumeItem.target = self
+        pauseResumeItem.image = NSImage(
+          systemSymbolName: recorder.isPaused ? "play.fill" : "pause.fill",
+          accessibilityDescription: nil
+        )
+        pauseResumeItem.isEnabled = recorder.state == .recording || recorder.state == .paused
+        menu?.addItem(pauseResumeItem)
 
-      menu?.addItem(NSMenuItem.separator())
-    }
+        menu?.addItem(NSMenuItem.separator())
+      }
     #endif
 
     // Capture Actions
@@ -573,39 +563,39 @@ final class AppStatusBarController: ObservableObject {
 
     if isVideoModuleEnabled {
       #if NOTINHAS_VIDEO_MODULE
-      menu?.addItem(NSMenuItem.separator())
+        menu?.addItem(NSMenuItem.separator())
 
-      // Recording
-      let recordItem = NSMenuItem(
-        title: L10n.Menu.recordScreen,
-        action: #selector(recordScreenAction),
-        keyEquivalent: ""
-      )
-      applyConfiguredShortcut(recordItem, for: .recording, using: shortcutManager)
-      recordItem.target = self
-      recordItem.image = NSImage(systemSymbolName: "record.circle", accessibilityDescription: nil)
-      recordItem.isEnabled = viewModel.hasPermission && !recorder.isActive
-      menu?.addItem(recordItem)
+        // Recording
+        let recordItem = NSMenuItem(
+          title: L10n.Menu.recordScreen,
+          action: #selector(recordScreenAction),
+          keyEquivalent: ""
+        )
+        applyConfiguredShortcut(recordItem, for: .recording, using: shortcutManager)
+        recordItem.target = self
+        recordItem.image = NSImage(systemSymbolName: "record.circle", accessibilityDescription: nil)
+        recordItem.isEnabled = viewModel.hasPermission && !recorder.isActive
+        menu?.addItem(recordItem)
 
-      let applicationRecordingShortcut = CaptureOverlayShortcutSettings.recordingApplicationCaptureShortcut
-      let applicationRecordingItem = NSMenuItem(
-        title: L10n.PreferencesShortcuts.applicationRecordingTitle,
-        action: #selector(recordApplicationAction),
-        keyEquivalent: ""
-      )
-      configureOverlayMenuItem(
-        applicationRecordingItem,
-        base: L10n.PreferencesShortcuts.applicationRecordingTitle,
-        shortcut: applicationRecordingShortcut,
-        parentKind: .recording,
-        using: shortcutManager
-      )
-      applicationRecordingItem.target = self
-      applicationRecordingItem.image = NSImage(systemSymbolName: "square.on.square", accessibilityDescription: nil)
-      applicationRecordingItem.isEnabled = viewModel.hasPermission && !recorder.isActive
-      menu?.addItem(applicationRecordingItem)
+        let applicationRecordingShortcut = CaptureOverlayShortcutSettings.recordingApplicationCaptureShortcut
+        let applicationRecordingItem = NSMenuItem(
+          title: L10n.PreferencesShortcuts.applicationRecordingTitle,
+          action: #selector(recordApplicationAction),
+          keyEquivalent: ""
+        )
+        configureOverlayMenuItem(
+          applicationRecordingItem,
+          base: L10n.PreferencesShortcuts.applicationRecordingTitle,
+          shortcut: applicationRecordingShortcut,
+          parentKind: .recording,
+          using: shortcutManager
+        )
+        applicationRecordingItem.target = self
+        applicationRecordingItem.image = NSImage(systemSymbolName: "square.on.square", accessibilityDescription: nil)
+        applicationRecordingItem.isEnabled = viewModel.hasPermission && !recorder.isActive
+        menu?.addItem(applicationRecordingItem)
 
-      menu?.addItem(NSMenuItem.separator())
+        menu?.addItem(NSMenuItem.separator())
       #endif
     } else {
       menu?.addItem(NSMenuItem.separator())
@@ -639,16 +629,16 @@ final class AppStatusBarController: ObservableObject {
 
     if isVideoModuleEnabled {
       #if NOTINHAS_VIDEO_MODULE
-      let editVideoItem = NSMenuItem(
-        title: L10n.Menu.editVideo,
-        action: #selector(editVideoAction),
-        keyEquivalent: ""
-      )
-      applyConfiguredShortcut(editVideoItem, for: .videoEditor, using: shortcutManager)
-      editVideoItem.target = self
-      editVideoItem.image = NSImage(systemSymbolName: "film", accessibilityDescription: nil)
-      editVideoItem.isEnabled = true
-      menu?.addItem(editVideoItem)
+        let editVideoItem = NSMenuItem(
+          title: L10n.Menu.editVideo,
+          action: #selector(editVideoAction),
+          keyEquivalent: ""
+        )
+        applyConfiguredShortcut(editVideoItem, for: .videoEditor, using: shortcutManager)
+        editVideoItem.target = self
+        editVideoItem.image = NSImage(systemSymbolName: "film", accessibilityDescription: nil)
+        editVideoItem.isEnabled = true
+        menu?.addItem(editVideoItem)
       #endif
     }
 
@@ -716,19 +706,6 @@ final class AppStatusBarController: ObservableObject {
       menu?.addItem(whatsNewItem)
     }
 
-    // Check for Updates
-    let updateItem = NSMenuItem(
-      title: L10n.Menu.checkForUpdates,
-      action: #selector(checkForUpdatesAction),
-      keyEquivalent: ""
-    )
-    updateItem.target = self
-    updateItem.image = NSImage(
-      systemSymbolName: "arrow.triangle.2.circlepath", accessibilityDescription: nil
-    )
-    updateItem.isEnabled = true
-    menu?.addItem(updateItem)
-
     // Preferences
     let prefsItem = NSMenuItem(
       title: L10n.Menu.preferences,
@@ -759,15 +736,15 @@ final class AppStatusBarController: ObservableObject {
   // MARK: - Menu Actions
 
   #if NOTINHAS_VIDEO_MODULE
-  @objc private func stopRecordingAction() {
-    logMenuAction("stopRecording", context: ["state": "\(recorder.state)"])
-    stopRecording()
-  }
+    @objc private func stopRecordingAction() {
+      logMenuAction("stopRecording", context: ["state": "\(recorder.state)"])
+      stopRecording()
+    }
 
-  @objc private func togglePauseRecordingAction() {
-    logMenuAction("togglePauseRecording", context: ["state": "\(recorder.state)"])
-    recorder.togglePause()
-  }
+    @objc private func togglePauseRecordingAction() {
+      logMenuAction("togglePauseRecording", context: ["state": "\(recorder.state)"])
+      recorder.togglePause()
+    }
   #endif
 
   @objc private func captureAreaAction() {
@@ -816,15 +793,15 @@ final class AppStatusBarController: ObservableObject {
   }
 
   #if NOTINHAS_VIDEO_MODULE
-  @objc private func recordScreenAction() {
-    logMenuAction("recordScreen")
-    viewModel?.startRecordingFlow()
-  }
+    @objc private func recordScreenAction() {
+      logMenuAction("recordScreen")
+      viewModel?.startRecordingFlow()
+    }
 
-  @objc private func recordApplicationAction() {
-    logMenuAction("recordApplication")
-    viewModel?.startApplicationRecordingFlow()
-  }
+    @objc private func recordApplicationAction() {
+      logMenuAction("recordApplication")
+      viewModel?.startApplicationRecordingFlow()
+    }
   #endif
 
   @objc private func openAnnotateAction() {
@@ -838,10 +815,10 @@ final class AppStatusBarController: ObservableObject {
   }
 
   #if NOTINHAS_VIDEO_MODULE
-  @objc private func editVideoAction() {
-    logMenuAction("editVideo")
-    VideoEditorManager.shared.openEmptyEditor()
-  }
+    @objc private func editVideoAction() {
+      logMenuAction("editVideo")
+      VideoEditorManager.shared.openEmptyEditor()
+    }
   #endif
 
   @objc private func openCloudUploadsAction() {
@@ -876,22 +853,11 @@ final class AppStatusBarController: ObservableObject {
     viewModel?.requestPermission()
   }
 
-  @objc private func checkForUpdatesAction() {
-    logMenuAction("checkForUpdates")
-    UpdaterManager.shared.checkForUpdates()
-  }
-
   @objc private func showPendingFeatureIntroAction() {
     logMenuAction("showPendingFeatureIntro")
     if let campaign = FeatureIntroManager.shared.getPendingCampaign() {
       FeatureIntroManager.shared.showCampaign(campaign)
     }
-  }
-
-  @objc private func reportProblemAction() {
-    logMenuAction("reportProblem")
-    CrashReportService.presentAlert()
-    didDetectCrash = false
   }
 
   @objc private func openPreferencesAction() {
@@ -1194,13 +1160,13 @@ final class AppStatusBarController: ObservableObject {
     }
 
     #if NOTINHAS_VIDEO_MODULE
-    var isHoverBarVisibleForTesting: Bool {
-      isHoverBarVisible
-    }
+      var isHoverBarVisibleForTesting: Bool {
+        isHoverBarVisible
+      }
 
-    var showsRecordingTimeOnMenuBarForTesting: Bool {
-      showsRecordingTimeOnMenuBar
-    }
+      var showsRecordingTimeOnMenuBarForTesting: Bool {
+        showsRecordingTimeOnMenuBar
+      }
     #endif
   #endif
 }

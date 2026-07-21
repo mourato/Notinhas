@@ -405,4 +405,28 @@ final class SnapzyConfigurationImporterTests: XCTestCase {
     let result3 = SnapzyConfigurationImporter.importTOML(sourceInvalidAnim, defaults: defaults)
     XCTAssertTrue(result3.hasErrors)
   }
+
+  func testImportIgnoresLegacyUpdatesSectionWhileApplyingOtherFields() {
+    let defaults = UserDefaultsFactory.make()
+    defaults.set(true, forKey: PreferencesKeys.playSounds)
+    defaults.set("stable", forKey: PreferencesKeys.updateChannel)
+
+    let source = """
+    schema_version = 1
+
+    [general]
+    play_sounds = false
+
+    [updates]
+    check_automatically = false
+    download_automatically = true
+    channel = "beta"
+    """
+
+    let result = SnapzyConfigurationImporter.importTOML(source, defaults: defaults)
+
+    XCTAssertFalse(result.hasErrors)
+    XCTAssertEqual(defaults.bool(forKey: PreferencesKeys.playSounds), false)
+    XCTAssertEqual(defaults.string(forKey: PreferencesKeys.updateChannel), "stable")
+  }
 }

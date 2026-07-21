@@ -23,7 +23,6 @@ jobs:
       HAS_DEVELOPER_ID_CERT: ${{ secrets.DEVELOPER_ID_P12 != '' && secrets.DEVELOPER_ID_PASSWORD != '' && 'true' || 'false' }}
       HAS_SELF_SIGNED_CERT: ${{ secrets.SELF_SIGNED_CERT_P12 != '' && secrets.SELF_SIGNED_CERT_PASSWORD != '' && 'true' || 'false' }}
       HAS_NOTARIZATION_CREDENTIALS: ${{ secrets.APPLE_ID != '' && secrets.APPLE_ID_PASSWORD != '' && secrets.APPLE_TEAM_ID != '' && 'true' || 'false' }}
-      HAS_SPARKLE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY != '' && 'true' || 'false' }}
       ALLOW_ADHOC_RELEASE: ${{ (vars.ALLOW_ADHOC_RELEASE == 'true' || secrets.ALLOW_ADHOC_RELEASE == 'true') && 'true' || 'false' }}
       ALLOW_SIGNING_IDENTITY_CHANGE: ${{ (vars.ALLOW_SIGNING_IDENTITY_CHANGE == 'true' || secrets.ALLOW_SIGNING_IDENTITY_CHANGE == 'true') && 'true' || 'false' }}
 
@@ -114,7 +113,7 @@ jobs:
 
       # --- Code Signing (conditional) ---
       # Priority: Developer ID > Self-signed cert > Ad-hoc
-      # Self-signed cert preserves TCC permissions across Sparkle updates
+      # Self-signed cert preserves TCC permissions across manual reinstalls
       # without requiring Apple Developer Program enrollment.
       - name: Import signing certificate
         if: env.HAS_DEVELOPER_ID_CERT == 'true' || env.HAS_SELF_SIGNED_CERT == 'true'
@@ -166,7 +165,6 @@ jobs:
           ditto "$ARCHIVE_PATH/Products/Applications/Snapzy.app" build/Snapzy.app
 
           APP_PATH="build/Snapzy.app"
-          SPARKLE_FRAMEWORK="$APP_PATH/Contents/Frameworks/Sparkle.framework"
 
           # Determine signing identity and timestamp flag
           if [ "${HAS_DEVELOPER_ID_CERT}" = "true" ]; then
@@ -186,28 +184,6 @@ jobs:
 
           # Clean extended attributes before signing
           xattr -rc "$APP_PATH"
-
-          # Sign Sparkle components inside-out
-          if [ -d "$SPARKLE_FRAMEWORK/Versions/B/XPCServices/Installer.xpc" ]; then
-            codesign --force --sign "$SIGN_IDENTITY" -o runtime $TIMESTAMP_FLAG \
-              "$SPARKLE_FRAMEWORK/Versions/B/XPCServices/Installer.xpc"
-          fi
-          if [ -d "$SPARKLE_FRAMEWORK/Versions/B/XPCServices/Downloader.xpc" ]; then
-            codesign --force --sign "$SIGN_IDENTITY" -o runtime --preserve-metadata=entitlements \
-              $TIMESTAMP_FLAG "$SPARKLE_FRAMEWORK/Versions/B/XPCServices/Downloader.xpc"
-          fi
-          if [ -f "$SPARKLE_FRAMEWORK/Versions/B/Autoupdate" ]; then
-            codesign --force --sign "$SIGN_IDENTITY" -o runtime $TIMESTAMP_FLAG \
-              "$SPARKLE_FRAMEWORK/Versions/B/Autoupdate"
-          fi
-          if [ -d "$SPARKLE_FRAMEWORK/Versions/B/Updater.app" ]; then
-            codesign --force --sign "$SIGN_IDENTITY" -o runtime $TIMESTAMP_FLAG \
-              "$SPARKLE_FRAMEWORK/Versions/B/Updater.app"
-          fi
-          if [ -d "$SPARKLE_FRAMEWORK" ]; then
-            codesign --force --sign "$SIGN_IDENTITY" -o runtime $TIMESTAMP_FLAG \
-              "$SPARKLE_FRAMEWORK"
-          fi
 
           # Pre-process entitlements (Xcode variable substitution)
           BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP_PATH/Contents/Info.plist")
@@ -442,165 +418,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract build number
-        id: build
-        run: |
-          BUILD=$(grep -m1 'CURRENT_PROJECT_VERSION' Snapzy.xcodeproj/project.pbxproj | sed 's/.*= //' | sed 's/;.*//' | tr -d ' ')
-          echo "number=$BUILD" >> "$GITHUB_OUTPUT"
-          echo "Build number: $BUILD"
-
-      - name: Sign DMG with Sparkle EdDSA key
-        id: sparkle_sign
-        if: env.HAS_SPARKLE_KEY == 'true'
-        env:
-          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
-        run: |
-          set +e  # Disable exit-on-error; we handle failures manually
-
-          # Write private key to temp file
-          PRIVATE_KEY_FILE="$RUNNER_TEMP/sparkle_private_key.pem"
-          echo "$SPARKLE_PRIVATE_KEY" > "$PRIVATE_KEY_FILE"
-
-          SIGN_UPDATE=""
-          SIGNATURE=""
-
-          # Diagnostic: show what Sparkle checkout contains
-          SPARKLE_SRC="build/DerivedData/SourcePackages/checkouts/Sparkle"
-          echo "--- Sparkle checkout contents ---"
-          ls -la "$SPARKLE_SRC/" 2>/dev/null || echo "Sparkle checkout dir not found"
-
-          # Strategy 1: Build sign_update from Sparkle SPM checkout
-          if [ -d "$SPARKLE_SRC/sign_update" ]; then
-            echo "Found sign_update source, building..."
-            if swift build --package-path "$SPARKLE_SRC/sign_update" -c release; then
-              BIN_PATH=$(swift build --package-path "$SPARKLE_SRC/sign_update" -c release --show-bin-path 2>/dev/null)
-              SIGN_UPDATE="$BIN_PATH/sign_update"
-              echo "Built sign_update at: $SIGN_UPDATE"
-            else
-              echo "::warning::swift build for sign_update failed"
-            fi
-          else
-            echo "::notice::sign_update source dir not found at $SPARKLE_SRC/sign_update"
-          fi
-
-          # Strategy 2: Find pre-built sign_update in SPM artifacts
-          if [ -z "$SIGN_UPDATE" ] || [ ! -x "$SIGN_UPDATE" ]; then
-            echo "Searching for pre-built sign_update in artifacts..."
-            SIGN_UPDATE_ALT=$(find build/DerivedData/SourcePackages/artifacts -name "sign_update" -type f 2>/dev/null | head -1)
-            if [ -n "$SIGN_UPDATE_ALT" ]; then
-              chmod +x "$SIGN_UPDATE_ALT" 2>/dev/null || true
-              if [ -x "$SIGN_UPDATE_ALT" ]; then
-                SIGN_UPDATE="$SIGN_UPDATE_ALT"
-                echo "Found pre-built sign_update at: $SIGN_UPDATE"
-              fi
-            fi
-          fi
-
-          # Strategy 3: Find generate_appcast which can also sign
-          if [ -z "$SIGN_UPDATE" ] || [ ! -x "$SIGN_UPDATE" ]; then
-            echo "Searching for generate_appcast binary..."
-            GEN_APPCAST=$(find build/DerivedData/SourcePackages/artifacts -name "generate_appcast" -type f 2>/dev/null | head -1)
-            if [ -n "$GEN_APPCAST" ] && [ -x "$GEN_APPCAST" ]; then
-              echo "Found generate_appcast at: $GEN_APPCAST"
-              # generate_appcast doesn't sign individual files the same way; skip
-            fi
-          fi
-
-          # Sign the DMG
-          if [ -n "$SIGN_UPDATE" ] && [ -x "$SIGN_UPDATE" ]; then
-            echo "Signing DMG with: $SIGN_UPDATE"
-            SIGN_OUTPUT=$("$SIGN_UPDATE" "${{ env.dmg_path }}" --ed-key-file "$PRIVATE_KEY_FILE" 2>&1) || true
-            echo "sign_update output: $SIGN_OUTPUT"
-            SIGNATURE=$(echo "$SIGN_OUTPUT" | grep "sparkle:edSignature=" | cut -d'"' -f2)
-          else
-            echo "::warning::Could not find or build sign_update binary, skipping signature"
-          fi
-
-          echo "signature=$SIGNATURE" >> "$GITHUB_OUTPUT"
-          rm -f "$PRIVATE_KEY_FILE"
-
-          if [ -n "$SIGNATURE" ]; then
-            echo "DMG signed successfully"
-            echo "Signature: $SIGNATURE"
-          else
-            echo "::warning::DMG signature is empty — appcast will have no EdDSA signature"
-          fi
-
-      - name: Convert changelog to HTML for appcast
-        id: release_notes
-        run: |
-          # Convert markdown changelog to clean HTML for Sparkle update dialog
-          # Only keep Features and Bug Fixes sections (skip Chore/Contributors/Distribution Notes)
-          NOTES_HTML=""
-          CURRENT_SECTION=""
-          IN_RELEVANT_SECTION=false
-
-          while IFS= read -r line; do
-            if echo "$line" | grep -qE '^### Features'; then
-              if [ -n "$CURRENT_SECTION" ]; then
-                NOTES_HTML="${NOTES_HTML}</ul>"
-              fi
-              NOTES_HTML="${NOTES_HTML}<h3>✨ Features</h3><ul>"
-              CURRENT_SECTION="features"
-              IN_RELEVANT_SECTION=true
-            elif echo "$line" | grep -qE '^### Bug Fixes'; then
-              if [ -n "$CURRENT_SECTION" ]; then
-                NOTES_HTML="${NOTES_HTML}</ul>"
-              fi
-              NOTES_HTML="${NOTES_HTML}<h3>🐛 Bug Fixes</h3><ul>"
-              CURRENT_SECTION="bugfixes"
-              IN_RELEVANT_SECTION=true
-            elif echo "$line" | grep -qE '^### '; then
-              # Other sections (Chore, Contributors, etc.) — skip
-              if [ -n "$CURRENT_SECTION" ]; then
-                NOTES_HTML="${NOTES_HTML}</ul>"
-              fi
-              CURRENT_SECTION=""
-              IN_RELEVANT_SECTION=false
-            elif [ "$IN_RELEVANT_SECTION" = true ] && echo "$line" | grep -qE '^- '; then
-              # Extract list item text, strip commit hashes and PR refs
-              ITEM=$(echo "$line" | sed 's/^- *//' | sed 's/ ([a-f0-9]\{7\})$//' | sed 's/ (#[0-9]*)//g' | sed 's/^ *//')
-              if [ -n "$ITEM" ]; then
-                NOTES_HTML="${NOTES_HTML}<li>${ITEM}</li>"
-              fi
-            fi
-          done < "${{ steps.changelog.outputs.changelog_path }}"
-
-          # Close last open list
-          if [ -n "$CURRENT_SECTION" ]; then
-            NOTES_HTML="${NOTES_HTML}</ul>"
-          fi
-
-          # Fallback if no relevant sections found
-          if [ -z "$NOTES_HTML" ]; then
-            NOTES_HTML="<h3>🔧 Maintenance</h3><ul><li>Bug fixes and improvements</li></ul>"
-          fi
-
-          RELEASE_NOTES_PATH="build/release-notes.html"
-          printf '%s' "$NOTES_HTML" > "$RELEASE_NOTES_PATH"
-          echo "release_notes_path=$RELEASE_NOTES_PATH" >> "$GITHUB_OUTPUT"
-
-      - name: Update appcast.xml
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-          BUILD_NUMBER: ${{ steps.build.outputs.number }}
-          ED_SIGNATURE: ${{ steps.sparkle_sign.outputs.signature }}
-          RELEASE_NOTES_PATH: ${{ steps.release_notes.outputs.release_notes_path }}
-          CHANNEL: ${{ steps.version.outputs.is_beta == 'true' && 'beta' || '' }}
-        run: |
-          set -euo pipefail
-          DMG_PATH="${dmg_path:?dmg_path is not set}"
-          RELEASE_NOTES_HTML="$(cat "$RELEASE_NOTES_PATH")"
-          chmod +x scripts/update-appcast.sh
-          ./scripts/update-appcast.sh \
-            "$VERSION" \
-            "$BUILD_NUMBER" \
-            "$DMG_PATH" \
-            "appcast.xml" \
-            "$ED_SIGNATURE" \
-            "$RELEASE_NOTES_HTML" \
-            "$CHANNEL"
-
       # Homebrew cask and README track stable releases only — skipped for beta
       - name: Update Homebrew cask
         if: steps.version.outputs.is_beta != 'true'
@@ -616,18 +433,14 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           sed -i '' "s|/Snapzy/v[0-9][0-9.]*\/install.sh|/Snapzy/v${VERSION}/install.sh|g" README.md
 
-      - name: Commit appcast and cask update
+      - name: Commit cask and readme update
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add appcast.xml Casks/snapzy.rb README.md
+          git add Casks/snapzy.rb README.md
           if git diff --cached --quiet; then
-            echo "No appcast/cask/readme changes to commit"
+            echo "No cask/readme changes to commit"
             exit 0
           fi
-          if [ "${{ steps.version.outputs.is_beta }}" = "true" ]; then
-            git commit -m "chore: update appcast for v${{ steps.version.outputs.version }}"
-          else
-            git commit -m "chore: update appcast, cask, and readme for v${{ steps.version.outputs.version }}"
-          fi
+          git commit -m "chore: update cask and readme for v${{ steps.version.outputs.version }}"
           git push origin main

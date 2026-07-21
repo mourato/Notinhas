@@ -48,10 +48,6 @@ struct PreferencesView: View {
       LazyView(AdvancedSettingsView())
         .tabItem { Label(L10n.Preferences.advancedTab, systemImage: "slider.horizontal.3") }
         .tag(PreferencesTab.advanced)
-
-      LazyView(AboutSettingsView())
-        .tabItem { Label(L10n.Preferences.aboutTab, systemImage: "info.circle.fill") }
-        .tag(PreferencesTab.about)
     }
     .frame(width: 760, height: 550)
   }

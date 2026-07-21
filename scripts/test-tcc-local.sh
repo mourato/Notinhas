@@ -3,7 +3,7 @@
 #
 # Usage:
 #   ./scripts/test-tcc-local.sh build-v1    # Build, sign, install v1
-#   ./scripts/test-tcc-local.sh build-v2    # Build, sign, replace (simulates Sparkle update)
+#   ./scripts/test-tcc-local.sh build-v2    # Build, sign, replace (simulates manual reinstall)
 #   ./scripts/test-tcc-local.sh compare     # Build ad-hoc version for comparison
 #
 # Flow:
@@ -18,29 +18,6 @@ TEST_DIR="/tmp/test-tcc-snapzy"
 CERT_NAME="Snapzy Self-Signed"
 ENTITLEMENTS="$PROJECT_DIR/Snapzy/Snapzy.entitlements"
 INSTALL_PATH="/Applications/Snapzy.app"
-
-sign_sparkle_framework() {
-  local app_path="$1"
-  local identity="$2"
-  local sparkle="$app_path/Contents/Frameworks/Sparkle.framework"
-
-  if [ ! -d "$sparkle" ]; then
-    echo "  ⚠️  Sparkle.framework not found, skipping framework signing"
-    return
-  fi
-
-  echo "  → Signing Sparkle components (inside-out)..."
-  [ -d "$sparkle/Versions/B/XPCServices/Installer.xpc" ] && \
-    codesign --force --sign "$identity" -o runtime --timestamp=none "$sparkle/Versions/B/XPCServices/Installer.xpc"
-  [ -d "$sparkle/Versions/B/XPCServices/Downloader.xpc" ] && \
-    codesign --force --sign "$identity" -o runtime --preserve-metadata=entitlements --timestamp=none "$sparkle/Versions/B/XPCServices/Downloader.xpc"
-  [ -f "$sparkle/Versions/B/Autoupdate" ] && \
-    codesign --force --sign "$identity" -o runtime --timestamp=none "$sparkle/Versions/B/Autoupdate"
-  [ -d "$sparkle/Versions/B/Updater.app" ] && \
-    codesign --force --sign "$identity" -o runtime --timestamp=none "$sparkle/Versions/B/Updater.app"
-  [ -d "$sparkle" ] && \
-    codesign --force --sign "$identity" -o runtime --timestamp=none "$sparkle"
-}
 
 build_archive() {
   local version_label="$1"
@@ -90,12 +67,7 @@ sign_and_install() {
   rm -rf "$app_path"
   ditto "$archive_path/Products/Applications/Snapzy.app" "$app_path"
 
-  # Sign Sparkle framework
-  sign_sparkle_framework "$app_path" "$identity"
-
   # Pre-process entitlements: codesign does NOT substitute Xcode variables
-  # like $(PRODUCT_BUNDLE_IDENTIFIER). We must do it manually or Sparkle's
-  # XPC mach-lookup ports won't match (causes error 4005).
   local bundle_id
   bundle_id=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$app_path/Contents/Info.plist")
   local processed="$TEST_DIR/processed-entitlements.plist"
@@ -196,7 +168,7 @@ case "$cmd" in
     echo ""
     echo "Commands:"
     echo "  build-v1   Build, sign with self-signed cert, install as v1"
-    echo "  build-v2   Re-sign and replace (simulates Sparkle update)"
+    echo "  build-v2   Re-sign and replace (simulates manual reinstall)"
     echo "  compare    Build ad-hoc version to prove permissions are lost"
     echo "  clean      Remove test build artifacts"
     echo ""

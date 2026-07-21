@@ -17,7 +17,6 @@ enum PreferencesTab: Hashable {
   case permissions
   case cloud
   case advanced
-  case about
 }
 
 @MainActor

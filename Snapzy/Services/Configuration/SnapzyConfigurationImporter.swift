@@ -7,7 +7,6 @@
 
 import AppKit
 import Foundation
-import Sparkle
 
 @MainActor
 enum SnapzyConfigurationImporter {
@@ -112,19 +111,16 @@ enum SnapzyConfigurationImporter {
     if let exportLocation = reader.string("general", "export_location") {
       mutations.append { defaults.set(expandedPath(exportLocation), forKey: PreferencesKeys.exportLocation) }
     }
-    collectBool(&reader, "updates", "check_automatically", mutations: &mutations) {
-      UpdaterManager.shared.updater.automaticallyChecksForUpdates = $0
-    }
-    collectBool(&reader, "updates", "download_automatically", mutations: &mutations) {
-      UpdaterManager.shared.updater.automaticallyDownloadsUpdates = $0
-    }
-    collectEnumString(&reader, "updates", "channel", allowed: UpdateChannel.allCases.map(\.rawValue), mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.updateChannel)
-    }
     collectBool(&reader, "diagnostics", "enabled", mutations: &mutations) {
       defaults.set($0, forKey: PreferencesKeys.diagnosticsEnabled)
     }
-    collectInt(&reader, "diagnostics", "retention_days", range: LogCleanupScheduler.retentionDaysRange, mutations: &mutations) {
+    collectInt(
+      &reader,
+      "diagnostics",
+      "retention_days",
+      range: LogCleanupScheduler.retentionDaysRange,
+      mutations: &mutations
+    ) {
       defaults.set($0, forKey: PreferencesKeys.diagnosticsRetentionDays)
     }
   }
@@ -182,91 +178,143 @@ enum SnapzyConfigurationImporter {
   }
 
   #if NOTINHAS_VIDEO_MODULE
-  private static func collectRecording(
-    _ reader: inout SnapzyConfigurationReader,
-    defaults: UserDefaults,
-    mutations: inout [() -> Void]
-  ) {
-    collectEnumString(&reader, "recording", "format", allowed: VideoFormat.allCases.map(\.rawValue), mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.recordingFormat)
-    }
-    collectEnumString(&reader, "recording", "quality", allowed: VideoQuality.allCases.map(\.rawValue), mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.recordingQuality)
-    }
-    collectInt(&reader, "recording", "fps", range: 1...120, mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.recordingFPS)
-    }
-    collectEnumString(&reader, "recording", "output_mode", allowed: RecordingOutputMode.allCases.map(\.rawValue), mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.recordingOutputMode)
-    }
-    collectBool(&reader, "recording", "capture_system_audio", mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.recordingCaptureAudio)
-    }
-    collectBool(&reader, "recording", "capture_microphone", mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.recordingCaptureMicrophone)
-    }
-    collectString(&reader, "recording", "microphone_device_id", mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.recordingMicrophoneDeviceID)
-    }
-    collectBool(&reader, "recording", "remember_last_area", mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.recordingRememberLastArea)
-    }
-    collectBool(&reader, "recording", "include_snapzy", mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.recordingIncludeOwnApp)
-    }
-    collectBool(&reader, "recording", "show_cursor", mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.recordingShowCursor)
-    }
-    collectBool(&reader, "recording", "highlight_clicks", mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.recordingHighlightClicks)
-    }
-    collectBool(&reader, "recording", "show_keystrokes", mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.recordingShowKeystrokes)
-    }
-    collectDouble(&reader, "recording", "mouse_highlight", "size", range: 20...120, mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.mouseHighlightSize)
-    }
-    collectDouble(&reader, "recording", "mouse_highlight", "animation_duration", range: 0.1...3, mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.mouseHighlightAnimationDuration)
-    }
-    if let colorHex = reader.string("recording", "mouse_highlight", "color") {
-      guard let color = SnapzyConfigurationColor.color(from: colorHex),
-            let data = try? NSKeyedArchiver.archivedData(
-              withRootObject: color,
-              requiringSecureCoding: false
-            ) else {
-        reader.error("recording.mouse_highlight.color must be #RRGGBB or #RRGGBBAA")
-        return
+    private static func collectRecording(
+      _ reader: inout SnapzyConfigurationReader,
+      defaults: UserDefaults,
+      mutations: inout [() -> Void]
+    ) {
+      collectEnumString(
+        &reader,
+        "recording",
+        "format",
+        allowed: VideoFormat.allCases.map(\.rawValue),
+        mutations: &mutations
+      ) {
+        defaults.set($0, forKey: PreferencesKeys.recordingFormat)
       }
-      mutations.append { defaults.set(data, forKey: PreferencesKeys.mouseHighlightColor) }
+      collectEnumString(
+        &reader,
+        "recording",
+        "quality",
+        allowed: VideoQuality.allCases.map(\.rawValue),
+        mutations: &mutations
+      ) {
+        defaults.set($0, forKey: PreferencesKeys.recordingQuality)
+      }
+      collectInt(&reader, "recording", "fps", range: 1 ... 120, mutations: &mutations) {
+        defaults.set($0, forKey: PreferencesKeys.recordingFPS)
+      }
+      collectEnumString(
+        &reader,
+        "recording",
+        "output_mode",
+        allowed: RecordingOutputMode.allCases.map(\.rawValue),
+        mutations: &mutations
+      ) {
+        defaults.set($0, forKey: PreferencesKeys.recordingOutputMode)
+      }
+      collectBool(&reader, "recording", "capture_system_audio", mutations: &mutations) {
+        defaults.set($0, forKey: PreferencesKeys.recordingCaptureAudio)
+      }
+      collectBool(&reader, "recording", "capture_microphone", mutations: &mutations) {
+        defaults.set($0, forKey: PreferencesKeys.recordingCaptureMicrophone)
+      }
+      collectString(&reader, "recording", "microphone_device_id", mutations: &mutations) {
+        defaults.set($0, forKey: PreferencesKeys.recordingMicrophoneDeviceID)
+      }
+      collectBool(&reader, "recording", "remember_last_area", mutations: &mutations) {
+        defaults.set($0, forKey: PreferencesKeys.recordingRememberLastArea)
+      }
+      collectBool(&reader, "recording", "include_snapzy", mutations: &mutations) {
+        defaults.set($0, forKey: PreferencesKeys.recordingIncludeOwnApp)
+      }
+      collectBool(&reader, "recording", "show_cursor", mutations: &mutations) {
+        defaults.set($0, forKey: PreferencesKeys.recordingShowCursor)
+      }
+      collectBool(&reader, "recording", "highlight_clicks", mutations: &mutations) {
+        defaults.set($0, forKey: PreferencesKeys.recordingHighlightClicks)
+      }
+      collectBool(&reader, "recording", "show_keystrokes", mutations: &mutations) {
+        defaults.set($0, forKey: PreferencesKeys.recordingShowKeystrokes)
+      }
+      collectDouble(&reader, "recording", "mouse_highlight", "size", range: 20 ... 120, mutations: &mutations) {
+        defaults.set($0, forKey: PreferencesKeys.mouseHighlightSize)
+      }
+      collectDouble(
+        &reader,
+        "recording",
+        "mouse_highlight",
+        "animation_duration",
+        range: 0.1 ... 3,
+        mutations: &mutations
+      ) {
+        defaults.set($0, forKey: PreferencesKeys.mouseHighlightAnimationDuration)
+      }
+      if let colorHex = reader.string("recording", "mouse_highlight", "color") {
+        guard let color = SnapzyConfigurationColor.color(from: colorHex),
+              let data = try? NSKeyedArchiver.archivedData(
+                withRootObject: color,
+                requiringSecureCoding: false
+              ) else {
+          reader.error("recording.mouse_highlight.color must be #RRGGBB or #RRGGBBAA")
+          return
+        }
+        mutations.append { defaults.set(data, forKey: PreferencesKeys.mouseHighlightColor) }
+      }
+      collectDouble(&reader, "recording", "mouse_highlight", "opacity", range: 0 ... 1, mutations: &mutations) {
+        defaults.set($0, forKey: PreferencesKeys.mouseHighlightOpacity)
+      }
+      collectInt(&reader, "recording", "mouse_highlight", "ripple_count", range: 1 ... 6, mutations: &mutations) {
+        defaults.set($0, forKey: PreferencesKeys.mouseHighlightRippleCount)
+      }
+      collectDouble(&reader, "recording", "keystrokes", "font_size", range: 10 ... 48, mutations: &mutations) {
+        defaults.set($0, forKey: PreferencesKeys.keystrokeFontSize)
+      }
+      collectEnumString(
+        &reader,
+        "recording",
+        "keystrokes",
+        "position",
+        allowed: KeystrokeOverlayPosition.allCases.map(\.rawValue),
+        mutations: &mutations
+      ) {
+        defaults.set($0, forKey: PreferencesKeys.keystrokePosition)
+      }
+      collectDouble(&reader, "recording", "keystrokes", "display_duration", range: 0.3 ... 10, mutations: &mutations) {
+        defaults.set($0, forKey: PreferencesKeys.keystrokeDisplayDuration)
+      }
+      collectEnumString(
+        &reader,
+        "recording",
+        "annotation_shortcuts",
+        "modifier",
+        allowed: AnnotationShortcutModifier.allCases.map(\.rawValue),
+        mutations: &mutations
+      ) {
+        defaults.set($0, forKey: PreferencesKeys.annotationShortcutModifier)
+        RecordingAnnotationShortcutConfig.shared.modifier = AnnotationShortcutModifier(rawValue: $0) ?? .shift
+      }
+      collectDouble(
+        &reader,
+        "recording",
+        "annotation_shortcuts",
+        "hold_duration",
+        range: 0.1 ... 5,
+        mutations: &mutations
+      ) {
+        defaults.set($0, forKey: PreferencesKeys.annotationShortcutHoldDuration)
+        RecordingAnnotationShortcutConfig.shared.holdDuration = $0
+      }
+      collectDouble(
+        &reader,
+        "recording",
+        "video_editor_zoom_transition_duration",
+        range: 0.15 ... 0.75,
+        mutations: &mutations
+      ) {
+        defaults.set($0, forKey: PreferencesKeys.videoEditorZoomTransitionDuration)
+      }
     }
-    collectDouble(&reader, "recording", "mouse_highlight", "opacity", range: 0...1, mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.mouseHighlightOpacity)
-    }
-    collectInt(&reader, "recording", "mouse_highlight", "ripple_count", range: 1...6, mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.mouseHighlightRippleCount)
-    }
-    collectDouble(&reader, "recording", "keystrokes", "font_size", range: 10...48, mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.keystrokeFontSize)
-    }
-    collectEnumString(&reader, "recording", "keystrokes", "position", allowed: KeystrokeOverlayPosition.allCases.map(\.rawValue), mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.keystrokePosition)
-    }
-    collectDouble(&reader, "recording", "keystrokes", "display_duration", range: 0.3...10, mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.keystrokeDisplayDuration)
-    }
-    collectEnumString(&reader, "recording", "annotation_shortcuts", "modifier", allowed: AnnotationShortcutModifier.allCases.map(\.rawValue), mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.annotationShortcutModifier)
-      RecordingAnnotationShortcutConfig.shared.modifier = AnnotationShortcutModifier(rawValue: $0) ?? .shift
-    }
-    collectDouble(&reader, "recording", "annotation_shortcuts", "hold_duration", range: 0.1...5, mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.annotationShortcutHoldDuration)
-      RecordingAnnotationShortcutConfig.shared.holdDuration = $0
-    }
-    collectDouble(&reader, "recording", "video_editor_zoom_transition_duration", range: 0.15...0.75, mutations: &mutations) {
-      defaults.set($0, forKey: PreferencesKeys.videoEditorZoomTransitionDuration)
-    }
-  }
   #endif
 
   private static func collectQuickAccess(
@@ -283,9 +331,15 @@ enum SnapzyConfigurationImporter {
       mutations.append { manager.position = value }
     }
     collectBool(&reader, "quick_access", "auto_dismiss", mutations: &mutations) { manager.autoDismissEnabled = $0 }
-    collectDouble(&reader, "quick_access", "auto_dismiss_delay", range: 3...30, mutations: &mutations) { manager.autoDismissDelay = $0 }
-    collectBool(&reader, "quick_access", "pause_countdown_on_hover", mutations: &mutations) { manager.pauseCountdownOnHover = $0 }
-    collectDouble(&reader, "quick_access", "overlay_scale", range: 0.75...1.5, mutations: &mutations) { manager.overlayScale = $0 }
+    collectDouble(&reader, "quick_access", "auto_dismiss_delay", range: 3 ... 30, mutations: &mutations) {
+      manager.autoDismissDelay = $0
+    }
+    collectBool(&reader, "quick_access", "pause_countdown_on_hover", mutations: &mutations) {
+      manager.pauseCountdownOnHover = $0
+    }
+    collectDouble(&reader, "quick_access", "overlay_scale", range: 0.75 ... 1.5, mutations: &mutations) {
+      manager.overlayScale = $0
+    }
     collectDouble(
       &reader,
       "quick_access",
@@ -294,8 +348,12 @@ enum SnapzyConfigurationImporter {
       mutations: &mutations
     ) { manager.cornerButtonScale = $0 }
     collectBool(&reader, "quick_access", "drag_drop", mutations: &mutations) { manager.dragDropEnabled = $0 }
-    collectBool(&reader, "quick_access", "two_finger_swipe_to_dismiss", mutations: &mutations) { manager.twoFingerSwipeToDismissEnabled = $0 }
-    collectDouble(&reader, "quick_access", "swipe_sensitivity", range: 0.5...3.0, mutations: &mutations) { manager.swipeSensitivity = $0 }
+    collectBool(&reader, "quick_access", "two_finger_swipe_to_dismiss", mutations: &mutations) {
+      manager.twoFingerSwipeToDismissEnabled = $0
+    }
+    collectDouble(&reader, "quick_access", "swipe_sensitivity", range: 0.5 ... 3.0, mutations: &mutations) {
+      manager.swipeSensitivity = $0
+    }
 
     if let swipeModeStr = reader.string("quick_access", "trackpad_swipe_mode") {
       guard let mode = QuickAccessTrackpadSwipeMode(rawValue: swipeModeStr) else {
@@ -350,7 +408,8 @@ enum SnapzyConfigurationImporter {
     }
 
     let order = reader.stringArray("quick_access", "actions_order")?.compactMap(QuickAccessActionKind.init(rawValue:))
-    let enabled = reader.stringArray("quick_access", "enabled_actions")?.compactMap(QuickAccessActionKind.init(rawValue:))
+    let enabled = reader.stringArray("quick_access", "enabled_actions")?
+      .compactMap(QuickAccessActionKind.init(rawValue:))
     let slots = quickAccessSlots(from: &reader)
     if order != nil || enabled != nil || slots != nil {
       mutations.append {
@@ -371,13 +430,19 @@ enum SnapzyConfigurationImporter {
     collectBool(&reader, "history", "enabled", mutations: &mutations) {
       defaults.set($0, forKey: PreferencesKeys.historyEnabled)
     }
-    collectInt(&reader, "history", "retention_days", range: 0...90, mutations: &mutations) {
+    collectInt(&reader, "history", "retention_days", range: 0 ... 90, mutations: &mutations) {
       defaults.set($0, forKey: PreferencesKeys.historyRetentionDays)
     }
-    collectInt(&reader, "history", "max_count", range: 0...1000, mutations: &mutations) {
+    collectInt(&reader, "history", "max_count", range: 0 ... 1000, mutations: &mutations) {
       defaults.set($0, forKey: PreferencesKeys.historyMaxCount)
     }
-    collectEnumString(&reader, "history", "background_style", allowed: HistoryBackgroundStyle.allCases.map(\.rawValue), mutations: &mutations) {
+    collectEnumString(
+      &reader,
+      "history",
+      "background_style",
+      allowed: HistoryBackgroundStyle.allCases.map(\.rawValue),
+      mutations: &mutations
+    ) {
       defaults.set($0, forKey: PreferencesKeys.historyBackgroundStyle)
     }
     collectBool(&reader, "history", "open_on_launch", mutations: &mutations) {
@@ -386,7 +451,14 @@ enum SnapzyConfigurationImporter {
 
     let manager = HistoryFloatingManager.shared
     collectBool(&reader, "history", "floating", "enabled", mutations: &mutations) { manager.isEnabled = $0 }
-    collectEnumString(&reader, "history", "floating", "position", allowed: ["topCenter", "bottomCenter", "center"], mutations: &mutations) {
+    collectEnumString(
+      &reader,
+      "history",
+      "floating",
+      "position",
+      allowed: ["topCenter", "bottomCenter", "center"],
+      mutations: &mutations
+    ) {
       manager.position = HistoryPanelPosition(rawValue: $0) ?? .topCenter
     }
     if let filter = reader.string("history", "floating", "default_filter") {
@@ -397,13 +469,20 @@ enum SnapzyConfigurationImporter {
         mutations.append { manager.defaultFilter = value }
       }
     }
-    collectInt(&reader, "history", "floating", "max_displayed_items", range: 3...20, mutations: &mutations) {
+    collectInt(&reader, "history", "floating", "max_displayed_items", range: 3 ... 20, mutations: &mutations) {
       manager.maxDisplayedItems = $0
     }
-    collectDouble(&reader, "history", "floating", "scale", range: HistoryFloatingLayout.scaleRange, mutations: &mutations) {
+    collectDouble(
+      &reader,
+      "history",
+      "floating",
+      "scale",
+      range: HistoryFloatingLayout.scaleRange,
+      mutations: &mutations
+    ) {
       manager.panelScale = $0
     }
-    collectInt(&reader, "history", "floating", "auto_clear_days", range: 0...365, mutations: &mutations) {
+    collectInt(&reader, "history", "floating", "auto_clear_days", range: 0 ... 365, mutations: &mutations) {
       manager.autoClearDays = $0
     }
   }
@@ -413,7 +492,13 @@ enum SnapzyConfigurationImporter {
     defaults: UserDefaults,
     mutations: inout [() -> Void]
   ) {
-    collectEnumString(&reader, "cloud", "provider", allowed: CloudProviderType.allCases.map(\.rawValue), mutations: &mutations) {
+    collectEnumString(
+      &reader,
+      "cloud",
+      "provider",
+      allowed: CloudProviderType.allCases.map(\.rawValue),
+      mutations: &mutations
+    ) {
       defaults.set($0, forKey: PreferencesKeys.cloudProviderType)
     }
     collectString(&reader, "cloud", "bucket", mutations: &mutations) {
@@ -431,10 +516,22 @@ enum SnapzyConfigurationImporter {
     collectString(&reader, "cloud", "custom_domain", mutations: &mutations) {
       defaults.set($0, forKey: PreferencesKeys.cloudCustomDomain)
     }
-    collectEnumString(&reader, "cloud", "expire_time", allowed: CloudExpireTime.allCases.map(\.rawValue), mutations: &mutations) {
+    collectEnumString(
+      &reader,
+      "cloud",
+      "expire_time",
+      allowed: CloudExpireTime.allCases.map(\.rawValue),
+      mutations: &mutations
+    ) {
       defaults.set($0, forKey: PreferencesKeys.cloudExpireTime)
     }
-    collectEnumString(&reader, "cloud", "uploads_window_position", allowed: CloudUploadFloatingPosition.allCases.map(\.rawValue), mutations: &mutations) {
+    collectEnumString(
+      &reader,
+      "cloud",
+      "uploads_window_position",
+      allowed: CloudUploadFloatingPosition.allCases.map(\.rawValue),
+      mutations: &mutations
+    ) {
       defaults.set($0, forKey: PreferencesKeys.cloudUploadsFloatingPosition)
     }
   }
@@ -444,7 +541,13 @@ enum SnapzyConfigurationImporter {
     defaults: UserDefaults,
     mutations: inout [() -> Void]
   ) {
-    collectEnumString(&reader, "annotate", "clipboard_image_open_behavior", allowed: AnnotateClipboardImageBehavior.allCases.map(\.rawValue), mutations: &mutations) {
+    collectEnumString(
+      &reader,
+      "annotate",
+      "clipboard_image_open_behavior",
+      allowed: AnnotateClipboardImageBehavior.allCases.map(\.rawValue),
+      mutations: &mutations
+    ) {
       defaults.set($0, forKey: PreferencesKeys.annotateClipboardImageOpenBehavior)
     }
     collectBool(&reader, "annotate", "close_after_drag", mutations: &mutations) {
@@ -547,10 +650,10 @@ enum SnapzyConfigurationImporter {
 
   private static func appearanceMode(from value: String) -> AppearanceMode? {
     switch value.lowercased() {
-    case "system": return .system
-    case "light": return .light
-    case "dark": return .dark
-    default: return AppearanceMode(rawValue: value)
+    case "system": .system
+    case "light": .light
+    case "dark": .dark
+    default: AppearanceMode(rawValue: value)
     }
   }
 

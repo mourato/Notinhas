@@ -106,7 +106,6 @@ final class SnapzyDeepLinkHandlerTests: XCTestCase {
       ("permissions", .permissions),
       ("cloud", .cloud),
       ("advanced", .advanced),
-      ("about", .about),
     ]
 
     for (tabName, expectedTab) in cases {
@@ -116,6 +115,11 @@ final class SnapzyDeepLinkHandlerTests: XCTestCase {
       let pathURL = try XCTUnwrap(URL(string: "snapzy://settings/\(tabName)"))
       XCTAssertEqual(SnapzyDeepLinkAction(url: pathURL), .openSettings(expectedTab), tabName)
     }
+  }
+
+  func testLegacyAboutSettingsRouteOpensPreferencesWithoutTab() throws {
+    let url = try XCTUnwrap(URL(string: "snapzy://settings/about"))
+    XCTAssertEqual(SnapzyDeepLinkAction(url: url), .openSettings(nil))
   }
 
   func testUnsupportedRoutesReturnNil() throws {

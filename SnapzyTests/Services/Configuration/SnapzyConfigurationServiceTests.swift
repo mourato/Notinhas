@@ -373,6 +373,18 @@ final class SnapzyConfigurationServiceTests: XCTestCase {
     XCTAssertEqual(document.value(at: "quick_access", "animation_style")?.stringValue, "scale")
   }
 
+  func testExportOmitsLegacyUpdatesSection() throws {
+    let defaults = UserDefaultsFactory.make()
+    defaults.set("beta", forKey: PreferencesKeys.updateChannel)
+
+    let source = SnapzyConfigurationExporter.exportTOML(defaults: defaults)
+    let document = try SimpleTOMLParser.parse(source)
+
+    XCTAssertNil(document.value(at: "updates", "check_automatically"))
+    XCTAssertNil(document.value(at: "updates", "download_automatically"))
+    XCTAssertNil(document.value(at: "updates", "channel"))
+  }
+
   private func temporaryHomeDirectory() -> URL {
     FileManager.default.temporaryDirectory
       .appendingPathComponent("snapzy-config-service-\(UUID().uuidString)", isDirectory: true)

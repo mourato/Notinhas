@@ -189,11 +189,6 @@ nonisolated enum L10n {
       defaultValue: "Advanced",
       comment: "Preferences tab title"
     )
-    static let aboutTab = string(
-      "preferences.tab.about",
-      defaultValue: "About",
-      comment: "Preferences tab title"
-    )
   }
 
   enum PreferencesAdvanced {
@@ -730,11 +725,6 @@ nonisolated enum L10n {
       "menu.grant-permission",
       defaultValue: "Grant Permission...",
       comment: "Status bar menu item title to request missing permissions"
-    )
-    static let checkForUpdates = string(
-      "menu.check-for-updates",
-      defaultValue: "Check for Updates...",
-      comment: "Status bar menu item title for update checking"
     )
     static let preferences = string(
       "menu.preferences",
@@ -1318,6 +1308,21 @@ nonisolated enum L10n {
       "sponsor.direct-support",
       defaultValue: "Direct support",
       comment: "Subtitle for PayPal option"
+    )
+    static let buttonGithub = string(
+      "sponsor.button-github",
+      defaultValue: "Sponsor",
+      comment: "GitHub Sponsors action button label"
+    )
+    static let buttonKofi = string(
+      "sponsor.button-kofi",
+      defaultValue: "Tip",
+      comment: "Ko-fi action button label"
+    )
+    static let buttonPaypal = string(
+      "sponsor.button-paypal",
+      defaultValue: "Donate",
+      comment: "PayPal action button label"
     )
   }
 
@@ -1904,11 +1909,6 @@ nonisolated enum L10n {
       defaultValue: "Storage",
       comment: "General preferences section title"
     )
-    static let updatesSection = string(
-      "preferences-general.section-updates",
-      defaultValue: "Software Updates",
-      comment: "General preferences section title"
-    )
     static let diagnosticsSection = string(
       "preferences-general.section-diagnostics",
       defaultValue: "Diagnostics",
@@ -2014,36 +2014,6 @@ nonisolated enum L10n {
       defaultValue: "Choose...",
       comment: "General preferences button title"
     )
-    static let checkAutomaticallyTitle = string(
-      "preferences-general.check-automatically-title",
-      defaultValue: "Check automatically",
-      comment: "General preferences setting title"
-    )
-    static let checkAutomaticallyDescription = string(
-      "preferences-general.check-automatically-description",
-      defaultValue: "Look for updates on launch",
-      comment: "General preferences setting description"
-    )
-    static let downloadAutomaticallyTitle = string(
-      "preferences-general.download-automatically-title",
-      defaultValue: "Download automatically",
-      comment: "General preferences setting title"
-    )
-    static let downloadAutomaticallyDescription = string(
-      "preferences-general.download-automatically-description",
-      defaultValue: "Download updates in background",
-      comment: "General preferences setting description"
-    )
-    static let lastCheckedTitle = string(
-      "preferences-general.last-checked-title",
-      defaultValue: "Last checked",
-      comment: "General preferences setting title"
-    )
-    static let never = string(
-      "preferences-general.never",
-      defaultValue: "Never",
-      comment: "Label shown when an event has never happened"
-    )
     static let diagnosticLoggingTitle = string(
       "preferences-general.crash-logging-title",
       defaultValue: "Diagnostic Logging",
@@ -2077,24 +2047,6 @@ nonisolated enum L10n {
       defaultValue: "Open Folder",
       comment: "General preferences button title"
     )
-    static let openReportPageButton = string(
-      "preferences-general.open-report-page-button",
-      defaultValue: "Open Report Page",
-      comment: "General preferences button title"
-    )
-    static let reportIssueTitle = string(
-      "preferences-general.report-issue-title",
-      defaultValue: "Report a Problem",
-      comment: "General preferences setting title"
-    )
-    static func reportIssueDescription(_ destination: String) -> String {
-      format(
-        "preferences-general.report-issue-description",
-        defaultValue: "Send a diagnostic log bundle at %@ when something goes wrong",
-        comment: "General preferences setting description. %@ is the problem report destination.",
-        destination
-      )
-    }
     static let restartOnboardingTitle = string(
       "preferences-general.restart-onboarding-title",
       defaultValue: "Restart Onboarding",
@@ -3363,102 +3315,6 @@ nonisolated enum L10n {
       "preferences-shortcuts.reset-to-defaults",
       defaultValue: "Reset to Defaults",
       comment: "Button title for resetting shortcut settings"
-    )
-  }
-
-  enum PreferencesAbout {
-    static let appSubtitle = string(
-      "preferences-about.app-subtitle",
-      defaultValue: "Screenshot & Recording for macOS",
-      comment: "About screen app subtitle"
-    )
-    static func version(_ appVersion: String) -> String {
-      format(
-        "preferences-about.version",
-        defaultValue: "Version %@",
-        comment: "About screen version label. %@ is the version and build string.",
-        appVersion
-      )
-    }
-    static let checkedLabel = string(
-      "preferences-about.checked-label",
-      defaultValue: "Checked",
-      comment: "About screen label before relative update check time"
-    )
-    static let reportProblem = string(
-      "preferences-about.report-problem",
-      defaultValue: "Report a Problem",
-      comment: "Button title on the about screen"
-    )
-    static let checkForUpdates = string(
-      "preferences-about.check-for-updates",
-      defaultValue: "Check for Updates",
-      comment: "Button title on the about screen"
-    )
-    static let website = string(
-      "preferences-about.website",
-      defaultValue: "Website",
-      comment: "Tooltip for website link"
-    )
-    static let github = string(
-      "preferences-about.github",
-      defaultValue: "GitHub",
-      comment: "Tooltip for GitHub link"
-    )
-    static let reportBug = string(
-      "preferences-about.report-bug",
-      defaultValue: "Report a Bug",
-      comment: "Tooltip for issue reporting link"
-    )
-    static let supportTitle = string(
-      "preferences-about.support-title",
-      defaultValue: "Support Snapzy",
-      comment: "About screen sponsor card title"
-    )
-    static let supportDescription = string(
-      "preferences-about.support-description",
-      defaultValue: "Snapzy is open-source. Sponsor if it helps your workflow.",
-      comment: "About screen sponsor card description"
-    )
-    static let sponsorButtonGithub = string(
-      "preferences-about.sponsor-button-github",
-      defaultValue: "Sponsor",
-      comment: "GitHub Sponsors action button label"
-    )
-    static let sponsorButtonKofi = string(
-      "preferences-about.sponsor-button-kofi",
-      defaultValue: "Tip",
-      comment: "Ko-fi action button label"
-    )
-    static let sponsorButtonPaypal = string(
-      "preferences-about.sponsor-button-paypal",
-      defaultValue: "Donate",
-      comment: "PayPal action button label"
-    )
-    static let updateChannelTitle = string(
-      "preferences-about.update-channel-title",
-      defaultValue: "Update Channel",
-      comment: "About screen update channel row title"
-    )
-    static let updateChannelDescription = string(
-      "preferences-about.update-channel-description",
-      defaultValue: "Choose which releases you receive",
-      comment: "About screen update channel row description"
-    )
-    static let updateChannelStable = string(
-      "preferences-about.update-channel-stable",
-      defaultValue: "Stable",
-      comment: "Update channel picker option for stable releases"
-    )
-    static let updateChannelBeta = string(
-      "preferences-about.update-channel-beta",
-      defaultValue: "Beta",
-      comment: "Update channel picker option for beta releases"
-    )
-    static let updateChannelBetaWarning = string(
-      "preferences-about.update-channel-beta-warning",
-      defaultValue: "Beta builds are early previews and may contain bugs or unfinished features. If you switch back to Stable, this beta stays installed until the next stable release is newer than it.",
-      comment: "Warning shown when the beta update channel is selected"
     )
   }
 
@@ -6789,39 +6645,6 @@ nonisolated enum L10n {
       "recording.error.cancelled",
       defaultValue: "Recording cancelled",
       comment: "Error description when recording is cancelled"
-    )
-  }
-
-  enum CrashReport {
-    static let alertTitle = string(
-      "crash-report.alert-title",
-      defaultValue: "Report a Problem",
-      comment: "Alert title shown when presenting a problem report dialog"
-    )
-    static let alertMessage = string(
-      "crash-report.alert-message",
-      defaultValue: "Snapzy bundled your diagnostic logs into one file. Drag the file below to the report page.",
-      comment: "Alert message shown when presenting a problem report dialog with a log bundle"
-    )
-    static let alertMessageNoLogBundle = string(
-      "crash-report.alert-message-no-log-bundle",
-      defaultValue: "Snapzy could not prepare a diagnostic log bundle. You can still open the report page and describe the problem.",
-      comment: "Alert message shown when presenting a problem report dialog without a log bundle"
-    )
-    static let submit = string(
-      "crash-report.submit",
-      defaultValue: "Open Report Page",
-      comment: "Primary button title for problem report alert"
-    )
-    static let dismiss = string(
-      "crash-report.dismiss",
-      defaultValue: "Close",
-      comment: "Secondary button title for problem report alert"
-    )
-    static let accessoryHint = string(
-      "crash-report.accessory-hint",
-      defaultValue: "Drag log bundle to the report page",
-      comment: "Hint shown below the draggable problem report log bundle"
     )
   }
 

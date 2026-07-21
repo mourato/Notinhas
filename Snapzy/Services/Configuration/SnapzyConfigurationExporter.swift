@@ -7,7 +7,6 @@
 
 import AppKit
 import Foundation
-import Sparkle
 
 @MainActor
 enum SnapzyConfigurationExporter {
@@ -38,13 +37,10 @@ enum SnapzyConfigurationExporter {
     writer.value("url_scheme_enabled", defaults.object(forKey: PreferencesKeys.urlSchemeEnabled) as? Bool ?? true)
     writer.value("show_menu_bar_icon", defaults.object(forKey: PreferencesKeys.showMenuBarIcon) as? Bool ?? true)
     writer.value("start_at_login", LoginItemManager.isEnabled)
-    writer.value("export_location", SnapzyConfigurationPaths.collapsingHomePath(SandboxFileAccessManager.shared.exportLocationPath))
-
-    writer.section("updates")
-    let updater = UpdaterManager.shared.updater
-    writer.value("check_automatically", updater.automaticallyChecksForUpdates)
-    writer.value("download_automatically", updater.automaticallyDownloadsUpdates)
-    writer.value("channel", UpdaterManager.channel.rawValue)
+    writer.value(
+      "export_location",
+      SnapzyConfigurationPaths.collapsingHomePath(SandboxFileAccessManager.shared.exportLocationPath)
+    )
 
     writer.section("diagnostics")
     writer.value("enabled", defaults.object(forKey: PreferencesKeys.diagnosticsEnabled) as? Bool ?? true)
@@ -69,14 +65,23 @@ enum SnapzyConfigurationExporter {
     writer.value("include_snapzy", defaults.boolValue(PreferencesKeys.screenshotIncludeOwnApp, default: false))
     writer.value("show_cursor", defaults.boolValue(PreferencesKeys.screenshotShowCursor, default: false))
     writer.value("freeze_area", defaults.boolValue(PreferencesKeys.screenshotFreezeArea, default: false))
-    writer.value("show_selection_area_overlay", defaults.boolValue(PreferencesKeys.screenshotShowSelectionAreaOverlay, default: true))
-    writer.value("reverse_magnifier_zoom_direction", defaults.boolValue(PreferencesKeys.screenshotReverseMagnifierZoomDirection, default: false))
+    writer.value(
+      "show_selection_area_overlay",
+      defaults.boolValue(PreferencesKeys.screenshotShowSelectionAreaOverlay, default: true)
+    )
+    writer.value(
+      "reverse_magnifier_zoom_direction",
+      defaults.boolValue(PreferencesKeys.screenshotReverseMagnifierZoomDirection, default: false)
+    )
 
     writer.section("capture.scrolling")
     writer.value("show_hints", defaults.boolValue(PreferencesKeys.scrollingCaptureShowHints, default: true))
 
     writer.section("capture.ocr")
-    writer.value("success_notification", defaults.boolValue(PreferencesKeys.ocrSuccessNotificationEnabled, default: false))
+    writer.value(
+      "success_notification",
+      defaults.boolValue(PreferencesKeys.ocrSuccessNotificationEnabled, default: false)
+    )
 
     writer.section("capture.object_cutout")
     writer.value("auto_crop", defaults.boolValue(PreferencesKeys.backgroundCutoutAutoCropEnabled, default: true))
@@ -86,51 +91,60 @@ enum SnapzyConfigurationExporter {
   }
 
   #if NOTINHAS_VIDEO_MODULE
-  private static func writeRecording(_ writer: inout SimpleTOMLWriter, defaults: UserDefaults) {
-    writer.section("recording")
-    writer.value("format", RecordingToolbarPreferences.selectedFormat(defaults: defaults).rawValue)
-    writer.value("quality", RecordingToolbarPreferences.selectedQuality(defaults: defaults).rawValue)
-    writer.value("fps", defaults.integerValue(PreferencesKeys.recordingFPS, default: 30))
-    writer.value("output_mode", RecordingToolbarPreferences.outputMode(defaults: defaults).rawValue)
-    writer.value("capture_system_audio", RecordingToolbarPreferences.captureAudio(defaults: defaults))
-    writer.value("capture_microphone", RecordingToolbarPreferences.captureMicrophone(defaults: defaults))
-    writer.value("microphone_device_id", RecordingToolbarPreferences.microphoneDeviceID(defaults: defaults))
-    writer.value("remember_last_area", defaults.boolValue(PreferencesKeys.recordingRememberLastArea, default: true))
-    writer.value("include_snapzy", defaults.boolValue(PreferencesKeys.recordingIncludeOwnApp, default: false))
-    writer.value("show_cursor", RecordingToolbarPreferences.showCursor(defaults: defaults))
-    writer.value("highlight_clicks", RecordingToolbarPreferences.highlightClicks(defaults: defaults))
-    writer.value("show_keystrokes", RecordingToolbarPreferences.showKeystrokes(defaults: defaults))
-    writer.value("video_editor_zoom_transition_duration", defaults.doubleValue(PreferencesKeys.videoEditorZoomTransitionDuration, default: 0.4))
+    private static func writeRecording(_ writer: inout SimpleTOMLWriter, defaults: UserDefaults) {
+      writer.section("recording")
+      writer.value("format", RecordingToolbarPreferences.selectedFormat(defaults: defaults).rawValue)
+      writer.value("quality", RecordingToolbarPreferences.selectedQuality(defaults: defaults).rawValue)
+      writer.value("fps", defaults.integerValue(PreferencesKeys.recordingFPS, default: 30))
+      writer.value("output_mode", RecordingToolbarPreferences.outputMode(defaults: defaults).rawValue)
+      writer.value("capture_system_audio", RecordingToolbarPreferences.captureAudio(defaults: defaults))
+      writer.value("capture_microphone", RecordingToolbarPreferences.captureMicrophone(defaults: defaults))
+      writer.value("microphone_device_id", RecordingToolbarPreferences.microphoneDeviceID(defaults: defaults))
+      writer.value("remember_last_area", defaults.boolValue(PreferencesKeys.recordingRememberLastArea, default: true))
+      writer.value("include_snapzy", defaults.boolValue(PreferencesKeys.recordingIncludeOwnApp, default: false))
+      writer.value("show_cursor", RecordingToolbarPreferences.showCursor(defaults: defaults))
+      writer.value("highlight_clicks", RecordingToolbarPreferences.highlightClicks(defaults: defaults))
+      writer.value("show_keystrokes", RecordingToolbarPreferences.showKeystrokes(defaults: defaults))
+      writer.value(
+        "video_editor_zoom_transition_duration",
+        defaults.doubleValue(PreferencesKeys.videoEditorZoomTransitionDuration, default: 0.4)
+      )
 
-    writer.section("recording.mouse_highlight")
-    let color = storedMouseColor(defaults: defaults)
-    writer.value("size", defaults.doubleValue(PreferencesKeys.mouseHighlightSize, default: 50))
-    writer.value("animation_duration", defaults.doubleValue(PreferencesKeys.mouseHighlightAnimationDuration, default: 0.7))
-    writer.value("color", SnapzyConfigurationColor.hexString(from: color))
-    writer.value("opacity", defaults.doubleValue(PreferencesKeys.mouseHighlightOpacity, default: 0.5))
-    writer.value("ripple_count", defaults.integerValue(PreferencesKeys.mouseHighlightRippleCount, default: 3))
+      writer.section("recording.mouse_highlight")
+      let color = storedMouseColor(defaults: defaults)
+      writer.value("size", defaults.doubleValue(PreferencesKeys.mouseHighlightSize, default: 50))
+      writer.value(
+        "animation_duration",
+        defaults.doubleValue(PreferencesKeys.mouseHighlightAnimationDuration, default: 0.7)
+      )
+      writer.value("color", SnapzyConfigurationColor.hexString(from: color))
+      writer.value("opacity", defaults.doubleValue(PreferencesKeys.mouseHighlightOpacity, default: 0.5))
+      writer.value("ripple_count", defaults.integerValue(PreferencesKeys.mouseHighlightRippleCount, default: 3))
 
-    writer.section("recording.keystrokes")
-    writer.value("font_size", defaults.doubleValue(PreferencesKeys.keystrokeFontSize, default: 16))
-    writer.value("position", defaults.string(forKey: PreferencesKeys.keystrokePosition) ?? KeystrokeOverlayPosition.bottomCenter.rawValue)
-    writer.value("display_duration", defaults.doubleValue(PreferencesKeys.keystrokeDisplayDuration, default: 1.5))
+      writer.section("recording.keystrokes")
+      writer.value("font_size", defaults.doubleValue(PreferencesKeys.keystrokeFontSize, default: 16))
+      writer.value(
+        "position",
+        defaults.string(forKey: PreferencesKeys.keystrokePosition) ?? KeystrokeOverlayPosition.bottomCenter.rawValue
+      )
+      writer.value("display_duration", defaults.doubleValue(PreferencesKeys.keystrokeDisplayDuration, default: 1.5))
 
-    writer.section("recording.annotation_shortcuts")
-    writer.value(
-      "modifier",
-      defaults.string(forKey: PreferencesKeys.annotationShortcutModifier)
-        ?? AnnotationShortcutModifier.shift.rawValue
-    )
-    writer.value("hold_duration", defaults.doubleValue(PreferencesKeys.annotationShortcutHoldDuration, default: 0.3))
-  }
-
-  private static func storedMouseColor(defaults: UserDefaults) -> NSColor {
-    guard let data = defaults.data(forKey: PreferencesKeys.mouseHighlightColor),
-          let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) else {
-      return MouseHighlightConfiguration.defaultHighlightColor
+      writer.section("recording.annotation_shortcuts")
+      writer.value(
+        "modifier",
+        defaults.string(forKey: PreferencesKeys.annotationShortcutModifier)
+          ?? AnnotationShortcutModifier.shift.rawValue
+      )
+      writer.value("hold_duration", defaults.doubleValue(PreferencesKeys.annotationShortcutHoldDuration, default: 0.3))
     }
-    return color
-  }
+
+    private static func storedMouseColor(defaults: UserDefaults) -> NSColor {
+      guard let data = defaults.data(forKey: PreferencesKeys.mouseHighlightColor),
+            let color = try? NSKeyedUnarchiver.unarchivedObject(ofClass: NSColor.self, from: data) else {
+        return MouseHighlightConfiguration.defaultHighlightColor
+      }
+      return color
+    }
   #endif
 
   private static func writeQuickAccess(_ writer: inout SimpleTOMLWriter) {
@@ -192,16 +206,25 @@ enum SnapzyConfigurationExporter {
       writer.value("region", defaults.string(forKey: PreferencesKeys.cloudRegion) ?? "us-east-1")
       writer.value("endpoint", defaults.string(forKey: PreferencesKeys.cloudEndpoint) ?? "")
       writer.value("custom_domain", defaults.string(forKey: PreferencesKeys.cloudCustomDomain) ?? "")
-      writer.value("expire_time", defaults.string(forKey: PreferencesKeys.cloudExpireTime) ?? CloudExpireTime.day7.rawValue)
+      writer.value(
+        "expire_time",
+        defaults.string(forKey: PreferencesKeys.cloudExpireTime) ?? CloudExpireTime.day7.rawValue
+      )
     }
     writer.value("uploads_window_position", CloudUploadFloatingPosition.stored(userDefaults: defaults).rawValue)
   }
 
   private static func writeAnnotate(_ writer: inout SimpleTOMLWriter, defaults: UserDefaults) {
     writer.section("annotate")
-    writer.value("clipboard_image_open_behavior", AnnotateClipboardImageBehavior.stored(userDefaults: defaults).rawValue)
+    writer.value(
+      "clipboard_image_open_behavior",
+      AnnotateClipboardImageBehavior.stored(userDefaults: defaults).rawValue
+    )
     writer.value("close_after_drag", defaults.boolValue(PreferencesKeys.annotateCloseAfterDrag, default: true))
-    writer.value("bring_forward_after_drag", defaults.boolValue(PreferencesKeys.annotateBringForwardAfterDrag, default: false))
+    writer.value(
+      "bring_forward_after_drag",
+      defaults.boolValue(PreferencesKeys.annotateBringForwardAfterDrag, default: false)
+    )
     writer.value("quick_properties_sync", AnnotateQuickPropertiesSyncPreference.isEnabled(userDefaults: defaults))
     writer.value("combine_save_as_edit", CombineSaveAsEditPreference.isEnabled(userDefaults: defaults))
   }
@@ -219,9 +242,9 @@ enum SnapzyConfigurationExporter {
 
   private static func appearance(defaults: UserDefaults) -> String {
     switch defaults.string(forKey: PreferencesKeys.appearanceMode) {
-    case AppearanceMode.light.rawValue: return "light"
-    case AppearanceMode.dark.rawValue: return "dark"
-    default: return "system"
+    case AppearanceMode.light.rawValue: "light"
+    case AppearanceMode.dark.rawValue: "dark"
+    default: "system"
     }
   }
 

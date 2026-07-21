@@ -266,8 +266,6 @@ enum SnapzyDeepLinkAction: Equatable {
       .cloud
     case "advanced", "configuration", "config", "toml":
       .advanced
-    case "about":
-      .about
     default:
       nil
     }

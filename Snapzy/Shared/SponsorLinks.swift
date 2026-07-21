@@ -35,8 +35,13 @@ struct SponsorLink: Identifiable, Hashable {
     self.actionTitle = actionTitle
   }
 
-  func hash(into hasher: inout Hasher) { hasher.combine(id) }
-  static func == (lhs: SponsorLink, rhs: SponsorLink) -> Bool { lhs.id == rhs.id }
+  func hash(into hasher: inout Hasher) {
+    hasher.combine(id)
+  }
+
+  static func == (lhs: SponsorLink, rhs: SponsorLink) -> Bool {
+    lhs.id == rhs.id
+  }
 }
 
 enum SponsorLinks {
@@ -49,7 +54,7 @@ enum SponsorLinks {
         systemImage: "heart.fill",
         color: .pink,
         url: URL(string: "https://github.com/sponsors/duongductrong")!,
-        actionTitle: L10n.PreferencesAbout.sponsorButtonGithub
+        actionTitle: L10n.Sponsor.buttonGithub
       ),
       SponsorLink(
         id: "ko-fi",
@@ -58,7 +63,7 @@ enum SponsorLinks {
         systemImage: "cup.and.saucer.fill",
         color: .orange,
         url: URL(string: "https://ko-fi.com/duongductrong")!,
-        actionTitle: L10n.PreferencesAbout.sponsorButtonKofi
+        actionTitle: L10n.Sponsor.buttonKofi
       ),
       SponsorLink(
         id: "paypal",
@@ -67,7 +72,7 @@ enum SponsorLinks {
         systemImage: "creditcard.fill",
         color: .blue,
         url: URL(string: "https://www.paypal.com/paypalme/duongductrong")!,
-        actionTitle: L10n.PreferencesAbout.sponsorButtonPaypal
+        actionTitle: L10n.Sponsor.buttonPaypal
       ),
     ]
   }
