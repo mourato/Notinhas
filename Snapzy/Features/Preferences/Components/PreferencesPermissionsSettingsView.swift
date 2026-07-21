@@ -1,5 +1,5 @@
 //
-//  PermissionsSettingsView.swift
+//  PreferencesPermissionsSettingsView.swift
 //  Snapzy
 //
 //  Permissions status tab showing system permission states and settings links
@@ -17,10 +17,11 @@ struct PermissionsSettingsView: View {
   @State private var saveFolderGranted = false
   @State private var isChecking = false
   @State private var hasAppeared = false
+  @State private var videoModuleEnabled = VideoModuleAvailability.isEnabled
 
   private let fileAccessManager = SandboxFileAccessManager.shared
 
-  // System Settings URLs
+  /// System Settings URLs
   private let screenRecordingURL =
     "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
   private let microphoneURL =
@@ -59,16 +60,18 @@ struct PermissionsSettingsView: View {
           settingsURL: filesAndFoldersURL
         )
 
-        permissionRow(
-          icon: "mic.fill",
-          name: L10n.Onboarding.microphone,
-          description: L10n.Onboarding.optionalForVoiceRecording,
-          statusLabel: microphoneGranted ? L10n.PermissionRow.granted : L10n.Common.notGranted,
-          statusIcon: microphoneGranted ? "checkmark.circle.fill" : "xmark.circle.fill",
-          statusColor: microphoneGranted ? .green : .orange,
-          isRequired: false,
-          settingsURL: microphoneURL
-        )
+        if videoModuleEnabled {
+          permissionRow(
+            icon: "mic.fill",
+            name: L10n.Onboarding.microphone,
+            description: L10n.Onboarding.optionalForVoiceRecording,
+            statusLabel: microphoneGranted ? L10n.PermissionRow.granted : L10n.Common.notGranted,
+            statusIcon: microphoneGranted ? "checkmark.circle.fill" : "xmark.circle.fill",
+            statusColor: microphoneGranted ? .green : .orange,
+            isRequired: false,
+            settingsURL: microphoneURL
+          )
+        }
 
         permissionRow(
           icon: "hand.raised.fill",
@@ -129,11 +132,13 @@ struct PermissionsSettingsView: View {
       guard hasAppeared else { return }
       checkAllPermissions()
     }
+    .onReceive(NotificationCenter.default.publisher(for: .videoModuleAvailabilityDidChange)) { _ in
+      videoModuleEnabled = VideoModuleAvailability.isEnabled
+    }
   }
 
   // MARK: - Permission Row Component
 
-  @ViewBuilder
   private func permissionRow(
     icon: String,
     name: String,
@@ -224,42 +229,42 @@ struct PermissionsSettingsView: View {
   private var screenRecordingDescription: String {
     switch screenCaptureManager.permissionStatus {
     case .granted:
-      return L10n.Onboarding.requiredForCaptures
+      L10n.Onboarding.requiredForCaptures
     case .notGranted:
-      return L10n.Onboarding.requiredForCaptures
+      L10n.Onboarding.requiredForCaptures
     case .grantedButUnavailableDueToAppIdentity:
-      return L10n.Onboarding.screenRecordingIdentityBlocked
+      L10n.Onboarding.screenRecordingIdentityBlocked
     }
   }
 
   private var screenRecordingStatusLabel: String {
     switch screenCaptureManager.permissionStatus {
     case .granted:
-      return L10n.PermissionRow.granted
+      L10n.PermissionRow.granted
     case .notGranted:
-      return L10n.Common.notGranted
+      L10n.Common.notGranted
     case .grantedButUnavailableDueToAppIdentity:
-      return L10n.Onboarding.unavailable
+      L10n.Onboarding.unavailable
     }
   }
 
   private var screenRecordingStatusIcon: String {
     switch screenCaptureManager.permissionStatus {
     case .granted:
-      return "checkmark.circle.fill"
+      "checkmark.circle.fill"
     case .notGranted:
-      return "xmark.circle.fill"
+      "xmark.circle.fill"
     case .grantedButUnavailableDueToAppIdentity:
-      return "exclamationmark.triangle.fill"
+      "exclamationmark.triangle.fill"
     }
   }
 
   private var screenRecordingStatusColor: Color {
     switch screenCaptureManager.permissionStatus {
     case .granted:
-      return .green
+      .green
     case .notGranted, .grantedButUnavailableDueToAppIdentity:
-      return .orange
+      .orange
     }
   }
 
