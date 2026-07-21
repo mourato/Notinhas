@@ -138,13 +138,35 @@ struct AnnotateToolbarView: View {
   }
 
   private var notinhasNoteButton: some View {
-    annotationToolButton(for: .notinhasNote, help: notinhasNoteTooltip)
+    ToolbarButton(
+      icon: AnnotationToolType.notinhasNote.icon,
+      isSelected: state.selectedTool == .notinhasNote
+    ) {
+      state.activateTool(.notinhasNote)
+    }
+    .disabled(state.editorMode == .mockup)
+    .opacity(state.editorMode == .mockup ? 0.4 : 1)
+    .overlayTooltip(
+      NotinhasL10n.noteTool,
+      keys: notinhasNoteShortcutKeys,
+      secondary: NotinhasL10n.noteToolGestureHint,
+      edge: .below
+    )
+    .accessibilityLabel(notinhasNoteAccessibilityLabel)
   }
 
-  private var notinhasNoteTooltip: String {
-    let title: String = if annotateShortcutManager.isShortcutEnabled(for: .notinhasNote),
-                           let key = annotateShortcutManager.shortcut(for: .notinhasNote) {
-      L10n.Common.withShortcut(NotinhasL10n.noteTool, String(key).uppercased())
+  /// Keycap symbol for the current note-tool shortcut, or empty when disabled/unset.
+  private var notinhasNoteShortcutKeys: [String] {
+    guard annotateShortcutManager.isShortcutEnabled(for: .notinhasNote),
+          let key = annotateShortcutManager.shortcut(for: .notinhasNote)
+    else { return [] }
+    return [String(key).uppercased()]
+  }
+
+  /// Spoken label for VoiceOver — includes the shortcut and gesture in words.
+  private var notinhasNoteAccessibilityLabel: String {
+    let title: String = if let key = notinhasNoteShortcutKeys.first {
+      L10n.Common.withShortcut(NotinhasL10n.noteTool, key)
     } else {
       NotinhasL10n.noteTool
     }
