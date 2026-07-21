@@ -48,23 +48,18 @@ struct NotinhasNoteEditorView: View {
         Button(role: .destructive) { onDelete() } label: {
           Image(systemName: "trash")
         }
-        .help(NotinhasL10n.deleteNote)
+        .overlayTooltip(NotinhasL10n.deleteNote, edge: .above)
         .accessibilityLabel(NotinhasL10n.deleteNote)
 
         Spacer(minLength: 4)
 
         Button(NotinhasL10n.cancel) { onCancel() }
           .keyboardShortcut(.cancelAction)
-          .help(L10n.Common.withShortcut(NotinhasL10n.cancel, "esc"))
+          .overlayTooltip(NotinhasL10n.cancel, keys: ["esc"], edge: .above)
 
-        HStack(spacing: 4) {
-          Button(NotinhasL10n.save) { onCommit() }
-            .keyboardShortcut(.defaultAction)
-            .help(L10n.Common.withShortcut(NotinhasL10n.save, "⌘⏎"))
-          // Compact keycap only on Save — Cancel keeps esc in the tooltip to avoid footer clip.
-          KeyCapGroupView(parts: ["⌘", "⏎"], fontSize: 9)
-            .accessibilityHidden(true)
-        }
+        Button(NotinhasL10n.save) { onCommit() }
+          .keyboardShortcut(.defaultAction)
+          .overlayTooltip(NotinhasL10n.save, keys: ["⌘", "⏎"], edge: .above)
       }
     }
     .padding(12)
