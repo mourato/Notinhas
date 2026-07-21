@@ -359,7 +359,7 @@ struct QuickAccessCardView: View {
     case .uploadToCloud:
       return cloudActionIcon
     case .uploadToImgBB:
-      return "photo.on.rectangle.angled"
+      return "icloud.and.arrow.up"
     case .pinToScreen:
       return item.isPinned ? "pin.fill" : "pin"
     default:

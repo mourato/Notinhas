@@ -85,6 +85,43 @@ nonisolated enum NotinhasNoteGeometry {
     target.pinCenter
   }
 
+  /// Places the note editor beside the selection (prefer right), then clamps to the container.
+  static func editorOrigin(
+    for target: NotinhasNoteTarget,
+    panelSize: CGSize,
+    in containerBounds: CGRect,
+    gap: CGFloat = 24,
+    margin: CGFloat = 12,
+    pinDiameter: CGFloat = pinDiameter
+  ) -> CGPoint {
+    let bounds = selectionBounds(for: target, pinDiameter: pinDiameter)
+    let rightX = bounds.maxX + gap
+    let leftX = bounds.minX - panelSize.width - gap
+    let fitsRight = rightX + panelSize.width <= containerBounds.maxX - margin
+    let fitsLeft = leftX >= containerBounds.minX + margin
+
+    let originX: CGFloat
+    if fitsRight {
+      originX = rightX
+    } else if fitsLeft {
+      originX = leftX
+    } else {
+      originX = max(
+        containerBounds.minX + margin,
+        min(rightX, containerBounds.maxX - panelSize.width - margin)
+      )
+    }
+
+    var originY = bounds.midY - panelSize.height / 2
+    if originY < containerBounds.minY + margin {
+      originY = containerBounds.minY + margin
+    }
+    if originY + panelSize.height > containerBounds.maxY - margin {
+      originY = containerBounds.maxY - panelSize.height - margin
+    }
+    return CGPoint(x: originX, y: originY)
+  }
+
   static func displayNumber(for note: NotinhasVisualNote, in notes: [NotinhasVisualNote]) -> Int {
     let ordered = orderedRenderableNotes(notes)
     guard let index = ordered.firstIndex(where: { $0.id == note.id }) else {

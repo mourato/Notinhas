@@ -388,7 +388,7 @@ struct AnnotateBottomBarView: View {
       }
 
       BottomBarButton(
-        icon: isImgBBUploading ? "hourglass" : "photo.on.rectangle.angled",
+        icon: isImgBBUploading ? "hourglass" : "icloud.and.arrow.up",
         tooltip: NotinhasL10n.uploadToImgBB
       ) {
         handleImgBBUpload()

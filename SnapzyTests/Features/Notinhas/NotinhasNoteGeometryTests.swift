@@ -82,4 +82,49 @@ final class NotinhasNoteGeometryTests: XCTestCase {
       .rect(CGRect(x: 25, y: 10, width: 15, height: 30))
     )
   }
+
+  func testEditorOriginPrefersRightOfLargeRect() {
+    let container = CGRect(x: 0, y: 0, width: 800, height: 600)
+    let target = NotinhasNoteTarget.rect(CGRect(x: 40, y: 80, width: 400, height: 220))
+    let panelSize = CGSize(width: 300, height: 200)
+    let origin = NotinhasNoteGeometry.editorOrigin(
+      for: target,
+      panelSize: panelSize,
+      in: container
+    )
+    let selection = NotinhasNoteGeometry.selectionBounds(for: target)
+
+    XCTAssertEqual(origin.x, selection.maxX + 24, accuracy: 0.001)
+    XCTAssertGreaterThanOrEqual(origin.x, selection.maxX)
+    XCTAssertEqual(origin.y, selection.midY - panelSize.height / 2, accuracy: 0.001)
+  }
+
+  func testEditorOriginFallsBackLeftWhenRightDoesNotFit() {
+    let container = CGRect(x: 0, y: 0, width: 700, height: 400)
+    let target = NotinhasNoteTarget.rect(CGRect(x: 350, y: 50, width: 280, height: 150))
+    let panelSize = CGSize(width: 300, height: 200)
+    let origin = NotinhasNoteGeometry.editorOrigin(
+      for: target,
+      panelSize: panelSize,
+      in: container
+    )
+    let selection = NotinhasNoteGeometry.selectionBounds(for: target)
+
+    XCTAssertEqual(origin.x, selection.minX - panelSize.width - 24, accuracy: 0.001)
+    XCTAssertLessThan(origin.x + panelSize.width, selection.minX)
+  }
+
+  func testEditorOriginPlacesBesidePointPin() {
+    let container = CGRect(x: 0, y: 0, width: 600, height: 400)
+    let target = NotinhasNoteTarget.point(CGPoint(x: 120, y: 180))
+    let panelSize = CGSize(width: 300, height: 180)
+    let origin = NotinhasNoteGeometry.editorOrigin(
+      for: target,
+      panelSize: panelSize,
+      in: container
+    )
+    let selection = NotinhasNoteGeometry.selectionBounds(for: target)
+
+    XCTAssertEqual(origin.x, selection.maxX + 24, accuracy: 0.001)
+  }
 }

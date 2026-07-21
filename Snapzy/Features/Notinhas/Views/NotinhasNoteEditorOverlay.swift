@@ -100,23 +100,17 @@ final class NotinhasNoteEditorOverlay: NSView {
     hostingView = hosting
     hosting.layoutSubtreeIfNeeded()
 
-    let anchor = NotinhasNoteGeometry.pinAnchor(for: note.target)
     let fitting = hosting.fittingSize
     let width = max(300, ceil(fitting.width))
     let preferredHeight = max(note.target.isRectangular ? 280 : 200, ceil(fitting.height))
     let maxHeight = max(200, containerBounds.height - 24)
     let panelSize = CGSize(width: width, height: min(preferredHeight, maxHeight))
-    var origin = CGPoint(x: anchor.x + 24, y: anchor.y - panelSize.height / 2)
-
-    if origin.x + panelSize.width > containerBounds.maxX - 12 {
-      origin.x = anchor.x - panelSize.width - 24
-    }
-    if origin.y < containerBounds.minY + 12 {
-      origin.y = containerBounds.minY + 12
-    }
-    if origin.y + panelSize.height > containerBounds.maxY - 12 {
-      origin.y = containerBounds.maxY - panelSize.height - 12
-    }
+    let origin = NotinhasNoteGeometry.editorOrigin(
+      for: note.target,
+      panelSize: panelSize,
+      in: containerBounds,
+      pinDiameter: note.pinDiameter
+    )
 
     frame = CGRect(origin: origin, size: panelSize)
     hosting.frame = bounds

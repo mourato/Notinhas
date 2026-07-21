@@ -64,24 +64,41 @@ struct NotinhasNoteEditorView: View {
   }
 
   private var colorMenu: some View {
-    // Menu-styled Picker keeps AppKit checkmarks for the active swatch.
-    Picker(selection: paletteSelection) {
-      ForEach(NotinhasPaletteColor.allCases) { swatch in
-        Label {
-          Text(swatch.localizedName)
-        } icon: {
-          // `Image(nsImage:)` survives AppKit menu bridging; SwiftUI `Circle` icons do not.
-          Image(nsImage: swatch.menuImage())
+    // Compact chip label mirrors area-style buttons; Menu avoids the wide menu Picker.
+    Menu {
+      Picker(selection: paletteSelection) {
+        ForEach(NotinhasPaletteColor.allCases) { swatch in
+          Label {
+            Text(swatch.localizedName)
+          } icon: {
+            // `Image(nsImage:)` survives AppKit menu bridging; SwiftUI `Circle` icons do not.
+            Image(nsImage: swatch.menuImage())
+          }
+          .tag(Optional(swatch))
         }
-        .tag(Optional(swatch))
+      } label: {
+        EmptyView()
       }
+      .labelsHidden()
+      .pickerStyle(.inline)
     } label: {
       Image(nsImage: NotinhasPaletteColor.makeSwatchImage(color: color.nsColor, diameter: 18))
         .resizable()
         .frame(width: 18, height: 18)
+        .frame(width: 28, height: 22)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 5)
+        .background(
+          RoundedRectangle(cornerRadius: 7, style: .continuous)
+            .fill(Color.primary.opacity(0.06))
+        )
+        .overlay {
+          RoundedRectangle(cornerRadius: 7, style: .continuous)
+            .stroke(Color.primary.opacity(0.12), lineWidth: 1)
+        }
     }
-    .labelsHidden()
-    .pickerStyle(.menu)
+    .menuStyle(.borderlessButton)
+    .buttonStyle(.plain)
     .fixedSize()
     .accessibilityLabel(NotinhasL10n.noteEditorColorButton)
     .accessibilityValue(NotinhasPaletteColor.matching(color)?.localizedName ?? NotinhasL10n.selected)
