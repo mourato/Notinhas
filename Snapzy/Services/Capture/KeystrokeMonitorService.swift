@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  KeystrokeMonitorService.swift
 //  Snapzy
@@ -160,3 +161,4 @@ final class KeystrokeMonitorService {
     }
   }
 }
+#endif

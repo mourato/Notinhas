@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  ToolbarCaptureAreaToggle.swift
 //  Snapzy
@@ -112,3 +113,4 @@ struct ToolbarCaptureAreaToggle: View {
   .background(.ultraThinMaterial)
   .clipShape(RoundedRectangle(cornerRadius: 14))
 }
+#endif

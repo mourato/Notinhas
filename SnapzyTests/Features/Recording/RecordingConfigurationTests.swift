@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingConfigurationTests.swift
 //  SnapzyTests
@@ -196,3 +197,4 @@ final class RecordingConfigurationTests: XCTestCase {
     XCTAssertEqual(config.position, KeystrokeOverlayConfiguration.defaultPosition)
   }
 }
+#endif

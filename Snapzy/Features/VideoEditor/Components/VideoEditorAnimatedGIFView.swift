@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  AnimatedGIFView.swift
 //  Snapzy
@@ -36,3 +37,4 @@ struct AnimatedGIFView: NSViewRepresentable {
     }
   }
 }
+#endif

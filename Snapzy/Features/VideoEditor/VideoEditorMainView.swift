@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorMainView.swift
 //  Snapzy
@@ -169,3 +170,4 @@ struct VideoEditorMainView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
   }
 }
+#endif

@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoTimelineFrameStrip.swift
 //  Snapzy
@@ -45,3 +46,4 @@ struct VideoTimelineFrameStrip: View {
     .clipped()
   }
 }
+#endif

@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  ToolbarOptionsMenu.swift
 //  Snapzy
@@ -211,3 +212,4 @@ private struct OptionPill: View {
   ToolbarOptionsPopoverContent(state: RecordingToolbarState())
     .background(Color(NSColor.windowBackgroundColor))
 }
+#endif

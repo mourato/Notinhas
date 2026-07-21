@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingAnnotationStateTests.swift
 //  SnapzyTests
@@ -98,3 +99,4 @@ final class RecordingAnnotationStateTests: XCTestCase {
     state.stopCleanupTimer()
   }
 }
+#endif

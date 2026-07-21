@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorState.swift
 //  Snapzy
@@ -1629,3 +1630,4 @@ final class VideoEditorState: ObservableObject {
     return blurred
   }
 }
+#endif

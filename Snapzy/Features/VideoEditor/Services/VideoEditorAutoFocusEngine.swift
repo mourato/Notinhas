@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorAutoFocusEngine.swift
 //  Snapzy
@@ -472,3 +473,4 @@ private extension Double {
     Swift.min(Swift.max(self, range.lowerBound), range.upperBound)
   }
 }
+#endif

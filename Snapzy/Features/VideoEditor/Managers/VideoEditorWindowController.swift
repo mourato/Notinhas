@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorWindowController.swift
 //  Snapzy
@@ -841,3 +842,4 @@ final class VideoEditorWindowController: NSWindowController, NSWindowDelegate {
     }
   }
 }
+#endif

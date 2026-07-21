@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  PauseResumeRecordingShortcutTests.swift
 //  SnapzyTests
@@ -93,3 +94,4 @@ final class PauseResumeRecordingShortcutTests: XCTestCase {
     )
   }
 }
+#endif

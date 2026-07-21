@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoTrimHandlesView.swift
 //  Snapzy
@@ -174,3 +175,4 @@ private struct TrimHandle: View {
       .contentShape(Rectangle().inset(by: -10))
   }
 }
+#endif

@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  MouseClickHighlightService.swift
 //  Snapzy
@@ -146,3 +147,4 @@ final class MouseClickHighlightService {
     onMouseDragged?(location)
   }
 }
+#endif

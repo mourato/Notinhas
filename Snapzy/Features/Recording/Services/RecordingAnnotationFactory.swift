@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingAnnotationFactory.swift
 //  Snapzy
@@ -63,3 +64,4 @@ enum RecordingAnnotationFactory {
     return AnnotationItem(type: annotationType, bounds: bounds, properties: properties)
   }
 }
+#endif

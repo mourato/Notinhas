@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingAnnotationToolbarWindow.swift
 //  Snapzy
@@ -280,3 +281,4 @@ final class RecordingAnnotationToolbarWindow: NSWindow {
     super.close()
   }
 }
+#endif

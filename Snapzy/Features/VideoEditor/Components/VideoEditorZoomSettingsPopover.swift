@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  ZoomSettingsPopover.swift
 //  Snapzy
@@ -261,3 +262,4 @@ struct ZoomSettingsPopover: View {
   )
   .background(Color(NSColor.windowBackgroundColor))
 }
+#endif

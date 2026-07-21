@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoTimelineView.swift
 //  Snapzy
@@ -110,3 +111,4 @@ private struct TimelinePlayheadView: View {
     return CGFloat(progress) * timelineWidth
   }
 }
+#endif

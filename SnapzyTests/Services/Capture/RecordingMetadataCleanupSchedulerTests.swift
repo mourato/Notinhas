@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingMetadataCleanupSchedulerTests.swift
 //  SnapzyTests
@@ -42,3 +43,4 @@ final class RecordingMetadataCleanupSchedulerTests: XCTestCase {
     scheduler.stop()
   }
 }
+#endif

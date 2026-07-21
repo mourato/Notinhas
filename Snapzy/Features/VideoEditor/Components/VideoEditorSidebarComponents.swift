@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorSidebarComponents.swift
 //  Snapzy
@@ -327,3 +328,4 @@ struct VideoAddWallpaperButton: View {
     .buttonStyle(.plain)
   }
 }
+#endif

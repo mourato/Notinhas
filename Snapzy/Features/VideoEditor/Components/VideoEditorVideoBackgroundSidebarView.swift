@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorVideoBackgroundSidebarView.swift
 //  Snapzy
@@ -380,3 +381,4 @@ struct VideoBackgroundSidebarView: View {
     }
   }
 }
+#endif

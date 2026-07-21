@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingMouseTrackerTests.swift
 //  SnapzyTests
@@ -88,3 +89,4 @@ private final class TestClock {
 
 private final class TestMouseMonitor {
 }
+#endif

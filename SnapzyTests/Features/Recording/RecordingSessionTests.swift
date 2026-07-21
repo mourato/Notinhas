@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingSessionTests.swift
 //  SnapzyTests
@@ -75,3 +76,4 @@ final class RecordingSessionTests: XCTestCase {
     session.reset()
   }
 }
+#endif

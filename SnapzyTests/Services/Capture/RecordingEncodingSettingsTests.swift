@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingEncodingSettingsTests.swift
 //  SnapzyTests
@@ -113,3 +114,4 @@ final class RecordingEncodingSettingsTests: XCTestCase {
     XCTAssertEqual(settings[AVSampleRateKey] as? Int, 48_000)
   }
 }
+#endif

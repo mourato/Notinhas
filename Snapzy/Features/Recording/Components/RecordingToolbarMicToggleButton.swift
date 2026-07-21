@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  ToolbarMicToggleButton.swift
 //  Snapzy
@@ -145,3 +146,4 @@ struct ToolbarMicToggleButton: View {
   .background(.ultraThinMaterial)
   .clipShape(RoundedRectangle(cornerRadius: 14))
 }
+#endif

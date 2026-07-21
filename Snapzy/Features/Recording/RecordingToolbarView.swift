@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingToolbarView.swift
 //  Snapzy
@@ -76,3 +77,4 @@ struct RecordingToolbarView: View {
   )
   .padding()
 }
+#endif

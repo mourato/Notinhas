@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorSpeedTimeMapTests.swift
 //  SnapzyTests
@@ -186,3 +187,4 @@ final class VideoEditorSpeedTimeMapTests: XCTestCase {
     XCTAssertEqual(CMTimeGetSeconds(map.scaledCMDuration()), map.scaledDuration, accuracy: 0.01)
   }
 }
+#endif

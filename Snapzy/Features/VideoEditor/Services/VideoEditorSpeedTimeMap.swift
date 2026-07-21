@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  SpeedTimeMap.swift
 //  Snapzy
@@ -135,3 +136,4 @@ struct SpeedTimeMap: Equatable {
     CMTime(seconds: scaledDuration, preferredTimescale: 600)
   }
 }
+#endif

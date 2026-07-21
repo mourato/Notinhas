@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorZoomAndAutoFocusTests.swift
 //  SnapzyTests
@@ -196,3 +197,4 @@ final class VideoEditorZoomAndAutoFocusTests: XCTestCase {
     XCTAssertEqual(actual, expected, accuracy: accuracy, file: file, line: line)
   }
 }
+#endif

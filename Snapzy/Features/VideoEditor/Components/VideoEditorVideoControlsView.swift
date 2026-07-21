@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorVideoControlsView.swift
 //  Snapzy
@@ -367,3 +368,4 @@ struct VideoControlsView: View {
     }
   }
 }
+#endif

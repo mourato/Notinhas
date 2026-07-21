@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingMouseTracker.swift
 //  Snapzy
@@ -225,3 +226,4 @@ private extension CGFloat {
     Swift.min(Swift.max(self, range.lowerBound), range.upperBound)
   }
 }
+#endif

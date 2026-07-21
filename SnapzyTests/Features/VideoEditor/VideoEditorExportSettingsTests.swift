@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorExportSettingsTests.swift
 //  SnapzyTests
@@ -303,3 +304,4 @@ final class VideoEditorExportSettingsTests: XCTestCase {
     return startVolume
   }
 }
+#endif

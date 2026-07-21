@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  AnnotationToolbarIconButton.swift
 //  Snapzy
@@ -41,3 +42,4 @@ struct AnnotationToolbarIconButton: View {
     return .clear
   }
 }
+#endif

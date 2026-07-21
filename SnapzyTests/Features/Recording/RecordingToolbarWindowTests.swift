@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingToolbarWindowTests.swift
 //  SnapzyTests
@@ -62,3 +63,4 @@ final class RecordingToolbarWindowTests: XCTestCase {
     XCTAssertEqual(result.y, union.minY, accuracy: 0.001)
   }
 }
+#endif

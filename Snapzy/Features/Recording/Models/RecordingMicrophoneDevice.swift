@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingMicrophoneDevice.swift
 //  Snapzy
@@ -108,3 +109,4 @@ enum RecordingMicrophoneDeviceProvider {
     return value
   }
 }
+#endif

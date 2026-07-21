@@ -72,13 +72,17 @@ struct SnapzyDeepLinkHandler {
         logIgnoredVideoDeepLink(action: action)
         return
       }
-      screenCaptureViewModel.startRecordingFlow()
+      #if NOTINHAS_VIDEO_MODULE
+        screenCaptureViewModel.startRecordingFlow()
+      #endif
     case .recordApplication:
       guard VideoModuleAvailability.isEnabled else {
         logIgnoredVideoDeepLink(action: action)
         return
       }
-      screenCaptureViewModel.startApplicationRecordingFlow()
+      #if NOTINHAS_VIDEO_MODULE
+        screenCaptureViewModel.startApplicationRecordingFlow()
+      #endif
     case .openAnnotate:
       AnnotateManager.shared.openEmptyAnnotation()
       NSApp.activate(ignoringOtherApps: true)
@@ -94,7 +98,9 @@ struct SnapzyDeepLinkHandler {
         logIgnoredVideoDeepLink(action: action)
         return
       }
-      VideoEditorManager.shared.openEmptyEditor()
+      #if NOTINHAS_VIDEO_MODULE
+        VideoEditorManager.shared.openEmptyEditor()
+      #endif
       NSApp.activate(ignoringOtherApps: true)
     case .openCloudUploads:
       if CloudUploadHistoryWindowController.shared.toggleWindow() {

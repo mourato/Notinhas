@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  ExportProgressOverlay.swift
 //  Snapzy
@@ -108,3 +109,4 @@ private struct PulseEffectModifier: ViewModifier {
     }()
   )
 }
+#endif

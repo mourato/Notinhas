@@ -1114,7 +1114,9 @@ final class QuickAccessManager: ObservableObject {
         do {
           try FileManager.default.trashItem(at: url, resultingItemURL: nil)
           if item.isVideo {
-            try? RecordingMetadataStore.delete(for: url)
+            #if NOTINHAS_VIDEO_MODULE
+              try? RecordingMetadataStore.delete(for: url)
+            #endif
           }
         } catch {
           logger.error("Failed to delete item \(url.lastPathComponent): \(error.localizedDescription)")
@@ -1289,7 +1291,9 @@ final class QuickAccessManager: ObservableObject {
         )
         return true
       }
-      VideoEditorManager.shared.openEditor(for: item)
+      #if NOTINHAS_VIDEO_MODULE
+        VideoEditorManager.shared.openEditor(for: item)
+      #endif
     } else {
       AnnotateManager.shared.openAnnotation(for: item)
     }

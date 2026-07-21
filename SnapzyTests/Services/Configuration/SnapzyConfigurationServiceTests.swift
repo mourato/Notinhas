@@ -362,7 +362,9 @@ final class SnapzyConfigurationServiceTests: XCTestCase {
     XCTAssertEqual(document.value(at: "capture", "screenshot", "freeze_area")?.boolValue, true)
     XCTAssertEqual(document.value(at: "capture", "screenshot", "show_selection_area_overlay")?.boolValue, false)
     XCTAssertEqual(document.value(at: "capture", "screenshot", "reverse_magnifier_zoom_direction")?.boolValue, true)
-    XCTAssertEqual(document.value(at: "recording", "video_editor_zoom_transition_duration")?.doubleValue, 0.65)
+    #if NOTINHAS_VIDEO_MODULE
+      XCTAssertEqual(document.value(at: "recording", "video_editor_zoom_transition_duration")?.doubleValue, 0.65)
+    #endif
     XCTAssertEqual(document.value(at: "annotate", "combine_save_as_edit")?.boolValue, false)
     XCTAssertEqual(document.value(at: "quick_access", "trackpad_swipe_mode")?.stringValue, "natural")
     XCTAssertEqual(document.value(at: "quick_access", "swipe_left_action")?.stringValue, "pinToScreen")

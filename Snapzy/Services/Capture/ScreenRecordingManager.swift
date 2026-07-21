@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  ScreenRecordingManager.swift
 //  Snapzy
@@ -2170,3 +2171,4 @@ extension ScreenRecordingManager: SCStreamDelegate {
     DiagnosticLogger.shared.logError(.recording, error, "Screen recording stream stopped unexpectedly")
   }
 }
+#endif

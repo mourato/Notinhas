@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  KeystrokeOverlayWindow.swift
 //  Snapzy
@@ -269,3 +270,4 @@ private final class KeystrokeBadgeView: NSView {
 
   override var isFlipped: Bool { true }
 }
+#endif

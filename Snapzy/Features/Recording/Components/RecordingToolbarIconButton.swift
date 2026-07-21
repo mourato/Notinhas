@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  ToolbarIconButton.swift
 //  Snapzy
@@ -42,3 +43,4 @@ struct ToolbarIconButton: View {
   .background(.ultraThinMaterial)
   .clipShape(RoundedRectangle(cornerRadius: 14))
 }
+#endif

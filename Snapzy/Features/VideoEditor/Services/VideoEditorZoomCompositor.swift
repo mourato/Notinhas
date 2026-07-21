@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorZoomCompositor.swift
 //  Snapzy
@@ -646,3 +647,4 @@ class ZoomVideoCompositorClass: NSObject, AVVideoCompositing {
     return outputBuffer
   }
 }
+#endif

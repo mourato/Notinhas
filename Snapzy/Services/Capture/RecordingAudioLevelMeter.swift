@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingAudioLevelMeter.swift
 //  Snapzy
@@ -185,3 +186,4 @@ final class RecordingAudioLevelMeter: ObservableObject, @unchecked Sendable {
     queue.sync {}
   }
 }
+#endif

@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorSpeedTimelineTrack.swift
 //  Snapzy
@@ -576,3 +577,4 @@ private struct SpeedPlaceholderView: View {
       .transition(.opacity.animation(.easeOut(duration: 0.15)))
   }
 }
+#endif

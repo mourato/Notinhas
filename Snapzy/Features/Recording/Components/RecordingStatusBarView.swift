@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingStatusBarView.swift
 //  Snapzy
@@ -165,3 +166,4 @@ struct RecordingStatusBarView: View {
   )
   .padding()
 }
+#endif

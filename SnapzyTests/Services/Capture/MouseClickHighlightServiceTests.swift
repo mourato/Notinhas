@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  MouseClickHighlightServiceTests.swift
 //  SnapzyTests
@@ -47,3 +48,4 @@ final class MouseClickHighlightServiceTests: XCTestCase {
     service.stop()
   }
 }
+#endif

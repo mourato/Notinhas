@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  MouseHighlightConfiguration.swift
 //  Snapzy
@@ -75,3 +76,4 @@ struct MouseHighlightConfiguration {
     }
   }
 }
+#endif

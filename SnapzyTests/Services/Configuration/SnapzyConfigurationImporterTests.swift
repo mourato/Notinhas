@@ -26,10 +26,16 @@ final class SnapzyConfigurationImporterTests: XCTestCase {
     let result = SnapzyConfigurationImporter.importTOML(source, defaults: defaults)
 
     XCTAssertFalse(result.hasErrors)
-    XCTAssertGreaterThanOrEqual(result.appliedChangeCount, 3)
+    #if NOTINHAS_VIDEO_MODULE
+      XCTAssertGreaterThanOrEqual(result.appliedChangeCount, 3)
+    #else
+      XCTAssertGreaterThanOrEqual(result.appliedChangeCount, 2)
+    #endif
     XCTAssertEqual(defaults.string(forKey: PreferencesKeys.screenshotFormat), "webp")
     XCTAssertEqual(defaults.object(forKey: PreferencesKeys.screenshotShowCursor) as? Bool, true)
-    XCTAssertEqual(defaults.object(forKey: PreferencesKeys.recordingFPS) as? Int, 60)
+    #if NOTINHAS_VIDEO_MODULE
+      XCTAssertEqual(defaults.object(forKey: PreferencesKeys.recordingFPS) as? Int, 60)
+    #endif
   }
 
   func testImportRejectsUnsupportedSchemaBeforeMutatingDefaults() {
@@ -341,7 +347,9 @@ final class SnapzyConfigurationImporterTests: XCTestCase {
     XCTAssertEqual(defaults.object(forKey: PreferencesKeys.screenshotReverseMagnifierZoomDirection) as? Bool, true)
     
     // recording
-    XCTAssertEqual(defaults.object(forKey: PreferencesKeys.videoEditorZoomTransitionDuration) as? Double, 0.55)
+    #if NOTINHAS_VIDEO_MODULE
+      XCTAssertEqual(defaults.object(forKey: PreferencesKeys.videoEditorZoomTransitionDuration) as? Double, 0.55)
+    #endif
 
     // annotate
     XCTAssertEqual(defaults.object(forKey: PreferencesKeys.annotateCombineSaveAsEdit) as? Bool, false)
@@ -354,6 +362,7 @@ final class SnapzyConfigurationImporterTests: XCTestCase {
     XCTAssertEqual(manager.animationStyle, .scale)
   }
 
+  #if NOTINHAS_VIDEO_MODULE
   func testImportRejectsOutOfRangeVideoEditorZoomTransitionDuration() {
     let defaults = UserDefaultsFactory.make()
     let source = """
@@ -367,6 +376,7 @@ final class SnapzyConfigurationImporterTests: XCTestCase {
     XCTAssertTrue(result.hasErrors)
     XCTAssertNil(defaults.object(forKey: PreferencesKeys.videoEditorZoomTransitionDuration))
   }
+  #endif
 
   func testImportRejectsInvalidEnumValues() {
     let defaults = UserDefaultsFactory.make()

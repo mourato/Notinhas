@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoEditorGIFSettingsPanel.swift
 //  Snapzy
@@ -471,3 +472,4 @@ struct VideoEditorGIFSettingsPanel: View {
     )
   }
 }
+#endif

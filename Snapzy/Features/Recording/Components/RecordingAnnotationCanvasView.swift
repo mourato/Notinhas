@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingAnnotationCanvasView.swift
 //  Snapzy
@@ -198,3 +199,4 @@ final class RecordingAnnotationCanvasView: NSView {
     needsDisplay = true
   }
 }
+#endif

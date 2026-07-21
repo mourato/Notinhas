@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  SpeedSegment.swift
 //  Snapzy
@@ -113,3 +114,4 @@ extension SpeedSegment {
     }
   }
 }
+#endif

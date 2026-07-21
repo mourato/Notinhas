@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  ToolbarSystemAudioToggleButton.swift
 //  Snapzy
@@ -52,3 +53,4 @@ struct ToolbarSystemAudioToggleButton: View {
   .background(.ultraThinMaterial)
   .clipShape(RoundedRectangle(cornerRadius: 14))
 }
+#endif

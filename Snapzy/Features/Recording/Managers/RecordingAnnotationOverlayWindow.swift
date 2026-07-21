@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingAnnotationOverlayWindow.swift
 //  Snapzy
@@ -165,3 +166,4 @@ final class RecordingAnnotationOverlayWindow: NSWindow {
   override var canBecomeKey: Bool { true }
   override var canBecomeMain: Bool { false }
 }
+#endif

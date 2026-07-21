@@ -31,7 +31,9 @@ final class ShortcutOverlayManager {
   }
 
   func show() {
-    guard !RecordingCoordinator.shared.isActive else { return }
+    #if NOTINHAS_VIDEO_MODULE
+      guard !RecordingCoordinator.shared.isActive else { return }
+    #endif
 
     let screen = ScreenUtility.activeScreen()
     let sections = ShortcutOverlayContentBuilder.buildSections()

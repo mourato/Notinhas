@@ -179,11 +179,11 @@ struct PermissionsView: View {
       : requiredForScreenshotsTitle
     switch screenCaptureManager.permissionStatus {
     case .granted:
-      capturesDescription
+      return capturesDescription
     case .notGranted:
-      capturesDescription
+      return capturesDescription
     case .grantedButUnavailableDueToAppIdentity:
-      screenRecordingIdentityBlockedTitle
+      return screenRecordingIdentityBlockedTitle
     }
   }
 

@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  VideoDetailsSidebarView.swift
 //  Snapzy
@@ -130,3 +131,4 @@ private struct DetailRow: View {
     }
   }
 }
+#endif

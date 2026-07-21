@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  RecordingSession.swift
 //  Snapzy
@@ -558,3 +559,4 @@ final class RecordingSession: @unchecked Sendable {
     }
   }
 }
+#endif

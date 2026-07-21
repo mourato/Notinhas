@@ -94,7 +94,9 @@ final class AnnotateManager {
     DispatchQueue.main.async { [weak self] in
       guard let self = self else { return }
       guard self.windowControllers.isEmpty && self.manualWindowControllers.isEmpty else { return }
-      guard !VideoEditorManager.shared.hasOpenWindows else { return }
+      #if NOTINHAS_VIDEO_MODULE
+        guard !VideoEditorManager.shared.hasOpenWindows else { return }
+      #endif
       NSApp.revertActivationPolicyToAccessoryIfNeeded()
     }
   }

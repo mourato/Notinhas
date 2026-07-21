@@ -55,7 +55,9 @@ enum SnapzyConfigurationImporter {
     validateSchema(&reader)
     collectGeneral(&reader, defaults: defaults, mutations: &mutations)
     collectCapture(&reader, defaults: defaults, mutations: &mutations)
-    collectRecording(&reader, defaults: defaults, mutations: &mutations)
+    #if NOTINHAS_VIDEO_MODULE
+      collectRecording(&reader, defaults: defaults, mutations: &mutations)
+    #endif
     collectQuickAccess(&reader, mutations: &mutations)
     collectHistory(&reader, defaults: defaults, mutations: &mutations)
     collectCloud(&reader, defaults: defaults, mutations: &mutations)
@@ -179,6 +181,7 @@ enum SnapzyConfigurationImporter {
     collectAfterCapture(&reader, type: .recording, mutations: &mutations)
   }
 
+  #if NOTINHAS_VIDEO_MODULE
   private static func collectRecording(
     _ reader: inout SnapzyConfigurationReader,
     defaults: UserDefaults,
@@ -264,6 +267,7 @@ enum SnapzyConfigurationImporter {
       defaults.set($0, forKey: PreferencesKeys.videoEditorZoomTransitionDuration)
     }
   }
+  #endif
 
   private static func collectQuickAccess(
     _ reader: inout SnapzyConfigurationReader,

@@ -1,3 +1,4 @@
+#if NOTINHAS_VIDEO_MODULE
 //
 //  ZoomCenterPicker.swift
 //  Snapzy
@@ -128,3 +129,4 @@ struct ZoomCenterPicker: View {
   .padding()
   .background(Color.black)
 }
+#endif
