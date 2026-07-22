@@ -243,7 +243,7 @@ enum CaptureSelectionGeometry {
   ) -> CGRect {
     switch handle {
     case .topLeft:
-      anchoredSize(
+      return anchoredSize(
         width: rect.width,
         fixedCorner: CGPoint(x: anchorRect.maxX, y: anchorRect.minY),
         fixedCornerKind: .bottomRight,
@@ -251,14 +251,16 @@ enum CaptureSelectionGeometry {
         minSize: minSize
       )
     case .top:
-      centeredHorizontalSize(
-        height: rect.height,
-        center: CGPoint(x: anchorRect.midX, y: anchorRect.maxY),
-        aspectRatio: aspectRatio,
-        minSize: minSize
+      let height = max(minSize, rect.height)
+      let width = max(minSize, height * aspectRatio)
+      return CGRect(
+        x: anchorRect.midX - width / 2,
+        y: anchorRect.minY,
+        width: width,
+        height: height
       )
     case .topRight:
-      anchoredSize(
+      return anchoredSize(
         width: rect.width,
         fixedCorner: CGPoint(x: anchorRect.minX, y: anchorRect.minY),
         fixedCornerKind: .bottomLeft,
@@ -266,21 +268,21 @@ enum CaptureSelectionGeometry {
         minSize: minSize
       )
     case .left:
-      centeredVerticalSize(
+      return centeredVerticalSize(
         width: rect.width,
         center: CGPoint(x: anchorRect.maxX, y: anchorRect.midY),
         aspectRatio: aspectRatio,
         minSize: minSize
       )
     case .right:
-      centeredVerticalSize(
+      return centeredVerticalSize(
         width: rect.width,
         center: CGPoint(x: anchorRect.minX, y: anchorRect.midY),
         aspectRatio: aspectRatio,
         minSize: minSize
       )
     case .bottomLeft:
-      anchoredSize(
+      return anchoredSize(
         width: rect.width,
         fixedCorner: CGPoint(x: anchorRect.maxX, y: anchorRect.maxY),
         fixedCornerKind: .topRight,
@@ -288,14 +290,16 @@ enum CaptureSelectionGeometry {
         minSize: minSize
       )
     case .bottom:
-      centeredHorizontalSize(
-        height: rect.height,
-        center: CGPoint(x: anchorRect.midX, y: anchorRect.minY),
-        aspectRatio: aspectRatio,
-        minSize: minSize
+      let height = max(minSize, rect.height)
+      let width = max(minSize, height * aspectRatio)
+      return CGRect(
+        x: anchorRect.midX - width / 2,
+        y: anchorRect.maxY - height,
+        width: width,
+        height: height
       )
     case .bottomRight:
-      anchoredSize(
+      return anchoredSize(
         width: rect.width,
         fixedCorner: CGPoint(x: anchorRect.minX, y: anchorRect.maxY),
         fixedCornerKind: .topLeft,

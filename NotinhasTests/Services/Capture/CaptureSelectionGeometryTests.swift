@@ -104,4 +104,34 @@ final class CaptureSelectionGeometryTests: XCTestCase {
     XCTAssertEqual(updated.width, 320)
     XCTAssertEqual(updated.height, 100)
   }
+
+  func testResizedRect_lockedTopKeepsBottomEdgeFixed() {
+    let original = CGRect(x: 100, y: 100, width: 200, height: 100)
+
+    let resized = CaptureSelectionGeometry.resizedRect(
+      original: original,
+      handle: .top,
+      translation: CGPoint(x: 0, y: 40),
+      aspectLocked: true,
+      aspectRatio: 2
+    )
+
+    XCTAssertEqual(resized.minY, original.minY, accuracy: 0.001)
+    XCTAssertEqual(resized.width / resized.height, 2, accuracy: 0.001)
+  }
+
+  func testResizedRect_lockedBottomKeepsTopEdgeFixed() {
+    let original = CGRect(x: 100, y: 100, width: 200, height: 100)
+
+    let resized = CaptureSelectionGeometry.resizedRect(
+      original: original,
+      handle: .bottom,
+      translation: CGPoint(x: 0, y: -40),
+      aspectLocked: true,
+      aspectRatio: 2
+    )
+
+    XCTAssertEqual(resized.maxY, original.maxY, accuracy: 0.001)
+    XCTAssertEqual(resized.width / resized.height, 2, accuracy: 0.001)
+  }
 }

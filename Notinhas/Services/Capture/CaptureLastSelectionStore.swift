@@ -32,6 +32,11 @@ enum CaptureLastSelectionStore {
       return nil
     }
 
+    guard x.isFinite, y.isFinite, width.isFinite, height.isFinite,
+          width > 0, height > 0 else {
+      return nil
+    }
+
     let rect = CaptureSelectionGeometry.normalized(
       CGRect(x: x, y: y, width: width, height: height)
     )

@@ -26,7 +26,11 @@ struct AllInOneDimensionsBarView: View {
 
   var body: some View {
     HStack(spacing: ToolbarConstants.itemSpacing) {
-      dimensionField(label: "W", text: $widthText) {
+      dimensionField(
+        label: String(localized: "W", comment: "Width abbreviation in All-In-One dimensions bar"),
+        accessibilityLabel: String(localized: "Width", comment: "All-In-One dimensions field"),
+        text: $widthText
+      ) {
         commitWidth()
       }
 
@@ -34,7 +38,11 @@ struct AllInOneDimensionsBarView: View {
         .font(.system(size: 12, weight: .medium))
         .foregroundStyle(.secondary)
 
-      dimensionField(label: "H", text: $heightText) {
+      dimensionField(
+        label: String(localized: "H", comment: "Height abbreviation in All-In-One dimensions bar"),
+        accessibilityLabel: String(localized: "Height", comment: "All-In-One dimensions field"),
+        text: $heightText
+      ) {
         commitHeight()
       }
 
@@ -60,6 +68,7 @@ struct AllInOneDimensionsBarView: View {
 
   private func dimensionField(
     label: String,
+    accessibilityLabel: String,
     text: Binding<String>,
     onCommit: @escaping () -> Void
   ) -> some View {
@@ -73,6 +82,7 @@ struct AllInOneDimensionsBarView: View {
         .font(.system(size: 12, weight: .medium, design: .monospaced))
         .frame(width: 52)
         .multilineTextAlignment(.trailing)
+        .accessibilityLabel(accessibilityLabel)
         .onSubmit(onCommit)
     }
   }
