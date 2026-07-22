@@ -178,7 +178,7 @@ host.
 | Plan | Title | Priority | Effort | Depends on | Status |
 |---|---|---:|---:|---|---|
 | 039 | Make every All-In-One mode button execute its capture | P1 | M | 038 | DONE (`80f3d732`; thermo review: no code findings; focused routing tests and Video-off build pass) |
-| 040 | Make All-In-One start with the last area and hand off selection safely | P1 | M | 039 | TODO |
+| 040 | Make All-In-One start with the last area and hand off selection safely | P1 | M | 039 | DONE (`821b1123`; thermo review: no code findings; focused lifecycle/store tests pass; manual WindowServer gate remains environment-dependent) |
 | 041 | Remove rectangular backing from the All-In-One floating HUD | P1 | M | 039, 040 | TODO |
 
 ### Dependency notes (039–041)
