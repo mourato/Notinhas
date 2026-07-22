@@ -367,28 +367,25 @@ struct AnnotateBottomBarView: View {
   private var annotateActionButtons: some View {
     let showCloudButton = cloudManager.isConfigured && QuickAccessActionConfigurationStore.shared
       .isEnabled(.uploadToCloud)
-    let cloudUploadShortcut = annotateShortcutManager.isActionShortcutEnabled(for: .cloudUpload)
-      ? annotateShortcutManager.cloudUploadShortcut?.displayString : nil
-    let togglePinShortcut = annotateShortcutManager.isActionShortcutEnabled(for: .togglePin)
-      ? annotateShortcutManager.togglePinShortcut?.displayString : nil
-    let copyAndCloseShortcut = annotateShortcutManager.isActionShortcutEnabled(for: .copyAndClose)
-      ? annotateShortcutManager.copyAndCloseShortcut?.displayString : nil
+    let cloudKeys = AnnotateOverlayTooltipKeys.actionKeys(for: .cloudUpload, manager: annotateShortcutManager)
+    let pinKeys = AnnotateOverlayTooltipKeys.actionKeys(for: .togglePin, manager: annotateShortcutManager)
+    let copyKeys = AnnotateOverlayTooltipKeys.actionKeys(for: .copyAndClose, manager: annotateShortcutManager)
 
     return HStack(spacing: 12) {
       BottomBarButton(
         icon: "plus.rectangle.on.rectangle",
-        tooltip: L10n.AnnotateUI.newWindow
+        tooltipTitle: L10n.AnnotateUI.newWindow
       ) {
         AnnotateManager.shared.openEmptyAnnotation()
       }
 
-      BottomBarButton(icon: "square.and.arrow.up", tooltip: L10n.Common.share) {
+      BottomBarButton(icon: "square.and.arrow.up", tooltipTitle: L10n.Common.share) {
         share()
       }
 
       BottomBarButton(
         icon: isImgBBUploading ? "hourglass" : "icloud.and.arrow.up",
-        tooltip: isImgBBConfigured ? NotinhasL10n.uploadToImgBB : NotinhasL10n.imgbbMissingAPIKey
+        tooltipTitle: isImgBBConfigured ? NotinhasL10n.uploadToImgBB : NotinhasL10n.imgbbMissingAPIKey
       ) {
         handleImgBBUpload()
       }
@@ -402,12 +399,10 @@ struct AnnotateBottomBarView: View {
         let alreadyUploaded = state.cloudURL != nil && !needsReUpload
         BottomBarButton(
           icon: alreadyUploaded ? "checkmark.cloud" : "cloud",
-          tooltip: alreadyUploaded
+          tooltipTitle: alreadyUploaded
             ? L10n.AnnotateUI.uploadedToCloud
-            : tooltipText(
-              state.cloudKey != nil ? L10n.AnnotateUI.reuploadToCloud : L10n.AnnotateUI.uploadToCloud,
-              shortcut: cloudUploadShortcut
-            )
+            : (state.cloudKey != nil ? L10n.AnnotateUI.reuploadToCloud : L10n.AnnotateUI.uploadToCloud),
+          tooltipKeys: alreadyUploaded ? [] : cloudKeys
         ) {
           if state.cloudKey != nil, needsReUpload {
             showOverwriteConfirmation = true
@@ -421,32 +416,26 @@ struct AnnotateBottomBarView: View {
 
       BottomBarButton(
         icon: state.isPinned ? "pin.fill" : "pin",
-        tooltip: tooltipText(
-          state.isPinned ? L10n.AnnotateUI.unpinWindow : L10n.AnnotateUI.pinWindow,
-          shortcut: togglePinShortcut
-        )
+        tooltipTitle: state.isPinned ? L10n.AnnotateUI.unpinWindow : L10n.AnnotateUI.pinWindow,
+        tooltipKeys: pinKeys
       ) {
         pin()
       }
 
       BottomBarButton(
         icon: "doc.on.doc",
-        tooltip: tooltipText(L10n.AnnotateUI.copyToClipboard, shortcut: copyAndCloseShortcut)
+        tooltipTitle: L10n.AnnotateUI.copyToClipboard,
+        tooltipKeys: copyKeys
       ) {
         copyToClipboard()
       }
 
-      BottomBarButton(icon: "trash", tooltip: L10n.Common.deleteAction) {
+      BottomBarButton(icon: "trash", tooltipTitle: L10n.Common.deleteAction) {
         confirmAndDeleteImage()
       }
       .disabled(state.sourceURL == nil)
       .opacity(state.sourceURL == nil ? 0.5 : 1)
     }
-  }
-
-  private func tooltipText(_ title: String, shortcut: String?) -> String {
-    guard let shortcut else { return title }
-    return L10n.Common.withShortcut(title, shortcut)
   }
 
   // MARK: - Actions
@@ -728,7 +717,8 @@ struct AnnotateBottomBarView: View {
 
 struct BottomBarButton: View {
   let icon: String
-  let tooltip: String
+  let tooltipTitle: String
+  var tooltipKeys: [String] = []
   let action: () -> Void
 
   @State private var isHovering = false
@@ -746,6 +736,11 @@ struct BottomBarButton: View {
     }
     .buttonStyle(.plain)
     .onHover { isHovering = $0 }
-    .help(tooltip)
+    .overlayTooltip(tooltipTitle, keys: tooltipKeys, edge: .above)
+    .accessibilityLabel(
+      tooltipKeys.isEmpty
+        ? tooltipTitle
+        : L10n.Common.withShortcut(tooltipTitle, tooltipKeys.joined(separator: ""))
+    )
   }
 }
