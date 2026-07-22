@@ -150,10 +150,10 @@ struct NotinhasNoteEditorView: View {
         .font(.system(size: 11, weight: .medium))
         .foregroundStyle(.secondary)
 
-      Slider(
+      SteppedSliderControl(
         value: $areaStrokeWidth,
-        in: NotinhasVisualNote.areaStrokeWidthRange,
-        step: 0.5
+        step: 0.5,
+        in: NotinhasVisualNote.areaStrokeWidthRange
       )
 
       Text(areaStrokeWidthLabel)

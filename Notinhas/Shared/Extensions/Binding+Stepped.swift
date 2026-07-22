@@ -8,6 +8,13 @@
 
 import SwiftUI
 
+enum SteppedValue {
+  static func nudge(_ value: CGFloat, by step: CGFloat, in range: ClosedRange<CGFloat>) -> CGFloat {
+    let snapped = ((value + step) / step).rounded() * step
+    return Swift.min(Swift.max(snapped, range.lowerBound), range.upperBound)
+  }
+}
+
 extension Binding where Value == CGFloat {
   func stepped(by step: CGFloat, in range: ClosedRange<CGFloat>) -> Binding<CGFloat> {
     Binding(

@@ -1385,13 +1385,13 @@ private struct QuickStrokeWidthControl: View {
           .font(.system(size: 10))
           .foregroundColor(.secondary)
 
-        Slider(
-          value: $value.stepped(by: 1, in: AnnotationProperties.controlValueRange),
+        SteppedSliderControl(
+          value: $value,
+          step: 1,
           in: AnnotationProperties.controlValueRange,
+          sliderWidth: sliderWidth,
           onEditingChanged: onEditingChanged
         )
-        .frame(width: sliderWidth)
-        .controlSize(.small)
 
         Text(displayText)
           .font(Typography.labelSmall)
@@ -1416,9 +1416,12 @@ private struct QuickTextFontSizeControl: View {
           .font(.system(size: 10))
           .foregroundColor(.secondary)
 
-        Slider(value: $value.stepped(by: 1, in: 12 ... 72), in: 12 ... 72)
-          .frame(width: sliderWidth)
-          .controlSize(.small)
+        SteppedSliderControl(
+          value: $value,
+          step: 1,
+          in: 12 ... 72,
+          sliderWidth: sliderWidth
+        )
 
         Text("\(Int(value))pt")
           .font(Typography.labelSmall)
@@ -1543,9 +1546,12 @@ private struct QuickWatermarkOpacityControl: View {
           .font(.system(size: 10))
           .foregroundColor(.secondary)
 
-        Slider(value: $value.stepped(by: 0.01, in: 0.05 ... 0.65), in: 0.05 ... 0.65)
-          .frame(width: sliderWidth)
-          .controlSize(.small)
+        SteppedSliderControl(
+          value: $value,
+          step: 0.01,
+          in: 0.05 ... 0.65,
+          sliderWidth: sliderWidth
+        )
 
         Text("\(Int((value * 100).rounded()))%")
           .font(Typography.labelSmall)
@@ -1570,9 +1576,12 @@ private struct QuickSpotlightOpacityControl: View {
           .font(.system(size: 10))
           .foregroundColor(.secondary)
 
-        Slider(value: $value.stepped(by: 0.01, in: 0.1 ... 0.9), in: 0.1 ... 0.9)
-          .frame(width: sliderWidth)
-          .controlSize(.small)
+        SteppedSliderControl(
+          value: $value,
+          step: 0.01,
+          in: 0.1 ... 0.9,
+          sliderWidth: sliderWidth
+        )
 
         Text("\(Int((value * 100).rounded()))%")
           .font(Typography.labelSmall)
@@ -1597,9 +1606,12 @@ private struct QuickWatermarkRotationControl: View {
           .font(.system(size: 10))
           .foregroundColor(.secondary)
 
-        Slider(value: $value.stepped(by: 1, in: -45 ... 45), in: -45 ... 45)
-          .frame(width: sliderWidth)
-          .controlSize(.small)
+        SteppedSliderControl(
+          value: $value,
+          step: 1,
+          in: -45 ... 45,
+          sliderWidth: sliderWidth
+        )
 
         Text("\(Int(value.rounded()))deg")
           .font(Typography.labelSmall)
@@ -1624,9 +1636,12 @@ private struct QuickCornerRadiusControl: View {
           .font(.system(size: 10))
           .foregroundColor(.secondary)
 
-        Slider(value: $value.stepped(by: 1, in: 0 ... 60), in: 0 ... 60)
-          .frame(width: sliderWidth)
-          .controlSize(.small)
+        SteppedSliderControl(
+          value: $value,
+          step: 1,
+          in: 0 ... 60,
+          sliderWidth: sliderWidth
+        )
 
         Text("\(Int(value))")
           .font(Typography.labelSmall)
