@@ -166,6 +166,52 @@ capture rather than a new generic timer subsystem.
 - The dimension control remains a compact W × H editor with aspect lock; do
   not add crop presets, a reset menu, or unrelated generic markup controls.
 
+## All-In-One flow correction (039–041)
+
+The review at commit `8fbb0455` found that the shipped 038 implementation still
+uses a separate Capture button as the only dispatch trigger, while mode buttons
+only change `selectedMode`. It also found a duplicated AppKit/SwiftUI material
+stack in the shared HUD host that can expose rectangular/white corners. These
+plans correct behavior first, then harden session handoff, then fix the visual
+host.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 039 | Make every All-In-One mode button execute its capture | P1 | M | 038 | TODO |
+| 040 | Make All-In-One start with the last area and hand off selection safely | P1 | M | 039 | TODO |
+| 041 | Remove rectangular backing from the All-In-One floating HUD | P1 | M | 039, 040 | TODO |
+
+### Dependency notes (039–041)
+
+- 039 establishes the direct-action contract and removes the obsolete Capture button.
+- 040 depends on that contract because Window and no-rect actions must tear down
+  the All-In-One session before starting an existing selection flow.
+- 041 is last so material/host changes do not obscure a lifecycle regression and
+  can be manually checked against the final toolbar contents.
+
+### Review findings
+
+- `AllInOneCaptureToolbarView.swift:15–20` routes mode buttons to
+  `selectMode(_:)`, while `AllInOneActionToolbarView.swift:23–31` owns the only
+  capture action. This violates the requested one-button/one-mode interaction.
+- `AllInOneCaptureCoordinator.swift:56–61` restores a last rect when available,
+  but its no-rect first-drag and Window handoff paths require explicit cleanup
+  ordering to avoid nested selection sessions and stale blocking state.
+- `CaptureFloatingHUDWindow.swift:33–55` creates an AppKit material host while
+  both SwiftUI toolbar roots also call `.captureFloatingToolbarMaterial()`;
+  `CaptureFloatingToolbarChrome.swift:66–71` confirms the duplicate background
+  ownership. Manual tests are required because the artifact is rendered by
+  AppKit/SwiftUI rather than pure geometry code.
+
+### Validation note
+
+The local test runner now mirrors `scripts/build_and_run.sh`: outside CI it
+uses `Prisma Local Code Signing`, clears `DEVELOPMENT_TEAM`, and disables the
+hardened runtime; CI continues to disable signing. After this adjustment, the
+focused command for All-In-One, HUD placement, and coordinator tests passed
+with 17 tests. The project still retains its automatic team signing settings
+for Xcode/release workflows; the local override is intentionally script-scoped.
+
 ## Dependency notes (026–030)
 
 - 026 must land before the bundle-ID/path cutover.
