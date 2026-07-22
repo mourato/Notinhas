@@ -26,14 +26,9 @@ final class CaptureSelectionSemanticBoundaryProvider: CaptureSelectionSemanticBo
   private let snapshotProvider: AXSnapshotProviding
   private let isTrusted: () -> Bool
 
-  private struct CacheKey: Equatable {
-    let quantizedX: Int
-    let quantizedY: Int
-    let ownerPID: Int32?
-  }
-
-  private var cacheKey: CacheKey?
+  private var cachedInputRect: CGRect?
   private var cachedRect: CGRect?
+  private var cachedOwnerPID: Int32?
 
   init(
     snapshotProvider: AXSnapshotProviding = AXAccessibilitySnapshotProvider(),
@@ -49,13 +44,10 @@ final class CaptureSelectionSemanticBoundaryProvider: CaptureSelectionSemanticBo
       return nil
     }
 
-    let key = CacheKey(
-      quantizedX: Int(screenPoint.x.rounded()),
-      quantizedY: Int(screenPoint.y.rounded()),
-      ownerPID: ownerPID
-    )
-
-    if cacheKey == key, let cachedRect {
+    if let cachedInputRect,
+       let cachedRect,
+       cachedOwnerPID == ownerPID,
+       cachedInputRect.contains(screenPoint) {
       return cachedRect
     }
 
@@ -70,14 +62,16 @@ final class CaptureSelectionSemanticBoundaryProvider: CaptureSelectionSemanticBo
       return nil
     }
 
-    cacheKey = key
+    cachedInputRect = meaningful.rect
     cachedRect = rect
+    cachedOwnerPID = ownerPID
     return rect
   }
 
   func clearCache() {
-    cacheKey = nil
+    cachedInputRect = nil
     cachedRect = nil
+    cachedOwnerPID = nil
   }
 
   func semanticCandidates(

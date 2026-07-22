@@ -29,9 +29,9 @@ final class CaptureSelectionSnappingTests: XCTestCase {
   }
 
   func testResolve_semanticCandidateWinsOverCloserColorCandidate() {
-    let proposed = CGRect(x: 100, y: 100, width: 200, height: 120)
+    let proposed = CGRect(x: 105, y: 100, width: 195, height: 120)
     let candidates = [
-      CaptureSelectionSnappingCandidate(edge: .minX, coordinate: 101, source: .color),
+      CaptureSelectionSnappingCandidate(edge: .minX, coordinate: 104, source: .color),
       CaptureSelectionSnappingCandidate(edge: .minX, coordinate: 103, source: .semantic),
     ]
 
@@ -48,7 +48,7 @@ final class CaptureSelectionSnappingTests: XCTestCase {
   }
 
   func testResolve_visualCandidateWinsOverColorCandidateAtEqualDistance() {
-    let proposed = CGRect(x: 100, y: 100, width: 200, height: 120)
+    let proposed = CGRect(x: 100, y: 100, width: 195, height: 120)
     let candidates = [
       CaptureSelectionSnappingCandidate(edge: .maxX, coordinate: 302, source: .color),
       CaptureSelectionSnappingCandidate(edge: .maxX, coordinate: 298, source: .visual),
@@ -216,11 +216,53 @@ final class CaptureSelectionSnappingTests: XCTestCase {
       handle: .right,
       backdrop: backdrop,
       screenFrame: screenFrame,
-      configuration: CaptureSelectionSnappingConfiguration(snapDistance: 40, colorSensitivity: 4)
+      configuration: CaptureSelectionSnappingConfiguration(snapDistance: 40, colorSensitivity: 4),
+      sampler: CaptureSelectionSnappingCGImageSampler(image: backdrop.image)
     )
 
     XCTAssertFalse(candidates.isEmpty)
     XCTAssertTrue(candidates.contains { $0.source == .visual || $0.source == .color })
+  }
+
+  func testImageCandidates_returnsBoundaryNearProposedEdge() {
+    let backdrop = makeTwoRegionBackdrop(
+      leftColor: (20, 20, 20),
+      rightColor: (240, 240, 240),
+      width: 200,
+      height: 100
+    )
+    let screenFrame = CGRect(x: 0, y: 0, width: 200, height: 100)
+    let proposed = CGRect(x: 10, y: 10, width: 85, height: 80)
+
+    let candidates = CaptureSelectionSnapping.imageCandidates(
+      proposedRect: proposed,
+      handle: .right,
+      backdrop: backdrop,
+      screenFrame: screenFrame,
+      configuration: CaptureSelectionSnappingConfiguration(snapDistance: 20, colorSensitivity: 4),
+      sampler: CaptureSelectionSnappingCGImageSampler(image: backdrop.image)
+    )
+
+    let candidate = candidates.first { $0.edge == .maxX }
+    XCTAssertEqual(candidate?.coordinate ?? -1, 100.5, accuracy: 1)
+  }
+
+  func testResolve_crossingBoundaryImmediatelyDefeatsAttraction() {
+    let proposed = CGRect(x: 100, y: 100, width: 202, height: 120)
+    let candidates = [
+      CaptureSelectionSnappingCandidate(edge: .maxX, coordinate: 300, source: .color),
+    ]
+
+    let result = CaptureSelectionSnapping.resolve(
+      proposedRect: proposed,
+      handle: .right,
+      candidates: candidates,
+      configuration: configuration,
+      desktopBounds: desktop
+    )
+
+    XCTAssertEqual(result.rect, proposed)
+    XCTAssertTrue(result.appliedSources.isEmpty)
   }
 
   func testImageCandidates_rejectsSinglePixelNoise() {
@@ -233,7 +275,8 @@ final class CaptureSelectionSnappingTests: XCTestCase {
       handle: .right,
       backdrop: backdrop,
       screenFrame: screenFrame,
-      configuration: CaptureSelectionSnappingConfiguration(snapDistance: 10, colorSensitivity: 1)
+      configuration: CaptureSelectionSnappingConfiguration(snapDistance: 10, colorSensitivity: 1),
+      sampler: CaptureSelectionSnappingCGImageSampler(image: backdrop.image)
     )
 
     XCTAssertTrue(candidates.filter { $0.source == .visual }.isEmpty)

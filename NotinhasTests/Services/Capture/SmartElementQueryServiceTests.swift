@@ -39,6 +39,17 @@ final class SmartElementQueryServiceTests: XCTestCase {
     XCTAssertEqual(service.permissionDeniedLogCount, 1, "Warning must be logged exactly once.")
   }
 
+  func testSemanticBoundaryProvider_permissionDenied_doesNotQueryAX() {
+    let snapshotProvider = CountingAXSnapshotProvider(snapshot: nil)
+    let provider = CaptureSelectionSemanticBoundaryProvider(
+      snapshotProvider: snapshotProvider,
+      isTrusted: { false }
+    )
+
+    XCTAssertNil(provider.semanticRect(at: CGPoint(x: 100, y: 100), ownerPID: nil))
+    XCTAssertEqual(snapshotProvider.callCount, 0)
+  }
+
   // MARK: - Dedup
 
   func testQueryElement_dedupesIdenticalRect() throws {

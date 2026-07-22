@@ -179,7 +179,9 @@ enum CaptureSelectionSnapping {
   ) -> CaptureSelectionSnappingCandidate? {
     candidates
       .filter { candidate in
-        candidate.edge == edge && abs(candidate.coordinate - proposedCoordinate) <= snapDistance
+        candidate.edge == edge
+          && abs(candidate.coordinate - proposedCoordinate) <= snapDistance
+          && isOnApproachSide(candidate.coordinate, of: proposedCoordinate, edge: edge)
       }
       .min { lhs, rhs in
         let lhsPriority = lhs.source.rawValue
@@ -194,6 +196,19 @@ enum CaptureSelectionSnapping {
         }
         return lhs.coordinate < rhs.coordinate
       }
+  }
+
+  private static func isOnApproachSide(
+    _ candidateCoordinate: CGFloat,
+    of proposedCoordinate: CGFloat,
+    edge: CaptureSelectionSnappingEdge
+  ) -> Bool {
+    switch edge {
+    case .minX, .minY:
+      candidateCoordinate <= proposedCoordinate
+    case .maxX, .maxY:
+      candidateCoordinate >= proposedCoordinate
+    }
   }
 
   static func rectBySetting(edge: CaptureSelectionSnappingEdge, coordinate: CGFloat, in rect: CGRect) -> CGRect {
@@ -386,7 +401,7 @@ enum CaptureSelectionSnapping {
     edge: CaptureSelectionSnappingEdge,
     screenFrame: CGRect,
     imageSize: CGSize,
-    configuration _: CaptureSelectionSnappingConfiguration,
+    configuration: CaptureSelectionSnappingConfiguration,
     sampler: CaptureSelectionSnappingPixelSampling,
     width: Int,
     height: Int,
@@ -408,8 +423,16 @@ enum CaptureSelectionSnapping {
     let scanAxisIsVertical = edge == .minX || edge == .maxX
     let scanLength = scanAxisIsVertical ? proposedRect.height : proposedRect.width
     let sampleCount = max(3, min(9, Int(scanLength / 24)))
-    let inwardSign: CGFloat = edge == .minX || edge == .minY ? -1 : 1
-    let stepPixels: CGFloat = 1
+    let pixelRadius = max(
+      2,
+      Int(
+        ceil(
+          configuration.snapDistance
+            / ((edge == .minX || edge == .maxX) ? screenFrame.width : screenFrame.height)
+            * ((edge == .minX || edge == .maxX) ? imageSize.width : imageSize.height)
+        )
+      )
+    )
 
     var bestCoordinate: CGFloat?
     var bestStrength: CGFloat = 0
@@ -429,8 +452,7 @@ enum CaptureSelectionSnapping {
       guard let transition = strongestTransitionAlongNormal(
         at: scanPoint,
         edge: edge,
-        inwardSign: inwardSign,
-        stepPixels: stepPixels,
+        pixelRadius: pixelRadius,
         threshold: threshold,
         minimumRun: minimumRun,
         sampler: sampler,
@@ -462,8 +484,7 @@ enum CaptureSelectionSnapping {
   private static func strongestTransitionAlongNormal(
     at point: CGPoint,
     edge: CaptureSelectionSnappingEdge,
-    inwardSign: CGFloat,
-    stepPixels: CGFloat,
+    pixelRadius: Int,
     threshold: CGFloat,
     minimumRun: Int,
     sampler: CaptureSelectionSnappingPixelSampling,
@@ -471,23 +492,46 @@ enum CaptureSelectionSnapping {
     height: Int
   ) -> (pixelCoordinate: CGFloat, strength: CGFloat)? {
     let isHorizontalEdge = edge == .minX || edge == .maxX
+    let inwardVector = switch edge {
+    case .minX:
+      CGPoint(x: 1, y: 0)
+    case .maxX:
+      CGPoint(x: -1, y: 0)
+    case .minY:
+      CGPoint(x: 0, y: -1)
+    case .maxY:
+      CGPoint(x: 0, y: 1)
+    }
+    let outwardVector = CGPoint(x: -inwardVector.x, y: -inwardVector.y)
+    let innerSamples = (1 ... 3).compactMap { offset -> (r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat)? in
+      let inwardSample = CGPoint(
+        x: point.x + inwardVector.x * CGFloat(offset),
+        y: point.y + inwardVector.y * CGFloat(offset)
+      )
+      return sampler.rgba(at: inwardSample, width: width, height: height)
+    }
+    guard !innerSamples.isEmpty else {
+      return nil
+    }
+    let innerColor = (
+      r: innerSamples.reduce(CGFloat.zero) { $0 + $1.r } / CGFloat(innerSamples.count),
+      g: innerSamples.reduce(CGFloat.zero) { $0 + $1.g } / CGFloat(innerSamples.count),
+      b: innerSamples.reduce(CGFloat.zero) { $0 + $1.b } / CGFloat(innerSamples.count),
+      a: innerSamples.reduce(CGFloat.zero) { $0 + $1.a } / CGFloat(innerSamples.count)
+    )
+
     var run = 0
-    var best: (CGFloat, CGFloat)?
+    var firstTransitionOffset: Int?
+    var bestStrength: CGFloat = 0
 
-    for offset in 1 ... 8 {
-      let delta = inwardSign * stepPixels * CGFloat(offset)
-      let inner = isHorizontalEdge
-        ? CGPoint(x: point.x + delta, y: point.y)
-        : CGPoint(x: point.x, y: point.y + delta)
-      let outer = isHorizontalEdge
-        ? CGPoint(x: point.x - delta, y: point.y)
-        : CGPoint(x: point.x, y: point.y - delta)
-
-      guard
-        let innerColor = sampler.rgba(at: inner, width: width, height: height),
-        let outerColor = sampler.rgba(at: outer, width: width, height: height)
-      else {
+    for offset in 1 ... pixelRadius {
+      let outer = CGPoint(
+        x: point.x + outwardVector.x * CGFloat(offset),
+        y: point.y + outwardVector.y * CGFloat(offset)
+      )
+      guard let outerColor = sampler.rgba(at: outer, width: width, height: height) else {
         run = 0
+        firstTransitionOffset = nil
         continue
       }
 
@@ -495,18 +539,20 @@ enum CaptureSelectionSnapping {
       if difference >= threshold {
         run += 1
         if run >= minimumRun {
-          let coordinate = isHorizontalEdge ? inner.x : inner.y
-          if best == nil || difference > best!.1 {
-            best = (coordinate, difference)
-          }
+          firstTransitionOffset = firstTransitionOffset ?? offset - minimumRun + 1
+          bestStrength = max(bestStrength, difference)
         }
       } else {
         run = 0
+        firstTransitionOffset = nil
       }
     }
 
-    guard let best else { return nil }
-    return (best.0, best.1)
+    guard let firstTransitionOffset else { return nil }
+    let transitionPixel = isHorizontalEdge
+      ? point.x + outwardVector.x * (CGFloat(firstTransitionOffset) - 0.5)
+      : point.y + outwardVector.y * (CGFloat(firstTransitionOffset) - 0.5)
+    return (transitionPixel, bestStrength)
   }
 
   static func perceptualDifference(

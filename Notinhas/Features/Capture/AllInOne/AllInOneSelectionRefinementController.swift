@@ -27,6 +27,7 @@ final class AllInOneSelectionRefinementController: NSObject {
   private let semanticProvider: CaptureSelectionSemanticBoundaryProviding
   private let backdropCapturer: any AreaSelectionBackdropCapturing
   private var backdropCache: [CGDirectDisplayID: AreaSelectionBackdrop] = [:]
+  private var backdropSamplers: [CGDirectDisplayID: CaptureSelectionSnappingCGImageSampler] = [:]
   private var backdropTasks: [CGDirectDisplayID: Task<Void, Never>] = [:]
 
   init(
@@ -234,9 +235,13 @@ final class AllInOneSelectionRefinementController: NSObject {
     let displayID = screen?.displayID ?? CGMainDisplayID()
 
     var candidates: [CaptureSelectionSnappingCandidate] = []
+    // NSEvent.mouseLocation is AppKit's bottom-left global coordinate. The AX
+    // provider follows the existing Smart Element contract and expects the
+    // Quartz/AX top-left global coordinate returned by CGEvent.
+    let accessibilityPointer = CGEvent(source: nil)?.location ?? pointer
     candidates.append(
       contentsOf: semanticProvider.semanticCandidates(
-        at: pointer,
+        at: accessibilityPointer,
         ownerPID: nil,
         handle: handle
       )
@@ -249,7 +254,8 @@ final class AllInOneSelectionRefinementController: NSObject {
           handle: handle,
           backdrop: backdrop,
           screenFrame: screenFrame,
-          configuration: snappingConfiguration
+          configuration: snappingConfiguration,
+          sampler: backdropSamplers[displayID]
         )
       )
     }
@@ -284,6 +290,9 @@ final class AllInOneSelectionRefinementController: NSObject {
         )
         guard !Task.isCancelled, let backdrop else { return }
         backdropCache[displayID] = backdrop
+        if let sampler = CaptureSelectionSnappingCGImageSampler(image: backdrop.image) {
+          backdropSamplers[displayID] = sampler
+        }
       }
     }
   }
@@ -292,6 +301,7 @@ final class AllInOneSelectionRefinementController: NSObject {
     backdropTasks.values.forEach { $0.cancel() }
     backdropTasks.removeAll()
     backdropCache.removeAll()
+    backdropSamplers.removeAll()
   }
 
   private var unifiedDesktopFrame: CGRect {

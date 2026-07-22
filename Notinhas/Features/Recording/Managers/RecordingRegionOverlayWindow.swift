@@ -488,18 +488,6 @@ enum RecordingResizeHandleCursorGeometry {
     }
   }
 
-  static func cursorAxis(for handle: RecordingResizeHandle) -> (horizontal: Bool, vertical: Bool) {
-    switch handle {
-    case .top, .bottom:
-      (false, true)
-    case .left, .right:
-      (true, false)
-    case .topLeft, .bottomRight:
-      (true, true)
-    case .topRight, .bottomLeft:
-      (true, true)
-    }
-  }
 }
 
 // MARK: - Drawing helpers (continued)
