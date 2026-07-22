@@ -1,0 +1,368 @@
+//
+//  CaptureSelectionGeometry.swift
+//  Notinhas
+//
+//  Pure resize, aspect-lock, and normalization helpers for All-In-One capture selection.
+//
+
+import CoreGraphics
+
+// MARK: - CaptureSelectionResizeHandle
+
+/// Resize handle positions mirroring `RecordingResizeHandle` without importing AppKit.
+enum CaptureSelectionResizeHandle: CaseIterable, Equatable {
+  case topLeft, top, topRight
+  case left, right
+  case bottomLeft, bottom, bottomRight
+}
+
+// MARK: - CaptureSelectionGeometry
+
+enum CaptureSelectionGeometry {
+  static let defaultMinSize: CGFloat = 1
+
+  // MARK: - Normalization
+
+  static func normalized(_ rect: CGRect, minSize: CGFloat = defaultMinSize) -> CGRect {
+    var result = rect.standardized
+    let clampedMin = max(minSize, .leastNonzeroMagnitude)
+
+    if result.width < clampedMin {
+      result.size.width = clampedMin
+    }
+    if result.height < clampedMin {
+      result.size.height = clampedMin
+    }
+
+    return result
+  }
+
+  // MARK: - Aspect Ratio
+
+  static func aspectRatio(of rect: CGRect) -> CGFloat? {
+    let normalizedRect = rect.standardized
+    guard normalizedRect.width > 0, normalizedRect.height > 0 else { return nil }
+    return normalizedRect.width / normalizedRect.height
+  }
+
+  // MARK: - Resize
+
+  static func resizedRect(
+    original: CGRect,
+    handle: CaptureSelectionResizeHandle,
+    translation: CGPoint,
+    aspectLocked: Bool,
+    aspectRatio: CGFloat?,
+    minSize: CGFloat = defaultMinSize
+  ) -> CGRect {
+    var rect = freeResizedRect(
+      original: original,
+      handle: handle,
+      translation: translation,
+      minSize: minSize
+    )
+
+    if aspectLocked, let ratio = aspectRatio, ratio > 0 {
+      rect = aspectLockedRect(
+        rect,
+        handle: handle,
+        anchorRect: original,
+        aspectRatio: ratio,
+        minSize: minSize
+      )
+    }
+
+    return normalized(rect, minSize: minSize)
+  }
+
+  // MARK: - Dimension Edits
+
+  static func rectBySettingWidth(
+    _ rect: CGRect,
+    width: CGFloat,
+    aspectLocked: Bool,
+    aspectRatio: CGFloat?,
+    minSize: CGFloat = defaultMinSize
+  ) -> CGRect {
+    let clampedWidth = max(minSize, width)
+    let center = CGPoint(x: rect.midX, y: rect.midY)
+
+    if aspectLocked, let ratio = aspectRatio, ratio > 0 {
+      let height = max(minSize, clampedWidth / ratio)
+      return normalized(
+        CGRect(
+          x: center.x - clampedWidth / 2,
+          y: center.y - height / 2,
+          width: clampedWidth,
+          height: height
+        ),
+        minSize: minSize
+      )
+    }
+
+    return normalized(
+      CGRect(
+        x: center.x - clampedWidth / 2,
+        y: rect.minY,
+        width: clampedWidth,
+        height: rect.height
+      ),
+      minSize: minSize
+    )
+  }
+
+  static func rectBySettingHeight(
+    _ rect: CGRect,
+    height: CGFloat,
+    aspectLocked: Bool,
+    aspectRatio: CGFloat?,
+    minSize: CGFloat = defaultMinSize
+  ) -> CGRect {
+    let clampedHeight = max(minSize, height)
+    let center = CGPoint(x: rect.midX, y: rect.midY)
+
+    if aspectLocked, let ratio = aspectRatio, ratio > 0 {
+      let width = max(minSize, clampedHeight * ratio)
+      return normalized(
+        CGRect(
+          x: center.x - width / 2,
+          y: center.y - clampedHeight / 2,
+          width: width,
+          height: clampedHeight
+        ),
+        minSize: minSize
+      )
+    }
+
+    return normalized(
+      CGRect(
+        x: rect.minX,
+        y: center.y - clampedHeight / 2,
+        width: rect.width,
+        height: clampedHeight
+      ),
+      minSize: minSize
+    )
+  }
+
+  static func rectByLockingAspectRatio(
+    _ rect: CGRect,
+    aspectRatio: CGFloat,
+    minSize: CGFloat = defaultMinSize
+  ) -> CGRect {
+    guard aspectRatio > 0 else { return normalized(rect, minSize: minSize) }
+
+    let center = CGPoint(x: rect.midX, y: rect.midY)
+    let width = max(minSize, rect.width)
+    let height = max(minSize, width / aspectRatio)
+
+    return normalized(
+      CGRect(
+        x: center.x - width / 2,
+        y: center.y - height / 2,
+        width: width,
+        height: height
+      ),
+      minSize: minSize
+    )
+  }
+
+  // MARK: - Private
+
+  private static func freeResizedRect(
+    original: CGRect,
+    handle: CaptureSelectionResizeHandle,
+    translation: CGPoint,
+    minSize: CGFloat
+  ) -> CGRect {
+    var rect = original
+
+    switch handle {
+    case .topLeft:
+      rect.origin.x += translation.x
+      rect.size.width -= translation.x
+      rect.size.height += translation.y
+    case .top:
+      rect.size.height += translation.y
+    case .topRight:
+      rect.size.width += translation.x
+      rect.size.height += translation.y
+    case .left:
+      rect.origin.x += translation.x
+      rect.size.width -= translation.x
+    case .right:
+      rect.size.width += translation.x
+    case .bottomLeft:
+      rect.origin.x += translation.x
+      rect.origin.y += translation.y
+      rect.size.width -= translation.x
+      rect.size.height -= translation.y
+    case .bottom:
+      rect.origin.y += translation.y
+      rect.size.height -= translation.y
+    case .bottomRight:
+      rect.origin.y += translation.y
+      rect.size.width += translation.x
+      rect.size.height -= translation.y
+    }
+
+    return enforceMinimumSize(rect, handle: handle, reference: original, minSize: minSize)
+  }
+
+  private static func enforceMinimumSize(
+    _ rect: CGRect,
+    handle: CaptureSelectionResizeHandle,
+    reference: CGRect,
+    minSize: CGFloat
+  ) -> CGRect {
+    var result = rect
+
+    if result.width < minSize {
+      if handle == .left || handle == .topLeft || handle == .bottomLeft {
+        result.origin.x = reference.maxX - minSize
+      }
+      result.size.width = minSize
+    }
+
+    if result.height < minSize {
+      if handle == .bottom || handle == .bottomLeft || handle == .bottomRight {
+        result.origin.y = reference.maxY - minSize
+      }
+      result.size.height = minSize
+    }
+
+    return result
+  }
+
+  private static func aspectLockedRect(
+    _ rect: CGRect,
+    handle: CaptureSelectionResizeHandle,
+    anchorRect: CGRect,
+    aspectRatio: CGFloat,
+    minSize: CGFloat
+  ) -> CGRect {
+    switch handle {
+    case .topLeft:
+      anchoredSize(
+        width: rect.width,
+        fixedCorner: CGPoint(x: anchorRect.maxX, y: anchorRect.minY),
+        fixedCornerKind: .bottomRight,
+        aspectRatio: aspectRatio,
+        minSize: minSize
+      )
+    case .top:
+      centeredHorizontalSize(
+        height: rect.height,
+        center: CGPoint(x: anchorRect.midX, y: anchorRect.maxY),
+        aspectRatio: aspectRatio,
+        minSize: minSize
+      )
+    case .topRight:
+      anchoredSize(
+        width: rect.width,
+        fixedCorner: CGPoint(x: anchorRect.minX, y: anchorRect.minY),
+        fixedCornerKind: .bottomLeft,
+        aspectRatio: aspectRatio,
+        minSize: minSize
+      )
+    case .left:
+      centeredVerticalSize(
+        width: rect.width,
+        center: CGPoint(x: anchorRect.maxX, y: anchorRect.midY),
+        aspectRatio: aspectRatio,
+        minSize: minSize
+      )
+    case .right:
+      centeredVerticalSize(
+        width: rect.width,
+        center: CGPoint(x: anchorRect.minX, y: anchorRect.midY),
+        aspectRatio: aspectRatio,
+        minSize: minSize
+      )
+    case .bottomLeft:
+      anchoredSize(
+        width: rect.width,
+        fixedCorner: CGPoint(x: anchorRect.maxX, y: anchorRect.maxY),
+        fixedCornerKind: .topRight,
+        aspectRatio: aspectRatio,
+        minSize: minSize
+      )
+    case .bottom:
+      centeredHorizontalSize(
+        height: rect.height,
+        center: CGPoint(x: anchorRect.midX, y: anchorRect.minY),
+        aspectRatio: aspectRatio,
+        minSize: minSize
+      )
+    case .bottomRight:
+      anchoredSize(
+        width: rect.width,
+        fixedCorner: CGPoint(x: anchorRect.minX, y: anchorRect.maxY),
+        fixedCornerKind: .topLeft,
+        aspectRatio: aspectRatio,
+        minSize: minSize
+      )
+    }
+  }
+
+  private enum FixedCornerKind {
+    case topLeft
+    case topRight
+    case bottomLeft
+    case bottomRight
+  }
+
+  private static func anchoredSize(
+    width: CGFloat,
+    fixedCorner: CGPoint,
+    fixedCornerKind: FixedCornerKind,
+    aspectRatio: CGFloat,
+    minSize: CGFloat
+  ) -> CGRect {
+    let clampedWidth = max(minSize, width)
+    let height = max(minSize, clampedWidth / aspectRatio)
+
+    switch fixedCornerKind {
+    case .topLeft:
+      return CGRect(x: fixedCorner.x, y: fixedCorner.y - height, width: clampedWidth, height: height)
+    case .topRight:
+      return CGRect(x: fixedCorner.x - clampedWidth, y: fixedCorner.y - height, width: clampedWidth, height: height)
+    case .bottomLeft:
+      return CGRect(x: fixedCorner.x, y: fixedCorner.y, width: clampedWidth, height: height)
+    case .bottomRight:
+      return CGRect(x: fixedCorner.x - clampedWidth, y: fixedCorner.y, width: clampedWidth, height: height)
+    }
+  }
+
+  private static func centeredHorizontalSize(
+    height: CGFloat,
+    center: CGPoint,
+    aspectRatio: CGFloat,
+    minSize: CGFloat
+  ) -> CGRect {
+    let clampedHeight = max(minSize, height)
+    let width = max(minSize, clampedHeight * aspectRatio)
+    return CGRect(
+      x: center.x - width / 2,
+      y: center.y - clampedHeight / 2,
+      width: width,
+      height: clampedHeight
+    )
+  }
+
+  private static func centeredVerticalSize(
+    width: CGFloat,
+    center: CGPoint,
+    aspectRatio: CGFloat,
+    minSize: CGFloat
+  ) -> CGRect {
+    let clampedWidth = max(minSize, width)
+    let height = max(minSize, clampedWidth / aspectRatio)
+    return CGRect(
+      x: center.x - clampedWidth / 2,
+      y: center.y - height / 2,
+      width: clampedWidth,
+      height: height
+    )
+  }
+}
