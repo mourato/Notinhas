@@ -13,7 +13,6 @@ final class CaptureFloatingHUDWindow: NSPanel {
   private var anchorRect: CGRect = .zero
   private var cachedContentSize: CGSize?
   private var hostingView: NSHostingView<AnyView>?
-  private var effectView: NSVisualEffectView?
 
   init() {
     super.init(
@@ -29,32 +28,14 @@ final class CaptureFloatingHUDWindow: NSPanel {
     let themedView = view.preferredColorScheme(ThemeManager.shared.systemAppearance)
     let hosting = NSHostingView(rootView: AnyView(themedView))
     hosting.translatesAutoresizingMaskIntoConstraints = false
-
-    let effect = NSVisualEffectView()
-    effect.material = .hudWindow
-    effect.state = .active
-    effect.blendingMode = .behindWindow
-    effect.wantsLayer = true
-    effect.layer?.cornerRadius = ToolbarConstants.toolbarCornerRadius
-    effect.layer?.cornerCurve = .continuous
-    effect.layer?.masksToBounds = true
-
+    hosting.wantsLayer = true
     hosting.layer?.backgroundColor = .clear
 
-    effect.addSubview(hosting)
-    NSLayoutConstraint.activate([
-      hosting.topAnchor.constraint(equalTo: effect.topAnchor),
-      hosting.bottomAnchor.constraint(equalTo: effect.bottomAnchor),
-      hosting.leadingAnchor.constraint(equalTo: effect.leadingAnchor),
-      hosting.trailingAnchor.constraint(equalTo: effect.trailingAnchor),
-    ])
-
     let fittingSize = hosting.fittingSize
-    effect.frame = CGRect(origin: .zero, size: fittingSize)
+    hosting.frame = CGRect(origin: .zero, size: fittingSize)
 
-    contentView = effect
+    contentView = hosting
     hostingView = hosting
-    effectView = effect
 
     setContentSize(fittingSize)
     cachedContentSize = fittingSize
@@ -83,7 +64,7 @@ final class CaptureFloatingHUDWindow: NSPanel {
     hostingView.layoutSubtreeIfNeeded()
     let fittingSize = hostingView.fittingSize
 
-    effectView?.frame = CGRect(origin: .zero, size: fittingSize)
+    hostingView.frame = CGRect(origin: .zero, size: fittingSize)
     setContentSize(fittingSize)
     cachedContentSize = fittingSize
     invalidateShadow()
