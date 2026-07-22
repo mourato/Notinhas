@@ -67,6 +67,13 @@ final class OverlayTooltipPresenter {
     }
   }
 
+  #if DEBUG
+    /// Test seam: current show owner without exposing panel internals.
+    var testingCurrentOwner: UUID? {
+      currentOwner
+    }
+  #endif
+
   private func makePanel() -> NSPanel {
     let panel = NSPanel(
       contentRect: .zero,

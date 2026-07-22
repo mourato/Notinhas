@@ -157,10 +157,7 @@ struct AnnotateToolbarView: View {
 
   /// Keycap symbol for the current note-tool shortcut, or empty when disabled/unset.
   private var notinhasNoteShortcutKeys: [String] {
-    guard annotateShortcutManager.isShortcutEnabled(for: .notinhasNote),
-          let key = annotateShortcutManager.shortcut(for: .notinhasNote)
-    else { return [] }
-    return [String(key).uppercased()]
+    AnnotateOverlayTooltipKeys.toolKeys(for: .notinhasNote, manager: annotateShortcutManager)
   }
 
   /// Spoken label for VoiceOver — includes the shortcut and gesture in words.
