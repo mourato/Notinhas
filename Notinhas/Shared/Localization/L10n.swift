@@ -2698,6 +2698,67 @@ nonisolated enum L10n {
       defaultValue: "Magnifier Zoom",
       comment: "Capture preferences section title"
     )
+    static let selectionSnappingSection = string(
+      "preferences-capture.selection-snapping-section",
+      defaultValue: "Selection Snapping",
+      comment: "Capture preferences section title for All-In-One resize snapping"
+    )
+    static let selectionSnapDistanceTitle = string(
+      "preferences-capture.selection-snap-distance-title",
+      defaultValue: "Snap distance",
+      comment: "Capture preferences setting title"
+    )
+    static let selectionSnapDistanceDescription = string(
+      "preferences-capture.selection-snap-distance-description",
+      defaultValue: "How close a resize edge must be before it snaps while refining an All-In-One area. Applies to resizing only.",
+      comment: "Capture preferences setting description"
+    )
+    static let selectionColorSensitivityTitle = string(
+      "preferences-capture.selection-color-sensitivity-title",
+      defaultValue: "Color edge sensitivity",
+      comment: "Capture preferences setting title"
+    )
+    static let selectionColorSensitivityDescription = string(
+      "preferences-capture.selection-color-sensitivity-description",
+      defaultValue: "How strongly color and visual edges attract a resize handle. Semantic snapping uses Accessibility when permission is granted; image fallback works without it.",
+      comment: "Capture preferences setting description"
+    )
+
+    static func selectionColorSensitivityLabel(_ value: Int) -> String {
+      switch CaptureSelectionSnappingConfiguration.clampedColorSensitivity(value) {
+      case 1:
+        string(
+          "preferences-capture.selection-color-sensitivity-strict",
+          defaultValue: "Strict",
+          comment: "Capture selection color sensitivity option"
+        )
+      case 2:
+        string(
+          "preferences-capture.selection-color-sensitivity-firm",
+          defaultValue: "Firm",
+          comment: "Capture selection color sensitivity option"
+        )
+      case 3:
+        string(
+          "preferences-capture.selection-color-sensitivity-balanced",
+          defaultValue: "Balanced",
+          comment: "Capture selection color sensitivity option"
+        )
+      case 4:
+        string(
+          "preferences-capture.selection-color-sensitivity-relaxed",
+          defaultValue: "Relaxed",
+          comment: "Capture selection color sensitivity option"
+        )
+      default:
+        string(
+          "preferences-capture.selection-color-sensitivity-loose",
+          defaultValue: "Loose",
+          comment: "Capture selection color sensitivity option"
+        )
+      }
+    }
+
     static let showCursorTitle = string(
       "preferences-capture.show-cursor-title",
       defaultValue: "Show cursor",

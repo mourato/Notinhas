@@ -16748,6 +16748,116 @@
         }
       }
     },
+    "preferences-capture.selection-snapping-section": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selection Snapping"
+          }
+        }
+      }
+    },
+    "preferences-capture.selection-snap-distance-title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Snap distance"
+          }
+        }
+      }
+    },
+    "preferences-capture.selection-snap-distance-description": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How close a resize edge must be before it snaps while refining an All-In-One area. Applies to resizing only."
+          }
+        }
+      }
+    },
+    "preferences-capture.selection-color-sensitivity-title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color edge sensitivity"
+          }
+        }
+      }
+    },
+    "preferences-capture.selection-color-sensitivity-description": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How strongly color and visual edges attract a resize handle. Semantic snapping uses Accessibility when permission is granted; image fallback works without it."
+          }
+        }
+      }
+    },
+    "preferences-capture.selection-color-sensitivity-strict": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strict"
+          }
+        }
+      }
+    },
+    "preferences-capture.selection-color-sensitivity-firm": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firm"
+          }
+        }
+      }
+    },
+    "preferences-capture.selection-color-sensitivity-balanced": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Balanced"
+          }
+        }
+      }
+    },
+    "preferences-capture.selection-color-sensitivity-relaxed": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relaxed"
+          }
+        }
+      }
+    },
+    "preferences-capture.selection-color-sensitivity-loose": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loose"
+          }
+        }
+      }
+    },
     "preferences-capture.overlay-section": {
       "extractionState": "manual",
       "localizations": {

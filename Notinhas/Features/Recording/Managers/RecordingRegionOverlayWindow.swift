@@ -147,6 +147,11 @@ final class RecordingRegionOverlayWindow: NSPanel {
     overlayView.refreshCursor()
   }
 
+  /// Active resize handle while the user is dragging a resize affordance.
+  var currentResizeHandle: RecordingResizeHandle? {
+    overlayView.currentResizeHandle
+  }
+
   /// Only update interaction state when it actually changes, to avoid
   /// redundant invalidateCursorRects calls on every drag event.
   func setInteractionEnabledIfNeeded(_ enabled: Bool) {
@@ -201,6 +206,11 @@ final class RecordingRegionOverlayView: NSView {
   private var isNewSelecting = false
   private var newSelectionStart: CGPoint = .zero
   private var newSelectionEnd: CGPoint = .zero
+
+  /// Resize state exposed for refinement snapping integration.
+  var currentResizeHandle: RecordingResizeHandle? {
+    isResizing ? activeHandle : nil
+  }
 
   // Cross-display event monitors — allow drag/resize/reselect gestures to continue
   // seamlessly when the pointer crosses screen boundaries. Without these, per-view
@@ -268,7 +278,26 @@ final class RecordingRegionOverlayView: NSView {
   }
 
   override func resetCursorRects() {
-    addCursorRect(bounds, cursor: isInteractionEnabled ? .crosshair : .arrow)
+    if !isInteractionEnabled {
+      addCursorRect(bounds, cursor: .arrow)
+      return
+    }
+
+    addCursorRect(bounds, cursor: .crosshair)
+
+    let localRect = localHighlightRect()
+    if !localRect.isEmpty {
+      addCursorRect(localRect, cursor: .openHand)
+      registerResizeHandleCursorRects(for: localRect)
+    }
+  }
+
+  private func registerResizeHandleCursorRects(for rect: CGRect) {
+    let hitSize = handleHitSize
+    for handle in RecordingResizeHandleCursorGeometry.allHandles {
+      let hitRect = RecordingResizeHandleCursorGeometry.hitRect(for: handle, in: rect, hitSize: hitSize)
+      addCursorRect(hitRect, cursor: cursorFor(handle: handle))
+    }
   }
 
   func refreshCursor() {
@@ -316,56 +345,33 @@ final class RecordingRegionOverlayView: NSView {
 
   private func handleAt(point: CGPoint) -> RecordingResizeHandle? {
     let rect = localHighlightRect()
-    let hs = handleHitSize
-
-    // Corner handles (check first, higher priority)
-    if CGRect(x: rect.minX - hs, y: rect.maxY - hs, width: hs * 2, height: hs * 2).contains(point) {
-      return .topLeft
-    }
-    if CGRect(x: rect.maxX - hs, y: rect.maxY - hs, width: hs * 2, height: hs * 2).contains(point) {
-      return .topRight
-    }
-    if CGRect(x: rect.minX - hs, y: rect.minY - hs, width: hs * 2, height: hs * 2).contains(point) {
-      return .bottomLeft
-    }
-    if CGRect(x: rect.maxX - hs, y: rect.minY - hs, width: hs * 2, height: hs * 2).contains(point) {
-      return .bottomRight
-    }
-
-    // Edge handles
-    if CGRect(x: rect.midX - hs, y: rect.maxY - hs, width: hs * 2, height: hs * 2).contains(point) {
-      return .top
-    }
-    if CGRect(x: rect.midX - hs, y: rect.minY - hs, width: hs * 2, height: hs * 2).contains(point) {
-      return .bottom
-    }
-    if CGRect(x: rect.minX - hs, y: rect.midY - hs, width: hs * 2, height: hs * 2).contains(point) {
-      return .left
-    }
-    if CGRect(x: rect.maxX - hs, y: rect.midY - hs, width: hs * 2, height: hs * 2).contains(point) {
-      return .right
-    }
-
-    return nil
+    return RecordingResizeHandleCursorGeometry.handle(at: point, in: rect, hitSize: handleHitSize)
   }
+
+  private static let northwestSoutheastCursor: NSCursor = {
+    let image = RecordingRegionOverlayView.makeDiagonalResizeCursorImage(nwse: true)
+    return NSCursor(image: image, hotSpot: NSPoint(x: 8, y: 8))
+  }()
+
+  private static let northeastSouthwestCursor: NSCursor = {
+    let image = RecordingRegionOverlayView.makeDiagonalResizeCursorImage(nwse: false)
+    return NSCursor(image: image, hotSpot: NSPoint(x: 8, y: 8))
+  }()
 
   private func cursorFor(handle: RecordingResizeHandle) -> NSCursor {
     switch handle {
     case .topLeft, .bottomRight:
-      // NW-SE diagonal resize (↖↘)
-      NSCursor(image: diagonalResizeCursorImage(nwse: true), hotSpot: NSPoint(x: 8, y: 8))
+      Self.northwestSoutheastCursor
     case .topRight, .bottomLeft:
-      // NE-SW diagonal resize (↗↙)
-      NSCursor(image: diagonalResizeCursorImage(nwse: false), hotSpot: NSPoint(x: 8, y: 8))
+      Self.northeastSouthwestCursor
     case .top, .bottom:
-      NSCursor.resizeUpDown
+      .resizeUpDown
     case .left, .right:
-      NSCursor.resizeLeftRight
+      .resizeLeftRight
     }
   }
 
-  /// Generate diagonal resize cursor image (matches Annotate crop cursors)
-  private func diagonalResizeCursorImage(nwse: Bool) -> NSImage {
+  private static func makeDiagonalResizeCursorImage(nwse: Bool) -> NSImage {
     let size = NSSize(width: 16, height: 16)
     let image = NSImage(size: size)
     image.lockFocus()
@@ -419,7 +425,86 @@ final class RecordingRegionOverlayView: NSView {
     image.unlockFocus()
     return image
   }
+}
 
+// MARK: - Handle Geometry (testable)
+
+enum RecordingResizeHandleCursorGeometry {
+  static let allHandles: [RecordingResizeHandle] = [
+    .topLeft, .top, .topRight, .left, .right, .bottomLeft, .bottom, .bottomRight,
+  ]
+
+  static func handle(at point: CGPoint, in rect: CGRect, hitSize: CGFloat) -> RecordingResizeHandle? {
+    let hs = hitSize
+
+    if CGRect(x: rect.minX - hs, y: rect.maxY - hs, width: hs * 2, height: hs * 2).contains(point) {
+      return .topLeft
+    }
+    if CGRect(x: rect.maxX - hs, y: rect.maxY - hs, width: hs * 2, height: hs * 2).contains(point) {
+      return .topRight
+    }
+    if CGRect(x: rect.minX - hs, y: rect.minY - hs, width: hs * 2, height: hs * 2).contains(point) {
+      return .bottomLeft
+    }
+    if CGRect(x: rect.maxX - hs, y: rect.minY - hs, width: hs * 2, height: hs * 2).contains(point) {
+      return .bottomRight
+    }
+
+    if CGRect(x: rect.midX - hs, y: rect.maxY - hs, width: hs * 2, height: hs * 2).contains(point) {
+      return .top
+    }
+    if CGRect(x: rect.midX - hs, y: rect.minY - hs, width: hs * 2, height: hs * 2).contains(point) {
+      return .bottom
+    }
+    if CGRect(x: rect.minX - hs, y: rect.midY - hs, width: hs * 2, height: hs * 2).contains(point) {
+      return .left
+    }
+    if CGRect(x: rect.maxX - hs, y: rect.midY - hs, width: hs * 2, height: hs * 2).contains(point) {
+      return .right
+    }
+
+    return nil
+  }
+
+  static func hitRect(for handle: RecordingResizeHandle, in rect: CGRect, hitSize: CGFloat) -> CGRect {
+    let hs = hitSize
+    switch handle {
+    case .topLeft:
+      return CGRect(x: rect.minX - hs, y: rect.maxY - hs, width: hs * 2, height: hs * 2)
+    case .topRight:
+      return CGRect(x: rect.maxX - hs, y: rect.maxY - hs, width: hs * 2, height: hs * 2)
+    case .bottomLeft:
+      return CGRect(x: rect.minX - hs, y: rect.minY - hs, width: hs * 2, height: hs * 2)
+    case .bottomRight:
+      return CGRect(x: rect.maxX - hs, y: rect.minY - hs, width: hs * 2, height: hs * 2)
+    case .top:
+      return CGRect(x: rect.midX - hs, y: rect.maxY - hs, width: hs * 2, height: hs * 2)
+    case .bottom:
+      return CGRect(x: rect.midX - hs, y: rect.minY - hs, width: hs * 2, height: hs * 2)
+    case .left:
+      return CGRect(x: rect.minX - hs, y: rect.midY - hs, width: hs * 2, height: hs * 2)
+    case .right:
+      return CGRect(x: rect.maxX - hs, y: rect.midY - hs, width: hs * 2, height: hs * 2)
+    }
+  }
+
+  static func cursorAxis(for handle: RecordingResizeHandle) -> (horizontal: Bool, vertical: Bool) {
+    switch handle {
+    case .top, .bottom:
+      (false, true)
+    case .left, .right:
+      (true, false)
+    case .topLeft, .bottomRight:
+      (true, true)
+    case .topRight, .bottomLeft:
+      (true, true)
+    }
+  }
+}
+
+// MARK: - Drawing helpers (continued)
+
+extension RecordingRegionOverlayView {
   private func calculateResizedRect(handle: RecordingResizeHandle, delta: CGPoint) -> CGRect {
     var rect = resizeStartRect
     let minSize = minimumSelectionSize

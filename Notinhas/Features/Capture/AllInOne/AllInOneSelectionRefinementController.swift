@@ -23,14 +23,26 @@ final class AllInOneSelectionRefinementController: NSObject {
   private var resizeStartRect: CGRect?
   private var activeResizeHandle: CaptureSelectionResizeHandle?
 
+  private var snappingConfiguration: CaptureSelectionSnappingConfiguration
+  private let semanticProvider: CaptureSelectionSemanticBoundaryProviding
+  private let backdropCapturer: any AreaSelectionBackdropCapturing
+  private var backdropCache: [CGDirectDisplayID: AreaSelectionBackdrop] = [:]
+  private var backdropTasks: [CGDirectDisplayID: Task<Void, Never>] = [:]
+
   init(
     initialRect: CGRect,
     aspectLocked: Bool = false,
-    aspectRatio: CGFloat? = nil
+    aspectRatio: CGFloat? = nil,
+    snappingConfiguration: CaptureSelectionSnappingConfiguration? = nil,
+    semanticProvider: CaptureSelectionSemanticBoundaryProviding? = nil,
+    backdropCapturer: (any AreaSelectionBackdropCapturing)? = nil
   ) {
     currentRect = CaptureSelectionGeometry.normalized(initialRect)
     self.aspectLocked = aspectLocked
     lockedAspectRatio = aspectRatio ?? CaptureSelectionGeometry.aspectRatio(of: initialRect)
+    self.snappingConfiguration = snappingConfiguration ?? Self.loadSnappingConfiguration()
+    self.semanticProvider = semanticProvider ?? CaptureSelectionSemanticBoundaryProvider()
+    self.backdropCapturer = backdropCapturer ?? AreaSelectionBackdropCapturerPolicy.makeDefault()
     super.init()
   }
 
@@ -44,6 +56,7 @@ final class AllInOneSelectionRefinementController: NSObject {
     if let globalEscapeMonitor {
       NSEvent.removeMonitor(globalEscapeMonitor)
     }
+    backdropTasks.values.forEach { $0.cancel() }
     regionOverlayWindows.removeAll()
   }
 
@@ -54,12 +67,15 @@ final class AllInOneSelectionRefinementController: NSObject {
     observeScreenParameters()
     reconcileScreenOverlays()
     installEscapeMonitorsIfNeeded()
+    refreshBackdropCache()
     publishRectChange()
   }
 
   func tearDown() {
     removeEscapeMonitors()
     removeScreenParametersObserver()
+    cancelBackdropTasks()
+    semanticProvider.clearCache()
     tearDownOverlays()
     resizeStartRect = nil
     activeResizeHandle = nil
@@ -109,6 +125,7 @@ final class AllInOneSelectionRefinementController: NSObject {
       queue: .main
     ) { [weak self] _ in
       self?.reconcileScreenOverlays()
+      self?.refreshBackdropCache()
     }
   }
 
@@ -150,7 +167,10 @@ final class AllInOneSelectionRefinementController: NSObject {
   }
 
   private func updateRect(_ rect: CGRect, notifyDuringInteraction: Bool = true) {
-    let normalizedRect = CaptureSelectionGeometry.normalized(rect)
+    let normalizedRect = CaptureSelectionGeometry.normalized(
+      rect,
+      minSize: CaptureSelectionSnapping.refinementMinimumSize
+    )
     guard normalizedRect != currentRect else { return }
 
     currentRect = normalizedRect
@@ -164,7 +184,7 @@ final class AllInOneSelectionRefinementController: NSObject {
   }
 
   private func finishInteraction(with rect: CGRect) {
-    var finalRect = CaptureSelectionGeometry.normalized(rect)
+    var finalRect = CaptureSelectionGeometry.normalized(rect, minSize: CaptureSelectionSnapping.refinementMinimumSize)
     if aspectLocked, activeResizeHandle != nil {
       finalRect = aspectLockedResizeRect(from: rect)
     } else if aspectLocked, let ratio = lockedAspectRatio, ratio > 0 {
@@ -173,12 +193,17 @@ final class AllInOneSelectionRefinementController: NSObject {
     updateRect(finalRect)
     resizeStartRect = nil
     activeResizeHandle = nil
+    semanticProvider.clearCache()
   }
 
-  private func beginResizeIfNeeded(with proposedRect: CGRect) {
+  private func beginResizeIfNeeded(with proposedRect: CGRect, overlay: RecordingRegionOverlayWindow) {
     guard resizeStartRect == nil else { return }
     resizeStartRect = currentRect
-    activeResizeHandle = inferResizeHandle(from: currentRect, to: proposedRect)
+    if let recordingHandle = overlay.currentResizeHandle {
+      activeResizeHandle = captureHandle(from: recordingHandle)
+    } else {
+      activeResizeHandle = inferResizeHandle(from: currentRect, to: proposedRect)
+    }
   }
 
   private func aspectLockedResizeRect(from proposedRect: CGRect) -> CGRect {
@@ -186,7 +211,7 @@ final class AllInOneSelectionRefinementController: NSObject {
           let handle = activeResizeHandle,
           let ratio = lockedAspectRatio,
           ratio > 0 else {
-      return CaptureSelectionGeometry.normalized(proposedRect)
+      return CaptureSelectionGeometry.normalized(proposedRect, minSize: CaptureSelectionSnapping.refinementMinimumSize)
     }
 
     return CaptureSelectionGeometry.resizedRect(
@@ -194,8 +219,113 @@ final class AllInOneSelectionRefinementController: NSObject {
       handle: handle,
       translation: resizeTranslation(from: startRect, to: proposedRect, handle: handle),
       aspectLocked: true,
-      aspectRatio: ratio
+      aspectRatio: ratio,
+      minSize: CaptureSelectionSnapping.refinementMinimumSize
     )
+  }
+
+  private func applySnapping(to rawProposedRect: CGRect, pointer: CGPoint) -> CGRect {
+    guard let handle = activeResizeHandle else {
+      return rawProposedRect
+    }
+
+    let screen = screenContaining(point: pointer) ?? NSScreen.main
+    let screenFrame = screen?.frame ?? .zero
+    let displayID = screen?.displayID ?? CGMainDisplayID()
+
+    var candidates: [CaptureSelectionSnappingCandidate] = []
+    candidates.append(
+      contentsOf: semanticProvider.semanticCandidates(
+        at: pointer,
+        ownerPID: nil,
+        handle: handle
+      )
+    )
+
+    if let backdrop = backdropCache[displayID] {
+      candidates.append(
+        contentsOf: CaptureSelectionSnapping.imageCandidates(
+          proposedRect: rawProposedRect,
+          handle: handle,
+          backdrop: backdrop,
+          screenFrame: screenFrame,
+          configuration: snappingConfiguration
+        )
+      )
+    }
+
+    let desktopBounds = unifiedDesktopFrame
+    let result = CaptureSelectionSnapping.resolve(
+      proposedRect: rawProposedRect,
+      handle: handle,
+      candidates: candidates,
+      configuration: snappingConfiguration,
+      desktopBounds: desktopBounds,
+      minSize: CaptureSelectionSnapping.refinementMinimumSize
+    )
+    return result.rect
+  }
+
+  private func refreshBackdropCache() {
+    cancelBackdropTasks()
+    backdropCache.removeAll()
+
+    for screen in NSScreen.screens {
+      guard let displayID = screen.displayID else { continue }
+      let captureRect = screen.frame
+      let scaleFactor = screen.backingScaleFactor
+      backdropTasks[displayID] = Task { @MainActor [backdropCapturer] in
+        guard !Task.isCancelled else { return }
+        let backdrop = await backdropCapturer.captureBackdrop(
+          displayID: displayID,
+          captureRect: captureRect,
+          scaleFactor: scaleFactor,
+          isVisible: true
+        )
+        guard !Task.isCancelled, let backdrop else { return }
+        backdropCache[displayID] = backdrop
+      }
+    }
+  }
+
+  private func cancelBackdropTasks() {
+    backdropTasks.values.forEach { $0.cancel() }
+    backdropTasks.removeAll()
+    backdropCache.removeAll()
+  }
+
+  private var unifiedDesktopFrame: CGRect {
+    NSScreen.screens.reduce(CGRect.null) { $0.union($1.frame) }
+  }
+
+  private func screenContaining(point: CGPoint) -> NSScreen? {
+    NSScreen.screens.first { $0.frame.contains(point) }
+      ?? NSScreen.screens.first { $0.frame.insetBy(dx: -1, dy: -1).contains(point) }
+  }
+
+  private static func loadSnappingConfiguration() -> CaptureSelectionSnappingConfiguration {
+    let defaults = UserDefaults.standard
+    let snapDistance = defaults.object(forKey: PreferencesKeys.captureSelectionSnapDistance) as? Int
+      ?? Int(CaptureSelectionSnappingConfiguration.defaultSnapDistance)
+    let colorSensitivity = defaults.object(forKey: PreferencesKeys.captureSelectionColorSensitivity) as? Int
+      ?? CaptureSelectionSnappingConfiguration.defaultColorSensitivity
+    return CaptureSelectionSnappingConfiguration(
+      snapDistance: CGFloat(snapDistance),
+      colorSensitivity: colorSensitivity
+    )
+  }
+
+  private func captureHandle(from recordingHandle: RecordingResizeHandle) -> CaptureSelectionResizeHandle {
+    switch recordingHandle {
+    case .topLeft: .topLeft
+    case .top: .top
+    case .topRight: .topRight
+    case .left: .left
+    case .right: .right
+    case .bottomLeft: .bottomLeft
+    case .bottom: .bottom
+    case .bottomRight: .bottomRight
+    }
   }
 
   private func inferResizeHandle(from startRect: CGRect, to proposedRect: CGRect) -> CaptureSelectionResizeHandle {
@@ -302,9 +432,10 @@ extension AllInOneSelectionRefinementController: RecordingRegionOverlayDelegate 
     finishInteraction(with: rect)
   }
 
-  func overlay(_: RecordingRegionOverlayWindow, didResizeRegionTo rect: CGRect) {
-    beginResizeIfNeeded(with: rect)
-    updateRect(aspectLocked ? aspectLockedResizeRect(from: rect) : rect)
+  func overlay(_ overlay: RecordingRegionOverlayWindow, didResizeRegionTo rect: CGRect) {
+    beginResizeIfNeeded(with: rect, overlay: overlay)
+    let snappedRect = applySnapping(to: rect, pointer: NSEvent.mouseLocation)
+    updateRect(aspectLocked ? aspectLockedResizeRect(from: snappedRect) : snappedRect)
   }
 
   func overlayDidFinishResizing(_: RecordingRegionOverlayWindow) {

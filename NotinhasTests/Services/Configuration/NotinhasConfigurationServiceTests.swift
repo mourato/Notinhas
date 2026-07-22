@@ -388,6 +388,26 @@ final class NotinhasConfigurationServiceTests: XCTestCase {
     XCTAssertNil(document.value(at: "updates", "channel"))
   }
 
+  func testDefaultDocumentIncludesSelectionSnappingKeys() throws {
+    let source = NotinhasConfigurationDefaultDocument.toml()
+    let document = try SimpleTOMLParser.parse(source)
+
+    XCTAssertEqual(document.value(at: "capture", "screenshot", "selection_snap_distance")?.intValue, 5)
+    XCTAssertEqual(document.value(at: "capture", "screenshot", "selection_color_sensitivity")?.intValue, 3)
+  }
+
+  func testExportIncludesSelectionSnappingKeys() throws {
+    let defaults = UserDefaultsFactory.make()
+    defaults.set(8, forKey: PreferencesKeys.captureSelectionSnapDistance)
+    defaults.set(2, forKey: PreferencesKeys.captureSelectionColorSensitivity)
+
+    let source = NotinhasConfigurationExporter.exportTOML(defaults: defaults)
+    let document = try SimpleTOMLParser.parse(source)
+
+    XCTAssertEqual(document.value(at: "capture", "screenshot", "selection_snap_distance")?.intValue, 8)
+    XCTAssertEqual(document.value(at: "capture", "screenshot", "selection_color_sensitivity")?.intValue, 2)
+  }
+
   private func temporaryHomeDirectory() -> URL {
     FileManager.default.temporaryDirectory
       .appendingPathComponent("snapzy-config-service-\(UUID().uuidString)", isDirectory: true)

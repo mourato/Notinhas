@@ -468,4 +468,38 @@ final class NotinhasConfigurationImporterTests: XCTestCase {
     XCTAssertFalse(exported.contains("snapzy_min_version"))
     XCTAssertFalse(exported.contains("include_snapzy"))
   }
+
+  func testImportSelectionSnappingKeys() {
+    let defaults = UserDefaultsFactory.make()
+    let source = """
+    schema_version = 1
+
+    [capture.screenshot]
+    selection_snap_distance = 12
+    selection_color_sensitivity = 4
+    """
+
+    let result = NotinhasConfigurationImporter.importTOML(source, defaults: defaults)
+
+    XCTAssertFalse(result.hasErrors)
+    XCTAssertEqual(defaults.object(forKey: PreferencesKeys.captureSelectionSnapDistance) as? Int, 12)
+    XCTAssertEqual(defaults.object(forKey: PreferencesKeys.captureSelectionColorSensitivity) as? Int, 4)
+  }
+
+  func testImportSelectionSnappingKeysClampOutOfRangeValues() {
+    let defaults = UserDefaultsFactory.make()
+    let source = """
+    schema_version = 1
+
+    [capture.screenshot]
+    selection_snap_distance = 99
+    selection_color_sensitivity = 0
+    """
+
+    let result = NotinhasConfigurationImporter.importTOML(source, defaults: defaults)
+
+    XCTAssertTrue(result.hasErrors)
+    XCTAssertNil(defaults.object(forKey: PreferencesKeys.captureSelectionSnapDistance))
+    XCTAssertNil(defaults.object(forKey: PreferencesKeys.captureSelectionColorSensitivity))
+  }
 }

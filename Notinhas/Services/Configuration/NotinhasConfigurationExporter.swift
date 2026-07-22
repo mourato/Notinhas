@@ -76,6 +76,20 @@ enum NotinhasConfigurationExporter {
       "reverse_magnifier_zoom_direction",
       defaults.boolValue(PreferencesKeys.screenshotReverseMagnifierZoomDirection, default: false)
     )
+    writer.value(
+      "selection_snap_distance",
+      defaults.integerValue(
+        PreferencesKeys.captureSelectionSnapDistance,
+        default: Int(CaptureSelectionSnappingConfiguration.defaultSnapDistance)
+      )
+    )
+    writer.value(
+      "selection_color_sensitivity",
+      defaults.integerValue(
+        PreferencesKeys.captureSelectionColorSensitivity,
+        default: CaptureSelectionSnappingConfiguration.defaultColorSensitivity
+      )
+    )
 
     writer.section("capture.scrolling")
     writer.value("show_hints", defaults.boolValue(PreferencesKeys.scrollingCaptureShowHints, default: true))

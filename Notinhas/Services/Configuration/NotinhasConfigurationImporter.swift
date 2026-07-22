@@ -169,6 +169,26 @@ enum NotinhasConfigurationImporter {
     collectBool(&reader, "capture", "screenshot", "reverse_magnifier_zoom_direction", mutations: &mutations) {
       defaults.set($0, forKey: PreferencesKeys.screenshotReverseMagnifierZoomDirection)
     }
+    collectInt(
+      &reader,
+      "capture",
+      "screenshot",
+      "selection_snap_distance",
+      range: CaptureSelectionSnappingConfiguration.snapDistanceRange,
+      mutations: &mutations
+    ) {
+      defaults.set($0, forKey: PreferencesKeys.captureSelectionSnapDistance)
+    }
+    collectInt(
+      &reader,
+      "capture",
+      "screenshot",
+      "selection_color_sensitivity",
+      range: CaptureSelectionSnappingConfiguration.colorSensitivityRange,
+      mutations: &mutations
+    ) {
+      defaults.set($0, forKey: PreferencesKeys.captureSelectionColorSensitivity)
+    }
     collectBool(&reader, "capture", "scrolling", "show_hints", mutations: &mutations) {
       defaults.set($0, forKey: PreferencesKeys.scrollingCaptureShowHints)
     }

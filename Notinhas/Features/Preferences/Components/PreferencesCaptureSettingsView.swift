@@ -50,6 +50,11 @@ struct CaptureSettingsView: View {
   @AppStorage(PreferencesKeys.screenshotFreezeArea) private var freezeAreaCapture = false
   @AppStorage(PreferencesKeys.screenshotShowSelectionAreaOverlay) private var showSelectionAreaOverlay = true
   @AppStorage(PreferencesKeys.screenshotReverseMagnifierZoomDirection) private var reverseMagnifierZoomDirection = false
+  @AppStorage(PreferencesKeys.captureSelectionSnapDistance) private var captureSelectionSnapDistance = Int(
+    CaptureSelectionSnappingConfiguration.defaultSnapDistance
+  )
+  @AppStorage(PreferencesKeys.captureSelectionColorSensitivity) private var captureSelectionColorSensitivity =
+    CaptureSelectionSnappingConfiguration.defaultColorSensitivity
 
   @AppStorage(PreferencesKeys.screenshotFormat) private var screenshotFormat = "png"
   @AppStorage(PreferencesKeys.scrollingCaptureShowHints) private var scrollingCaptureShowHints = true
@@ -203,6 +208,38 @@ struct CaptureSettingsView: View {
             ) {
               Toggle("", isOn: $reverseMagnifierZoomDirection)
                 .labelsHidden()
+            }
+          }
+
+          Section(L10n.PreferencesCapture.selectionSnappingSection) {
+            SettingRow(
+              icon: "arrow.left.and.right.square",
+              title: L10n.PreferencesCapture.selectionSnapDistanceTitle,
+              description: L10n.PreferencesCapture.selectionSnapDistanceDescription
+            ) {
+              Stepper(
+                value: $captureSelectionSnapDistance,
+                in: CaptureSelectionSnappingConfiguration.snapDistanceRange,
+                step: 1
+              ) {
+                Text("\(captureSelectionSnapDistance) px")
+                  .monospacedDigit()
+              }
+            }
+
+            SettingRow(
+              icon: "eyedropper.halffull",
+              title: L10n.PreferencesCapture.selectionColorSensitivityTitle,
+              description: L10n.PreferencesCapture.selectionColorSensitivityDescription
+            ) {
+              Picker("", selection: $captureSelectionColorSensitivity) {
+                ForEach(Array(CaptureSelectionSnappingConfiguration.colorSensitivityRange), id: \.self) { value in
+                  Text(L10n.PreferencesCapture.selectionColorSensitivityLabel(value))
+                    .tag(value)
+                }
+              }
+              .labelsHidden()
+              .pickerStyle(.menu)
             }
           }
         }
