@@ -68,6 +68,10 @@ private struct CaptureFloatingToolbarMaterialBackground: ViewModifier {
       .background(reduceTransparency ? AnyShapeStyle(Color(nsColor: .windowBackgroundColor)) :
         AnyShapeStyle(.ultraThinMaterial))
       .clipShape(RoundedRectangle(cornerRadius: ToolbarConstants.toolbarCornerRadius))
+      .overlay(
+        RoundedRectangle(cornerRadius: ToolbarConstants.toolbarCornerRadius)
+          .strokeBorder(Color.primary.opacity(reduceTransparency ? 0.2 : 0.1), lineWidth: 0.5)
+      )
   }
 }
 
