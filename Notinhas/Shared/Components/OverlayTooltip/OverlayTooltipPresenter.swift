@@ -17,8 +17,6 @@ final class OverlayTooltipPresenter {
     preferred: OverlayTooltipEdge,
     owner: UUID
   ) {
-    currentOwner = owner
-
     let bubble = OverlayTooltipBubbleView(content: content)
     let host = hostingView ?? NSHostingView(rootView: bubble)
     host.rootView = bubble
@@ -28,6 +26,10 @@ final class OverlayTooltipPresenter {
     let screen = NSScreen.screens.first { $0.frame.intersects(anchorScreenFrame) }
       ?? NSScreen.main
     guard let visibleFrame = screen?.visibleFrame else { return }
+
+    // Claim ownership only after show preconditions succeed, so a failed show
+    // does not orphan the previous owner or leave a stuck currentOwner.
+    currentOwner = owner
 
     let frame = OverlayTooltipPlacement.frame(
       anchor: anchorScreenFrame,
