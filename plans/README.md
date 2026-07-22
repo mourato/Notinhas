@@ -134,6 +134,38 @@ Recording/Scrolling without depending on the Video-gated `RecordingToolbarWindow
 - Default All-In-One shortcut ships **unbound**, recommended ⌘⇧0.
 - All-In-One chrome must compile in the default scheme (Video module off).
 
+## All-In-One refinement (038)
+
+The first shipped All-In-One session is functionally complete but its mode
+strip is icon-only and the planned Timer mode was intentionally deferred. The
+next focused round keeps the established session/refinement architecture,
+retains **Annotate**, and introduces a deliberately bounded delayed-area
+capture rather than a new generic timer subsystem.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 038 | Refine All-In-One chrome and add delayed area capture | P1 | M | 035–037 | IN PROGRESS (implementation `c97eef68`; automated gates pass, manual smoke pending) |
+
+### Dependency notes (038)
+
+- 038 depends on 035–037 because it extends their shared HUD, refinement, and
+  session-dispatch seams; do not re-extract or replace those foundations.
+- This is one cohesive UI/behavior change and should be implemented in one
+  isolated worktree and reviewed as one pull request.
+
+### Product decisions (038)
+
+- Keep **Annotate** in the All-In-One strip; it is not replaced by Timer.
+- Timer means a fixed **three-second delayed area screenshot**. After Capture,
+  the HUD and selection chrome disappear, then Notinhas captures the selected
+  rectangle. It is not a recording timer, recurring capture, configurable
+  preference, Smart Element mode, or Object Cutout mode.
+- Recording stays last and remains conditional on the optional Video module.
+- The mode strip presents an icon and concise localized label for every mode;
+  its selected state must be legible over varied desktop backgrounds.
+- The dimension control remains a compact W × H editor with aspect lock; do
+  not add crop presets, a reset menu, or unrelated generic markup controls.
+
 ## Dependency notes (026–030)
 
 - 026 must land before the bundle-ID/path cutover.
@@ -178,8 +210,9 @@ instructions may not use this allowlist to retain branding.
 - Publishing these plans as GitHub issues: not requested; no issues were created.
 - All-In-One depending on `RecordingToolbarWindow`: rejected — file is
   `#if NOTINHAS_VIDEO_MODULE`; extract ungated chrome instead (035).
-- Putting Timer in All-In-One MVP: rejected — Notinhas has no capture-timer mode
-  today (recording annotation timer is unrelated).
+- Putting Timer in the 035–037 All-In-One MVP: rejected at that time —
+  Notinhas had no capture-timer mode (recording annotation timer is unrelated).
+  This decision is superseded by the bounded delayed-area Timer in plan 038.
 - Putting Smart Element / Object Cutout in the All-In-One strip: deferred — keeps
   the HUD focused; dedicated shortcuts/menu remain.
 - Upgrading classic ⌘⇧4 to refine-before-capture in the same round: deferred —
