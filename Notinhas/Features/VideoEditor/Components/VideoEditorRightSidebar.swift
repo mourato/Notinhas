@@ -207,7 +207,7 @@
           .font(.system(size: 11, weight: .medium))
           .foregroundColor(.secondary)
 
-        Text(L10n.VideoEditor.followMouseOnlyWorksWithSnapzy)
+        Text(L10n.VideoEditor.followMouseOnlyWorksWithNotinhas)
           .font(.system(size: 10))
           .foregroundColor(.secondary.opacity(0.8))
           .fixedSize(horizontal: false, vertical: true)

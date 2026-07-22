@@ -19,9 +19,9 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 TMP_ROOT="${TMPDIR:-/tmp}"
-BINARY_PATH="${TMP_ROOT%/}/snapzy-ocr-readme-benchmark"
-MODULE_CACHE_PATH="${TMP_ROOT%/}/snapzy-ocr-readme-benchmark-module-cache"
-STDERR_PATH="${TMP_ROOT%/}/snapzy-ocr-readme-benchmark.stderr"
+BINARY_PATH="${TMP_ROOT%/}/notinhas-ocr-readme-benchmark"
+MODULE_CACHE_PATH="${TMP_ROOT%/}/notinhas-ocr-readme-benchmark-module-cache"
+STDERR_PATH="${TMP_ROOT%/}/notinhas-ocr-readme-benchmark.stderr"
 
 cd "$REPO_ROOT"
 

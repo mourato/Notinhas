@@ -445,7 +445,7 @@ extension DragHandleNSView {
     }
 
     let fallback = fileManager.temporaryDirectory
-      .appendingPathComponent("Snapzy_Captures", isDirectory: true)
+      .appendingPathComponent("Notinhas_Captures", isDirectory: true)
       .appendingPathComponent("AnnotateDrag", isDirectory: true)
     try? fileManager.createDirectory(at: fallback, withIntermediateDirectories: true)
     return fallback

@@ -349,7 +349,7 @@ run_xcodebuild() {
   if [[ "$QUIET" -eq 1 ]]; then
     args+=(-quiet)
     local build_log
-    build_log="$(mktemp "${TMPDIR:-/tmp}/snapzy-xcodebuild.XXXXXX.log")"
+    build_log="$(mktemp "${TMPDIR:-/tmp}/notinhas-xcodebuild.XXXXXX.log")"
 
     set +e
     "${args[@]}" 2>&1 | tee "$build_log" | filter_xcodebuild_output

@@ -221,7 +221,7 @@ enum ClipboardHelper {
 
     // Write to a temp file so the pasteboard can reference it
     let tempDir = TempCaptureManager.shared.tempCaptureDirectory
-    let fileName = "Snapzy_clipboard_\(UUID().uuidString).\(ext)"
+    let fileName = "Notinhas_clipboard_\(UUID().uuidString).\(ext)"
     let tempURL = tempDir.appendingPathComponent(fileName)
 
     do {

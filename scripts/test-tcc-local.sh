@@ -14,7 +14,7 @@
 set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-TEST_DIR="/tmp/test-tcc-snapzy"
+TEST_DIR="/tmp/test-tcc-notinhas"
 CERT_NAME="Notinhas Self-Signed"
 ENTITLEMENTS="$PROJECT_DIR/Notinhas/Notinhas.entitlements"
 INSTALL_PATH="/Applications/Notinhas.app"

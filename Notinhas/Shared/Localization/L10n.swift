@@ -745,8 +745,8 @@ nonisolated enum L10n {
       defaultValue: "Preferences...",
       comment: "Status bar menu item title for opening preferences"
     )
-    static let quitSnapzy = string(
-      "menu.quit-snapzy",
+    static let quitNotinhas = string(
+      "menu.quit-notinhas",
       defaultValue: "Quit Notinhas",
       comment: "Status bar menu item title for quitting the app"
     )
@@ -5633,8 +5633,8 @@ nonisolated enum L10n {
       defaultValue: "Mouse tracking data unavailable",
       comment: "Warning title shown when mouse tracking data is not available for follow-mouse zooms"
     )
-    static let followMouseOnlyWorksWithSnapzy = string(
-      "video-editor.follow-mouse-only-works-with-snapzy",
+    static let followMouseOnlyWorksWithNotinhas = string(
+      "video-editor.follow-mouse-only-works-with-notinhas",
       defaultValue: "Follow Mouse only works with videos recorded by Notinhas after mouse tracking was added.",
       comment: "Warning message shown when follow-mouse zoom mode is unavailable"
     )
@@ -6293,8 +6293,8 @@ nonisolated enum L10n {
       defaultValue: "Hold steady",
       comment: "Selection guidance title shown while the first scrolling capture frame is locking"
     )
-    static let guidanceSnapzyLockingFirstFrame = string(
-      "scrolling-capture.guidance-snapzy-locking-first-frame",
+    static let guidanceLockingFirstFrame = string(
+      "scrolling-capture.guidance-locking-first-frame",
       defaultValue: "Notinhas is locking the first frame",
       comment: "Selection guidance detail shown while the first scrolling capture frame is locking"
     )
@@ -6303,8 +6303,8 @@ nonisolated enum L10n {
       defaultValue: "Slow down",
       comment: "Selection guidance title shown when scrolling capture needs slower scrolling"
     )
-    static let guidanceKeepOneDirectionSoSnapzyCanRealign = string(
-      "scrolling-capture.guidance-keep-one-direction-so-snapzy-can-realign",
+    static let guidanceKeepOneDirectionForRealignment = string(
+      "scrolling-capture.guidance-keep-one-direction-for-realignment",
       defaultValue: "Keep one direction so Notinhas can re-align",
       comment: "Selection guidance detail shown when scrolling capture needs recovery"
     )
@@ -6358,8 +6358,8 @@ nonisolated enum L10n {
       defaultValue: "Locking current capture",
       comment: "Selection guidance title shown while scrolling capture finalizes"
     )
-    static let guidanceSnapzySealingStitchedResult = string(
-      "scrolling-capture.guidance-snapzy-sealing-stitched-result",
+    static let guidanceSealingStitchedResult = string(
+      "scrolling-capture.guidance-sealing-stitched-result",
       defaultValue: "Notinhas is sealing the stitched result",
       comment: "Selection guidance detail shown while scrolling capture finalizes"
     )

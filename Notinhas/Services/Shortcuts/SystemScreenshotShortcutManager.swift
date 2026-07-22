@@ -96,9 +96,9 @@ final class SystemScreenshotShortcutManager {
 
     for kind in GlobalShortcutKind.allCases where kind.isSystemConflictRelevant {
       guard KeyboardShortcutManager.shared.isShortcutEnabled(for: kind) else { continue }
-      guard let snapzyShortcut = KeyboardShortcutManager.shared.shortcut(for: kind) else { continue }
+      guard let configuredShortcut = KeyboardShortcutManager.shared.shortcut(for: kind) else { continue }
 
-      if !matchingSystemHotkeys(for: kind, shortcut: snapzyShortcut, in: hotkeys).isEmpty {
+      if !matchingSystemHotkeys(for: kind, shortcut: configuredShortcut, in: hotkeys).isEmpty {
         return true
       }
     }

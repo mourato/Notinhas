@@ -20,9 +20,9 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 TMP_ROOT="${TMPDIR:-/tmp}"
-BINARY_PATH="${TMP_ROOT%/}/snapzy-scroll-capture-accuracy-benchmark"
-MODULE_CACHE_PATH="${TMP_ROOT%/}/snapzy-scroll-benchmark-module-cache"
-STDERR_PATH="${TMP_ROOT%/}/snapzy-scroll-capture-accuracy-benchmark.stderr"
+BINARY_PATH="${TMP_ROOT%/}/notinhas-scroll-capture-accuracy-benchmark"
+MODULE_CACHE_PATH="${TMP_ROOT%/}/notinhas-scroll-benchmark-module-cache"
+STDERR_PATH="${TMP_ROOT%/}/notinhas-scroll-capture-accuracy-benchmark.stderr"
 
 cd "$REPO_ROOT"
 

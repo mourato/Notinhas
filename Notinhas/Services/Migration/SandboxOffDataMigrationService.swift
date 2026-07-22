@@ -88,7 +88,8 @@ final class SandboxOffDataMigrationService {
 
   private let configurationProvider: () -> Configuration?
   private let completedKey = PreferencesKeys.sandboxOffMigrationCompleted
-  private let appSupportFolderName = "Snapzy"
+  private let currentAppSupportFolderName = "Notinhas"
+  private let legacyAppSupportFolderName = "Snapzy"
   private let markerFileName = ".sandbox-off-migration-completed"
 
   init(configurationProvider: @escaping () -> Configuration? = Configuration.live) {
@@ -131,15 +132,17 @@ final class SandboxOffDataMigrationService {
     }
 
     var applicationSupportSummary = DirectoryMergeSummary()
-    try mergeDirectoryIfPresent(
-      from: sourceDataDirectory
-        .appendingPathComponent("Library", isDirectory: true)
-        .appendingPathComponent("Application Support", isDirectory: true)
-        .appendingPathComponent(appSupportFolderName, isDirectory: true),
-      to: destinationAppSupportDirectory(configuration),
-      configuration: configuration,
-      summary: &applicationSupportSummary
-    )
+    for appSupportFolderName in [currentAppSupportFolderName, legacyAppSupportFolderName] {
+      try mergeDirectoryIfPresent(
+        from: sourceDataDirectory
+          .appendingPathComponent("Library", isDirectory: true)
+          .appendingPathComponent("Application Support", isDirectory: true)
+          .appendingPathComponent(appSupportFolderName, isDirectory: true),
+        to: destinationAppSupportDirectory(configuration),
+        configuration: configuration,
+        summary: &applicationSupportSummary
+      )
+    }
 
     let preferencesSummary = migratePreferences(
       sourceDataDirectory: sourceDataDirectory,
@@ -148,22 +151,24 @@ final class SandboxOffDataMigrationService {
     )
 
     var logSummary = DirectoryMergeSummary()
-    do {
-      try mergeDirectoryIfPresent(
-        from: sourceDataDirectory
-          .appendingPathComponent("Library", isDirectory: true)
-          .appendingPathComponent("Logs", isDirectory: true)
-          .appendingPathComponent(appSupportFolderName, isDirectory: true),
-        to: configuration.libraryDirectory
-          .appendingPathComponent("Logs", isDirectory: true)
-          .appendingPathComponent(appSupportFolderName, isDirectory: true),
-        configuration: configuration,
-        summary: &logSummary
-      )
-    } catch {
-      sandboxOffMigrationLogger.warning(
-        "Log migration skipped: \(error.localizedDescription, privacy: .public)"
-      )
+    for logFolderName in [currentAppSupportFolderName, legacyAppSupportFolderName] {
+      do {
+        try mergeDirectoryIfPresent(
+          from: sourceDataDirectory
+            .appendingPathComponent("Library", isDirectory: true)
+            .appendingPathComponent("Logs", isDirectory: true)
+            .appendingPathComponent(logFolderName, isDirectory: true),
+          to: configuration.libraryDirectory
+            .appendingPathComponent("Logs", isDirectory: true)
+            .appendingPathComponent(currentAppSupportFolderName, isDirectory: true),
+          configuration: configuration,
+          summary: &logSummary
+        )
+      } catch {
+        sandboxOffMigrationLogger.warning(
+          "Log migration skipped: \(error.localizedDescription, privacy: .public)"
+        )
+      }
     }
 
     markCompleted(configuration, sourceDataDirectory: sourceDataDirectory)
@@ -234,7 +239,7 @@ final class SandboxOffDataMigrationService {
 
   private func destinationAppSupportDirectory(_ configuration: Configuration) -> URL {
     configuration.applicationSupportDirectory
-      .appendingPathComponent(appSupportFolderName, isDirectory: true)
+      .appendingPathComponent(currentAppSupportFolderName, isDirectory: true)
   }
 
   private func markerFileURL(_ configuration: Configuration) -> URL {
@@ -435,22 +440,25 @@ final class SandboxOffDataMigrationService {
   ) {
     let fileManager = configuration.fileManager
 
-    let sourceAppSupport = sourceDataDirectory
-      .appendingPathComponent("Library", isDirectory: true)
-      .appendingPathComponent("Application Support", isDirectory: true)
-      .appendingPathComponent(appSupportFolderName, isDirectory: true)
-
-    let sourceLogs = sourceDataDirectory
-      .appendingPathComponent("Library", isDirectory: true)
-      .appendingPathComponent("Logs", isDirectory: true)
-      .appendingPathComponent(appSupportFolderName, isDirectory: true)
-
     let sourcePrefs = sourceDataDirectory
       .appendingPathComponent("Library", isDirectory: true)
       .appendingPathComponent("Preferences", isDirectory: true)
       .appendingPathComponent("\(bundleIdentifier).plist")
 
-    for url in [sourceAppSupport, sourceLogs, sourcePrefs] {
+    let sourceDirectories = [currentAppSupportFolderName, legacyAppSupportFolderName].flatMap { folderName in
+      [
+        sourceDataDirectory
+          .appendingPathComponent("Library", isDirectory: true)
+          .appendingPathComponent("Application Support", isDirectory: true)
+          .appendingPathComponent(folderName, isDirectory: true),
+        sourceDataDirectory
+          .appendingPathComponent("Library", isDirectory: true)
+          .appendingPathComponent("Logs", isDirectory: true)
+          .appendingPathComponent(folderName, isDirectory: true),
+      ]
+    }
+
+    for url in sourceDirectories + [sourcePrefs] {
       guard fileManager.fileExists(atPath: url.path) else { continue }
       do {
         try fileManager.removeItem(at: url)

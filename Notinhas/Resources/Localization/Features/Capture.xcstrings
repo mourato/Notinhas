@@ -13202,7 +13202,7 @@
         }
       }
     },
-    "scrolling-capture.guidance-keep-one-direction-so-snapzy-can-realign": {
+    "scrolling-capture.guidance-keep-one-direction-for-realignment": {
       "extractionState": "stale",
       "localizations": {
         "de": {
@@ -14437,7 +14437,7 @@
         }
       }
     },
-    "scrolling-capture.guidance-snapzy-locking-first-frame": {
+    "scrolling-capture.guidance-locking-first-frame": {
       "extractionState": "stale",
       "localizations": {
         "de": {
@@ -14502,7 +14502,7 @@
         }
       }
     },
-    "scrolling-capture.guidance-snapzy-sealing-stitched-result": {
+    "scrolling-capture.guidance-sealing-stitched-result": {
       "extractionState": "stale",
       "localizations": {
         "de": {

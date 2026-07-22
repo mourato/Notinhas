@@ -722,7 +722,7 @@ final class AppStatusBarController: ObservableObject {
 
     // Quit
     let quitItem = NSMenuItem(
-      title: L10n.Menu.quitSnapzy,
+      title: L10n.Menu.quitNotinhas,
       action: #selector(quitAction),
       keyEquivalent: "q"
     )

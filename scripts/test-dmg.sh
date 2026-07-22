@@ -26,7 +26,7 @@ cat > "$TEMP_DIR/Notinhas.app/Contents/Info.plist" <<EOF
     <key>CFBundleExecutable</key>
     <string>Notinhas</string>
     <key>CFBundleIdentifier</key>
-    <string>com.snapzy.test-layout</string>
+    <string>com.mourato.notinhas.test-layout</string>
     <key>CFBundleName</key>
     <string>Notinhas</string>
     <key>CFBundlePackageType</key>

@@ -189,13 +189,13 @@ enum ScrollingCaptureSelectionGuidanceKind {
     case .holdSteady:
       ScrollingCaptureSelectionGuidance(
         title: L10n.ScrollingCapture.guidanceHoldSteady,
-        detail: L10n.ScrollingCapture.guidanceSnapzyLockingFirstFrame,
+        detail: L10n.ScrollingCapture.guidanceLockingFirstFrame,
         tone: .progress
       )
     case .slowDown:
       ScrollingCaptureSelectionGuidance(
         title: L10n.ScrollingCapture.guidanceSlowDown,
-        detail: L10n.ScrollingCapture.guidanceKeepOneDirectionSoSnapzyCanRealign,
+        detail: L10n.ScrollingCapture.guidanceKeepOneDirectionForRealignment,
         tone: .warning
       )
     case .keepSteadierPace:
@@ -231,7 +231,7 @@ enum ScrollingCaptureSelectionGuidanceKind {
     case .lockingCurrentCapture:
       ScrollingCaptureSelectionGuidance(
         title: L10n.ScrollingCapture.guidanceLockingCurrentCapture,
-        detail: L10n.ScrollingCapture.guidanceSnapzySealingStitchedResult,
+        detail: L10n.ScrollingCapture.guidanceSealingStitchedResult,
         tone: .progress
       )
     case .savingLongScreenshot:

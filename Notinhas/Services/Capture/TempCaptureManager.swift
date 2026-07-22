@@ -46,7 +46,7 @@ final class TempCaptureManager {
     ).first else {
       // Fallback if Application Support unavailable
       let fallback = FileManager.default.temporaryDirectory
-        .appendingPathComponent("Snapzy_Captures", isDirectory: true)
+        .appendingPathComponent("Notinhas_Captures", isDirectory: true)
       try? FileManager.default.createDirectory(at: fallback, withIntermediateDirectories: true)
       return fallback
     }
@@ -376,7 +376,7 @@ final class TempCaptureManager {
       for: .applicationSupportDirectory, in: .userDomainMask
     ).first else {
       return FileManager.default.temporaryDirectory
-        .appendingPathComponent("Snapzy_Captures", isDirectory: true)
+        .appendingPathComponent("Notinhas_Captures", isDirectory: true)
     }
 
     return appSupport

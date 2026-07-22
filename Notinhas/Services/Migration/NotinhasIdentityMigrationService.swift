@@ -345,11 +345,13 @@ final class NotinhasIdentityMigrationService {
   }
 
   private func legacyApplicationSupportDirectories(_ configuration: Configuration) -> [URL] {
-    [legacyAppSupportDirectory(configuration)] + legacySandboxDataDirectories(configuration).map {
-      $0
-        .appendingPathComponent("Library", isDirectory: true)
-        .appendingPathComponent("Application Support", isDirectory: true)
-        .appendingPathComponent(NotinhasStoragePaths.legacyAppSupportFolderName, isDirectory: true)
+    [legacyAppSupportDirectory(configuration)] + legacySandboxDataDirectories(configuration).flatMap { dataDirectory in
+      [NotinhasStoragePaths.destinationAppSupportFolderName, NotinhasStoragePaths.legacyAppSupportFolderName].map {
+        dataDirectory
+          .appendingPathComponent("Library", isDirectory: true)
+          .appendingPathComponent("Application Support", isDirectory: true)
+          .appendingPathComponent($0, isDirectory: true)
+      }
     }
   }
 
@@ -365,11 +367,13 @@ final class NotinhasIdentityMigrationService {
   }
 
   private func legacyLogsDirectories(_ configuration: Configuration) -> [URL] {
-    [legacyLogsDirectory(configuration)] + legacySandboxDataDirectories(configuration).map {
-      $0
-        .appendingPathComponent("Library", isDirectory: true)
-        .appendingPathComponent("Logs", isDirectory: true)
-        .appendingPathComponent(NotinhasStoragePaths.legacyLogsFolderName, isDirectory: true)
+    [legacyLogsDirectory(configuration)] + legacySandboxDataDirectories(configuration).flatMap { dataDirectory in
+      [NotinhasStoragePaths.destinationLogsFolderName, NotinhasStoragePaths.legacyLogsFolderName].map {
+        dataDirectory
+          .appendingPathComponent("Library", isDirectory: true)
+          .appendingPathComponent("Logs", isDirectory: true)
+          .appendingPathComponent($0, isDirectory: true)
+      }
     }
   }
 
@@ -757,57 +761,56 @@ private extension CloudKeychainItem {
   }
 
   var legacyKeychainLocations: [KeychainLocation] {
+    let transitionalLocation = KeychainLocation(
+      service: NotinhasStoragePaths.legacyCurrentKeychainService,
+      account: destinationAccount
+    )
+
     switch self {
     case .accessKey:
-      [
-        KeychainLocation(
-          service: NotinhasStoragePaths.legacyCurrentKeychainService,
-          account: "com.trongduong.snapzy.cloud.accessKey"
-        ),
-        KeychainLocation(
-          service: NotinhasStoragePaths.legacyOlderKeychainService,
-          account: "com.snapzy.cloud.accessKey"
-        ),
-      ]
+      return [transitionalLocation,
+              KeychainLocation(
+                service: NotinhasStoragePaths.legacyCurrentKeychainService,
+                account: "com.trongduong.snapzy.cloud.accessKey"
+              ),
+              KeychainLocation(
+                service: NotinhasStoragePaths.legacyOlderKeychainService,
+                account: "com.snapzy.cloud.accessKey"
+              )]
     case .secretKey:
-      [
-        KeychainLocation(
-          service: NotinhasStoragePaths.legacyCurrentKeychainService,
-          account: "com.trongduong.snapzy.cloud.secretKey"
-        ),
-        KeychainLocation(
-          service: NotinhasStoragePaths.legacyOlderKeychainService,
-          account: "com.snapzy.cloud.secretKey"
-        ),
-      ]
+      return [transitionalLocation,
+              KeychainLocation(
+                service: NotinhasStoragePaths.legacyCurrentKeychainService,
+                account: "com.trongduong.snapzy.cloud.secretKey"
+              ),
+              KeychainLocation(
+                service: NotinhasStoragePaths.legacyOlderKeychainService,
+                account: "com.snapzy.cloud.secretKey"
+              )]
     case .passwordHash:
-      [
-        KeychainLocation(
-          service: NotinhasStoragePaths.legacyCurrentKeychainService,
-          account: "com.trongduong.snapzy.cloud.passwordHash"
-        ),
-      ]
+      return [transitionalLocation,
+              KeychainLocation(
+                service: NotinhasStoragePaths.legacyCurrentKeychainService,
+                account: "com.trongduong.snapzy.cloud.passwordHash"
+              )]
     case .googleRefreshToken:
-      [
-        KeychainLocation(
-          service: NotinhasStoragePaths.legacyCurrentKeychainService,
-          account: "com.trongduong.snapzy.cloud.google.refreshToken"
-        ),
-      ]
+      return [transitionalLocation,
+              KeychainLocation(
+                service: NotinhasStoragePaths.legacyCurrentKeychainService,
+                account: "com.trongduong.snapzy.cloud.google.refreshToken"
+              )]
     case .googleClientId:
-      [
-        KeychainLocation(
-          service: NotinhasStoragePaths.legacyCurrentKeychainService,
-          account: "com.trongduong.snapzy.cloud.google.clientId"
-        ),
-      ]
+      return [transitionalLocation,
+              KeychainLocation(
+                service: NotinhasStoragePaths.legacyCurrentKeychainService,
+                account: "com.trongduong.snapzy.cloud.google.clientId"
+              )]
     case .googleClientSecret:
-      [
-        KeychainLocation(
-          service: NotinhasStoragePaths.legacyCurrentKeychainService,
-          account: "com.trongduong.snapzy.cloud.google.clientSecret"
-        ),
-      ]
+      return [transitionalLocation,
+              KeychainLocation(
+                service: NotinhasStoragePaths.legacyCurrentKeychainService,
+                account: "com.trongduong.snapzy.cloud.google.clientSecret"
+              )]
     }
   }
 }

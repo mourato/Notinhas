@@ -87,7 +87,7 @@ ok "Downloaded ${DMG_NAME}"
 # Mount, copy, unmount
 # ---------------------------------------------------------------------------
 
-MOUNT_POINT="${TMPDIR_INSTALL}/snapzy-dmg"
+MOUNT_POINT="${TMPDIR_INSTALL}/notinhas-dmg"
 mkdir -p "$MOUNT_POINT"
 
 info "Mounting disk image…"

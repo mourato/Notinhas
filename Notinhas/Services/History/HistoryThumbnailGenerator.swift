@@ -22,12 +22,12 @@ final class HistoryThumbnailGenerator {
   private let maxDimension: CGFloat = 208
   private let compressionFactor: CGFloat = 0.58
   private let workerQueue = DispatchQueue(
-    label: "snapzy.history-thumbnail-generator.worker",
+    label: "com.mourato.notinhas.history-thumbnail-generator.worker",
     qos: .utility,
     attributes: .concurrent
   )
   private let thumbnailsDirectoryURL: URL
-  private let stateQueue = DispatchQueue(label: "snapzy.history-thumbnail-generator.state")
+  private let stateQueue = DispatchQueue(label: "com.mourato.notinhas.history-thumbnail-generator.state")
   private let memoryCache = NSCache<NSString, NSImage>()
   private var inFlightRequests: [String: [(NSImage?) -> Void]] = [:]
   private var memoryCacheKeysByRecordId: [UUID: Set<String>] = [:]

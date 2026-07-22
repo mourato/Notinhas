@@ -57,9 +57,9 @@ enum CaptureOutputKind {
   var defaultTemplate: String {
     switch self {
     case .screenshot:
-      "Snapzy_{datetime}_{ms}"
+      "Notinhas_{datetime}_{ms}"
     case .recording:
-      "Snapzy_Recording_{datetime}"
+      "Notinhas_Recording_{datetime}"
     }
   }
 
@@ -223,9 +223,9 @@ enum CaptureOutputNaming {
   private static func fallbackName(for kind: CaptureOutputKind, date: Date) -> String {
     switch kind {
     case .screenshot:
-      "Snapzy_\(format(date, style: "yyyy-MM-dd_HH-mm-ss-SSS"))"
+      "Notinhas_\(format(date, style: "yyyy-MM-dd_HH-mm-ss-SSS"))"
     case .recording:
-      "Snapzy_Recording_\(format(date, style: "yyyy-MM-dd_HH-mm-ss"))"
+      "Notinhas_Recording_\(format(date, style: "yyyy-MM-dd_HH-mm-ss"))"
     }
   }
 }
