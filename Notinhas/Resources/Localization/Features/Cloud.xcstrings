@@ -12726,6 +12726,16 @@
         }
       }
     },
+    "cloud-settings.imgbb-api-key-empty": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter an ImgBB API key before saving."
+          }
+        }
+      }
+    },
     "cloud-settings.imgbb-clear-title": {
       "localizations": {
         "en": {

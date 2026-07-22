@@ -4540,6 +4540,11 @@ nonisolated enum L10n {
       defaultValue: "API Key",
       comment: "ImgBB API key input placeholder"
     )
+    static let imgbbAPIKeyEmpty = string(
+      "cloud-settings.imgbb-api-key-empty",
+      defaultValue: "Enter an ImgBB API key before saving.",
+      comment: "Validation message shown when an ImgBB API key is empty"
+    )
     static let imgbbClearTitle = string(
       "cloud-settings.imgbb-clear-title",
       defaultValue: "Clear ImgBB API Key?",

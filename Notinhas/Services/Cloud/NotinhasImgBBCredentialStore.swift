@@ -15,9 +15,9 @@ enum NotinhasImgBBCredentialError: LocalizedError {
   var errorDescription: String? {
     switch self {
     case .emptyKey:
-      "API key cannot be empty."
+      L10n.CloudSettings.imgbbAPIKeyEmpty
     case .keychainWriteFailed(let message):
-      message
+      L10n.CloudOperation.keychainError(message)
     }
   }
 }
@@ -115,7 +115,6 @@ final class NotinhasImgBBCredentialStore: ObservableObject {
     do {
       try keychain.upsert(value: legacyValue)
       defaults.removeObject(forKey: PreferencesKeys.notinhasImgBBAPIKey)
-      publishChange()
     } catch {
       // Preserve the legacy value when Keychain migration cannot complete.
     }
