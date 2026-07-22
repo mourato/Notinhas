@@ -67,6 +67,11 @@ final class CaptureFloatingHUDWindow: NSPanel {
     orderFrontRegardless()
   }
 
+  func showAboveCaptureOverlay() {
+    level = .screenSaver
+    orderFrontRegardless()
+  }
+
   func updateAnchorRect(_ rect: CGRect) {
     anchorRect = rect
     positionNearAnchor(screen: nil)

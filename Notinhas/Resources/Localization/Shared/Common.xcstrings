@@ -1,6 +1,17 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "action.capture-all-in-one": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All-In-One Capture"
+          }
+        }
+      }
+    },
     "action.capture-active-window": {
       "extractionState": "stale",
       "localizations": {

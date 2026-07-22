@@ -6,6 +6,7 @@
 //
 
 @testable import Notinhas
+import SwiftUI
 import XCTest
 
 @MainActor
@@ -43,5 +44,14 @@ final class AllInOneCaptureCoordinatorTests: XCTestCase {
     state.selectMode(.recording)
 
     XCTAssertEqual(state.selectedMode, .area)
+  }
+
+  func testFloatingHUD_canBeRaisedAboveCaptureOverlay() {
+    let window = CaptureFloatingHUDWindow()
+    window.setContent(AnyView(Text("All-In-One")))
+    window.showAboveCaptureOverlay()
+
+    XCTAssertEqual(window.level, .screenSaver)
+    window.close()
   }
 }

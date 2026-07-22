@@ -1,6 +1,17 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "preferences-shortcuts.capture-all-in-one-description": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the All-In-One HUD to pick mode, area, and dimensions"
+          }
+        }
+      }
+    },
     "preferences-shortcuts.action-required": {
       "extractionState": "stale",
       "localizations": {

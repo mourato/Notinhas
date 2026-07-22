@@ -117,6 +117,15 @@ final class AllInOneCaptureCoordinator {
 
       beginRefinement(with: rect)
     }
+
+    // AreaSelectionController presents screen-saver-level panels. Reassert the All-In-One
+    // controls above them so the user can change modes before completing the first drag.
+    DispatchQueue.main.async { [weak self] in
+      guard let self, isActive, isAwaitingInitialSelection else { return }
+      positionHUDs()
+      modeHUD?.showAboveCaptureOverlay()
+      actionHUD?.showAboveCaptureOverlay()
+    }
   }
 
   private func beginRefinement(with rect: CGRect) {

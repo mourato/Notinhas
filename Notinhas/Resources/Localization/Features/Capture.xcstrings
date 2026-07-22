@@ -1,6 +1,116 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "all-in-one.capture-button": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture"
+          }
+        }
+      }
+    },
+    "all-in-one.capture-button.accessibility": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture with selected mode and area"
+          }
+        }
+      }
+    },
+    "all-in-one.mode.area.accessibility": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Area capture mode"
+          }
+        }
+      }
+    },
+    "all-in-one.mode.fullscreen.accessibility": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fullscreen capture mode"
+          }
+        }
+      }
+    },
+    "all-in-one.mode.window.accessibility": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window capture mode"
+          }
+        }
+      }
+    },
+    "all-in-one.mode.annotate.accessibility": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture and annotate mode"
+          }
+        }
+      }
+    },
+    "all-in-one.mode.scrolling.accessibility": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrolling capture mode"
+          }
+        }
+      }
+    },
+    "all-in-one.mode.ocr.accessibility": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text capture mode"
+          }
+        }
+      }
+    },
+    "all-in-one.mode.recording.accessibility": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen recording mode"
+          }
+        }
+      }
+    },
+    "all-in-one.mode.window": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window"
+          }
+        }
+      }
+    },
     "after-capture.accessibility-label": {
       "extractionState": "stale",
       "localizations": {
