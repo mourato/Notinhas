@@ -24,6 +24,7 @@ struct CaptureFloatingToolbarIconButtonLabel: View {
   let systemName: String
   var iconSize: CGFloat = ToolbarConstants.iconSize
   let isHovered: Bool
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
   var body: some View {
     Image(systemName: systemName)
@@ -38,7 +39,7 @@ struct CaptureFloatingToolbarIconButtonLabel: View {
           .fill(Color.primary.opacity(isHovered ? 0.1 : 0))
       )
       .contentShape(RoundedRectangle(cornerRadius: ToolbarConstants.buttonCornerRadius))
-      .animation(ToolbarConstants.hoverAnimation, value: isHovered)
+      .animation(reduceMotion ? nil : ToolbarConstants.hoverAnimation, value: isHovered)
   }
 }
 
@@ -59,11 +60,21 @@ struct CaptureFloatingToolbarIconButton: View {
   }
 }
 
+private struct CaptureFloatingToolbarMaterialBackground: ViewModifier {
+  @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+  func body(content: Content) -> some View {
+    content
+      .background(reduceTransparency ? AnyShapeStyle(Color(nsColor: .windowBackgroundColor)) :
+        AnyShapeStyle(.ultraThinMaterial))
+      .clipShape(RoundedRectangle(cornerRadius: ToolbarConstants.toolbarCornerRadius))
+  }
+}
+
 // MARK: - Material Background
 
 extension View {
   func captureFloatingToolbarMaterial() -> some View {
-    background(.ultraThinMaterial)
-      .clipShape(RoundedRectangle(cornerRadius: ToolbarConstants.toolbarCornerRadius))
+    modifier(CaptureFloatingToolbarMaterialBackground())
   }
 }

@@ -58,4 +58,19 @@ final class CaptureFloatingToolbarPlacementTests: XCTestCase {
       screenFrame.maxY - toolbarSize.height - CaptureFloatingToolbarPlacement.screenEdgeInset
     )
   }
+
+  func testCaptureFloatingToolbarPlacement_keepsOversizedToolbarAtVisibleOrigin() {
+    let toolbarSize = CGSize(width: 1400, height: 1000)
+    let screenFrame = CGRect(x: 200, y: 100, width: 1200, height: 900)
+    let selectionRect = CGRect(x: 500, y: 400, width: 200, height: 200)
+
+    let origin = CaptureFloatingToolbarPlacement.frameOrigin(
+      toolbarSize: toolbarSize,
+      anchorRect: selectionRect,
+      screenFrame: screenFrame
+    )
+
+    XCTAssertEqual(origin.x, screenFrame.minX + CaptureFloatingToolbarPlacement.screenEdgeInset)
+    XCTAssertEqual(origin.y, screenFrame.minY + CaptureFloatingToolbarPlacement.screenEdgeInset)
+  }
 }

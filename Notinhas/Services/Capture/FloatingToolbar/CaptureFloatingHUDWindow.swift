@@ -8,6 +8,7 @@
 import AppKit
 import SwiftUI
 
+@MainActor
 final class CaptureFloatingHUDWindow: NSPanel {
   private var anchorRect: CGRect = .zero
   private var cachedContentSize: CGSize?
