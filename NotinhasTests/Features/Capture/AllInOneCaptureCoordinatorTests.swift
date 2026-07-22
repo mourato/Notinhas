@@ -27,23 +27,29 @@ final class AllInOneCaptureCoordinatorTests: XCTestCase {
     XCTAssertEqual(state.availableModes, AllInOneCaptureMode.availableModes(videoEnabled: false))
   }
 
-  func testSessionState_selectMode_updatesSelection() {
+  func testSessionState_activateMode_updatesSelectionAndInvokesAction() {
     let state = AllInOneCaptureSessionState(videoEnabled: false)
-    var selected: AllInOneCaptureMode?
-    state.onModeSelected = { selected = $0 }
+    let rect = CGRect(x: 40, y: 50, width: 320, height: 180)
+    state.currentRect = rect
+    var activated: AllInOneCaptureMode?
+    state.onModeActivated = { activated = $0 }
 
-    state.selectMode(.timer)
+    state.activateMode(.timer)
 
     XCTAssertEqual(state.selectedMode, .timer)
-    XCTAssertEqual(selected, .timer)
+    XCTAssertEqual(activated, .timer)
+    XCTAssertEqual(state.currentRect, rect)
   }
 
-  func testSessionState_selectUnavailableMode_isIgnored() {
+  func testSessionState_activateUnavailableMode_isIgnored() {
     let state = AllInOneCaptureSessionState(videoEnabled: false)
+    var activated = false
+    state.onModeActivated = { _ in activated = true }
 
-    state.selectMode(.recording)
+    state.activateMode(.recording)
 
     XCTAssertEqual(state.selectedMode, .area)
+    XCTAssertFalse(activated)
   }
 
   func testFloatingHUD_canBeRaisedAboveCaptureOverlay() {
@@ -67,17 +73,13 @@ final class AllInOneCaptureCoordinatorTests: XCTestCase {
     XCTAssertEqual(publishedRect, rect)
   }
 
-  func testSessionState_confirmAndCancelInvokeCallbacks() {
+  func testSessionState_cancelInvokesCallback() {
     let state = AllInOneCaptureSessionState(videoEnabled: false)
-    var confirmed = false
     var cancelled = false
-    state.onConfirmCapture = { confirmed = true }
     state.onCancel = { cancelled = true }
 
-    state.confirmCapture()
     state.cancel()
 
-    XCTAssertTrue(confirmed)
     XCTAssertTrue(cancelled)
   }
 }

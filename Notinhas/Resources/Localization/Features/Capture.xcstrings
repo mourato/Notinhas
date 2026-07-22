@@ -1,35 +1,13 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "all-in-one.capture-button": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture"
-          }
-        }
-      }
-    },
-    "all-in-one.capture-button.accessibility": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture with selected mode and area"
-          }
-        }
-      }
-    },
     "all-in-one.mode.area.accessibility": {
       "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Area capture mode"
+            "value": "Capture area"
           }
         }
       }
@@ -40,7 +18,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fullscreen capture mode"
+            "value": "Capture full screen"
           }
         }
       }
@@ -51,7 +29,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Window capture mode"
+            "value": "Select a window to capture"
           }
         }
       }
@@ -62,7 +40,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Capture and annotate mode"
+            "value": "Capture area and annotate"
           }
         }
       }
@@ -73,7 +51,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scrolling capture mode"
+            "value": "Capture scrolling area"
           }
         }
       }
@@ -84,7 +62,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Text capture mode"
+            "value": "Capture text from area"
           }
         }
       }
@@ -95,7 +73,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Screen recording mode"
+            "value": "Start screen recording"
           }
         }
       }
@@ -205,18 +183,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Delayed area capture mode"
-          }
-        }
-      }
-    },
-    "all-in-one.timer.capture.accessibility": {
-      "extractionState": "stale",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start delayed area capture in three seconds"
+            "value": "Capture area after three seconds"
           }
         }
       }

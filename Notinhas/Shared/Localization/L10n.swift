@@ -1363,60 +1363,45 @@ nonisolated enum L10n {
       defaultValue: "Selected",
       comment: "Accessibility value when an All-In-One mode is selected"
     )
-    static let captureButton = string(
-      "all-in-one.capture-button",
-      defaultValue: "Capture",
-      comment: "Primary capture button in the All-In-One action toolbar"
-    )
-    static let captureButtonAccessibility = string(
-      "all-in-one.capture-button.accessibility",
-      defaultValue: "Capture with selected mode and area",
-      comment: "Accessibility label for the All-In-One capture button"
-    )
     static let modeAreaAccessibility = string(
       "all-in-one.mode.area.accessibility",
-      defaultValue: "Area capture mode",
-      comment: "Accessibility label for area mode in All-In-One toolbar"
+      defaultValue: "Capture area",
+      comment: "Accessibility label for the All-In-One area capture action"
     )
     static let modeFullscreenAccessibility = string(
       "all-in-one.mode.fullscreen.accessibility",
-      defaultValue: "Fullscreen capture mode",
-      comment: "Accessibility label for fullscreen mode in All-In-One toolbar"
+      defaultValue: "Capture full screen",
+      comment: "Accessibility label for the All-In-One fullscreen capture action"
     )
     static let modeWindowAccessibility = string(
       "all-in-one.mode.window.accessibility",
-      defaultValue: "Window capture mode",
-      comment: "Accessibility label for window mode in All-In-One toolbar"
+      defaultValue: "Select a window to capture",
+      comment: "Accessibility label for the All-In-One window capture action"
     )
     static let modeAnnotateAccessibility = string(
       "all-in-one.mode.annotate.accessibility",
-      defaultValue: "Capture and annotate mode",
-      comment: "Accessibility label for annotate mode in All-In-One toolbar"
+      defaultValue: "Capture area and annotate",
+      comment: "Accessibility label for the All-In-One annotate capture action"
     )
     static let modeScrollingAccessibility = string(
       "all-in-one.mode.scrolling.accessibility",
-      defaultValue: "Scrolling capture mode",
-      comment: "Accessibility label for scrolling mode in All-In-One toolbar"
+      defaultValue: "Capture scrolling area",
+      comment: "Accessibility label for the All-In-One scrolling capture action"
     )
     static let modeOCRAccessibility = string(
       "all-in-one.mode.ocr.accessibility",
-      defaultValue: "Text capture mode",
-      comment: "Accessibility label for OCR mode in All-In-One toolbar"
+      defaultValue: "Capture text from area",
+      comment: "Accessibility label for the All-In-One OCR capture action"
     )
     static let modeRecordingAccessibility = string(
       "all-in-one.mode.recording.accessibility",
-      defaultValue: "Screen recording mode",
-      comment: "Accessibility label for recording mode in All-In-One toolbar"
+      defaultValue: "Start screen recording",
+      comment: "Accessibility label for the All-In-One recording action"
     )
     static let modeTimerAccessibility = string(
       "all-in-one.mode.timer.accessibility",
-      defaultValue: "Delayed area capture mode",
-      comment: "Accessibility label for timer mode in All-In-One toolbar"
-    )
-    static let timerCaptureAccessibility = string(
-      "all-in-one.timer.capture.accessibility",
-      defaultValue: "Start delayed area capture in three seconds",
-      comment: "Accessibility label for the All-In-One capture button when Timer is selected"
+      defaultValue: "Capture area after three seconds",
+      comment: "Accessibility label for the All-In-One timer capture action"
     )
     static let widthFieldAccessibility = string(
       "all-in-one.dimensions.width.accessibility",

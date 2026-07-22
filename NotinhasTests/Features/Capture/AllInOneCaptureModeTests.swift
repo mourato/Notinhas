@@ -60,10 +60,24 @@ final class AllInOneCaptureModeTests: XCTestCase {
     }
   }
 
-  func testTimer_captureActionAccessibility_isSpecific() {
-    XCTAssertEqual(
-      AllInOneCaptureMode.timer.captureActionAccessibilityLabel,
-      L10n.AllInOne.timerCaptureAccessibility
-    )
+  func testCommandMatrix_routesEveryMode() {
+    let rect = CGRect(x: 40, y: 50, width: 320, height: 180)
+
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .area, rect: rect), .area(rect))
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .fullscreen, rect: rect), .fullscreen)
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .window, rect: rect), .window)
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .annotate, rect: rect), .annotate(rect))
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .scrolling, rect: rect), .scrolling(rect))
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .timer, rect: rect), .timer(rect))
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .ocr, rect: rect), .ocr(rect))
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .recording, rect: rect), .recording)
+  }
+
+  func testCommandMatrix_preservesNoRectFallback() {
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .area, rect: nil), .area(nil))
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .annotate, rect: nil), .annotate(nil))
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .scrolling, rect: nil), .scrolling(nil))
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .timer, rect: nil), .timer(nil))
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .ocr, rect: nil), .ocr(nil))
   }
 }

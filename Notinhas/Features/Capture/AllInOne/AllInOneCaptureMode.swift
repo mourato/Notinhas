@@ -74,15 +74,6 @@ enum AllInOneCaptureMode: String, CaseIterable, Identifiable, Equatable {
     }
   }
 
-  var captureActionAccessibilityLabel: String {
-    switch self {
-    case .timer:
-      L10n.AllInOne.timerCaptureAccessibility
-    default:
-      L10n.AllInOne.captureButtonAccessibility
-    }
-  }
-
   var preservesSelectionRect: Bool {
     switch self {
     case .area, .annotate, .scrolling, .timer, .ocr, .recording:
@@ -94,5 +85,29 @@ enum AllInOneCaptureMode: String, CaseIterable, Identifiable, Equatable {
 
   var showsDimensionsBar: Bool {
     preservesSelectionRect
+  }
+}
+
+enum AllInOneCaptureCommand: Equatable {
+  case area(CGRect?)
+  case fullscreen
+  case window
+  case annotate(CGRect?)
+  case scrolling(CGRect?)
+  case timer(CGRect?)
+  case ocr(CGRect?)
+  case recording
+
+  static func make(for mode: AllInOneCaptureMode, rect: CGRect?) -> AllInOneCaptureCommand {
+    switch mode {
+    case .area: .area(rect)
+    case .fullscreen: .fullscreen
+    case .window: .window
+    case .annotate: .annotate(rect)
+    case .scrolling: .scrolling(rect)
+    case .timer: .timer(rect)
+    case .ocr: .ocr(rect)
+    case .recording: .recording
+    }
   }
 }

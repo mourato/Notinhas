@@ -37,14 +37,11 @@ final class AllInOneCaptureCoordinator {
     isActive = true
 
     let state = AllInOneCaptureSessionState()
-    state.onModeSelected = { [weak self] mode in
-      self?.handleModeChange(mode)
+    state.onModeActivated = { [weak self] mode in
+      self?.activate(mode)
     }
     state.onRectChanged = { [weak self] rect in
       self?.applyRect(rect)
-    }
-    state.onConfirmCapture = { [weak self] in
-      self?.confirmCapture()
     }
     state.onCancel = { [weak self] in
       self?.cancel()
@@ -177,18 +174,6 @@ final class AllInOneCaptureCoordinator {
     positionHUDs()
   }
 
-  private func handleModeChange(_ mode: AllInOneCaptureMode) {
-    if mode == .fullscreen {
-      refinementController?.tearDown()
-      refinementController = nil
-    } else if mode.preservesSelectionRect, let rect = sessionState?.currentRect {
-      beginRefinement(with: rect)
-    }
-
-    actionHUD?.refreshContentSize()
-    positionHUDs()
-  }
-
   private func positionHUDs() {
     let anchorRect = sessionState?.currentRect ?? defaultAnchorRect()
 
@@ -227,17 +212,17 @@ final class AllInOneCaptureCoordinator {
     )
   }
 
-  private func confirmCapture() {
+  private func activate(_ mode: AllInOneCaptureMode) {
     guard isActive, let viewModel, let sessionState else { return }
 
-    let mode = sessionState.selectedMode
     let rect = sessionState.currentRect
+    let command = AllInOneCaptureCommand.make(for: mode, rect: rect)
 
     if let rect, mode.preservesSelectionRect {
       CaptureLastSelectionStore.save(rect, userDefaults: .standard)
     }
 
-    if mode == .timer {
+    if case let .timer(rect) = command {
       guard let rect else {
         DiagnosticLogger.shared.log(.info, .capture, "All-In-One timer capture ignored: no selection")
         return
@@ -255,8 +240,8 @@ final class AllInOneCaptureCoordinator {
 
     cancel()
 
-    switch mode {
-    case .area:
+    switch command {
+    case let .area(rect):
       if let rect {
         viewModel.captureArea(at: rect)
       } else {
@@ -266,19 +251,19 @@ final class AllInOneCaptureCoordinator {
       viewModel.captureFullscreen()
     case .window:
       viewModel.captureApplication()
-    case .annotate:
+    case let .annotate(rect):
       if let rect {
         viewModel.captureAreaAnnotate(at: rect)
       } else {
         viewModel.captureAreaAnnotate()
       }
-    case .scrolling:
+    case let .scrolling(rect):
       if let rect {
         viewModel.captureScrolling(at: rect)
       } else {
         viewModel.captureScrolling()
       }
-    case .ocr:
+    case let .ocr(rect):
       if let rect {
         viewModel.captureOCR(at: rect)
       } else {
