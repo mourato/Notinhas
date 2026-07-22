@@ -98,4 +98,21 @@ final class AllInOneCaptureCoordinatorTests: XCTestCase {
     XCTAssertEqual(AllInOneCaptureCommand.make(for: .scrolling, rect: nil), .scrolling(nil))
     XCTAssertEqual(AllInOneCaptureCommand.make(for: .ocr, rect: nil), .ocr(nil))
   }
+
+  func testRefinementController_usesFrozenBackdropsWithoutLiveCaptureTask() {
+    guard let image = TestImageFactory.solidColor(width: 40, height: 40, red: 1, green: 2, blue: 3) else {
+      XCTFail("Failed to create test image")
+      return
+    }
+    let backdrop = AreaSelectionBackdrop(displayID: 1, image: image, scaleFactor: 2)
+    let controller = AllInOneSelectionRefinementController(
+      initialRect: CGRect(x: 10, y: 10, width: 120, height: 80),
+      frozenBackdrops: [1: backdrop]
+    )
+
+    controller.present()
+
+    XCTAssertEqual(controller.backdropCacheCountForTesting, 1)
+    controller.tearDown()
+  }
 }

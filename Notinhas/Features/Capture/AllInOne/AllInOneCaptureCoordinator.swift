@@ -17,6 +17,8 @@ final class AllInOneCaptureCoordinator {
   private var modeHUD: CaptureFloatingHUDWindow?
   private var actionHUD: CaptureFloatingHUDWindow?
   private var refinementController: AllInOneSelectionRefinementController?
+  private var frozenSession: FrozenAreaCaptureSession?
+  private var frozenBackdropHost = AllInOneFrozenBackdropHost()
   private let timerScheduler = AllInOneTimerScheduler()
   private var isActive = false
   private var isAwaitingInitialSelection = false
@@ -48,13 +50,12 @@ final class AllInOneCaptureCoordinator {
     }
     sessionState = state
 
-    installHUDs(using: state)
-
-    let screenFrames = NSScreen.screens.map(\.frame)
-    if let lastRect = CaptureLastSelectionStore.load(userDefaults: .standard, screens: screenFrames) {
-      beginRefinement(with: lastRect)
+    if viewModel.isFreezeAreaCaptureEnabled {
+      Task { @MainActor [weak self] in
+        await self?.startWithFrozenSessionIfNeeded()
+      }
     } else {
-      startInitialAreaSelection()
+      continueStartup()
     }
   }
 
@@ -64,32 +65,38 @@ final class AllInOneCaptureCoordinator {
       return
     }
 
-    isActive = false
-    let ownsInitialSelection = isAwaitingInitialSelection
-    isAwaitingInitialSelection = false
-    timerScheduler.cancel()
-    viewModel?.setAllInOneSelectionBlocking(false)
-
-    refinementController?.onCancel = nil
-    refinementController?.onRectChanged = nil
-    refinementController?.tearDown()
-    refinementController = nil
-
-    if ownsInitialSelection {
-      AreaSelectionController.shared.cancelSelection()
-    }
-
-    modeHUD?.close()
-    actionHUD?.close()
-    modeHUD = nil
-    actionHUD = nil
-    sessionState = nil
-    viewModel = nil
-
+    tearDownSession(invalidateFrozenSession: true)
     DiagnosticLogger.shared.log(.info, .capture, "All-In-One capture session cancelled")
   }
 
   // MARK: - Private
+
+  private func startWithFrozenSessionIfNeeded() async {
+    guard isActive, let viewModel else { return }
+
+    switch await viewModel.prepareAllInOneFrozenSelectionSession() {
+    case .success(let session):
+      frozenSession = session
+      continueStartup()
+    case .failure(let error):
+      viewModel.lastCaptureResult = .failure(error)
+      tearDownSession(invalidateFrozenSession: true)
+    }
+  }
+
+  private func continueStartup() {
+    guard isActive else { return }
+
+    installHUDs(using: sessionState!)
+
+    let screenFrames = NSScreen.screens.map(\.frame)
+    if let lastRect = CaptureLastSelectionStore.load(userDefaults: .standard, screens: screenFrames) {
+      showFrozenBackdropHostIfNeeded()
+      beginRefinement(with: lastRect)
+    } else {
+      startInitialAreaSelection()
+    }
+  }
 
   private func installHUDs(using state: AllInOneCaptureSessionState) {
     let modeWindow = CaptureFloatingHUDWindow()
@@ -107,20 +114,26 @@ final class AllInOneCaptureCoordinator {
     isAwaitingInitialSelection = true
     viewModel?.setAllInOneSelectionBlocking(true)
 
-    AreaSelectionController.shared.startSelection { [weak self] rect in
-      guard let self else { return }
-      isAwaitingInitialSelection = false
-      viewModel?.setAllInOneSelectionBlocking(false)
+    let backdrops = frozenSession?.backdrops ?? [:]
+    AreaSelectionController.shared.startSelection(
+      mode: .screenshot,
+      backdrops: backdrops,
+      completion: { [weak self] result in
+        guard let self else { return }
+        isAwaitingInitialSelection = false
+        viewModel?.setAllInOneSelectionBlocking(false)
 
-      guard isActive else { return }
+        guard isActive else { return }
 
-      guard let rect else {
-        cancel()
-        return
+        guard let result else {
+          cancel()
+          return
+        }
+
+        showFrozenBackdropHostIfNeeded()
+        beginRefinement(with: result.rect)
       }
-
-      beginRefinement(with: rect)
-    }
+    )
 
     // AreaSelectionController presents screen-saver-level panels. Reassert the All-In-One
     // controls above them so the user can change modes before completing the first drag.
@@ -151,7 +164,8 @@ final class AllInOneCaptureCoordinator {
     let controller = AllInOneSelectionRefinementController(
       initialRect: normalized,
       aspectLocked: aspectLocked,
-      aspectRatio: aspectRatio
+      aspectRatio: aspectRatio,
+      frozenBackdrops: frozenSession?.backdrops
     )
     controller.onRectChanged = { [weak self] updated in
       self?.handleRefinementRectChanged(updated)
@@ -161,6 +175,11 @@ final class AllInOneCaptureCoordinator {
     }
     refinementController = controller
     controller.present()
+  }
+
+  private func showFrozenBackdropHostIfNeeded() {
+    guard let backdrops = frozenSession?.backdrops, !backdrops.isEmpty else { return }
+    frozenBackdropHost.present(backdrops: backdrops)
   }
 
   private func handleRefinementRectChanged(_ rect: CGRect) {
@@ -218,6 +237,9 @@ final class AllInOneCaptureCoordinator {
 
     let rect = sessionState.currentRect
     let command = AllInOneCaptureCommand.make(for: mode, rect: rect)
+    let freezeEnabled = viewModel.isFreezeAreaCaptureEnabled
+    let transferredSession = frozenSession
+    frozenSession = nil
 
     if let rect, mode.preservesSelectionRect {
       CaptureLastSelectionStore.save(rect, userDefaults: .standard)
@@ -225,57 +247,115 @@ final class AllInOneCaptureCoordinator {
 
     if case let .timer(rect) = command {
       guard let rect else {
+        transferredSession?.invalidate()
         DiagnosticLogger.shared.log(.info, .capture, "All-In-One timer capture ignored: no selection")
         return
       }
 
+      transferredSession?.invalidate()
       let capturedViewModel = viewModel
       let capturedRect = rect
-      cancel()
+      tearDownSession(invalidateFrozenSession: false)
       timerScheduler.scheduleAreaCapture { [capturedViewModel] in
-        capturedViewModel.captureArea(at: capturedRect)
+        capturedViewModel.captureAreaWithFreshFrozenSession(at: capturedRect)
       }
       DiagnosticLogger.shared.log(.info, .capture, "All-In-One timer capture scheduled")
       return
     }
 
-    cancel()
+    tearDownSession(invalidateFrozenSession: false)
 
     switch command {
     case let .area(rect):
-      if let rect {
+      if freezeEnabled {
+        guard let transferredSession, let rect else {
+          transferredSession?.invalidate()
+          viewModel.lastCaptureResult = .failure(.captureFailed(L10n.ScreenCapture.unableToCaptureSelectedArea))
+          return
+        }
+        viewModel.captureArea(at: rect, from: transferredSession)
+      } else if let rect {
         viewModel.captureArea(at: rect)
       } else {
         viewModel.captureArea()
       }
     case .fullscreen:
+      transferredSession?.invalidate()
       viewModel.captureFullscreen()
     case .window:
+      transferredSession?.invalidate()
       viewModel.captureApplication()
     case let .annotate(rect):
-      if let rect {
+      if freezeEnabled {
+        guard let transferredSession, let rect else {
+          transferredSession?.invalidate()
+          viewModel.lastCaptureResult = .failure(.captureFailed(L10n.ScreenCapture.unableToCaptureSelectedArea))
+          return
+        }
+        viewModel.captureAreaAnnotate(at: rect, from: transferredSession)
+      } else if let rect {
         viewModel.captureAreaAnnotate(at: rect)
       } else {
         viewModel.captureAreaAnnotate()
       }
     case let .scrolling(rect):
+      transferredSession?.invalidate()
       if let rect {
         viewModel.captureScrolling(at: rect)
       } else {
         viewModel.captureScrolling()
       }
     case let .ocr(rect):
-      if let rect {
+      if freezeEnabled {
+        guard let transferredSession, let rect else {
+          transferredSession?.invalidate()
+          viewModel.lastCaptureResult = .failure(.captureFailed(L10n.ScreenCapture.unableToCaptureSelectedArea))
+          return
+        }
+        viewModel.captureOCR(at: rect, from: transferredSession)
+      } else if let rect {
         viewModel.captureOCR(at: rect)
       } else {
         viewModel.captureOCR()
       }
     case .timer:
-      break
+      transferredSession?.invalidate()
     case .recording:
+      transferredSession?.invalidate()
       #if NOTINHAS_VIDEO_MODULE
         viewModel.startRecordingFlow()
       #endif
     }
+  }
+
+  private func tearDownSession(invalidateFrozenSession: Bool) {
+    isActive = false
+    let ownsInitialSelection = isAwaitingInitialSelection
+    isAwaitingInitialSelection = false
+    timerScheduler.cancel()
+    viewModel?.setAllInOneSelectionBlocking(false)
+
+    refinementController?.onCancel = nil
+    refinementController?.onRectChanged = nil
+    refinementController?.tearDown()
+    refinementController = nil
+
+    frozenBackdropHost.tearDown()
+
+    if invalidateFrozenSession {
+      frozenSession?.invalidate()
+    }
+    frozenSession = nil
+
+    if ownsInitialSelection {
+      AreaSelectionController.shared.cancelSelection()
+    }
+
+    modeHUD?.close()
+    actionHUD?.close()
+    modeHUD = nil
+    actionHUD = nil
+    sessionState = nil
+    viewModel = nil
   }
 }

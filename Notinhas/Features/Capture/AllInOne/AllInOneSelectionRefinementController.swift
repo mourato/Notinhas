@@ -29,6 +29,7 @@ final class AllInOneSelectionRefinementController: NSObject {
   private var backdropCache: [CGDirectDisplayID: AreaSelectionBackdrop] = [:]
   private var backdropSamplers: [CGDirectDisplayID: CaptureSelectionSnappingCGImageSampler] = [:]
   private var backdropTasks: [CGDirectDisplayID: Task<Void, Never>] = [:]
+  private let frozenBackdrops: [CGDirectDisplayID: AreaSelectionBackdrop]?
 
   init(
     initialRect: CGRect,
@@ -36,7 +37,8 @@ final class AllInOneSelectionRefinementController: NSObject {
     aspectRatio: CGFloat? = nil,
     snappingConfiguration: CaptureSelectionSnappingConfiguration? = nil,
     semanticProvider: CaptureSelectionSemanticBoundaryProviding? = nil,
-    backdropCapturer: (any AreaSelectionBackdropCapturing)? = nil
+    backdropCapturer: (any AreaSelectionBackdropCapturing)? = nil,
+    frozenBackdrops: [CGDirectDisplayID: AreaSelectionBackdrop]? = nil
   ) {
     currentRect = CaptureSelectionGeometry.normalized(initialRect)
     self.aspectLocked = aspectLocked
@@ -44,6 +46,7 @@ final class AllInOneSelectionRefinementController: NSObject {
     self.snappingConfiguration = snappingConfiguration ?? Self.loadSnappingConfiguration()
     self.semanticProvider = semanticProvider ?? CaptureSelectionSemanticBoundaryProvider()
     self.backdropCapturer = backdropCapturer ?? AreaSelectionBackdropCapturerPolicy.makeDefault()
+    self.frozenBackdrops = frozenBackdrops
     super.init()
   }
 
@@ -108,6 +111,10 @@ final class AllInOneSelectionRefinementController: NSObject {
     currentRect
   }
 
+  var backdropCacheCountForTesting: Int {
+    backdropCache.count
+  }
+
   // MARK: - Overlays
 
   private func makeRegionOverlay(for screen: NSScreen) -> RecordingRegionOverlayWindow {
@@ -126,7 +133,9 @@ final class AllInOneSelectionRefinementController: NSObject {
       queue: .main
     ) { [weak self] _ in
       self?.reconcileScreenOverlays()
-      self?.refreshBackdropCache()
+      if self?.frozenBackdrops == nil {
+        self?.refreshBackdropCache()
+      }
     }
   }
 
@@ -275,6 +284,16 @@ final class AllInOneSelectionRefinementController: NSObject {
   private func refreshBackdropCache() {
     cancelBackdropTasks()
     backdropCache.removeAll()
+
+    if let frozenBackdrops, !frozenBackdrops.isEmpty {
+      backdropCache = frozenBackdrops
+      for (displayID, backdrop) in frozenBackdrops {
+        if let sampler = CaptureSelectionSnappingCGImageSampler(image: backdrop.image) {
+          backdropSamplers[displayID] = sampler
+        }
+      }
+      return
+    }
 
     for screen in NSScreen.screens {
       guard let displayID = screen.displayID else { continue }

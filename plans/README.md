@@ -267,6 +267,25 @@ Access uploads separate from `CloudProvider` and Cloud Upload History.
 - 044 must not add `.imgbb` to `CloudProviderType`, Cloud Upload History, or
   `.notinhascloud` archives.
 
+## Capture freeze and multi-display behavior (045)
+
+Plan 045 makes Freeze Screen apply to All-In-One selection/refinement and to
+all connected displays. It reuses one `FrozenAreaCaptureSession` across the
+selection and final crop, preserves the live path when the preference is off,
+and keeps Timer fresh at fire time. Fullscreen, Scrolling, and Recording remain
+outside this screenshot-area behavior.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 045 | Honor Freeze Screen in All-In-One and freeze every connected display | P1 | L | — | DONE |
+
+### Dependency notes (045)
+
+- 045 is independent of 043 and 044 at the source level, but its final manual
+  Preferences/Capture smoke checks should be serialized with 043.
+- 045 must preserve the existing `FrozenAreaCaptureSession` composite crop and
+  must not turn ImgBB/Cloud or unrelated capture modes into dependencies.
+
 ## Dependency notes (026–030)
 
 - 026 must land before the bundle-ID/path cutover.

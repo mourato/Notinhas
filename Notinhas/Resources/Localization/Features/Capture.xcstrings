@@ -15978,7 +15978,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Freeze the screen while selecting. Enable to hold a still snapshot."
+            "value": "Freeze all connected displays while selecting. Enable to hold still snapshots across your monitors."
           }
         },
         "es": {

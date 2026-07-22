@@ -2760,7 +2760,7 @@ nonisolated enum L10n {
     )
     static let freezeAreaDescription = string(
       "preferences-capture.freeze-area-description",
-      defaultValue: "Freeze the screen while selecting. Enable to hold a still snapshot.",
+      defaultValue: "Freeze all connected displays while selecting. Enable to hold still snapshots across your monitors.",
       comment: "Capture preferences setting description"
     )
     static let recordingShowCursorDescription = string(
