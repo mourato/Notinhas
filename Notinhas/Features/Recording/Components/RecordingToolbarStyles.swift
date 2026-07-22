@@ -13,12 +13,12 @@ import SwiftUI
 enum ToolbarConstants {
   static let iconButtonSize: CGFloat = 32
   static let iconSize: CGFloat = 15
-  static let buttonCornerRadius: CGFloat = 6
+  static let buttonCornerRadius: CGFloat = 8
   static let toolbarCornerRadius: CGFloat = 14
   static let dividerHeight: CGFloat = 20
   static let itemSpacing: CGFloat = 4
   static let groupSpacing: CGFloat = 2
-  static let horizontalPadding: CGFloat = 10
+  static let horizontalPadding: CGFloat = 6
   static let verticalPadding: CGFloat = 6
   static let hoverAnimation: Animation = .easeInOut(duration: 0.15)
   static let pressAnimation: Animation = .easeInOut(duration: 0.1)

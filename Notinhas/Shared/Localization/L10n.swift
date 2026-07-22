@@ -1350,7 +1350,7 @@ nonisolated enum L10n {
     )
     static let modeOCR = string(
       "all-in-one.mode.ocr",
-      defaultValue: "Text",
+      defaultValue: "OCR",
       comment: "Compact All-In-One toolbar label for OCR capture"
     )
     static let modeRecording = string(

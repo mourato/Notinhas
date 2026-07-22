@@ -50,7 +50,6 @@ private struct AllInOneCaptureToolbarModeButton: View {
       .foregroundStyle(foregroundStyle)
       .frame(width: 54, height: 46)
       .background(background)
-      .overlay(selectionBorder)
       .contentShape(RoundedRectangle(cornerRadius: ToolbarConstants.buttonCornerRadius))
     }
     .buttonStyle(.plain)
@@ -89,14 +88,6 @@ private struct AllInOneCaptureToolbarModeButton: View {
     }
 
     return .clear
-  }
-
-  private var selectionBorder: some View {
-    RoundedRectangle(cornerRadius: ToolbarConstants.buttonCornerRadius)
-      .strokeBorder(
-        isSelected ? Color.primary.opacity(reduceTransparency ? 0.55 : 0.35) : .clear,
-        lineWidth: isSelected ? 1.5 : 0
-      )
   }
 
   private var selectedAccessibilityValue: String {
