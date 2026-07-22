@@ -48,7 +48,7 @@ Options:
 
 Examples:
   $0
-  $0 --app Notinhas --bundle-id com.duongductrong.Notinhas --days 7
+  $0 --app Notinhas --bundle-id com.mourato.notinhas --days 7
   APP_NAME="My App" BUNDLE_ID=com.example.MyApp $0 --output-dir /tmp/crashes
 EOF
 }

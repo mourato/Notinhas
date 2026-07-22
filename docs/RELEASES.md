@@ -51,7 +51,7 @@ See [BUILD.md](BUILD.md) for Debug builds, icon regeneration, and DMG creation.
 Include in release notes when relevant:
 
 - Re-grant Screen Recording / Accessibility after install
-- Link to [MIGRATION.md](MIGRATION.md) for Snapzy upgrades
+- Link to [MIGRATION.md](MIGRATION.md) for legacy identity upgrades
 - Manual download URL: `https://github.com/mourato/Notinhas/releases`
 
 ## Beta / prerelease
@@ -64,7 +64,7 @@ Prereleases may be marked `prerelease: true` on GitHub. Users install the DMG ma
 | --- | --- |
 | Gatekeeper blocks app | Code signing + notarization; or `xattr -rd com.apple.quarantine` for local ad-hoc builds |
 | Permissions missing after upgrade | Expected — TCC is per bundle ID; see MIGRATION.md |
-| Wrong app name in menu bar | Confirm `Notinhas.app` replaced `Snapzy.app` in `/Applications` |
+| Wrong app name in menu bar | Confirm the current `Notinhas.app` replaced any older app bundle in `/Applications` |
 
 ## Related
 

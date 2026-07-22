@@ -81,4 +81,4 @@ Enable at runtime under **Preferences → Advanced** when compiled in.
 
 - [BUILD.md](BUILD.md) — archive, export, DMG packaging
 - [RELEASES.md](RELEASES.md) — GitHub Release workflow
-- [MIGRATION.md](MIGRATION.md) — Snapzy upgrade path
+- [MIGRATION.md](MIGRATION.md) — Notinhas upgrade path

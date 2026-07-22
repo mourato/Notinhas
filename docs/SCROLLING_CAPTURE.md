@@ -1,12 +1,12 @@
 # Scrolling Capture
 
-Scrolling capture stitches a scrollable region into one long screenshot while a live preview rail shows the committed result. This doc covers the self-contained subsystem in `Snapzy/Services/Capture/ScrollingCapture/` as of HEAD.
+Scrolling capture stitches a scrollable region into one long screenshot while a live preview rail shows the committed result. This doc covers the self-contained subsystem in `Notinhas/Services/Capture/ScrollingCapture/` as of HEAD.
 
 For trigger plumbing shared with other capture modes, see [`CAPTURE.md`](CAPTURE.md); for what happens after the stitched image is saved, see [`POST_CAPTURE.md`](POST_CAPTURE.md).
 
 ## Overview
 
-- Entry point: `ScreenCaptureViewModel.captureScrolling()` (`Snapzy/Features/Capture/CaptureViewModel.swift`), fired from the menu bar, the global shortcut (default `⇧⌘6`), or `snapzy://capture/scrolling`.
+- Entry point: `ScreenCaptureViewModel.captureScrolling()` (`Notinhas/Features/Capture/CaptureViewModel.swift`), fired from the menu bar, the global shortcut (default `⇧⌘6`), or `notinhas://capture/scrolling`.
 - The entry resolves the save directory (`SandboxFileAccessManager.ensureExportDirectoryForOperation` → `TempCaptureManager.resolveSaveDirectory(for: .screenshot)`), hides own windows when excluded, then starts `AreaSelectionController.startSelection(mode: .scrollingCapture)`.
 - The user drags a rect around **only the moving content** (fixed headers/footers confuse stitching).
 - The rect, save directory, `ImageFormat`, and prefetched `SCShareableContent` task are handed to `ScrollingCaptureCoordinator.beginSession(rect:saveDirectory:format:prefetchedContentTask:onSessionEnded:)`.
@@ -58,7 +58,7 @@ flowchart TD
 - **Commit lane**: `ScrollingCaptureCommitScheduler` serializes stitch work and coalesces requests — only the latest pending request survives (`onRequestCoalesced` feeds metrics). `refreshPreview(reason:)` picks the newest ring frame after the last committed sequence number.
 - **Still fallback**: when the ring has no usable new frame (stream not started, failed, or starved), the commit falls back to a still capture through the prewarmed context (`capturePreparedArea`). Commit frame source is logged as `stream` vs `still-fallback`.
 - `ScrollingCaptureCommitFrameNormalizer` keeps every frame submitted to the stitcher at one pixel scale: it clamps the output scale to `max(sourceScaleFactor, minimumOutputScaleFactor)` and reuses `FrozenAreaCaptureSession.imageByPromotingScaleIfNeeded`, so region frames honor the same minimum 2x screenshot baseline as other modes — long screenshots from non-Retina displays do not save as 1x output.
-- Stitching runs off the main actor on a serial `processingQueue` (`com.snapzy.scrolling-capture.processing`, `.userInitiated`); the full merged image render is skipped while the live preview is the visible surface.
+- Stitching runs off the main actor on a serial `processingQueue` (`com.notinhas.scrolling-capture.processing`, `.userInitiated`); the full merged image render is skipped while the live preview is the visible surface.
 
 ## Scroll Detection
 
@@ -127,10 +127,10 @@ flowchart TD
 
 - `ScrollingCaptureSessionMetrics` (`ScrollingCaptureMetrics.swift`) accumulates per-session counters: scroll events, live-preview starts/failures/gaps, commit schedule/coalesce counts, stream vs still-fallback commits, refresh durations by reason, stitch outcomes, alignment paths, safety counts, finalizing duration, blocked inputs.
 - The summary flushes once per session (reason `saved`/`cancelled`) as a `ScrollingCaptureDebug session-summary` debug line plus an info-level metrics line.
-- Debug lines go through `DiagnosticLogger` into `~/Library/Logs/Snapzy/snapzy_YYYY-MM-DD.txt`. Filter them with:
+- Debug lines go through `DiagnosticLogger` into `~/Library/Logs/Notinhas/notinhas_YYYY-MM-DD.txt`. Filter them with:
 
 ```bash
-grep 'ScrollingCaptureDebug' "$HOME/Library/Logs/Snapzy/snapzy_$(date +%F).txt"
+grep 'ScrollingCaptureDebug' "$HOME/Library/Logs/Notinhas/notinhas_$(date +%F).txt"
 ```
 
 - Useful events: `live-stream-started`, `live-stream-fallback`, `live-frame-sample`, `commit-frame-selected`, `stitch-update` (outcome, safety, confidence, delta error, durations), `refresh-failure`, `session-summary`.
@@ -140,19 +140,19 @@ grep 'ScrollingCaptureDebug' "$HOME/Library/Logs/Snapzy/snapzy_$(date +%F).txt"
 
 | File | Responsibility |
 | --- | --- |
-| `Snapzy/Services/Capture/ScrollingCapture/ScrollingCaptureCoordinator.swift` | Session orchestration: windows, scroll monitoring, commit lane, auto scroll, finish/save |
-| `Snapzy/Services/Capture/ScrollingCapture/ScrollingCaptureTypes.swift` | `ScrollingCaptureSessionModel`, phases, runtime states, truth states, guidance, auto-scroll policy |
-| `Snapzy/Services/Capture/ScrollingCapture/ScrollingCaptureStitcher.swift` | Vertical stitcher: fast guided match, Vision recovery, static bands, safety, merged/preview output |
-| `Snapzy/Services/Capture/ScrollingCapture/ScrollingCaptureFrameSource.swift` | Region-scoped `SCStream` publishing timestamped frames |
-| `Snapzy/Services/Capture/ScrollingCapture/ScrollingCaptureFrameRing.swift` | Bounded frame history (capacity 8) shared by preview and commit lanes |
-| `Snapzy/Services/Capture/ScrollingCapture/ScrollingCaptureCommitScheduler.swift` | Serial commit lane coalescing to the latest pending request |
-| `Snapzy/Services/Capture/ScrollingCapture/ScrollingCaptureCommitFrameNormalizer.swift` | Uniform pixel scale for frames entering the stitcher |
-| `Snapzy/Services/Capture/ScrollingCapture/ScrollingCaptureHUDWindow.swift` | Floating non-activating control panel (Start/Done/Cancel/Auto Scroll) |
-| `Snapzy/Services/Capture/ScrollingCapture/ScrollingCaptureHUDView.swift` | SwiftUI HUD content and action buttons |
-| `Snapzy/Services/Capture/ScrollingCapture/ScrollingCapturePreviewWindow.swift` | Non-interactive floating preview rail window |
-| `Snapzy/Services/Capture/ScrollingCapture/ScrollingCapturePreviewView.swift` | SwiftUI rail content: truth badge, preview, caption, layout constants |
-| `Snapzy/Services/Capture/ScrollingCapture/ScrollingCapturePreviewRenderer.swift` | Layer-backed `NSViewRepresentable` image surface (`.fit` scaling) |
-| `Snapzy/Services/Capture/ScrollingCapture/ScrollingCaptureMetrics.swift` | Per-session metrics counters and summary context |
+| `Notinhas/Services/Capture/ScrollingCapture/ScrollingCaptureCoordinator.swift` | Session orchestration: windows, scroll monitoring, commit lane, auto scroll, finish/save |
+| `Notinhas/Services/Capture/ScrollingCapture/ScrollingCaptureTypes.swift` | `ScrollingCaptureSessionModel`, phases, runtime states, truth states, guidance, auto-scroll policy |
+| `Notinhas/Services/Capture/ScrollingCapture/ScrollingCaptureStitcher.swift` | Vertical stitcher: fast guided match, Vision recovery, static bands, safety, merged/preview output |
+| `Notinhas/Services/Capture/ScrollingCapture/ScrollingCaptureFrameSource.swift` | Region-scoped `SCStream` publishing timestamped frames |
+| `Notinhas/Services/Capture/ScrollingCapture/ScrollingCaptureFrameRing.swift` | Bounded frame history (capacity 8) shared by preview and commit lanes |
+| `Notinhas/Services/Capture/ScrollingCapture/ScrollingCaptureCommitScheduler.swift` | Serial commit lane coalescing to the latest pending request |
+| `Notinhas/Services/Capture/ScrollingCapture/ScrollingCaptureCommitFrameNormalizer.swift` | Uniform pixel scale for frames entering the stitcher |
+| `Notinhas/Services/Capture/ScrollingCapture/ScrollingCaptureHUDWindow.swift` | Floating non-activating control panel (Start/Done/Cancel/Auto Scroll) |
+| `Notinhas/Services/Capture/ScrollingCapture/ScrollingCaptureHUDView.swift` | SwiftUI HUD content and action buttons |
+| `Notinhas/Services/Capture/ScrollingCapture/ScrollingCapturePreviewWindow.swift` | Non-interactive floating preview rail window |
+| `Notinhas/Services/Capture/ScrollingCapture/ScrollingCapturePreviewView.swift` | SwiftUI rail content: truth badge, preview, caption, layout constants |
+| `Notinhas/Services/Capture/ScrollingCapture/ScrollingCapturePreviewRenderer.swift` | Layer-backed `NSViewRepresentable` image surface (`.fit` scaling) |
+| `Notinhas/Services/Capture/ScrollingCapture/ScrollingCaptureMetrics.swift` | Per-session metrics counters and summary context |
 
 ## Related docs
 

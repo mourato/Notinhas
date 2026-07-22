@@ -47,7 +47,8 @@ Screen Recording and Accessibility TCC grants follow the code signature. Ad-hoc 
 - Notinhas notes / export / geometry: run `NotinhasTests/Features/Notinhas/*` suites; manual capture → annotate → copy brief.
 - Capture / permissions: confirm Screen Recording grant path; menu items disabled when permission missing.
 - Persistence: relaunch; confirm Notinhas session restore and ImgBB key round-trip (key name only in logs).
-- Upstream Snapzy merge: `./scripts/run-tests.sh` + capture/annotate smoke; preserve `Notinhas/Features/Notinhas/`.
+- Upstream merge: `./scripts/run-tests.sh` + capture/annotate smoke; preserve
+  `Notinhas/Features/Notinhas/`.
 
 ## Git Evidence
 

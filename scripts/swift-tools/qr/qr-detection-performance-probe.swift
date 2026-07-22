@@ -81,7 +81,7 @@ struct QRDetectionPerformanceProbe {
     runProbe(name: "QR blank 1440x900", image: blankImage, computeMode: .systemDefault).printReport()
     runProbe(name: "QR blank 1440x900", image: blankImage, computeMode: .cpu).printReport()
 
-    if let qrImage = makeCanvas(withQRCodePayload: "https://snapzy.app/security-check") {
+    if let qrImage = makeCanvas(withQRCodePayload: "https://notinhas.app/security-check") {
       runProbe(name: "QR payload 1440x900", image: qrImage, computeMode: .systemDefault).printReport()
       runProbe(name: "QR payload 1440x900", image: qrImage, computeMode: .cpu).printReport()
     } else {

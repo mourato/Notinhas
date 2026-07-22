@@ -1,6 +1,8 @@
 # Update Testing
 
-Notinhas does **not** use Sparkle or an in-app update channel. Local Sparkle harnesses, appcast feeds, and `UPDATE_TESTING` scripts from upstream Snapzy are **not applicable**.
+Notinhas does **not** use Sparkle or an in-app update channel. Local Sparkle
+harnesses, appcast feeds, and updater-only scripts inherited from the upstream
+project are **not applicable**.
 
 ## What to validate instead
 
@@ -14,7 +16,7 @@ Notinhas does **not** use Sparkle or an in-app update channel. Local Sparkle har
 
 ### Upgrade path
 
-1. Install an older Notinhas DMG (or use a migration fixture with legacy Snapzy data).
+1. Install an older Notinhas DMG (or use a migration fixture with legacy data).
 2. Install the newer DMG over `/Applications/Notinhas.app`.
 3. Verify history, preferences, and logs per [MIGRATION.md](MIGRATION.md).
 4. Re-grant Screen Recording / Accessibility / Microphone as needed.

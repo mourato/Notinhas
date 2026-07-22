@@ -62,4 +62,8 @@ flowchart TD
 
 ## Legacy compatibility note
 
-Source and migration code may reference **legacy Snapzy** paths (`Snapzy/`, `snapzy.db`, `snapzy://`) only for one-time import or rejection tests. User-facing docs and automation should use **Notinhas** paths and `notinhas://` unless explicitly documenting legacy migration inputs in [MIGRATION.md](MIGRATION.md).
+Source and migration code may reference **legacy Snapzy** paths (`Snapzy/`,
+`snapzy.db`, `snapzy://`) only for one-time import or rejection tests.
+User-facing docs and automation should use **Notinhas** paths and
+`notinhas://` unless explicitly documenting legacy migration inputs in
+[MIGRATION.md](MIGRATION.md).

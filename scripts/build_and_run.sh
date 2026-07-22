@@ -328,9 +328,9 @@ run_xcodebuild() {
 
   # The project targets an unavailable legacy development team. Use the shared
   # Vozinha identity for local app bundles instead. Its local, team-less
-  # certificate cannot pass library validation for the bundled Sparkle
-  # framework, so local builds disable hardened runtime by default. A trusted
-  # Apple distribution identity can opt in with LOCAL_ENABLE_HARDENED_RUNTIME=YES.
+  # certificate is intended for local builds, so hardened runtime is disabled
+  # by default. A trusted Apple distribution identity can opt in with
+  # LOCAL_ENABLE_HARDENED_RUNTIME=YES.
   args+=(
     "CODE_SIGN_STYLE=Manual"
     "CODE_SIGN_IDENTITY=$LOCAL_CODE_SIGN_IDENTITY"

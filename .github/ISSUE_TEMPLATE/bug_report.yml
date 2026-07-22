@@ -86,7 +86,7 @@ body:
         - GitHub Release DMG
         - Shell script
         - Built from source
-        - Migrated from Snapzy
+        - Migrated from an earlier app identity
     validations:
       required: false
 

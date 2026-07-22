@@ -2,8 +2,8 @@
 # install.sh — Install Notinhas from GitHub Releases
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/duongductrong/Notinhas/master/install.sh | bash
-#   curl -fsSL https://raw.githubusercontent.com/duongductrong/Notinhas/v1.2.3/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/mourato/Notinhas/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/mourato/Notinhas/v1.2.3/install.sh | bash
 #   VERSION=1.2.3 bash install.sh
 #
 # The script downloads the DMG from GitHub Releases, mounts it,
@@ -49,7 +49,7 @@ done
 # Resolve version
 # ---------------------------------------------------------------------------
 
-REPO="duongductrong/Notinhas"
+REPO="mourato/Notinhas"
 
 if [[ -z "${VERSION:-}" ]]; then
   info "Fetching latest release version…"

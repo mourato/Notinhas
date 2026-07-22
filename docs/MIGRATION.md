@@ -1,6 +1,6 @@
 # Migrating from Snapzy to Notinhas
 
-Notinhas is a separate macOS app with its own bundle identifier, URL scheme, and on-disk identity. First launch runs a **non-destructive, idempotent** migration that copies legacy Snapzy data into Notinhas paths. Legacy source files are left in place unless you choose **Start Fresh**.
+Notinhas is a separate macOS app with its own bundle identifier, URL scheme, and on-disk identity. First launch runs a **non-destructive, idempotent** identity migration that copies legacy Snapzy data into Notinhas paths. Direct legacy source files are left in place; the older sandbox-off migration may clean copied sandbox directories after a successful copy.
 
 ## What changes
 
@@ -29,13 +29,13 @@ Notinhas is a separate macOS app with its own bundle identifier, URL scheme, and
 - **Application Support** — captures, annotation session sidecars, temp files, and related folders under legacy `Snapzy/` (including sandbox-off container copies when present).
 - **Database** — `snapzy.db`, `snapzy.db-wal`, `snapzy.db-shm` copied/renamed to `notinhas.db` companions when the destination set is missing.
 - **UserDefaults / preferences** — keys imported from legacy preference domains (`com.trongduong.snapzy`, `com.trongduong.snapzy.debug`) and sandbox preference plists.
-- **Logs** — retained diagnostic files from `~/Library/Logs/Snapzy/` into `~/Library/Logs/Notinhas/` with `notinhas_` prefix.
-- **TOML config** — `~/.config/snapzy/` tree into `~/.config/notinhas/` when the destination config folder does not already exist.
+- **Logs** — retained diagnostic files from `~/Library/Logs/Snapzy/` into `~/Library/Logs/Notinhas/`; copied legacy filenames are retained, while new logs use the `notinhas_` prefix.
+- **TOML config** — `~/.config/snapzy/` tree is merged into `~/.config/notinhas/` without overwriting existing destination files.
 - **Keychain** — cloud credential items moved from legacy services to `com.mourato.notinhas.cloud`.
 
 ### Behavior guarantees
 
-- **Non-destructive** — legacy Snapzy folders and plists remain on disk after a successful migration.
+- **Non-destructive identity migration** — direct legacy Snapzy folders and plists remain on disk after a successful identity migration. The separate sandbox-off migration can remove copied sandbox subdirectories after marking completion.
 - **Idempotent** — re-running is skipped once the marker file exists; destination files are not overwritten when already present.
 - **Start Fresh** — user can skip migration; legacy data is untouched and Notinhas starts with empty destination paths.
 

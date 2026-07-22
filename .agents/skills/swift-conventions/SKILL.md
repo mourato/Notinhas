@@ -29,13 +29,13 @@ Install once: `brew install swiftformat`. Run from the repo root so `.swiftforma
 
 ```bash
 # app + tests (typical)
-swiftformat Snapzy NotinhasTests
+swiftformat Notinhas NotinhasTests
 
 # Notinhas-only
 swiftformat Notinhas/Features/Notinhas NotinhasTests/Features/Notinhas
 
 # lint without writing (CI-style)
-swiftformat --lint Snapzy NotinhasTests
+swiftformat --lint Notinhas NotinhasTests
 ```
 
 ## Related

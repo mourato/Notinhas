@@ -33,11 +33,13 @@ TCC grants do not migrate from legacy Snapzy bundle IDs — see [MIGRATION.md](M
 
 ## Deep links
 
-Only `notinhas://` is registered. Legacy `snapzy://` requests are rejected by design (see `NotinhasTests` deep-link rejection tests).
+Only `notinhas://` is registered. Legacy `snapzy://` requests are rejected by
+design (see `NotinhasTests` deep-link rejection tests).
 
 ## Dependency review
 
-Audit `Package.resolved` when adding SPM packages. Upstream Snapzy dependencies that existed only for Sparkle must not return.
+Audit `Package.resolved` when adding SPM packages. Dependencies that existed
+only for the removed updater must not return.
 
 ## Contributor checklist
 

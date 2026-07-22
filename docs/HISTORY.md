@@ -1,11 +1,11 @@
 # Capture History
 
-Persistent history of screenshots, videos, and GIFs backed by GRDB SQLite, surfaced through a floating panel (compact carousel + expanded grid) and a restore-to-Quick-Access flow that reopens captures in Annotate or Video Editor with editable sessions. Code: `Snapzy/Features/History/` + `Snapzy/Services/History/`.
+Persistent history of screenshots, videos, and GIFs backed by GRDB SQLite, surfaced through a floating panel (compact carousel + expanded grid) and a restore-to-Quick-Access flow that reopens captures in Annotate or Video Editor with editable sessions. Code: `Notinhas/Features/History/` + `Notinhas/Services/History/`.
 
 ## Entry Points
 
 - Status bar menu (Capture History).
-- Deep link `snapzy://open/history` (aliases `history`, `capture-history`).
+- Deep link `notinhas://open/history` (aliases `history`, `capture-history`).
 - Global shortcut `GlobalShortcutKind.history`, default ⌘⇧H (`ShortcutConfig.defaultHistory`), rebindable in Preferences → Shortcuts.
 
 ## Floating Panel
@@ -45,7 +45,7 @@ flowchart TD
 
 ## Storage
 
-- Database: GRDB SQLite at `~/Library/Application Support/Snapzy/snapzy.db` via `DatabaseManager` (`Services/Cloud/`). Migrations: `v1_createCloudUploadRecords`, `v2_createCaptureHistoryRecords`. Launch repair/reset recovery archives db files to `DatabaseRecovery-<timestamp>/`.
+- Database: GRDB SQLite at `~/Library/Application Support/Notinhas/notinhas.db` via `DatabaseManager` (`Services/Cloud/`). Migrations: `v1_createCloudUploadRecords`, `v2_createCaptureHistoryRecords`. Launch repair/reset recovery archives db files to `DatabaseRecovery-<timestamp>/`.
 - `CaptureHistoryStore` — GRDB `ValueObservation` publishes records; `add` is a no-op when `history.enabled` is off; `updateFilePath` (temp→export move), `markFileChanged`, `hasRecord(forFilePath:)`, `removeByFilePath`.
 - Media files: temp captures live in Application Support temp root; saved captures in the user export folder — history only records paths.
 - Thumbnails: `HistoryThumbnailGenerator` — JPEG, max dimension 208, stored in `HistoryThumbnails/`; `NSCache` memory cache 160 items / 48MB.
@@ -77,5 +77,5 @@ Unused (kept in tree): `HistoryMainView` (except `HistoryBackdropView`, still us
 - [ANNOTATE.md](ANNOTATE.md) — editable session restore, sidecar format
 - [VIDEO_EDITOR.md](VIDEO_EDITOR.md) — video/GIF restore target
 - [POST_CAPTURE.md](POST_CAPTURE.md) — where history records are created
-- [CLOUD.md](CLOUD.md) — upload records sharing `snapzy.db`
+- [CLOUD.md](CLOUD.md) — upload records sharing `notinhas.db`
 - [PREFERENCES.md](PREFERENCES.md) — settings keys

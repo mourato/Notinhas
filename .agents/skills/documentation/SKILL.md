@@ -21,7 +21,8 @@ Use when updating project docs, agent guidance, or in-source section markers.
 - Keep agent policy in `AGENTS.md`.
 - Document Screen Recording / Accessibility requirements when capture or permission UX changes.
 - Do not reintroduce Sparkle, About, Report a Problem, or `snapzy://` in user-facing docs.
-- Legacy Snapzy references belong only in `docs/MIGRATION.md` (labelled migration inputs).
+- Legacy identity references belong only in `docs/MIGRATION.md` (labelled
+  migration inputs).
 - Prefer linking to skills over duplicating long checklists in README.
 
 ## Checklist

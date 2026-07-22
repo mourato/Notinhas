@@ -1,6 +1,9 @@
 # Self-Signed Certificate Setup
 
-Snapzy uses a self-signed code signing certificate to preserve macOS TCC permissions (Screen Recording, Microphone, etc.) across Sparkle updates.
+Notinhas can use a stable self-signed certificate for local release testing.
+This preserves macOS TCC permissions when replacing builds signed with the same
+identity; it does not provide an in-app update channel or bypass the required
+permission re-grant after the bundle identifier changes.
 
 ## Why This Matters
 
@@ -32,17 +35,18 @@ Push a release and check the "Import self-signed certificate" step in the workfl
 
 ## Local Testing
 
-Use `scripts/test-tcc-local.sh` to verify TCC permissions persist across updates locally:
+Use `scripts/test-tcc-local.sh` to verify TCC permissions persist across
+same-identity replacements locally:
 
 ```bash
 # Step 1: Generate cert and import into login keychain
 ./scripts/create-signing-cert.sh
 
-# Step 2: Build, sign with self-signed cert, install as v1
+# Step 2: Build, sign with self-signed cert, install as build v1
 ./scripts/test-tcc-local.sh build-v1
 # → Open app → Grant Screen Recording + Microphone
 
-# Step 3: Re-sign and replace (simulates Sparkle update)
+# Step 3: Re-sign and replace with the same identity
 ./scripts/test-tcc-local.sh build-v2
 # → Open app → Verify permissions are STILL granted ✅
 
@@ -63,7 +67,7 @@ The release workflow uses this fallback chain:
 
 1. **Developer ID** — best (Gatekeeper pass + TCC persist). Requires Apple Developer Program.
 2. **Self-signed cert** — good (TCC persist, Gatekeeper warning on first install).
-3. **Ad-hoc** — worst (TCC revoked every update).
+3. **Ad-hoc** — worst (TCC may be revoked when the build identity changes).
 
 ## Upgrading to Developer ID
 
@@ -72,14 +76,15 @@ When you enroll in Apple Developer Program:
 1. Add `DEVELOPER_ID_P12`, `DEVELOPER_ID_PASSWORD` secrets
 2. Optionally add `APPLE_ID`, `APPLE_ID_PASSWORD`, `APPLE_TEAM_ID` for notarization
 3. Remove `SELF_SIGNED_CERT_P12` and `SELF_SIGNED_CERT_PASSWORD` (optional)
-4. Users re-grant permissions **once** on the first update with the new identity
+4. Users re-grant permissions **once** when switching to the new Notinhas bundle
+   identity
 
 ## Certificate Renewal
 
 The default certificate is valid for 10 years. To regenerate:
 
 ```bash
-./scripts/create-signing-cert.sh "Snapzy Self-Signed" 3650
+./scripts/create-signing-cert.sh "Notinhas Self-Signed" 3650
 ```
 
 Then update the GitHub Secrets with the new values.

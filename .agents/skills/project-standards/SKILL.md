@@ -46,7 +46,9 @@ Route new knowledge in this order:
 
 1. **Skill absorption** (`.agents/skills/...`) for reusable operational guidance.
 2. **AGENTS.md** for durable agent policy and product intent.
-3. **Upstream Snapzy docs** (`docs/CAPTURE.md`, `docs/ANNOTATE.md`, etc.) for engineering narrative of shared flows — **do not** ban `docs/`; **do not** duplicate the same topics in a parallel Notinhas-only tree.
+3. **Shared upstream-derived docs** (`docs/CAPTURE.md`, `docs/ANNOTATE.md`,
+   etc.) for engineering narrative of shared flows — **do not** ban `docs/`;
+   **do not** duplicate the same topics in a parallel Notinhas-only tree.
 4. **GitHub issues** for backlog items, known limitations, and follow-up work.
 5. **Deletion** for stale or duplicate files with no current operational value.
 
