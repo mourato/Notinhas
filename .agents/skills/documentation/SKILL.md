@@ -13,7 +13,6 @@ Use when updating project docs, agent guidance, or in-source section markers.
 - **AGENTS.md** — canonical agent guide (product intent, structure, commands, fork workflow).
 - **docs/** — engineering docs; `MIGRATION.md`, `RELEASES.md`, and `UPDATES.md` describe Notinhas distribution (no Sparkle).
 - **`.agents/skills/`** — reusable operational guidance per domain.
-- **`.agents/SKILLS_INDEX.md`** — skill catalog and routing.
 - Source `// MARK:` — navigate large files (`AppStatusBarController`, `AnnotateState`, `NotinhasNoteGeometry`).
 
 ## Rules
@@ -33,5 +32,5 @@ Use when updating project docs, agent guidance, or in-source section markers.
 
 ## Related
 
-- Standards / routing → `AGENTS.md` + `SKILLS_INDEX.md` + `project-standards`
+- Standards / routing → `AGENTS.md` + `project-standards` + the owning skill
 - Delivery commands → `delivery-workflow`

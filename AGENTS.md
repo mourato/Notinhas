@@ -30,7 +30,9 @@ renaming, moving, or rewriting upstream code merely to match a new design.
 
 ## Skills
 
-Agent skills live under `.agents/skills/`. Start at `.agents/SKILLS_INDEX.md` for routing.
+Project-specific agent skills live under `.agents/skills/`. Choose the narrowest
+relevant skill from its description; use `project-standards` for guidance
+governance and routing policy.
 `project-standards` owns guidance governance (where docs live, skill template, anti-drift).
 `capture-annotate-export` owns the visual handoff loop (capture → pins/notes → clipboard export).
 Keep Notinhas behavior guidance aligned with Product Intent above; do not reintroduce

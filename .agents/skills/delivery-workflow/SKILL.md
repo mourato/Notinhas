@@ -59,6 +59,6 @@ Screen Recording and Accessibility TCC grants follow the code signature. Ad-hoc 
 
 ## Related
 
-- Domain behavior → narrowest skill in `.agents/skills/` (see `project-standards` / `SKILLS_INDEX.md` when present)
+- Domain behavior → narrowest skill in `.agents/skills/` (see `project-standards` when routing or policy is unclear)
 - Capture → annotate → export loop → `capture-annotate-export` (when added)
 - Strict review → global `thermo-nuclear-code-quality-review` if available in the executor environment

@@ -64,7 +64,7 @@ Generated report artifacts: prefer `/tmp` or `.agents/reports/` (create only whe
 ## Evolution
 
 - Review project guidance every ~90 days and whenever scripts, skill registry, or major upstream merges change.
-- When a command, skill owner, or validation rule changes, update `AGENTS.md`, the owning skill, and `SKILLS_INDEX.md` together.
+- When a command, skill owner, or validation rule changes, update `AGENTS.md` and the owning skill together. Update other documentation that describes the affected routing or policy when needed.
 - Prefer deleting stale guidance over stacking duplicates. One canonical owner per rule.
 
 ## Related Skills
@@ -76,4 +76,4 @@ Generated report artifacts: prefer `/tmp` or `.agents/reports/` (create only whe
 ## References
 
 - `AGENTS.md`
-- `.agents/SKILLS_INDEX.md`
+- `.agents/skills/`
