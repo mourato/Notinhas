@@ -16,7 +16,7 @@ struct AllInOneCaptureToolbarView: View {
         AllInOneCaptureToolbarModeButton(
           mode: mode,
           isSelected: session.selectedMode == mode,
-          action: { session.selectMode(mode) }
+          action: { session.activateMode(mode) }
         )
       }
     }

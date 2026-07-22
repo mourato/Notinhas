@@ -15,28 +15,23 @@ final class AllInOneCaptureSessionState: ObservableObject {
   @Published var currentRect: CGRect?
   @Published private(set) var availableModes: [AllInOneCaptureMode]
 
-  var onModeSelected: (AllInOneCaptureMode) -> Void = { _ in }
+  var onModeActivated: (AllInOneCaptureMode) -> Void = { _ in }
   var onRectChanged: (CGRect) -> Void = { _ in }
-  var onConfirmCapture: () -> Void = {}
   var onCancel: () -> Void = {}
 
   init(videoEnabled: Bool = VideoModuleAvailability.isEnabled) {
     availableModes = AllInOneCaptureMode.availableModes(videoEnabled: videoEnabled)
   }
 
-  func selectMode(_ mode: AllInOneCaptureMode) {
+  func activateMode(_ mode: AllInOneCaptureMode) {
     guard availableModes.contains(mode) else { return }
     selectedMode = mode
-    onModeSelected(mode)
+    onModeActivated(mode)
   }
 
   func updateRect(_ rect: CGRect) {
     currentRect = rect
     onRectChanged(rect)
-  }
-
-  func confirmCapture() {
-    onConfirmCapture()
   }
 
   func cancel() {
