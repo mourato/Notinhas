@@ -22,7 +22,9 @@ final class AllInOneFrozenBackdropHost {
       hasShadow = false
       ignoresMouseEvents = true
       collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
-      level = .mainMenu
+      // Keep the frozen pixels above normal app windows, but below the selection
+      // overlays and All-In-One HUDs that are ordered after this host.
+      level = .floating
 
       let imageView = NSImageView(frame: NSRect(origin: .zero, size: screen.frame.size))
       imageView.imageScaling = .scaleAxesIndependently
