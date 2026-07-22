@@ -1,15 +1,15 @@
 //
-//  SnapzyDeepLinkHandler.swift
+//  NotinhasDeepLinkHandler.swift
 //  Snapzy
 //
-//  Handles snapzy:// automation URLs for external launchers and workflows.
+//  Handles notinhas:// automation URLs for external launchers and workflows.
 //
 
 import AppKit
 import Foundation
 
 @MainActor
-struct SnapzyDeepLinkHandler {
+struct NotinhasDeepLinkHandler {
   private let screenCaptureViewModel: ScreenCaptureViewModel
 
   init(screenCaptureViewModel: ScreenCaptureViewModel) {
@@ -27,7 +27,7 @@ struct SnapzyDeepLinkHandler {
       return
     }
 
-    guard let action = SnapzyDeepLinkAction(url: url) else {
+    guard let action = NotinhasDeepLinkAction(url: url) else {
       DiagnosticLogger.shared.log(
         .warning,
         .action,
@@ -115,7 +115,7 @@ struct SnapzyDeepLinkHandler {
     }
   }
 
-  private func logIgnoredVideoDeepLink(action: SnapzyDeepLinkAction) {
+  private func logIgnoredVideoDeepLink(action: NotinhasDeepLinkAction) {
     DiagnosticLogger.shared.log(
       .info,
       .action,
@@ -125,7 +125,7 @@ struct SnapzyDeepLinkHandler {
   }
 }
 
-enum SnapzyDeepLinkAction: Equatable {
+enum NotinhasDeepLinkAction: Equatable {
   case captureFullscreen
   case captureArea
   case captureApplication
@@ -146,7 +146,7 @@ enum SnapzyDeepLinkAction: Equatable {
   case openSettings(PreferencesTab?)
 
   init?(url: URL) {
-    guard url.scheme?.lowercased() == "snapzy" else { return nil }
+    guard url.scheme?.lowercased() == "notinhas" else { return nil }
 
     let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
     let host = url.host?.lowercased()
@@ -192,6 +192,8 @@ enum SnapzyDeepLinkAction: Equatable {
       self = .showShortcuts
     case "settings", "preferences":
       self = .openSettings(Self.preferencesTab(from: components, pathParts: pathParts))
+    case "settings/about", "preferences/about":
+      return nil
     case let value where value.hasPrefix("settings/"):
       self = .openSettings(Self.preferencesTab(from: components, pathParts: pathParts))
     case let value where value.hasPrefix("preferences/"):
@@ -266,6 +268,8 @@ enum SnapzyDeepLinkAction: Equatable {
       .cloud
     case "advanced", "configuration", "config", "toml":
       .advanced
+    case "about":
+      nil
     default:
       nil
     }

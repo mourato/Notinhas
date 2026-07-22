@@ -32,10 +32,10 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.trongduong.snapzy</string>
+			<string>com.mourato.notinhas</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>snapzy</string>
+				<string>notinhas</string>
 			</array>
 		</dict>
 	</array>

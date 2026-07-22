@@ -309,7 +309,7 @@ final class GoogleDriveOAuthService: @unchecked Sendable {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Snapzy Authorization Successful</title>
+      <title>Notinhas Authorization Successful</title>
       <style>
         body {
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -377,19 +377,19 @@ final class GoogleDriveOAuthService: @unchecked Sendable {
         }
       </style>
       <script>
-        // Automatically attempt to redirect back to Snapzy
+        // Automatically attempt to redirect back to Notinhas
         setTimeout(function() {
-          window.location.href = "snapzy://settings/cloud";
+          window.location.href = "notinhas://settings/cloud";
         }, 1000);
       </script>
     </head>
     <body>
       <div class="container">
         <div class="icon">✓</div>
-        <h1>Snapzy Authorized!</h1>
-        <p>Google Drive authorization was successful. You can close this browser window and return to Snapzy to complete your setup.</p>
+        <h1>Notinhas Authorized!</h1>
+        <p>Google Drive authorization was successful. You can close this browser window and return to Notinhas to complete your setup.</p>
         <div class="action-btn-container">
-          <a href="snapzy://settings/cloud" class="btn">Return to Snapzy</a>
+          <a href="notinhas://settings/cloud" class="btn">Return to Notinhas</a>
         </div>
       </div>
     </body>
@@ -405,7 +405,7 @@ final class GoogleDriveOAuthService: @unchecked Sendable {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Snapzy Authorization Failed</title>
+      <title>Notinhas Authorization Failed</title>
       <style>
         body {
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -473,9 +473,9 @@ final class GoogleDriveOAuthService: @unchecked Sendable {
         }
       </style>
       <script>
-        // Automatically attempt to redirect back to Snapzy
+        // Automatically attempt to redirect back to Notinhas
         setTimeout(function() {
-          window.location.href = "snapzy://settings/cloud";
+          window.location.href = "notinhas://settings/cloud";
         }, 1500);
       </script>
     </head>
@@ -483,9 +483,9 @@ final class GoogleDriveOAuthService: @unchecked Sendable {
       <div class="container">
         <div class="icon">✕</div>
         <h1>Authorization Failed</h1>
-        <p>Google Drive authorization failed with error: <strong>\(error)</strong>. Please return to Snapzy and try again.</p>
+        <p>Google Drive authorization failed with error: <strong>\(error)</strong>. Please return to Notinhas and try again.</p>
         <div class="action-btn-container">
-          <a href="snapzy://settings/cloud" class="btn">Return to Snapzy</a>
+          <a href="notinhas://settings/cloud" class="btn">Return to Notinhas</a>
         </div>
       </div>
     </body>

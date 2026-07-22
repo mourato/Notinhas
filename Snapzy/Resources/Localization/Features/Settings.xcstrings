@@ -10798,61 +10798,61 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Externe Auslöser über snapzy://-URLs zulassen"
+            "value": "Externe Auslöser über notinhas://-URLs zulassen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Allow external triggers via snapzy:// URLs"
+            "value": "Allow external triggers via notinhas:// URLs"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Permitir activadores externos mediante URL snapzy://"
+            "value": "Permitir activadores externos mediante URL notinhas://"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Autoriser les déclencheurs externes via les URL snapzy://"
+            "value": "Autoriser les déclencheurs externes via les URL notinhas://"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "snapzy:// URLを介した外部トリガーを许可する"
+            "value": "notinhas:// URLを介した外部トリガーを许可する"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "snapzy:// URL을 통한 외부 트리거 허용"
+            "value": "notinhas:// URL을 통한 외부 트리거 허용"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Разрешить внешние триггеры через URL-адреса snapzy://"
+            "value": "Разрешить внешние триггеры через URL-адреса notinhas://"
           }
         },
         "vi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cho phép kích hoạt bên ngoài qua URL snapzy://"
+            "value": "Cho phép kích hoạt bên ngoài qua URL notinhas://"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "允许通过 snapzy:// URL 进行外部触发"
+            "value": "允许通过 notinhas:// URL 进行外部触发"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "允許透過 snapzy:// URL 進行外部觸發"
+            "value": "允許透過 notinhas:// URL 進行外部觸發"
           }
         }
       }

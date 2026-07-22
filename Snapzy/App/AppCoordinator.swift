@@ -101,7 +101,7 @@ final class AppCoordinator {
   }
 
   func handleDeepLink(_ url: URL) {
-    SnapzyDeepLinkHandler(screenCaptureViewModel: environment.screenCaptureViewModel)
+    NotinhasDeepLinkHandler(screenCaptureViewModel: environment.screenCaptureViewModel)
       .handle(url)
   }
 

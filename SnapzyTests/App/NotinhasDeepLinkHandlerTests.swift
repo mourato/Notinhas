@@ -1,56 +1,56 @@
 //
-//  SnapzyDeepLinkHandlerTests.swift
+//  NotinhasDeepLinkHandlerTests.swift
 //  SnapzyTests
 //
-//  Unit tests for snapzy:// automation URL parsing.
+//  Unit tests for notinhas:// automation URL parsing.
 //
 
 @testable import Snapzy
 import XCTest
 
-final class SnapzyDeepLinkHandlerTests: XCTestCase {
+final class NotinhasDeepLinkHandlerTests: XCTestCase {
   func testCanonicalRoutesParseExpectedActions() throws {
-    let cases: [(String, SnapzyDeepLinkAction)] = [
-      ("snapzy://capture/fullscreen", .captureFullscreen),
-      ("snapzy://capture/area", .captureArea),
-      ("snapzy://capture/application", .captureApplication),
-      ("snapzy://capture/area-annotate", .captureAreaAnnotate),
-      ("snapzy://capture/scrolling", .captureScrolling),
-      ("snapzy://capture/ocr", .captureOCR),
-      ("snapzy://capture/smart-element", .captureSmartElement),
-      ("snapzy://capture/object-cutout", .captureObjectCutout),
-      ("snapzy://record/screen", .recordScreen),
-      ("snapzy://record/application", .recordApplication),
-      ("snapzy://open/annotate", .openAnnotate),
-      ("snapzy://open/combine", .openCombine([])),
-      ("snapzy://open/video-editor", .openVideoEditor),
-      ("snapzy://open/cloud-uploads", .openCloudUploads),
-      ("snapzy://open/history", .openHistory),
-      ("snapzy://show/shortcuts", .showShortcuts),
-      ("snapzy://settings", .openSettings(nil)),
+    let cases: [(String, NotinhasDeepLinkAction)] = [
+      ("notinhas://capture/fullscreen", .captureFullscreen),
+      ("notinhas://capture/area", .captureArea),
+      ("notinhas://capture/application", .captureApplication),
+      ("notinhas://capture/area-annotate", .captureAreaAnnotate),
+      ("notinhas://capture/scrolling", .captureScrolling),
+      ("notinhas://capture/ocr", .captureOCR),
+      ("notinhas://capture/smart-element", .captureSmartElement),
+      ("notinhas://capture/object-cutout", .captureObjectCutout),
+      ("notinhas://record/screen", .recordScreen),
+      ("notinhas://record/application", .recordApplication),
+      ("notinhas://open/annotate", .openAnnotate),
+      ("notinhas://open/combine", .openCombine([])),
+      ("notinhas://open/video-editor", .openVideoEditor),
+      ("notinhas://open/cloud-uploads", .openCloudUploads),
+      ("notinhas://open/history", .openHistory),
+      ("notinhas://show/shortcuts", .showShortcuts),
+      ("notinhas://settings", .openSettings(nil)),
     ]
 
     for (urlString, expectedAction) in cases {
       let url = try XCTUnwrap(URL(string: urlString))
-      XCTAssertEqual(SnapzyDeepLinkAction(url: url), expectedAction, urlString)
+      XCTAssertEqual(NotinhasDeepLinkAction(url: url), expectedAction, urlString)
     }
   }
 
   func testCombineAliasesParseExpectedAction() throws {
     let aliases = [
-      "snapzy://combine",
-      "snapzy://combine-images",
-      "snapzy://open-combine",
+      "notinhas://combine",
+      "notinhas://combine-images",
+      "notinhas://open-combine",
     ]
 
     for urlString in aliases {
       let url = try XCTUnwrap(URL(string: urlString))
-      XCTAssertEqual(SnapzyDeepLinkAction(url: url), .openCombine([]), urlString)
+      XCTAssertEqual(NotinhasDeepLinkAction(url: url), .openCombine([]), urlString)
     }
   }
 
   func testCombineRouteParsesRepeatedFileParameters() throws {
-    var components = try XCTUnwrap(URLComponents(string: "snapzy://open/combine"))
+    var components = try XCTUnwrap(URLComponents(string: "notinhas://open/combine"))
     components.queryItems = [
       URLQueryItem(name: "file", value: "/tmp/first image.png"),
       URLQueryItem(name: "file", value: "file:///tmp/second.jpg"),
@@ -59,7 +59,7 @@ final class SnapzyDeepLinkHandlerTests: XCTestCase {
 
     let url = try XCTUnwrap(components.url)
     XCTAssertEqual(
-      SnapzyDeepLinkAction(url: url),
+      NotinhasDeepLinkAction(url: url),
       .openCombine([
         URL(fileURLWithPath: "/tmp/first image.png"),
         URL(fileURLWithPath: "/tmp/second.jpg"),
@@ -69,29 +69,29 @@ final class SnapzyDeepLinkHandlerTests: XCTestCase {
 
   func testApplicationCaptureAliasesParseExpectedAction() throws {
     let aliases = [
-      "snapzy://capture/window",
-      "snapzy://application-capture",
-      "snapzy://window-capture",
-      "snapzy://screenshot/window",
+      "notinhas://capture/window",
+      "notinhas://application-capture",
+      "notinhas://window-capture",
+      "notinhas://screenshot/window",
     ]
 
     for urlString in aliases {
       let url = try XCTUnwrap(URL(string: urlString))
-      XCTAssertEqual(SnapzyDeepLinkAction(url: url), .captureApplication, urlString)
+      XCTAssertEqual(NotinhasDeepLinkAction(url: url), .captureApplication, urlString)
     }
   }
 
   func testApplicationRecordingAliasesParseExpectedAction() throws {
     let aliases = [
-      "snapzy://record/window",
-      "snapzy://application-recording",
-      "snapzy://window-recording",
-      "snapzy://recording/window",
+      "notinhas://record/window",
+      "notinhas://application-recording",
+      "notinhas://window-recording",
+      "notinhas://recording/window",
     ]
 
     for urlString in aliases {
       let url = try XCTUnwrap(URL(string: urlString))
-      XCTAssertEqual(SnapzyDeepLinkAction(url: url), .recordApplication, urlString)
+      XCTAssertEqual(NotinhasDeepLinkAction(url: url), .recordApplication, urlString)
     }
   }
 
@@ -109,31 +109,46 @@ final class SnapzyDeepLinkHandlerTests: XCTestCase {
     ]
 
     for (tabName, expectedTab) in cases {
-      let queryURL = try XCTUnwrap(URL(string: "snapzy://settings?tab=\(tabName)"))
-      XCTAssertEqual(SnapzyDeepLinkAction(url: queryURL), .openSettings(expectedTab), tabName)
+      let queryURL = try XCTUnwrap(URL(string: "notinhas://settings?tab=\(tabName)"))
+      XCTAssertEqual(NotinhasDeepLinkAction(url: queryURL), .openSettings(expectedTab), tabName)
 
-      let pathURL = try XCTUnwrap(URL(string: "snapzy://settings/\(tabName)"))
-      XCTAssertEqual(SnapzyDeepLinkAction(url: pathURL), .openSettings(expectedTab), tabName)
+      let pathURL = try XCTUnwrap(URL(string: "notinhas://settings/\(tabName)"))
+      XCTAssertEqual(NotinhasDeepLinkAction(url: pathURL), .openSettings(expectedTab), tabName)
     }
   }
 
-  func testLegacyAboutSettingsRouteOpensPreferencesWithoutTab() throws {
-    let url = try XCTUnwrap(URL(string: "snapzy://settings/about"))
-    XCTAssertEqual(SnapzyDeepLinkAction(url: url), .openSettings(nil))
+  func testAboutSettingsRouteIsRejected() throws {
+    let url = try XCTUnwrap(URL(string: "notinhas://settings/about"))
+    XCTAssertNil(NotinhasDeepLinkAction(url: url))
+  }
+
+  func testLegacySnapzySchemeIsRejected() throws {
+    let urls = [
+      "snapzy://capture/area",
+      "snapzy://settings",
+      "snapzy://open/combine",
+      "snapzy://capture/fullscreen",
+      "snapzy://settings/cloud",
+    ]
+
+    for urlString in urls {
+      let url = try XCTUnwrap(URL(string: urlString))
+      XCTAssertNil(NotinhasDeepLinkAction(url: url), urlString)
+    }
   }
 
   func testUnsupportedRoutesReturnNil() throws {
     let urls = [
       "https://capture/area",
-      "snapzy://",
-      "snapzy://capture/unknown",
-      "snapzy://record/stop",
-      "snapzy://open/unknown",
+      "notinhas://",
+      "notinhas://capture/unknown",
+      "notinhas://record/stop",
+      "notinhas://open/unknown",
     ]
 
     for urlString in urls {
       let url = try XCTUnwrap(URL(string: urlString))
-      XCTAssertNil(SnapzyDeepLinkAction(url: url), urlString)
+      XCTAssertNil(NotinhasDeepLinkAction(url: url), urlString)
     }
   }
 
@@ -150,8 +165,8 @@ final class SnapzyDeepLinkHandlerTests: XCTestCase {
 
     defaults.set(false, forKey: PreferencesKeys.urlSchemeEnabled)
     let viewModel = ScreenCaptureViewModel()
-    let handler = SnapzyDeepLinkHandler(screenCaptureViewModel: viewModel)
-    let url = try XCTUnwrap(URL(string: "snapzy://capture/fullscreen"))
+    let handler = NotinhasDeepLinkHandler(screenCaptureViewModel: viewModel)
+    let url = try XCTUnwrap(URL(string: "notinhas://capture/fullscreen"))
     handler.handle(url)
   }
 
@@ -177,17 +192,17 @@ final class SnapzyDeepLinkHandlerTests: XCTestCase {
     )
 
     let viewModel = ScreenCaptureViewModel()
-    let handler = SnapzyDeepLinkHandler(screenCaptureViewModel: viewModel)
+    let handler = NotinhasDeepLinkHandler(screenCaptureViewModel: viewModel)
     let urls = [
-      "snapzy://record/screen",
-      "snapzy://record/application",
-      "snapzy://open/video-editor",
+      "notinhas://record/screen",
+      "notinhas://record/application",
+      "notinhas://open/video-editor",
     ]
 
     for urlString in urls {
       let url = try XCTUnwrap(URL(string: urlString))
       // URLs still parse; the handler must gate dispatch, not drop parsing.
-      XCTAssertNotNil(SnapzyDeepLinkAction(url: url), urlString)
+      XCTAssertNotNil(NotinhasDeepLinkAction(url: url), urlString)
       handler.handle(url)
       XCTAssertFalse(
         VideoModuleMediaRouting.shouldDispatchVideoAction(),
