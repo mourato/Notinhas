@@ -15,6 +15,8 @@ private enum CloudProtectedAction {
   case editCredentials
   case importCredentials
   case exportCredentials
+  case editImgBBCredentials
+  case clearImgBBCredentials
 
   var passwordPrompt: String {
     switch self {
@@ -24,6 +26,10 @@ private enum CloudProtectedAction {
       L10n.CloudSettings.importCredentialsPasswordPrompt
     case .exportCredentials:
       L10n.CloudSettings.exportCredentialsPasswordPrompt
+    case .editImgBBCredentials:
+      L10n.CloudSettings.imgbbEditPasswordPrompt
+    case .clearImgBBCredentials:
+      L10n.CloudSettings.imgbbClearPasswordPrompt
     }
   }
 }
@@ -56,6 +62,12 @@ struct CloudSettingsView: View {
   // Existing user password initialization
   @State private var showPasswordInit = false
   @State private var passwordInitCompleted = false
+  @State private var showImgBBClearConfirmation = false
+  @State private var isEditingImgBB = false
+  @State private var imgbbDraftAPIKey = ""
+  @State private var imgbbErrorMessage: String?
+
+  @ObservedObject private var imgbbCredentialStore = NotinhasImgBBCredentialStore.shared
 
   var body: some View {
     Form {
@@ -85,6 +97,7 @@ struct CloudSettingsView: View {
         )
       }
 
+      imgbbSettingsSection
       uploadsWindowSection
     }
     .formStyle(.grouped)
@@ -111,6 +124,23 @@ struct CloudSettingsView: View {
       }
     } message: {
       Text(transferAlertMessage ?? "")
+    }
+    .alert(L10n.CloudSettings.imgbbClearTitle, isPresented: $showImgBBClearConfirmation) {
+      Button(L10n.CloudSettings.reset, role: .destructive) {
+        imgbbCredentialStore.clear()
+        isEditingImgBB = false
+        imgbbDraftAPIKey = ""
+      }
+      Button(L10n.Common.cancel, role: .cancel) {}
+    } message: {
+      Text(L10n.CloudSettings.imgbbClearMessage)
+    }
+    .alert(L10n.CloudSettings.transferAlertTitle, isPresented: imgbbErrorAlertBinding) {
+      Button(L10n.Common.ok, role: .cancel) {
+        imgbbErrorMessage = nil
+      }
+    } message: {
+      Text(imgbbErrorMessage ?? "")
     }
     .sheet(isPresented: $showPasswordGate) {
       CloudPasswordGateView(
@@ -159,12 +189,6 @@ struct CloudSettingsView: View {
     .onChange(of: uploadsWindowPosition) { newValue in
       CloudUploadHistoryWindowController.shared.updatePosition(newValue)
     }
-  }
-
-  // MARK: - Password Init Check
-
-  private func checkPasswordInitNeeded() {
-    // Intentionally disabled to avoid passive keychain reads when the Cloud tab opens.
   }
 
   // MARK: - Configured State
@@ -272,6 +296,62 @@ struct CloudSettingsView: View {
     }
   }
 
+  private var imgbbSettingsSection: some View {
+    Section(L10n.CloudSettings.imageSharingSection) {
+      Text(L10n.CloudSettings.imgbbDescription)
+        .font(.system(size: 12))
+        .foregroundColor(.secondary)
+
+      if imgbbCredentialStore.isConfigured, !isEditingImgBB {
+        SettingRow(
+          icon: "photo.on.rectangle.angled",
+          title: L10n.CloudSettings.imgbbAPIKeyTitle,
+          description: imgbbCredentialStore.maskedAPIKey.isEmpty
+            ? L10n.CloudSettings.storedSecurelyInKeychain
+            : imgbbCredentialStore.maskedAPIKey
+        ) {
+          EmptyView()
+        }
+
+        HStack(spacing: 12) {
+          Button(action: handleImgBBEditTapped) {
+            Label(L10n.CloudSettings.edit, systemImage: "pencil")
+          }
+
+          Button(role: .destructive, action: handleImgBBClearTapped) {
+            Label(L10n.CloudSettings.reset, systemImage: "trash")
+          }
+          .foregroundColor(.red)
+        }
+        .padding(.top, 4)
+      } else {
+        SettingRow(
+          icon: "photo.on.rectangle.angled",
+          title: L10n.CloudSettings.imgbbAPIKeyTitle,
+          description: L10n.CloudSettings.imgbbAPIKeyHelp
+        ) {
+          SecureField(L10n.CloudSettings.imgbbAPIKeyPlaceholder, text: $imgbbDraftAPIKey)
+            .textFieldStyle(.roundedBorder)
+            .frame(width: 180)
+        }
+
+        HStack(spacing: 12) {
+          Button(action: saveImgBBAPIKey) {
+            Label(L10n.Common.save, systemImage: "checkmark.circle")
+          }
+          .disabled(imgbbDraftAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+          if isEditingImgBB {
+            Button(action: cancelImgBBEditing) {
+              Label(L10n.Common.cancel, systemImage: "xmark.circle")
+            }
+          }
+        }
+        .padding(.top, 4)
+      }
+    }
+  }
+
   private var uploadsWindowSection: some View {
     Section(L10n.CloudSettings.uploadsWindowSection) {
       SettingRow(
@@ -338,6 +418,11 @@ struct CloudSettingsView: View {
       } catch {
         transferAlertMessage = error.localizedDescription
       }
+    case .editImgBBCredentials:
+      imgbbDraftAPIKey = imgbbCredentialStore.apiKey ?? ""
+      isEditingImgBB = true
+    case .clearImgBBCredentials:
+      showImgBBClearConfirmation = true
     }
   }
 
@@ -382,6 +467,40 @@ struct CloudSettingsView: View {
         }
       }
     )
+  }
+
+  private var imgbbErrorAlertBinding: Binding<Bool> {
+    Binding(
+      get: { imgbbErrorMessage != nil },
+      set: { isPresented in
+        if !isPresented {
+          imgbbErrorMessage = nil
+        }
+      }
+    )
+  }
+
+  private func handleImgBBEditTapped() {
+    beginProtectedAction(.editImgBBCredentials)
+  }
+
+  private func handleImgBBClearTapped() {
+    beginProtectedAction(.clearImgBBCredentials)
+  }
+
+  private func saveImgBBAPIKey() {
+    do {
+      try imgbbCredentialStore.save(apiKey: imgbbDraftAPIKey)
+      imgbbDraftAPIKey = ""
+      isEditingImgBB = false
+    } catch {
+      imgbbErrorMessage = error.localizedDescription
+    }
+  }
+
+  private func cancelImgBBEditing() {
+    imgbbDraftAPIKey = ""
+    isEditingImgBB = false
   }
 
   // MARK: - Cloud Stats Section

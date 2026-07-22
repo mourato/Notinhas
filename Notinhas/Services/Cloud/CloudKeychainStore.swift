@@ -16,6 +16,7 @@ enum CloudKeychainItem {
   case googleRefreshToken
   case googleClientId
   case googleClientSecret
+  case imgbbAPIKey
 
   var account: String {
     switch self {
@@ -31,6 +32,8 @@ enum CloudKeychainItem {
       "com.mourato.notinhas.cloud.google.clientId"
     case .googleClientSecret:
       "com.mourato.notinhas.cloud.google.clientSecret"
+    case .imgbbAPIKey:
+      "com.mourato.notinhas.cloud.imgbbAPIKey"
     }
   }
 
@@ -54,6 +57,8 @@ enum CloudKeychainItem {
       ["com.trongduong.snapzy.cloud.google.clientId"]
     case .googleClientSecret:
       ["com.trongduong.snapzy.cloud.google.clientSecret"]
+    case .imgbbAPIKey:
+      []
     }
   }
 }
@@ -418,6 +423,8 @@ enum CloudKeychainStore {
       "googleClientId"
     case .googleClientSecret:
       "googleClientSecret"
+    case .imgbbAPIKey:
+      "imgbbAPIKey"
     }
   }
 }

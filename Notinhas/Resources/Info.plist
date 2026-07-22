@@ -43,7 +43,5 @@
 	<string>Notinhas needs microphone access to record audio with your screen recordings.</string>
 	<key>NSScreenCaptureUsageDescription</key>
 	<string>Notinhas needs screen recording permission to capture screenshots and record your screen.</string>
-  <key>IMGBB_API_KEY</key>
-  <string>$(IMGBB_API_KEY)</string>
 </dict>
 </plist>

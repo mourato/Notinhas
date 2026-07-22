@@ -1,21 +1,12 @@
 import Foundation
 
 enum NotinhasImgBBConfiguration {
-  static let apiKeyUserDefaultsKey = "notinhas.imgbb.apiKey"
+  /// Legacy UserDefaults key retained for one-time migration only. New writes must use Keychain.
+  static let apiKeyUserDefaultsKey = PreferencesKeys.notinhasImgBBAPIKey
   static let panelSideUserDefaultsKey = PreferencesKeys.notinhasNotesPanelSide
 
   static var apiKey: String? {
-    if let stored = UserDefaults.standard.string(forKey: apiKeyUserDefaultsKey)?
-      .trimmingCharacters(in: .whitespacesAndNewlines), !stored.isEmpty {
-      return stored
-    }
-    if let plist = Bundle.main.object(forInfoDictionaryKey: "IMGBB_API_KEY") as? String {
-      let trimmed = plist.trimmingCharacters(in: .whitespacesAndNewlines)
-      if !trimmed.isEmpty {
-        return trimmed
-      }
-    }
-    return nil
+    NotinhasImgBBCredentialStore.shared.apiKey
   }
 
   static var panelSide: NotinhasNotesPanelSide {

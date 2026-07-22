@@ -111,7 +111,7 @@ renders directly without an inner picker.
 
 ### Cloud (`PreferencesCloudSettingsView.swift`)
 
-Provider configuration, credentials, expiration, usage stats, and the Cloud Uploads window. Summary only here — full reference in [CLOUD.md](CLOUD.md).
+Provider configuration, credentials, expiration, usage stats, Cloud Uploads window position, and the separate **Image Sharing** ImgBB section. ImgBB is external image sharing for manual Annotate/Quick Access uploads; it is not a `CloudProvider`, does not appear in Cloud Upload History, and is not included in encrypted `.notinhascloud` archives. The ImgBB API key is stored in Keychain (migrated from legacy `notinhas.imgbb.apiKey` UserDefaults). Summary only here — full reference in [CLOUD.md](CLOUD.md).
 
 ### Advanced (`PreferencesAdvancedSettingsView.swift`)
 

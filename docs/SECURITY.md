@@ -5,7 +5,7 @@ Companion to the root [SECURITY.md](../SECURITY.md) policy. Describes runtime se
 ## Threat model summary
 
 - Local-first capture and history on disk under Application Support
-- Optional outbound network only for user-configured cloud storage and Google OAuth loopback
+- Optional outbound network only for user-configured cloud storage, user-configured ImgBB image uploads, and Google OAuth loopback
 - No automatic update fetches, telemetry, or crash upload endpoints
 - No in-app **Report a Problem** or diagnostic zip upload
 
@@ -28,7 +28,7 @@ TCC grants do not migrate from legacy Snapzy bundle IDs — see [MIGRATION.md](M
 ## Secrets
 
 - Cloud credentials: Keychain service `com.mourato.notinhas.cloud`
-- ImgBB API key: build-time `IMGBB_API_KEY` in Info.plist (optional)
+- ImgBB API key: Keychain item `com.mourato.notinhas.cloud.imgbbAPIKey` (configured in Preferences → Cloud; legacy `notinhas.imgbb.apiKey` UserDefaults is migrated on read)
 - Never commit keys, `.p12` files, or webhook URLs
 
 ## Deep links

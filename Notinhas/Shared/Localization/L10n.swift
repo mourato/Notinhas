@@ -3267,24 +3267,9 @@ nonisolated enum L10n {
     )
     static let left = string("annotate.notinhas.left", defaultValue: "Left", comment: "Notinhas left panel side")
     static let right = string("annotate.notinhas.right", defaultValue: "Right", comment: "Notinhas right panel side")
-    static let imgbbAPIKeyTitle = string(
-      "annotate.notinhas.imgbb-api-key-title",
-      defaultValue: "ImgBB API Key",
-      comment: "ImgBB API key setting title"
-    )
-    static let imgbbAPIKeyHelp = string(
-      "annotate.notinhas.imgbb-api-key-help",
-      defaultValue: "Used for anonymous image uploads from Annotate.",
-      comment: "ImgBB API key setting description"
-    )
-    static let imgbbAPIKeyPlaceholder = string(
-      "annotate.notinhas.imgbb-api-key-placeholder",
-      defaultValue: "API Key",
-      comment: "ImgBB API key input placeholder"
-    )
     static let imgbbMissingAPIKey = string(
       "annotate.notinhas.imgbb-missing-api-key",
-      defaultValue: "Add an ImgBB API Key in Settings before uploading.",
+      defaultValue: "Add an ImgBB API key in Preferences → Cloud before uploading.",
       comment: "ImgBB missing API key error"
     )
     static let imgbbInvalidImageData = string(
@@ -4529,6 +4514,51 @@ nonisolated enum L10n {
       "cloud-settings.stored-securely-in-keychain",
       defaultValue: "Stored securely in Keychain",
       comment: "Status text shown when cloud credentials are stored securely in the Keychain"
+    )
+    static let imageSharingSection = string(
+      "cloud-settings.image-sharing-section",
+      defaultValue: "Image Sharing",
+      comment: "Section title for external ImgBB image sharing settings"
+    )
+    static let imgbbDescription = string(
+      "cloud-settings.imgbb-description",
+      defaultValue: "External image sharing for manual uploads from Annotate and Quick Access. This is separate from bucket storage and Cloud Upload History.",
+      comment: "Description for the ImgBB image sharing section in Cloud preferences"
+    )
+    static let imgbbAPIKeyTitle = string(
+      "cloud-settings.imgbb-api-key-title",
+      defaultValue: "ImgBB API Key",
+      comment: "ImgBB API key setting title"
+    )
+    static let imgbbAPIKeyHelp = string(
+      "cloud-settings.imgbb-api-key-help",
+      defaultValue: "Used for anonymous image uploads from Annotate and Quick Access.",
+      comment: "ImgBB API key setting description"
+    )
+    static let imgbbAPIKeyPlaceholder = string(
+      "cloud-settings.imgbb-api-key-placeholder",
+      defaultValue: "API Key",
+      comment: "ImgBB API key input placeholder"
+    )
+    static let imgbbClearTitle = string(
+      "cloud-settings.imgbb-clear-title",
+      defaultValue: "Clear ImgBB API Key?",
+      comment: "Alert title for clearing the ImgBB API key"
+    )
+    static let imgbbClearMessage = string(
+      "cloud-settings.imgbb-clear-message",
+      defaultValue: "This removes the saved ImgBB API key from Keychain. Manual uploads stay disabled until you add a key again.",
+      comment: "Alert message for clearing the ImgBB API key"
+    )
+    static let imgbbEditPasswordPrompt = string(
+      "cloud-settings.imgbb-edit-password-prompt",
+      defaultValue: "Enter your protection password to edit the ImgBB API key.",
+      comment: "Password prompt shown before editing the ImgBB API key"
+    )
+    static let imgbbClearPasswordPrompt = string(
+      "cloud-settings.imgbb-clear-password-prompt",
+      defaultValue: "Enter your protection password to clear the ImgBB API key.",
+      comment: "Password prompt shown before clearing the ImgBB API key"
     )
     static let edit = string(
       "cloud-settings.edit",

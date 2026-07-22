@@ -757,6 +757,7 @@ private extension CloudKeychainItem {
     case .googleRefreshToken: "googleRefreshToken"
     case .googleClientId: "googleClientId"
     case .googleClientSecret: "googleClientSecret"
+    case .imgbbAPIKey: "imgbbAPIKey"
     }
   }
 
@@ -811,6 +812,8 @@ private extension CloudKeychainItem {
                 service: NotinhasStoragePaths.legacyCurrentKeychainService,
                 account: "com.trongduong.snapzy.cloud.google.clientSecret"
               )]
+    case .imgbbAPIKey:
+      return []
     }
   }
 }

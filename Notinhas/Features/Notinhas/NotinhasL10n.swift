@@ -34,9 +34,6 @@ enum NotinhasL10n {
   static let panelSideDescription = L10n.Notinhas.panelSideDescription
   static let left = L10n.Notinhas.left
   static let right = L10n.Notinhas.right
-  static let imgbbAPIKeyTitle = L10n.Notinhas.imgbbAPIKeyTitle
-  static let imgbbAPIKeyHelp = L10n.Notinhas.imgbbAPIKeyHelp
-  static let imgbbAPIKeyPlaceholder = L10n.Notinhas.imgbbAPIKeyPlaceholder
   static let imgbbMissingAPIKey = L10n.Notinhas.imgbbMissingAPIKey
   static let imgbbInvalidImageData = L10n.Notinhas.imgbbInvalidImageData
   static let imgbbInvalidResponse = L10n.Notinhas.imgbbInvalidResponse

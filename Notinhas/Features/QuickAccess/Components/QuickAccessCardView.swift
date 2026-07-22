@@ -29,6 +29,7 @@ struct QuickAccessCardView: View {
   @State private var cloudUploadProgress: Double = 0
   @State private var isImgBBUploading = false
   @State private var imgbbUploadError: String?
+  @ObservedObject private var imgbbCredentialStore = NotinhasImgBBCredentialStore.shared
   private let imgbbUploadCoordinator = NotinhasUploadCoordinator()
   @Environment(\.accessibilityReduceMotion) var reduceMotion
 
@@ -398,7 +399,7 @@ struct QuickAccessCardView: View {
     case .uploadToCloud:
       shouldShowCloudButton
     case .uploadToImgBB:
-      NotinhasImgBBConfiguration.apiKey != nil
+      imgbbCredentialStore.isConfigured
     case .delete:
       true
     }
@@ -411,7 +412,7 @@ struct QuickAccessCardView: View {
     case .uploadToCloud:
       shouldShowCloudButton && !alreadyUploadedToCloud && !isCloudUploading
     case .uploadToImgBB:
-      NotinhasImgBBConfiguration.apiKey != nil && !item.isVideo && !isImgBBUploading
+      imgbbCredentialStore.isConfigured && !item.isVideo && !isImgBBUploading
     case .copy, .saveOrOpen, .dismiss, .delete, .edit:
       true
     }

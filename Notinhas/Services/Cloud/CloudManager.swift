@@ -1061,6 +1061,8 @@ final class CloudManager: ObservableObject {
       "googleClientId"
     case .googleClientSecret:
       "googleClientSecret"
+    case .imgbbAPIKey:
+      "imgbbAPIKey"
     }
   }
 }

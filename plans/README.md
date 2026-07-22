@@ -249,6 +249,24 @@ Recording pane remains separate and conditional on the Video module.
 - 043 is a presentation/documentation change only; it must not migrate or
   rename persisted UserDefaults or TOML keys.
 
+## Cloud ImgBB configuration (044)
+
+Plan 044 moves ImgBB API-key configuration into Preferences → Cloud as an
+independent Image Sharing section backed by Keychain, migrates legacy
+`notinhas.imgbb.apiKey` UserDefaults on read, and keeps manual Annotate/Quick
+Access uploads separate from `CloudProvider` and Cloud Upload History.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 044 | Migrate ImgBB configuration into the Cloud preferences flow | P1 | M | — | DONE |
+
+### Dependency notes (044)
+
+- 044 coordinates manual Cloud/Annotate UI smoke with plan 043 when both land in
+  the same round; functional scope remains independent.
+- 044 must not add `.imgbb` to `CloudProviderType`, Cloud Upload History, or
+  `.notinhascloud` archives.
+
 ## Dependency notes (026–030)
 
 - 026 must land before the bundle-ID/path cutover.

@@ -40,9 +40,17 @@ flowchart LR
 
 ## Credentials & secrets
 
-- `CloudKeychainStore`: service `com.trongduong.notinhas.cloud`; items `accessKey`, `secretKey`, `passwordHash`, `googleRefreshToken`, `googleClientId`, `googleClientSecret`. Legacy service `com.notinhas.cloud` auto-migrated. Data-protection keychain primary, file (legacy) keychain fallback when `errSecMissingEntitlement`.
+- `CloudKeychainStore`: service `com.trongduong.notinhas.cloud`; items `accessKey`, `secretKey`, `passwordHash`, `googleRefreshToken`, `googleClientId`, `googleClientSecret`, `imgbbAPIKey`. Legacy service `com.notinhas.cloud` auto-migrated. Data-protection keychain primary, file (legacy) keychain fallback when `errSecMissingEntitlement`.
 - Protection password (`CloudPasswordService`): optional; SHA-256 hash in Keychain; min 4 characters; gates Edit / Import / Export of the config. Forgot password → reset configuration (`cloudPasswordEnabled` / `cloudPasswordSkipped` flags).
-- Encrypted transfer archives (`CloudCredentialTransferService`): `.notinhascloud` files — AES-GCM-256 with PBKDF2-SHA256 key derivation, 300,000 iterations; passphrase ≥ 12 characters.
+- Encrypted transfer archives (`CloudCredentialTransferService`): `.notinhascloud` files — AES-GCM-256 with PBKDF2-SHA256 key derivation, 300,000 iterations; passphrase ≥ 12 characters. ImgBB credentials are intentionally excluded from this archive format.
+
+## ImgBB image sharing (Preferences → Cloud)
+
+- Separate from bucket storage providers and Cloud Upload History.
+- Manual uploads only from Annotate and Quick Access; link copy behavior is unchanged.
+- API key stored in Keychain via `NotinhasImgBBCredentialStore`; legacy `notinhas.imgbb.apiKey` UserDefaults migrates on read.
+- Cloud storage reset does not clear ImgBB; clearing the ImgBB key is explicit in the Image Sharing section.
+- Protected edit/clear reuses the existing Cloud protection password when one is set.
 
 ## Configuration UI (Settings → Cloud)
 
@@ -57,6 +65,7 @@ flowchart LR
 - Configured state: masked summary (access key masked, "stored securely in Keychain") + Edit (password-gated) / Import / Export (`.notinhascloud`) / Reset.
 - Usage stats grid (`CloudUsageService`): ListObjectsV2 scan of the `notinhas/` prefix, 10-minute cache (`cloud.usageStatsCache`), monthly cost estimates — R2 $0.015/GB (10 GB free), S3 $0.023/GB (5 GB free); skipped for Google Drive.
 - Uploads window position pref: `cloud.uploads.floatingPosition` (`CloudUploadFloatingPosition`).
+- Image Sharing / ImgBB section: API key setup, masked status, password-gated edit/clear; available even when no storage provider is configured.
 
 ## Cloud Uploads window
 

@@ -59,6 +59,7 @@ The TOML file covers portable app preferences:
 The export intentionally excludes secrets and machine-private state:
 
 - Cloud access key and secret key are not exported. They remain in Keychain.
+- ImgBB API keys are not exported. They remain in Keychain and are configured separately in Preferences → Cloud.
 - Cloud credential archive transfer stays in the existing encrypted cloud
   import/export flow.
 - Cloud configured/password-protection state is not exported because it depends

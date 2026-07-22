@@ -17,7 +17,6 @@ struct AnnotateSettingsView: View {
   private var annotateQuickPropertiesSyncEnabled = true
   @AppStorage(PreferencesKeys.annotateCombineSaveAsEdit)
   private var annotateCombineSaveAsEdit = true
-  @AppStorage(PreferencesKeys.notinhasImgBBAPIKey) private var notinhasImgBBAPIKey = ""
   @AppStorage(PreferencesKeys.notinhasNotesPanelSide) private var notinhasNotesPanelSide = NotinhasNotesPanelSide
     .default.rawValue
 
@@ -91,19 +90,6 @@ struct AnnotateSettingsView: View {
           .labelsHidden()
           .pickerStyle(.segmented)
           .frame(width: 180, alignment: .trailing)
-        }
-
-        SettingRow(
-          icon: "photo.on.rectangle.angled",
-          title: NotinhasL10n.imgbbAPIKeyTitle,
-          description: NotinhasL10n.imgbbAPIKeyHelp
-        ) {
-          TextField(
-            NotinhasL10n.imgbbAPIKeyPlaceholder,
-            text: $notinhasImgBBAPIKey
-          )
-          .textFieldStyle(.roundedBorder)
-          .frame(width: 180)
         }
       }
     }
