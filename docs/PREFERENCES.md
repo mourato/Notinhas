@@ -25,21 +25,41 @@ Reference for the Settings window: tab structure, every section, and how prefere
 
 ### Capture (`PreferencesCaptureSettingsView.swift`)
 
-Segmented into three panes (`CaptureSettingsPane`): General / Screenshot / Recording.
+One unified **Capture** pane with seven sections in user-flow order. When the
+optional Video module is compiled in and enabled at runtime, a segmented control
+shows **Capture** and **Recording**; with Video off, the unified Capture form
+renders directly without an inner picker.
 
-- **General pane**:
-  - App Windows: Include Notinhas windows in screenshots (`screenshot.includeOwnApp`) / in recordings (`recording.includeOwnApp`).
-  - Desktop: Hide Desktop Icons (`hideDesktopIcons`), Hide Desktop Widgets (`hideDesktopWidgets`).
-  - Overlay: Show Selection Area Overlay (`screenshot.showSelectionAreaOverlay`).
-  - Magnifier: Reverse Magnifier Zoom Direction (`screenshot.reverseMagnifierZoomDirection`).
-  - Output Naming: screenshot/recording file-name templates (`screenshot.fileNameTemplate`, `recording.fileNameTemplate`) with token list + live preview + reset.
-  - After Capture: action matrix (see below) + Auto-Crop Subject (`backgroundCutout.autoCropEnabled`).
-- **Screenshot pane**:
-  - Format: Show Cursor (`screenshot.showCursor`), Freeze Area (`screenshot.freezeArea`), Image Format (`screenshot.format`, `ImageFormatOption`; WebP shows a warning, JPEG a cutout note).
-  - Preset: default annotate canvas preset (`PreferencesScreenshotDefaultPresetPicker`).
+- **Capture Environment**:
+  - Include Notinhas windows in screenshots (`screenshot.includeOwnApp`) / in
+    recordings (`recording.includeOwnApp`, Video module on).
+  - Hide Desktop Icons (`hideDesktopIcons`), Hide Desktop Widgets
+    (`hideDesktopWidgets`).
+- **Selection**:
+  - Show Selection Area Overlay (`screenshot.showSelectionAreaOverlay`).
+  - Reverse Magnifier Zoom Direction (`screenshot.reverseMagnifierZoomDirection`).
+  - All-In-One Selection Snapping: snap distance (`capture.selection.snapDistance`)
+    and color edge sensitivity (`capture.selection.colorSensitivity`) — applies to
+    All-In-One resize refinement only.
+- **Screenshot Behavior**:
+  - Freeze Area (`screenshot.freezeArea`), Show Cursor (`screenshot.showCursor`).
+- **Specialized Capture**:
   - Scrolling Capture: Show Session Hints (`scrollingCapture.showHints`) + info note.
-  - OCR: Success Notification (`ocr.successNotificationEnabled`), Link Detection (`ocr.linkDetectionEnabled`).
-- **Recording pane**:
+  - OCR: Success Notification (`ocr.successNotificationEnabled`), Link Detection
+    (`ocr.linkDetectionEnabled`).
+- **Output**:
+  - Image Format (`screenshot.format`, `ImageFormatOption`; WebP warning, JPEG
+    cutout note).
+  - Screenshot and conditional recording file-name templates
+    (`screenshot.fileNameTemplate`, `recording.fileNameTemplate`) with token list,
+    live preview, and reset.
+- **Post-Processing**:
+  - Default annotate canvas preset (`PreferencesScreenshotDefaultPresetPicker`).
+  - Auto-Crop Subject (`backgroundCutout.autoCropEnabled`) — background removal
+    in capture and Annotate.
+- **After Capture**:
+  - Action matrix only (`PreferencesAfterCaptureMatrixView`); see below.
+- **Recording pane** (optional, Video module on):
   - Format: MOV / MP4 (`recording.format`).
   - Quality: Frame Rate 30/60 (`recording.fps`), Quality (`recording.quality`, `VideoQuality`).
   - Behavior: Show Cursor (`recording.showCursor`), Remember Last Area (`recording.rememberLastArea`).
@@ -114,7 +134,7 @@ flowchart LR
 - `AfterCaptureAction` (4 cases) × `CaptureType` (2: screenshot, recording) — defined in `PreferencesManager.swift`.
 - Defaults: `showQuickAccess`, `copyFile`, `save` = on for both types; `openAnnotate` = off (opt-in, screenshot-only).
 - Stored as JSON `[String: [String: Bool]]` under UserDefaults key `afterCaptureActions`; load failures fall back to seeded defaults.
-- Edited via `PreferencesAfterCaptureMatrixView.swift` (Capture → General pane).
+- Edited via `PreferencesAfterCaptureMatrixView.swift` (Capture → After Capture section).
 - **Removed at `dd4ccd5`**: the `uploadToCloud` after-capture auto-upload case no longer exists. Manual cloud uploads remain (Quick Access, Annotate ⌘U, Video Editor, History) — see [CLOUD.md](CLOUD.md).
 
 ## Related docs

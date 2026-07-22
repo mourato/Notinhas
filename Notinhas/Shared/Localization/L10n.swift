@@ -2556,35 +2556,34 @@ nonisolated enum L10n {
   }
 
   enum PreferencesCapture {
-    static let appWindowsSection = string(
-      "preferences-capture.section-app-windows",
-      defaultValue: "App Windows",
+    static let captureEnvironmentSection = string(
+      "preferences-capture.section-capture-environment",
+      defaultValue: "Capture Environment",
       comment: "Capture preferences section title"
     )
-    static let desktopSection = string(
-      "preferences-capture.section-desktop",
-      defaultValue: "Desktop",
+    static let selectionSection = string(
+      "preferences-capture.section-selection",
+      defaultValue: "Selection",
       comment: "Capture preferences section title"
     )
-    static let screenshotFormatSection = string(
-      "preferences-capture.section-screenshot-format",
-      defaultValue: "Format",
+    static let screenshotBehaviorSection = string(
+      "preferences-capture.section-screenshot-behavior",
+      defaultValue: "Screenshot Behavior",
       comment: "Capture preferences section title"
     )
-    static let screenshotPresetSection = string(
-      "preferences-capture.section-screenshot-preset",
-      defaultValue: "Preset",
+    static let specializedCaptureSection = string(
+      "preferences-capture.section-specialized-capture",
+      defaultValue: "Specialized Capture",
       comment: "Capture preferences section title"
     )
-
-    static let scrollingCaptureSection = string(
-      "preferences-capture.section-scrolling-capture",
-      defaultValue: "Scrolling Capture",
+    static let outputSection = string(
+      "preferences-capture.section-output",
+      defaultValue: "Output",
       comment: "Capture preferences section title"
     )
-    static let outputNamingSection = string(
-      "preferences-capture.section-output-naming",
-      defaultValue: "Output Naming",
+    static let postProcessingSection = string(
+      "preferences-capture.section-post-processing",
+      defaultValue: "Post-Processing",
       comment: "Capture preferences section title"
     )
     static let recordingFormatSection = string(
@@ -2687,21 +2686,6 @@ nonisolated enum L10n {
       "preferences-capture.reverse-magnifier-zoom-direction-description",
       defaultValue: "Invert the scroll wheel zoom direction (scroll down to zoom in)",
       comment: "Capture preferences setting description"
-    )
-    static let overlaySection = string(
-      "preferences-capture.overlay-section",
-      defaultValue: "Overlay",
-      comment: "Capture preferences section title"
-    )
-    static let magnifierZoomSection = string(
-      "preferences-capture.magnifier-zoom-section",
-      defaultValue: "Magnifier Zoom",
-      comment: "Capture preferences section title"
-    )
-    static let selectionSnappingSection = string(
-      "preferences-capture.selection-snapping-section",
-      defaultValue: "Selection Snapping",
-      comment: "Capture preferences section title for All-In-One resize snapping"
     )
     static let selectionSnapDistanceTitle = string(
       "preferences-capture.selection-snap-distance-title",
@@ -3082,11 +3066,6 @@ nonisolated enum L10n {
       "preferences-capture.auto-crop-subject-description",
       defaultValue: "Applies to background removal in capture and Annotate",
       comment: "Capture preferences setting description"
-    )
-    static let ocrSection = string(
-      "preferences-capture.section-ocr",
-      defaultValue: "OCR (Text Extraction)",
-      comment: "Capture preferences section title"
     )
     static let ocrSuccessNotificationTitle = string(
       "preferences-capture.ocr-success-notification-title",

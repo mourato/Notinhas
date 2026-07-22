@@ -231,6 +231,24 @@ CatalogTool verification remains blocked by its pre-existing hardcoded
 `Snapzy/Resources/Localization/manifest.json` path; the repository's manifest
 is under `Notinhas/Resources/Localization/manifest.json`.
 
+## Capture preferences organization (043)
+
+Plan 043 unifies the nested General and Screenshot panes into one Capture flow
+ordered by capture environment, selection, screenshot behavior, specialized
+capture, output, post-processing, and after-capture actions. The optional
+Recording pane remains separate and conditional on the Video module.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 043 | Unify General and Screenshot preferences into one Capture flow | P1 | M | — | DONE |
+
+### Dependency notes (043)
+
+- 043 is independent of the completed All-In-One plans, but it must preserve
+  their All-In-One-only Selection Snapping controls and descriptions.
+- 043 is a presentation/documentation change only; it must not migrate or
+  rename persisted UserDefaults or TOML keys.
+
 ## Dependency notes (026–030)
 
 - 026 must land before the bundle-ID/path cutover.

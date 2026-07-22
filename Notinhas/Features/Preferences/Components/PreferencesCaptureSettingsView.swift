@@ -9,8 +9,7 @@ import AVFoundation
 import SwiftUI
 
 private enum CaptureSettingsPane: CaseIterable, Hashable, Identifiable {
-  case general
-  case screenshot
+  case capture
   #if NOTINHAS_VIDEO_MODULE
     case recording
   #endif
@@ -21,10 +20,8 @@ private enum CaptureSettingsPane: CaseIterable, Hashable, Identifiable {
 
   var title: String {
     switch self {
-    case .general:
-      L10n.Preferences.generalTab
-    case .screenshot:
-      CaptureType.screenshot.displayName
+    case .capture:
+      L10n.Preferences.captureTab
     #if NOTINHAS_VIDEO_MODULE
       case .recording:
         CaptureType.recording.displayName
@@ -34,9 +31,9 @@ private enum CaptureSettingsPane: CaseIterable, Hashable, Identifiable {
 
   static func availablePanes(videoModuleEnabled: Bool) -> [CaptureSettingsPane] {
     #if NOTINHAS_VIDEO_MODULE
-      videoModuleEnabled ? allCases : [.general, .screenshot]
+      videoModuleEnabled ? allCases : [.capture]
     #else
-      [.general, .screenshot]
+      [.capture]
     #endif
   }
 }
@@ -116,32 +113,38 @@ struct CaptureSettingsView: View {
   #endif
 
   @State private var showPermissionDeniedAlert = false
-  @State private var selectedPane: CaptureSettingsPane = .general
+  @State private var selectedPane: CaptureSettingsPane = .capture
   @State private var videoModuleEnabled = VideoModuleAvailability.isEnabled
+
+  private var availablePanes: [CaptureSettingsPane] {
+    CaptureSettingsPane.availablePanes(videoModuleEnabled: videoModuleEnabled)
+  }
 
   var body: some View {
     VStack(spacing: 0) {
-      HStack {
-        Spacer()
+      if availablePanes.count > 1 {
+        HStack {
+          Spacer()
 
-        Picker("", selection: $selectedPane) {
-          ForEach(CaptureSettingsPane.availablePanes(videoModuleEnabled: videoModuleEnabled)) { pane in
-            Text(pane.title).tag(pane)
+          Picker("", selection: $selectedPane) {
+            ForEach(availablePanes) { pane in
+              Text(pane.title).tag(pane)
+            }
           }
-        }
-        .labelsHidden()
-        .pickerStyle(.segmented)
-        .frame(maxWidth: 560)
+          .labelsHidden()
+          .pickerStyle(.segmented)
+          .frame(maxWidth: 560)
 
-        Spacer()
+          Spacer()
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 16)
+        .padding(.bottom, 8)
       }
-      .padding(.horizontal, 20)
-      .padding(.top, 16)
-      .padding(.bottom, 8)
 
       Form {
-        if selectedPane == .general {
-          Section(L10n.PreferencesCapture.appWindowsSection) {
+        if selectedPane == .capture {
+          Section(L10n.PreferencesCapture.captureEnvironmentSection) {
             SettingRow(
               icon: "photo.on.rectangle",
               title: L10n.PreferencesCapture.includeInScreenshotsTitle,
@@ -163,13 +166,7 @@ struct CaptureSettingsView: View {
                 }
               }
             #endif
-          }
-        }
 
-        // MARK: - Desktop
-
-        if selectedPane == .general {
-          Section(L10n.PreferencesCapture.desktopSection) {
             SettingRow(
               icon: "eye.slash",
               title: L10n.PreferencesCapture.hideDesktopIconsTitle,
@@ -189,7 +186,7 @@ struct CaptureSettingsView: View {
             }
           }
 
-          Section(L10n.PreferencesCapture.overlaySection) {
+          Section(L10n.PreferencesCapture.selectionSection) {
             SettingRow(
               icon: "macwindow",
               title: L10n.PreferencesCapture.showSelectionAreaOverlayTitle,
@@ -198,9 +195,7 @@ struct CaptureSettingsView: View {
               Toggle("", isOn: $showSelectionAreaOverlay)
                 .labelsHidden()
             }
-          }
 
-          Section(L10n.PreferencesCapture.magnifierZoomSection) {
             SettingRow(
               icon: "arrow.up.and.down",
               title: L10n.PreferencesCapture.reverseMagnifierZoomDirectionTitle,
@@ -209,9 +204,7 @@ struct CaptureSettingsView: View {
               Toggle("", isOn: $reverseMagnifierZoomDirection)
                 .labelsHidden()
             }
-          }
 
-          Section(L10n.PreferencesCapture.selectionSnappingSection) {
             SettingRow(
               icon: "arrow.left.and.right.square",
               title: L10n.PreferencesCapture.selectionSnapDistanceTitle,
@@ -242,21 +235,8 @@ struct CaptureSettingsView: View {
               .pickerStyle(.menu)
             }
           }
-        }
 
-        // MARK: - Screenshot Format
-
-        if selectedPane == .screenshot {
-          Section(L10n.PreferencesCapture.screenshotFormatSection) {
-            SettingRow(
-              icon: "cursorarrow",
-              title: L10n.PreferencesCapture.showCursorTitle,
-              description: L10n.PreferencesCapture.showCursorDescription
-            ) {
-              Toggle("", isOn: $screenshotShowCursor)
-                .labelsHidden()
-            }
-
+          Section(L10n.PreferencesCapture.screenshotBehaviorSection) {
             SettingRow(
               icon: "snowflake",
               title: L10n.PreferencesCapture.freezeAreaTitle,
@@ -266,6 +246,58 @@ struct CaptureSettingsView: View {
                 .labelsHidden()
             }
 
+            SettingRow(
+              icon: "cursorarrow",
+              title: L10n.PreferencesCapture.showCursorTitle,
+              description: L10n.PreferencesCapture.showCursorDescription
+            ) {
+              Toggle("", isOn: $screenshotShowCursor)
+                .labelsHidden()
+            }
+          }
+
+          Section(L10n.PreferencesCapture.specializedCaptureSection) {
+            SettingRow(
+              icon: "lightbulb",
+              title: L10n.PreferencesCapture.showSessionHintsTitle,
+              description: L10n.PreferencesCapture.showSessionHintsDescription
+            ) {
+              Toggle("", isOn: $scrollingCaptureShowHints)
+                .labelsHidden()
+            }
+
+            HStack(alignment: .top, spacing: 6) {
+              Image(systemName: "info.circle.fill")
+                .foregroundColor(.blue)
+                .font(.system(size: 12))
+                .padding(.top, 1)
+              Text(L10n.PreferencesCapture.scrollingCaptureInfo)
+                .font(.system(size: 11))
+                .foregroundColor(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.vertical, 4)
+
+            SettingRow(
+              icon: "bell.badge",
+              title: L10n.PreferencesCapture.ocrSuccessNotificationTitle,
+              description: L10n.PreferencesCapture.ocrSuccessNotificationDescription
+            ) {
+              Toggle("", isOn: $ocrSuccessNotification)
+                .labelsHidden()
+            }
+
+            SettingRow(
+              icon: "link",
+              title: L10n.PreferencesCapture.ocrLinkDetectionTitle,
+              description: L10n.PreferencesCapture.ocrLinkDetectionDescription
+            ) {
+              Toggle("", isOn: $ocrLinkDetection)
+                .labelsHidden()
+            }
+          }
+
+          Section(L10n.PreferencesCapture.outputSection) {
             SettingRow(
               icon: "photo",
               title: L10n.PreferencesCapture.imageFormatTitle,
@@ -307,66 +339,7 @@ struct CaptureSettingsView: View {
               }
               .padding(.vertical, 4)
             }
-          }
-        }
 
-        if selectedPane == .screenshot {
-          Section(L10n.PreferencesCapture.screenshotPresetSection) {
-            PreferencesScreenshotDefaultPresetPicker()
-          }
-        }
-
-        if selectedPane == .screenshot {
-          Section(L10n.PreferencesCapture.scrollingCaptureSection) {
-            SettingRow(
-              icon: "lightbulb",
-              title: L10n.PreferencesCapture.showSessionHintsTitle,
-              description: L10n.PreferencesCapture.showSessionHintsDescription
-            ) {
-              Toggle("", isOn: $scrollingCaptureShowHints)
-                .labelsHidden()
-            }
-
-            HStack(alignment: .top, spacing: 6) {
-              Image(systemName: "info.circle.fill")
-                .foregroundColor(.blue)
-                .font(.system(size: 12))
-                .padding(.top, 1)
-              Text(L10n.PreferencesCapture.scrollingCaptureInfo)
-                .font(.system(size: 11))
-                .foregroundColor(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.vertical, 4)
-          }
-        }
-
-        // MARK: - OCR
-
-        if selectedPane == .screenshot {
-          Section(L10n.PreferencesCapture.ocrSection) {
-            SettingRow(
-              icon: "bell.badge",
-              title: L10n.PreferencesCapture.ocrSuccessNotificationTitle,
-              description: L10n.PreferencesCapture.ocrSuccessNotificationDescription
-            ) {
-              Toggle("", isOn: $ocrSuccessNotification)
-                .labelsHidden()
-            }
-
-            SettingRow(
-              icon: "link",
-              title: L10n.PreferencesCapture.ocrLinkDetectionTitle,
-              description: L10n.PreferencesCapture.ocrLinkDetectionDescription
-            ) {
-              Toggle("", isOn: $ocrLinkDetection)
-                .labelsHidden()
-            }
-          }
-        }
-
-        if selectedPane == .general {
-          Section(L10n.PreferencesCapture.outputNamingSection) {
             SettingRow(
               icon: "textformat",
               title: L10n.PreferencesCapture.screenshotTemplateTitle,
@@ -424,6 +397,27 @@ struct CaptureSettingsView: View {
               .foregroundColor(.secondary)
               .buttonStyle(.plain)
             }
+          }
+
+          Section(L10n.PreferencesCapture.postProcessingSection) {
+            PreferencesScreenshotDefaultPresetPicker()
+
+            Text(L10n.PreferencesCapture.removeBackground)
+              .font(.caption)
+              .foregroundColor(.secondary)
+
+            SettingRow(
+              icon: "person.crop.rectangle",
+              title: L10n.PreferencesCapture.autoCropSubjectTitle,
+              description: L10n.PreferencesCapture.autoCropSubjectDescription
+            ) {
+              Toggle("", isOn: $backgroundCutoutAutoCropEnabled)
+                .labelsHidden()
+            }
+          }
+
+          Section(L10n.PreferencesCapture.afterCaptureSection) {
+            AfterCaptureMatrixView()
           }
         }
 
@@ -695,27 +689,6 @@ struct CaptureSettingsView: View {
             }
           }
         #endif
-
-        // MARK: - After Capture
-
-        if selectedPane == .general {
-          Section(L10n.PreferencesCapture.afterCaptureSection) {
-            AfterCaptureMatrixView()
-
-            Text(L10n.PreferencesCapture.removeBackground)
-              .font(.caption)
-              .foregroundColor(.secondary)
-
-            SettingRow(
-              icon: "person.crop.rectangle",
-              title: L10n.PreferencesCapture.autoCropSubjectTitle,
-              description: L10n.PreferencesCapture.autoCropSubjectDescription
-            ) {
-              Toggle("", isOn: $backgroundCutoutAutoCropEnabled)
-                .labelsHidden()
-            }
-          }
-        }
       }
       .formStyle(.grouped)
     }
@@ -734,7 +707,7 @@ struct CaptureSettingsView: View {
   private func reconcileSelectedPane() {
     let available = CaptureSettingsPane.availablePanes(videoModuleEnabled: videoModuleEnabled)
     if !available.contains(selectedPane) {
-      selectedPane = available.first ?? .general
+      selectedPane = available.first ?? .capture
     }
   }
 
