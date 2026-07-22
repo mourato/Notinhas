@@ -129,12 +129,15 @@ configure_interactive_build() {
     esac
   done
 
-  printf "Clean previous build artifacts first? [y/N]: "
+  printf "Clean previous build artifacts first? [Y/n]: "
   local clean_choice
   read -r clean_choice || exit 0
   case "$clean_choice" in
-    y|Y|yes|YES)
+    ""|y|Y|yes|YES)
       CLEAN=1
+      ;;
+    n|N|no|NO)
+      CLEAN=0
       ;;
   esac
 
@@ -144,6 +147,9 @@ configure_interactive_build() {
   case "$video_choice" in
     y|Y|yes|YES)
       ENABLE_VIDEO_MODULE=1
+      ;;
+    ""|n|N|no|NO)
+      ENABLE_VIDEO_MODULE=0
       ;;
     *)
       ENABLE_VIDEO_MODULE=0
