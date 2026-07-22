@@ -43,6 +43,9 @@ unrelated product skills from other apps.
 - `./scripts/run-tests.sh` — run the XCTest suite with results in `build/`
   (default **Notinhas** scheme). Use `--video-module` (or `ENABLE_VIDEO_MODULE=1`)
   for Recording/VideoEditor XCTests via **Notinhas Video** / **Debug+Video**.
+  Use `--skip-visual` (or `NOTINHAS_SKIP_VISUAL_TESTS=1`) locally to skip suites
+  that flash real capture overlays / Quick Access panels on screen; still run the
+  full suite (or those suites alone) when changing those areas.
 - `swiftformat <paths…>` — format Swift in place (install once:
   `brew install swiftformat`). Rules live in `.swiftformat` (two-space indent,
   120-column maximum). Scope paths as needed, e.g. `swiftformat Notinhas

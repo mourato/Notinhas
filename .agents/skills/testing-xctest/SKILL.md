@@ -23,8 +23,18 @@ Use when adding or changing automated tests under `NotinhasTests/`.
 
 ```bash
 ./scripts/run-tests.sh
+./scripts/run-tests.sh --skip-visual
 ./scripts/run-tests.sh -only-testing:NotinhasTests/NotinhasNoteGeometryTests
 ```
+
+`--skip-visual` / `NOTINHAS_SKIP_VISUAL_TESTS=1` skips host suites that flash real
+area-selection overlays, Quick Access panels, or status-bar activation onto the
+display. Prefer it while working on unrelated tasks; do not use it as the sole
+gate when those UI surfaces change.
+
+Splash/onboarding during tests is **not** a skip-list issue: `AppLaunchPolicy`
+must keep the interactive host off under XCTest. Do not “fix” onboarding by
+skipping unrelated suites — harden launch detection instead.
 
 ## Related
 

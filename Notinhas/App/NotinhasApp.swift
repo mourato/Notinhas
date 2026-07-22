@@ -36,13 +36,18 @@ struct NotinhasApp: App {
 struct AppLaunchPolicy {
   private let environment: [String: String]
   private let screenCountProvider: () -> Int
+  /// Injectable so unit tests can assert the "normal app" path while themselves
+  /// running under XCTest (where `XCTestCase` is always linked).
+  private let xctestRuntimePresent: () -> Bool
 
   init(
     environment: [String: String] = ProcessInfo.processInfo.environment,
-    screenCountProvider: @escaping () -> Int = { NSScreen.screens.count }
+    screenCountProvider: @escaping () -> Int = { NSScreen.screens.count },
+    xctestRuntimePresent: @escaping () -> Bool = { NSClassFromString("XCTestCase") != nil }
   ) {
     self.environment = environment
     self.screenCountProvider = screenCountProvider
+    self.xctestRuntimePresent = xctestRuntimePresent
   }
 
   var shouldStartInteractiveApplication: Bool {
@@ -53,8 +58,28 @@ struct AppLaunchPolicy {
     return !isHeadlessDisplaySession
   }
 
+  /// True when this process is an XCTest host. Uses multiple signals because
+  /// `XCTestConfigurationFilePath` alone can be absent early in host launch
+  /// (or under alternate runners), which would otherwise start splash/onboarding
+  /// and menu-bar UI during `xcodebuild test`.
   var isRunningUnderXCTest: Bool {
-    environment["XCTestConfigurationFilePath"] != nil
+    if environment["XCTestConfigurationFilePath"] != nil {
+      return true
+    }
+
+    if let injectBundle = environment["XCInjectBundle"],
+       (injectBundle as NSString).pathExtension == "xctest" {
+      return true
+    }
+
+    if let dyldInsert = environment["DYLD_INSERT_LIBRARIES"],
+       dyldInsert.contains("libXCTest")
+       || dyldInsert.contains("XCTTargetBootstrap")
+       || dyldInsert.contains("libXCTestSwiftSupport") {
+      return true
+    }
+
+    return xctestRuntimePresent()
   }
 
   var isHeadlessDisplaySession: Bool {

@@ -4,6 +4,7 @@
 # Usage:
 #   ./scripts/run-tests.sh
 #   ./scripts/run-tests.sh --video-module
+#   ./scripts/run-tests.sh --skip-visual
 #   ./scripts/run-tests.sh -only-testing:NotinhasTests/SomeTests
 #   ./scripts/run-tests.sh --open-result
 
@@ -32,6 +33,19 @@ VIDEO_MODULE_EXPLICIT=0
 if [[ -n "$ENABLE_VIDEO_MODULE" ]]; then
   VIDEO_MODULE_EXPLICIT=1
 fi
+# Skip suites that order real overlays/panels onto the display (local focus aid).
+SKIP_VISUAL_TESTS="${NOTINHAS_SKIP_VISUAL_TESTS:-0}"
+# XCTest identifiers that flash fullscreen capture overlays, floating panels, or Dock policy.
+# Keep in sync with delivery-workflow / testing-xctest skills when adding new on-screen hosts.
+VISUAL_TEST_IDENTIFIERS=(
+  NotinhasTests/AreaSelectionSessionLifecycleTests
+  NotinhasTests/AreaSelectionMultiMonitorReconciliationTests
+  NotinhasTests/AreaSelectionControllerTests
+  NotinhasTests/AreaSelectionOverlayMagnifierLayoutTests
+  NotinhasTests/CaptureViewModelTests
+  NotinhasTests/QuickAccessPanelControllerTests
+  NotinhasTests/AppStatusBarControllerTests
+)
 XCODEBUILD_ARGS=()
 
 if [ -t 1 ]; then
@@ -75,6 +89,13 @@ apply_video_module_settings() {
   fi
 }
 
+append_skip_visual_args() {
+  local id
+  for id in "${VISUAL_TEST_IDENTIFIERS[@]}"; do
+    XCODEBUILD_ARGS+=("-skip-testing:${id}")
+  done
+}
+
 usage() {
   cat <<EOF
 Usage: $0 [OPTIONS] [XCODEBUILD_TEST_OPTIONS]
@@ -92,15 +113,22 @@ Options:
   --keep-result          Do not remove the previous result bundle before running.
   --video-module         Run Recording/VideoEditor XCTests (Notinhas Video / Debug+Video).
   --no-video-module      Explicit default: Notinhas scheme without Video module.
+  --skip-visual          Skip XCTest suites that flash real overlays/panels on screen
+                         (area selection, Quick Access panel, status-bar activation).
+                         Not a merge-gate substitute — run without this flag (or only the
+                         visual suites) when those areas change.
   -h, --help             Show this help.
 
 Environment:
-  ENABLE_VIDEO_MODULE    Set to 1 or 0 to enable/disable the Video module non-interactively.
+  ENABLE_VIDEO_MODULE          Set to 1 or 0 to enable/disable the Video module non-interactively.
+  NOTINHAS_SKIP_VISUAL_TESTS   Set to 1 for the same effect as --skip-visual.
 
 Examples:
   $0
   $0 --video-module
+  $0 --skip-visual
   ENABLE_VIDEO_MODULE=1 $0
+  NOTINHAS_SKIP_VISUAL_TESTS=1 $0
   $0 -only-testing:NotinhasTests/CaptureOutputNamingTests
   NOTINHAS_RUN_MICROPHONE_INTEGRATION=1 $0 -only-testing:NotinhasTests/MicrophoneAudioCapturerTests/testMicrophoneAudioCapturerStartStopRealMicrophoneIntegration
 EOF
@@ -165,6 +193,10 @@ while [ $# -gt 0 ]; do
       VIDEO_MODULE_EXPLICIT=1
       shift
       ;;
+    --skip-visual)
+      SKIP_VISUAL_TESTS=1
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -187,6 +219,10 @@ if [[ "$VIDEO_MODULE_EXPLICIT" -eq 1 ]]; then
   apply_video_module_settings
 fi
 
+if [[ "$SKIP_VISUAL_TESTS" == "1" ]]; then
+  append_skip_visual_args
+fi
+
 if [ "$(uname -s)" != "Darwin" ]; then
   die "This script requires macOS."
 fi
@@ -206,6 +242,12 @@ if [ "$KEEP_RESULT" -eq 0 ]; then
 fi
 
 info "Running ${SCHEME} tests"
+if [[ "$SKIP_VISUAL_TESTS" == "1" ]]; then
+  info "Skipping visual on-screen suites (${#VISUAL_TEST_IDENTIFIERS[@]} identifiers)"
+  for id in "${VISUAL_TEST_IDENTIFIERS[@]}"; do
+    info "  -skip-testing:${id}"
+  done
+fi
 info "Log: ${LOG_PATH}"
 info "Result bundle: ${RESULT_BUNDLE_PATH}"
 

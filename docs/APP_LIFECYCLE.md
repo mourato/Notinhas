@@ -19,7 +19,7 @@ flowchart TD
     A["NotinhasApp @main<br/>(LSUIElement, Settings scene only)"] --> B["AppDelegate.applicationWillFinishLaunching<br/>register AppleEvent kAEGetURL handler"]
     B --> C["applicationDidFinishLaunching"]
     C --> D{"AppLaunchPolicy<br/>shouldStartInteractiveApplication?"}
-    D -- "XCTest && !SNAPZY_ALLOW_INTERACTIVE_XCTEST_HOST=1" --> X[return, no UI]
+    D -- "XCTest && !NOTINHAS_ALLOW_INTERACTIVE_XCTEST_HOST=1" --> X[return, no UI]
     D -- "headless (0 screens)" --> X
     D -- pass --> E["AppIdentityManager.refresh()"]
     E --> F{"SandboxOffDataMigrationService.runIfNeeded()"}
@@ -33,7 +33,7 @@ flowchart TD
     I --> J["flushPendingDeepLinks() + flushPendingOpenFileURLs()"]
 ```
 
-- `AppLaunchPolicy` (`Notinhas/App/NotinhasApp.swift`): skips interactive startup under XCTest unless `SNAPZY_ALLOW_INTERACTIVE_XCTEST_HOST=1`, and in headless sessions (`NSScreen.screens.count == 0`).
+- `AppLaunchPolicy` (`Notinhas/App/NotinhasApp.swift`): skips interactive startup under XCTest unless `NOTINHAS_ALLOW_INTERACTIVE_XCTEST_HOST=1`, and in headless sessions (`NSScreen.screens.count == 0`). XCTest detection uses `XCTestConfigurationFilePath`, `XCInjectBundle`, `DYLD_INSERT_LIBRARIES` (XCTest inject dylibs), and linked `XCTestCase` — so splash/onboarding/menu-bar setup do not start during host-app tests even when the configuration path env var is absent early in launch.
 - Sandbox-off migration failure loops a critical modal: **Try Again** (retry), **Start Fresh…** (confirm, then `skipMigration()`; old sandbox data is left untouched), **Quit Notinhas**.
 - Database failure loops: **Try Repair** (`DatabaseManager.attemptRepair()`), **Reset Database…** (moves files into `DatabaseRecovery-<timestamp>` then `retryInitialization()`), **Quit Notinhas**.
 - AppleEvents arriving before the coordinator exists are queued in `pendingDeepLinkURLs` and flushed after launch; same for cold-launch "Open With" file URLs (`pendingOpenFileURLs`).

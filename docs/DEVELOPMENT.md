@@ -59,6 +59,7 @@ Unit tests live in `NotinhasTests/`, a peer folder of `Notinhas/`.
 
 ```bash
 ./scripts/run-tests.sh
+./scripts/run-tests.sh --skip-visual   # skip on-screen overlay/panel suites (local focus)
 ./scripts/run-tests.sh --video-module   # optional Recording/VideoEditor XCTests
 ```
 

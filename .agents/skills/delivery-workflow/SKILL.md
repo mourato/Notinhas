@@ -19,6 +19,7 @@ Build/run failures, choosing verification depth, assessing merge readiness, or G
 | `./scripts/build_and_run.sh --no-video-module` | Explicit default: **Notinhas** scheme, module off. |
 | `./scripts/run-tests.sh` | Run the XCTest suite with default **Notinhas** scheme (**Debug**); results under `build/`. Recording/VideoEditor tests are **not** compiled in. |
 | `./scripts/run-tests.sh --video-module` | Run Recording/VideoEditor XCTests (**Notinhas Video** / **Debug+Video**). Also: `ENABLE_VIDEO_MODULE=1` or `--no-video-module`. |
+| `./scripts/run-tests.sh --skip-visual` | Local focus aid: skip suites that order real overlays/panels onto the display (`NOTINHAS_SKIP_VISUAL_TESTS=1`). Not a merge-gate substitute when capture overlay / Quick Access / status-bar activation change. |
 | `swiftformat <paths…>` | Format Swift in place (`brew install swiftformat`; `.swiftformat`: 2-space indent, 120 columns). Scope paths as needed — e.g. `swiftformat Notinhas NotinhasTests`. |
 
 Do **not** treat plain `swift build` as sufficient acceptance — Info.plist, signing, and Screen Recording permissions matter for capture flows.
