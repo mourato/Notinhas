@@ -65,6 +65,7 @@ final class AllInOneCaptureCoordinator {
     }
 
     isActive = false
+    let ownsInitialSelection = isAwaitingInitialSelection
     isAwaitingInitialSelection = false
     timerScheduler.cancel()
     viewModel?.setAllInOneSelectionBlocking(false)
@@ -74,7 +75,7 @@ final class AllInOneCaptureCoordinator {
     refinementController?.tearDown()
     refinementController = nil
 
-    if isAwaitingInitialSelection || AreaSelectionController.shared.isPresenting {
+    if ownsInitialSelection {
       AreaSelectionController.shared.cancelSelection()
     }
 

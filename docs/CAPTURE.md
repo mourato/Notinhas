@@ -125,6 +125,7 @@ flowchart TD
 - If a valid last selection exists on any connected display, refinement overlays appear immediately; otherwise the coordinator starts `AreaSelectionController` for the first drag, then hands the rect to refinement. Classic `⇧⌘4` area capture is unchanged.
 - Fullscreen mode hides area refinement. Each mode exits the HUD and calls its existing capture entry point: Window opens application-window selection, while Scrolling and Recording start their respective flows (documented compromise to avoid rewriting those coordinators).
 - Area, Capture Markup, OCR, and Scrolling preserve the refined rect and dispatch through `ScreenCaptureViewModel` helpers (`captureArea(at:)`, `captureAreaAnnotate(at:)`, `captureOCR(at:)`, `captureScrolling(at:)`). The last rect is persisted on Capture.
+- Every mode handoff tears down the All-In-One HUD, refinement callbacks, and any first-drag selection before dispatching. This leaves the application-window overlay as the only active selection session and makes Escape/re-entry safe.
 - `Escape` cancels the session; re-entry cancels any prior All-In-One session first.
 
 ### Selection overlay architecture

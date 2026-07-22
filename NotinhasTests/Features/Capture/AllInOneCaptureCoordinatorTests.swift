@@ -82,4 +82,20 @@ final class AllInOneCaptureCoordinatorTests: XCTestCase {
 
     XCTAssertTrue(cancelled)
   }
+
+  func testCaptureCommand_preservesSelectionOnlyForRectBackedModes() {
+    let rect = CGRect(x: 20, y: 30, width: 400, height: 240)
+
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .area, rect: rect), .area(rect))
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .window, rect: rect), .window)
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .fullscreen, rect: rect), .fullscreen)
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .timer, rect: nil), .timer(nil))
+  }
+
+  func testCaptureCommand_keepsNilRectForFirstSelectionModes() {
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .area, rect: nil), .area(nil))
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .annotate, rect: nil), .annotate(nil))
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .scrolling, rect: nil), .scrolling(nil))
+    XCTAssertEqual(AllInOneCaptureCommand.make(for: .ocr, rect: nil), .ocr(nil))
+  }
 }
