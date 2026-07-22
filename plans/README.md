@@ -3,9 +3,10 @@
 This directory contains the improve-skill handoff plans. Plans 001–025 are
 completed historical Notinhas UX/video work. The identity-separation round is
 026–030. The OverlayTooltip rollout + slider steppers round is **031–034**,
-generated on 2026-07-21 against commit `df25f56f`.
+generated on 2026-07-21 against commit `df25f56f`. The All-In-One capture
+round is **035–037**, generated on 2026-07-22 against commit `1849b93a`.
 
-Execute 031–034 with the project skill
+Execute active rounds with the project skill
 `.agents/skills/plan-execute-review/SKILL.md` (Composer 2.5 executor → merge →
 thermo-nuclear review → fix all findings → next plan).
 
@@ -102,6 +103,37 @@ replace a STOP condition with an assumption.
 - Preferences / VideoEditor OverlayTooltip and Preferences slider steppers
   were considered and deferred (see rejected findings).
 
+## All-In-One capture (035–037)
+
+CleanShot-style single-shortcut capture HUD: pick mode + refine area, with
+W×H, aspect lock, and last-selection restore. Reuses floating-HUD patterns from
+Recording/Scrolling without depending on the Video-gated `RecordingToolbarWindow`.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 035 | Shared capture floating HUD chrome (ungated) | P1 | M | — | DONE (`e539d2bf`; thermo fixes `d58843df`) |
+| 036 | Refinable selection (handles, W×H, aspect lock, last rect) | P1 | L | 035 | TODO |
+| 037 | All-In-One session, shortcut, menu, deeplink, docs | P1 | L | 035, 036 | TODO |
+
+### Dependency notes (035–037)
+
+- 035 must land first (shared `CaptureFloatingHUDWindow` / placement / icon chrome).
+- 036 builds geometry + last-rect + refinement on top of 035 chrome.
+- 037 wires coordinator + shortcut/menu/deeplink and must not reimplement 035/036.
+- Execute strictly 035 → 036 → 037.
+
+### Product decisions (035–037)
+
+- MVP modes: Area, Fullscreen, Window, Annotate, Scrolling, OCR; Recording only
+  when `VideoModuleAvailability.isEnabled`.
+- Timer / Smart Element / Object Cutout stay out of the All-In-One strip (dedicated
+  entry points remain).
+- Classic ⌘⇧4 area capture stays commit-on-mouseup; refinement is All-In-One-owned.
+- Last selection uses a new key (`capture.allInOne.lastAreaRect`), not
+  `recording.lastAreaRect`.
+- Default All-In-One shortcut ships **unbound**, recommended ⌘⇧0.
+- All-In-One chrome must compile in the default scheme (Video module off).
+
 ## Dependency notes (026–030)
 
 - 026 must land before the bundle-ID/path cutover.
@@ -144,3 +176,12 @@ instructions may not use this allowlist to retain branding.
   remain useful without an upload/support flow.
 - Renaming external cloud object prefixes: rejected as unsafe for user data.
 - Publishing these plans as GitHub issues: not requested; no issues were created.
+- All-In-One depending on `RecordingToolbarWindow`: rejected — file is
+  `#if NOTINHAS_VIDEO_MODULE`; extract ungated chrome instead (035).
+- Putting Timer in All-In-One MVP: rejected — Notinhas has no capture-timer mode
+  today (recording annotation timer is unrelated).
+- Putting Smart Element / Object Cutout in the All-In-One strip: deferred — keeps
+  the HUD focused; dedicated shortcuts/menu remain.
+- Upgrading classic ⌘⇧4 to refine-before-capture in the same round: deferred —
+  All-In-One owns refinement first to avoid regressing the fast area path.
+- Migrating Scrolling HUD onto shared host in 035: deferred — optional DRY later.
