@@ -1,39 +1,40 @@
-# Contributing to Snapzy
+# Contributing to Notinhas
 
-Thanks for contributing to Snapzy.
+Thanks for contributing to Notinhas.
 
-Snapzy is an open-source native macOS screenshot and screen recording app built with SwiftUI and ScreenCaptureKit. This guide keeps contributions aligned with the current project workflow and structure.
+Notinhas is a macOS visual-handoff app built on a Snapzy fork: capture an area, add numbered pins and notes, and copy a clipboard-ready brief for developers and AI agents.
 
 ## Ways to contribute
 
-- Report bugs
-- Propose features or UX improvements
+- Report bugs via GitHub Issues
+- Propose features or UX improvements aligned with the visual-handoff loop
 - Improve documentation
-- Submit code fixes or new features
+- Submit code fixes or focused features
 - Help test changes on macOS
 
 ## Before you start
 
 - Search existing issues and pull requests before opening a new one.
-- For larger changes, open an issue first so the approach can be discussed before implementation.
-- Keep contributions focused. Small, reviewable pull requests move faster than broad refactors.
+- For larger changes, open an issue first so the approach can be discussed.
+- Keep contributions focused. Small, reviewable pull requests move faster.
+- Do not reintroduce Sparkle updates, About/Report UI, `snapzy://` aliases, or a public support funnel.
 
 ## Development setup
 
 Use [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for local setup, cloning, opening the Xcode project, and running a debug build.
 
-If you need archive, export, or DMG packaging commands, see [docs/BUILD.md](docs/BUILD.md).
+For archive, export, or DMG packaging, see [docs/BUILD.md](docs/BUILD.md).
 
 ## Project conventions
 
-Snapzy uses a feature-based structure with limited nesting.
+Notinhas uses a feature-based structure with limited nesting.
 
 - Keep primary feature entry points at the root of each feature folder.
 - Use `Components`, `Managers`, `Services`, and `Models` only when needed.
-- Prefer colocating feature-specific logic with the feature.
+- Keep Notinhas-specific logic in `Notinhas/Features/Notinhas/`.
 - Avoid unrelated renames or directory reshuffles in the same pull request.
 
-See [docs/STRUCTURE.md](docs/STRUCTURE.md) for the current architecture guidance.
+See [docs/STRUCTURE.md](docs/STRUCTURE.md) for current architecture guidance.
 
 ## Contribution workflow
 
@@ -45,7 +46,7 @@ See [docs/STRUCTURE.md](docs/STRUCTURE.md) for the current architecture guidance
 
 ## Coding guidelines
 
-- Follow the existing Swift and SwiftUI style already used in the repository.
+- Follow the existing Swift and SwiftUI style in the repository.
 - Prefer clear, descriptive type and file names.
 - Keep changes scoped to the problem being solved.
 - Add comments only when the intent is not obvious from the code.
@@ -53,14 +54,14 @@ See [docs/STRUCTURE.md](docs/STRUCTURE.md) for the current architecture guidance
 
 ## Validation
 
-Before opening a pull request, verify the following:
+Before opening a pull request:
 
-- The project builds successfully in Xcode or via `xcodebuild`
-- The affected feature works as expected on macOS
-- Permission-sensitive flows are tested when relevant, especially screen recording
-- New UI behavior includes screenshots or recordings in the pull request when helpful
+- The project builds in Xcode or via `xcodebuild`
+- `./scripts/run-tests.sh` passes for affected areas
+- The affected capture/annotate/export flow works on macOS
+- Permission-sensitive flows are tested when relevant (Screen Recording, Accessibility)
 
-If your change affects capture, recording, annotation, export, onboarding, or updates, include manual test steps in the pull request description.
+Include manual test steps for capture, annotation, clipboard export, migration, or deep-link changes.
 
 ## Pull request checklist
 
@@ -68,30 +69,30 @@ If your change affects capture, recording, annotation, export, onboarding, or up
 - Link the related issue when one exists
 - Keep the pull request focused and reviewable
 - Include screenshots or short recordings for UI changes
-- Note any follow-up work or known limitations
+- Note follow-up work or known limitations
 - Confirm how you tested the change
 
 ## Commit messages
 
-Use short, imperative commit messages. Prefixes such as `feat:`, `fix:`, `docs:`, `refactor:`, and `chore:` are preferred when they fit the change.
+Use short, imperative commit messages. Prefixes such as `feat:`, `fix:`, `docs:`, `refactor:`, and `chore:` are preferred.
 
 Examples:
 
 - `fix: prevent duplicate quick access panels`
 - `docs: update local build instructions`
-- `chore: clean up release workflow notes`
+- `feat(notinhas): keep marker order in export brief`
 
 ## Reporting bugs
 
 When filing a bug report, include:
 
 - macOS version
-- Snapzy version or commit SHA
+- Notinhas version or commit SHA
 - Steps to reproduce
-- Expected behavior
-- Actual behavior
-- Screenshots or screen recordings if relevant
+- Expected and actual behavior
+- Screenshots or recordings if relevant
+- Relevant lines from `~/Library/Logs/Notinhas/notinhas_*.txt` when diagnostics are enabled
 
 ## Security issues
 
-Please do not report security vulnerabilities in public issues. Contact the repository maintainer privately through GitHub first so the issue can be handled responsibly.
+Do not report security vulnerabilities in public issues. Use [GitHub Security Advisories](https://github.com/mourato/Notinhas/security/advisories/new) on this repository.

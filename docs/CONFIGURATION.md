@@ -1,41 +1,41 @@
 # TOML Configuration
 
-Snapzy can export and import user-editable TOML configuration for backup,
-dotfiles, and machine-to-machine setup. If the file changes while Snapzy is
-closed, Snapzy automatically applies the valid TOML on the next launch.
+Notinhas can export and import user-editable TOML configuration for backup,
+dotfiles, and machine-to-machine setup. If the file changes while Notinhas is
+closed, Notinhas automatically applies the valid TOML on the next launch.
 
 Default path:
 
 ```text
-~/.config/snapzy/config.toml
+~/.config/notinhas/config.toml
 ```
 
 Settings -> Advanced -> Backup requires config folder access before Import,
 Export, Restore defaults, or Open config.toml can be used. Granting access lets
-Snapzy create `config.toml` with the current preferences if it is missing.
-After launch, Snapzy observes app preference changes and debounces background
+Notinhas create `config.toml` with the current preferences if it is missing.
+After launch, Notinhas observes app preference changes and debounces background
 syncs into the managed file. The sync compares current settings with
-`config.toml`; if the file is simply stale from older in-app changes, Snapzy
-updates it. If the file appears to have external edits that Snapzy has not
-applied yet, Snapzy stops and asks before replacing it. Settings -> Advanced
+`config.toml`; if the file is simply stale from older in-app changes, Notinhas
+updates it. If the file appears to have external edits that Notinhas has not
+applied yet, Notinhas stops and asks before replacing it. Settings -> Advanced
 shows the current sync state and a manual Sync Now action. Open config.toml uses
 the same safe sync path before opening the file.
 
-When Settings asks for confirmation, Snapzy remembers the exact file signature
+When Settings asks for confirmation, Notinhas remembers the exact file signature
 that caused the conflict. If `config.toml` changes again before the user
-confirms replacing it, Snapzy cancels the write and asks the user to review the
+confirms replacing it, Notinhas cancels the write and asks the user to review the
 file again.
 
-Snapzy does not live-watch direct edits to `config.toml`; those edits are picked
+Notinhas does not live-watch direct edits to `config.toml`; those edits are picked
 up on the next app launch, or through explicit Import. Explicit import validates
 a selected `.toml` backup, replaces the managed
-`~/.config/snapzy/config.toml`, then applies it immediately.
+`~/.config/notinhas/config.toml`, then applies it immediately.
 
-If `~/.config` or `~/.config/snapzy` does not exist yet, the grant flow starts
+If `~/.config` or `~/.config/notinhas` does not exist yet, the grant flow starts
 from the nearest existing parent and creates the missing folder after the user
-confirms access. Snapzy stores the bookmark for `~/.config/snapzy`.
+confirms access. Notinhas stores the bookmark for `~/.config/notinhas`.
 
-For existing users upgrading from a version without TOML config support, Snapzy
+For existing users upgrading from a version without TOML config support, Notinhas
 opens the normal onboarding window directly on the config access step once
 after launch. Granting access stores the folder bookmark, creates `config.toml`
 if needed, and applies an existing valid file immediately. Users can skip the
@@ -46,7 +46,7 @@ step and grant access later from Settings -> Advanced.
 The TOML file covers portable app preferences:
 
 - General settings: language, appearance, sounds, URL scheme integration, show menu bar icon, login item, export folder path.
-- Updates: automatic check/download and the Sparkle update channel (`stable` or `beta`).
+- Updates: automatic check/download and the  update channel (`stable` or `beta`).
 - Capture settings: naming templates, screenshot format, cursor/app inclusion, freeze area, show selection area overlay, reverse magnifier zoom direction, scrolling hints, OCR notification, object cutout auto-crop.
 - After-capture actions for screenshot and recording: `save`, `quick_access`, `copy_file`, and `open_annotate` under `[capture.after.screenshot]` / `[capture.after.recording]`. Cloud upload is not part of this matrix — it is manual-only from Quick Access, Annotate, Video Editor, and History surfaces.
 - Recording settings: format, quality, FPS, audio, microphone device id, cursor, click highlights, keystroke overlay, live annotation shortcuts, video editor zoom transition duration.
@@ -74,11 +74,11 @@ Current schema version:
 
 ```toml
 schema_version = 1
-snapzy_min_version = "1.20.0"
+notinhas_min_version = "1.20.0"
 ```
 
 Unknown keys are ignored. Known keys are validated by type and allowed value.
-If import finds any error, Snapzy applies none of the changes. Warnings do not
+If import finds any error, Notinhas applies none of the changes. Warnings do not
 block import.
 
 Capture naming templates support `{datetime}`, `{date}`, `{year}`,
@@ -97,7 +97,7 @@ is not available.
 
 ```toml
 schema_version = 1
-snapzy_min_version = "1.20.0"
+notinhas_min_version = "1.20.0"
 
 [general]
 language = "system"
@@ -118,12 +118,12 @@ hide_desktop_icons = false
 hide_desktop_widgets = false
 
 [capture.naming]
-screenshot_template = "Screenshots/{appName}/{yearShort}/{monthName}/{day}/Snapzy_{time}_{ms}"
-recording_template = "Recordings/{appName}/{year}/{monthShort}/Snapzy_Recording_{day}_{time}"
+screenshot_template = "Screenshots/{appName}/{yearShort}/{monthName}/{day}/Notinhas_{time}_{ms}"
+recording_template = "Recordings/{appName}/{year}/{monthShort}/Notinhas_Recording_{day}_{time}"
 
 [capture.screenshot]
 format = "png"
-include_snapzy = false
+include_notinhas = false
 show_cursor = false
 freeze_area = false
 show_selection_area_overlay = true
@@ -198,9 +198,9 @@ app in an existing-user state. This simulates an upgrade from a version that did
 not have `config.toml` support yet.
 
 ```bash
-osascript -e 'quit app "Snapzy"' 2>/dev/null || true
+osascript -e 'quit app "Notinhas"' 2>/dev/null || true
 
-PLIST="$HOME/Library/Containers/com.trongduong.snapzy/Data/Library/Preferences/com.trongduong.snapzy"
+PLIST="$HOME/Library/Containers/com.mourato.notinhas/Data/Library/Preferences/com.mourato.notinhas"
 
 defaults write "$PLIST" onboardingCompleted -bool true
 defaults write "$PLIST" sponsorPromptSeen -bool true
@@ -213,29 +213,29 @@ killall cfprefsd 2>/dev/null || true
 ```
 
 To test the missing-folder path, remove the user-managed config folder before
-launching Snapzy:
+launching Notinhas:
 
 ```bash
-rm -rf "$HOME/.config/snapzy"
-open -a Snapzy
+rm -rf "$HOME/~/.config/notinhas"
+open -a Notinhas
 ```
 
-Expected result: Snapzy opens the onboarding window directly on the config
+Expected result: Notinhas opens the onboarding window directly on the config
 access step. After granting access, the user remains on the step until clicking
-Continue. Snapzy creates
-`~/.config/snapzy/config.toml` automatically and no manual export/import step is
+Continue. Notinhas creates
+`~/.config/notinhas/config.toml` automatically and no manual export/import step is
 required.
 
 To test applying an existing direct edit after grant, prepare a config file
 first:
 
 ```bash
-mkdir -p "$HOME/.config/snapzy"
-cp "$HOME/Desktop/config.toml" "$HOME/.config/snapzy/config.toml"
-open -a Snapzy
+mkdir -p "$HOME/~/.config/notinhas"
+cp "$HOME/Desktop/config.toml" "$HOME/~/.config/notinhas/config.toml"
+open -a Notinhas
 ```
 
-Expected result: after the user grants access, Snapzy stores the folder
+Expected result: after the user grants access, Notinhas stores the folder
 bookmark and applies the existing valid `config.toml` immediately.
 
 To test the Settings -> Advanced warning without showing the launch step, mark
@@ -243,9 +243,9 @@ the config access onboarding step as already shown, then remove the stored
 folder/file bookmarks:
 
 ```bash
-osascript -e 'quit app "Snapzy"' 2>/dev/null || true
+osascript -e 'quit app "Notinhas"' 2>/dev/null || true
 
-PLIST="$HOME/Library/Containers/com.trongduong.snapzy/Data/Library/Preferences/com.trongduong.snapzy"
+PLIST="$HOME/Library/Containers/com.mourato.notinhas/Data/Library/Preferences/com.mourato.notinhas"
 
 defaults write "$PLIST" onboardingCompleted -bool true
 defaults write "$PLIST" sponsorPromptSeen -bool true
@@ -254,7 +254,7 @@ defaults delete "$PLIST" configuration.directoryBookmark 2>/dev/null || true
 defaults delete "$PLIST" configuration.fileBookmark 2>/dev/null || true
 
 killall cfprefsd 2>/dev/null || true
-open -a Snapzy
+open -a Notinhas
 ```
 
 Expected result: Settings -> Advanced -> Backup shows a config access warning.
@@ -266,17 +266,17 @@ log section.
 
 ## Implementation Notes
 
-- `SnapzyConfigurationService` is the facade used by Settings.
-- `SnapzyConfigurationSyncCoordinator` observes preference changes, debounces
+- `NotinhasConfigurationService` is the facade used by Settings.
+- `NotinhasConfigurationSyncCoordinator` observes preference changes, debounces
   background app-to-file syncs, flushes pending sync before Open config.toml and
   app termination, and exposes status for Settings -> Advanced.
-- `SnapzyConfigurationAccessGranting` owns the shared macOS folder picker flow
+- `NotinhasConfigurationAccessGranting` owns the shared macOS folder picker flow
   used by onboarding and Settings -> Advanced. A successful grant prepares the
   default folder and file so the user does not need to export/import manually.
 - Settings import replaces the managed `config.toml` after validation succeeds,
   then applies the same contents so the backup file and app state stay aligned.
 - Background sync and Open config.toml sync current settings into the managed
-  file only when the file still matches Snapzy's last applied/exported
+  file only when the file still matches Notinhas's last applied/exported
   signature. If the file has unapplied external edits, Settings asks before
   replacing it.
 - Debounced background sync exports settings on the main actor, then performs
@@ -284,19 +284,19 @@ log section.
   responsive. All managed `config.toml` reads/writes use a shared serial queue
   so manual actions, Open config.toml, Import/Restore, and background sync do
   not write the file concurrently.
-- Only the latest managed config operation may update Snapzy's
+- Only the latest managed config operation may update Notinhas's
   `configuration.lastAppliedSignature`, which prevents an older background sync
   from marking stale contents after a newer Import/Restore/manual sync.
 - Restore defaults replaces the managed `config.toml` with a generated default
   TOML document and applies it after confirmation.
-- `SnapzyConfigurationAutoImporter` runs during app launch, hashes the current
+- `NotinhasConfigurationAutoImporter` runs during app launch, hashes the current
   file contents, and imports only when `config.toml` changed since the last
   successful launch-time apply.
-- `SnapzyConfigurationExporter` and its shortcut extension build deterministic
+- `NotinhasConfigurationExporter` and its shortcut extension build deterministic
   TOML so exported files are diff-friendly.
-- `SnapzyConfigurationImporter` parses, validates, then applies mutations only
+- `NotinhasConfigurationImporter` parses, validates, then applies mutations only
   after validation succeeds.
-- `SimpleTOMLParser` is intentionally focused on Snapzy's schema surface:
+- `SimpleTOMLParser` is intentionally focused on Notinhas's schema surface:
   strings, booleans, integers, doubles, arrays, dotted keys, and nested tables.
 
 ## Related docs

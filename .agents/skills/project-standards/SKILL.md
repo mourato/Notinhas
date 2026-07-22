@@ -38,7 +38,7 @@ Use when the user asks to update AGENTS, document project policy, track known li
 - **Clean registry**: Periodically audit `.agents/skills` for stale guidance or Picker-era leakage.
 - **Command surface sync**: When `scripts/*` change, update `AGENTS.md` and `delivery-workflow` in the same change.
 - **Preview standard**: Keep preview-related guidance in `macos-app-engineering`.
-- **Fork awareness**: Preserve `Snapzy/Features/Notinhas/` across `upstream` merges; do not delete Notinhas modules during conflict resolution.
+- **Fork awareness**: Preserve `Notinhas/Features/Notinhas/` across `upstream` merges; do not delete Notinhas modules during conflict resolution.
 
 ## Information Routing
 

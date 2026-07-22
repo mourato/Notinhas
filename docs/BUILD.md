@@ -1,8 +1,8 @@
 # Manual Build Guide
 
-Build Snapzy from source on your local machine.
+Build Notinhas from source on your local machine.
 
-> If you only need first-time local setup and a basic debug run, start with [DEVELOPMENT.md](DEVELOPMENT.md).
+> For first-time setup and a basic debug run, start with [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Prerequisites
 
@@ -13,39 +13,18 @@ Build Snapzy from source on your local machine.
 ## Quick Build (Xcode)
 
 ```bash
-open Snapzy.xcodeproj
+open Notinhas.xcodeproj
 ```
 
-Press ⌘R to build and run.
+Press ⌘R to build and run (**Notinhas** scheme).
 
 ## Regenerate App Icon Assets
 
-After editing `Snapzy/SnapzyIcon.icon` in Icon Composer, regenerate the padded macOS asset catalog before building a release:
+After editing `Notinhas/NotinhasIcon.icon` in Icon Composer:
 
 ```bash
-brew install imagemagick # one-time dependency if magick is missing
+brew install imagemagick   # if magick is missing
 scripts/generate-app-icon-assets.sh
-```
-
-The script renders the `.icon` package with Icon Composer's bundled `ictool`, then centers the rendered artwork in an 832 × 832 px box on a 1024 × 1024 px transparent canvas. This preserves the Icon Composer artwork while keeping Finder/Dock margins consistent with other macOS apps.
-
-If you only have a manually exported Icon Composer PNG, use:
-
-```bash
-scripts/generate-app-icon-assets.sh --source-png /path/to/IconComposerExport.png
-```
-
-For other projects, copy `scripts/generate-icon-composer-appiconset.sh` and run it directly:
-
-```bash
-./generate-icon-composer-appiconset.sh /path/to/MyIcon.icon
-```
-
-By default it writes `AppIcon.appiconset` next to the input `.icon` package. To target an existing asset catalog:
-
-```bash
-./generate-icon-composer-appiconset.sh /path/to/MyIcon.icon \
-  --appiconset /path/to/Assets.xcassets/AppIcon.appiconset
 ```
 
 ## Command Line Build
@@ -53,19 +32,16 @@ By default it writes `AppIcon.appiconset` next to the input `.icon` package. To 
 ### Development Build
 
 ```bash
-xcodebuild -project Snapzy.xcodeproj -scheme Snapzy -configuration Debug build
+xcodebuild -project Notinhas.xcodeproj -scheme Notinhas -configuration Debug build
 ```
-
-Output: `~/Library/Developer/Xcode/DerivedData/Snapzy-*/Build/Products/Debug/Snapzy.app`
 
 ### Release Build (Unsigned)
 
 ```bash
-xcodebuild -project Snapzy.xcodeproj \
-  -scheme Snapzy \
+xcodebuild -project Notinhas.xcodeproj \
+  -scheme Notinhas \
   -configuration Release \
-  CODE_SIGN_IDENTITY="" \
-  CODE_SIGNING_REQUIRED=NO \
+  CODE_SIGNING_ALLOWED=NO \
   build
 ```
 
@@ -74,73 +50,60 @@ xcodebuild -project Snapzy.xcodeproj \
 Requires Apple Developer account.
 
 ```bash
-# 1. Create archive
-xcodebuild -project Snapzy.xcodeproj \
-  -scheme Snapzy \
+xcodebuild -project Notinhas.xcodeproj \
+  -scheme Notinhas \
   -configuration Release \
-  archive -archivePath Snapzy.xcarchive
-
-# 2. Export app bundle
-xcodebuild -exportArchive \
-  -archivePath Snapzy.xcarchive \
-  -exportPath ./exported_app \
-  -exportOptionsPlist ExportOptions.plist
+  archive -archivePath Notinhas.xcarchive
 ```
 
 ### Create DMG
 
-After exporting, create distributable DMG:
-
 ```bash
-# Using create-dmg (brew install create-dmg)
 create-dmg \
-  --volname "Snapzy" \
+  --volname "Notinhas" \
   --background "assets/dmg-background.png" \
   --window-size 660 400 \
   --icon-size 120 \
-  --icon "Snapzy.app" 180 170 \
+  --icon "Notinhas.app" 180 170 \
   --app-drop-link 480 170 \
   --no-internet-enable \
-  "Snapzy.dmg" \
-  "./exported_app/Snapzy.app"
+  "Notinhas.dmg" \
+  "./exported_app/Notinhas.app"
 ```
 
 ## Build Locations
 
 | Build Type | Location |
 |------------|----------|
-| Debug | `DerivedData/Snapzy-*/Build/Products/Debug/` |
-| Release | `DerivedData/Snapzy-*/Build/Products/Release/` |
-| Archive | `./Snapzy.xcarchive` |
-| Export | `./exported_app/Snapzy.app` |
+| Debug (script) | `.build/xcode-derived-data/Build/Products/Debug/Notinhas Debug.app` |
+| Release (script) | `.build/xcode-derived-data/Build/Products/Release/Notinhas.app` |
+| Archive | `./Notinhas.xcarchive` |
 
 ## Troubleshooting
-
-### "archive not found" Error
-
-You used `build` instead of `archive`. The `build` command outputs to DerivedData, not `.xcarchive`.
-
-```bash
-# Wrong
-xcodebuild ... build
-xcodebuild -exportArchive -archivePath Snapzy.xcarchive ...  # Fails!
-
-# Correct
-xcodebuild ... archive -archivePath Snapzy.xcarchive
-xcodebuild -exportArchive -archivePath Snapzy.xcarchive ...  # Works!
-```
 
 ### Code Signing Issues
 
 For local testing without signing:
 
 ```bash
-xcodebuild ... CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO build
+xcodebuild ... CODE_SIGNING_ALLOWED=NO build
 ```
 
 ### Clean Build
 
 ```bash
-xcodebuild -project Snapzy.xcodeproj -scheme Snapzy clean
-rm -rf ~/Library/Developer/Xcode/DerivedData/Snapzy-*
+xcodebuild -project Notinhas.xcodeproj -scheme Notinhas clean
+rm -rf ~/Library/Developer/Xcode/DerivedData/Notinhas-*
 ```
+
+## Bundle verification
+
+After Release build:
+
+```bash
+APP=".build/xcode-derived-data/Build/Products/Release/Notinhas.app"
+plutil -p "$APP/Contents/Info.plist" | rg 'CFBundleIdentifier|CFBundleName|CFBundleURLSchemes'
+find "$APP/Contents/Frameworks" -name 'Sparkle.framework' 2>/dev/null
+```
+
+Expect `com.mourato.notinhas`, `notinhas` URL scheme, and no Sparkle framework.

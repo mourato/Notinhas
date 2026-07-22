@@ -24,8 +24,8 @@ Start here to route work to the narrowest skill. For governance (where docs live
 | `debugging-diagnostics` | Troubleshooting | Permissions, signing/TCC, export/clipboard, ImgBB errors |
 | `data-persistence` | Session / UserDefaults | Notinhas session restore, ImgBB key name, panel side prefs |
 | `swift-concurrency-expert` | Actors / async | MainActor UI, export/upload isolation |
-| `swift-conventions` | Swift style | Naming, SwiftFormat, Snapzy layout |
-| `testing-xctest` | XCTest | `SnapzyTests/`, especially `Features/Notinhas/` |
+| `swift-conventions` | Swift style | Naming, SwiftFormat, Notinhas layout |
+| `testing-xctest` | XCTest | `NotinhasTests/`, especially `Features/Notinhas/` |
 | `localization` | Strings | xcstrings, NotinhasL10n, accessible copy |
 | `code-quality` | Refactors | Deduplication, dead code, fork coherence |
 

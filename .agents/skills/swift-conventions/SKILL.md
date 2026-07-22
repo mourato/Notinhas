@@ -1,11 +1,11 @@
 ---
 name: swift-conventions
-description: Swift coding conventions for Notinhas — naming, SwiftFormat, type safety, and Snapzy/SnapzyTests layout.
+description: Swift coding conventions for Notinhas — naming, SwiftFormat, type safety, and Notinhas/NotinhasTests layout.
 ---
 
 # Swift Conventions
 
-Use when editing Swift under `Snapzy/` or `SnapzyTests/`.
+Use when editing Swift under `Notinhas/` or `NotinhasTests/`.
 
 ## Rules
 
@@ -14,14 +14,14 @@ Use when editing Swift under `Snapzy/` or `SnapzyTests/`.
 - Avoid force unwraps unless failure is truly impossible and localized.
 - Match `.swiftformat` (2-space indent, 120-column max, Swift 5.9) via `swiftformat <paths…>` from the repo root.
 - Use `// MARK:` in large types for navigation.
-- Keep Notinhas-specific code in `Snapzy/Features/Notinhas/`; keep Annotate/Capture integration thin.
+- Keep Notinhas-specific code in `Notinhas/Features/Notinhas/`; keep Annotate/Capture integration thin.
 
 ## Layout
 
-- App shell: `Snapzy/App/`
-- Features: `Snapzy/Features/` (Notinhas under `Features/Notinhas/`)
-- Services: `Snapzy/Services/`
-- Tests mirror app: `SnapzyTests/Features/Notinhas/`, etc.
+- App shell: `Notinhas/App/`
+- Features: `Notinhas/Features/` (Notinhas under `Features/Notinhas/`)
+- Services: `Notinhas/Services/`
+- Tests mirror app: `NotinhasTests/Features/Notinhas/`, etc.
 
 ## Tooling
 
@@ -29,13 +29,13 @@ Install once: `brew install swiftformat`. Run from the repo root so `.swiftforma
 
 ```bash
 # app + tests (typical)
-swiftformat Snapzy SnapzyTests
+swiftformat Snapzy NotinhasTests
 
 # Notinhas-only
-swiftformat Snapzy/Features/Notinhas SnapzyTests/Features/Notinhas
+swiftformat Notinhas/Features/Notinhas NotinhasTests/Features/Notinhas
 
 # lint without writing (CI-style)
-swiftformat --lint Snapzy SnapzyTests
+swiftformat --lint Snapzy NotinhasTests
 ```
 
 ## Related

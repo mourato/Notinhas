@@ -13,19 +13,19 @@ Build/run failures, choosing verification depth, assessing merge readiness, or G
 
 | Command | Purpose |
 | ------- | ------- |
-| `open Snapzy.xcodeproj` | Develop and run in Xcode (`⌘R`). Default scheme **Snapzy** = Video module off. |
+| `open Notinhas.xcodeproj` | Develop and run in Xcode (`⌘R`). Default scheme **Notinhas** = Video module off. |
 | `./scripts/build_and_run.sh` | Build and launch the isolated debug app (codesign via `LOCAL_CODE_SIGN_IDENTITY`, default `Prisma Local Code Signing`). Interactive prompt asks whether to include the Video module; non-interactive: `--video-module`, `--no-video-module`, or `ENABLE_VIDEO_MODULE=1` / `0`. |
-| `./scripts/build_and_run.sh --video-module` | Build with Recording + Video Editor (`Snapzy Video` scheme, **Debug+Video** / **Release+Video**). |
-| `./scripts/build_and_run.sh --no-video-module` | Explicit default: **Snapzy** scheme, module off. |
-| `./scripts/run-tests.sh` | Run the XCTest suite with default **Snapzy** scheme (**Debug**); results under `build/`. Recording/VideoEditor tests are **not** compiled in. |
-| `./scripts/run-tests.sh --video-module` | Run Recording/VideoEditor XCTests (**Snapzy Video** / **Debug+Video**). Also: `ENABLE_VIDEO_MODULE=1` or `--no-video-module`. |
-| `swiftformat <paths…>` | Format Swift in place (`brew install swiftformat`; `.swiftformat`: 2-space indent, 120 columns). Scope paths as needed — e.g. `swiftformat Snapzy SnapzyTests`. |
+| `./scripts/build_and_run.sh --video-module` | Build with Recording + Video Editor (`Notinhas Video` scheme, **Debug+Video** / **Release+Video**). |
+| `./scripts/build_and_run.sh --no-video-module` | Explicit default: **Notinhas** scheme, module off. |
+| `./scripts/run-tests.sh` | Run the XCTest suite with default **Notinhas** scheme (**Debug**); results under `build/`. Recording/VideoEditor tests are **not** compiled in. |
+| `./scripts/run-tests.sh --video-module` | Run Recording/VideoEditor XCTests (**Notinhas Video** / **Debug+Video**). Also: `ENABLE_VIDEO_MODULE=1` or `--no-video-module`. |
+| `swiftformat <paths…>` | Format Swift in place (`brew install swiftformat`; `.swiftformat`: 2-space indent, 120 columns). Scope paths as needed — e.g. `swiftformat Notinhas NotinhasTests`. |
 
 Do **not** treat plain `swift build` as sufficient acceptance — Info.plist, signing, and Screen Recording permissions matter for capture flows.
 
 ### Optional Video Module
 
-- **Compile gate:** `NOTINHAS_VIDEO_MODULE` — set by **Snapzy Video** scheme configurations **Debug+Video** / **Release+Video**. Default **Snapzy** scheme excludes Recording and Video Editor sources and their XCTests (`#if NOTINHAS_VIDEO_MODULE`).
+- **Compile gate:** `NOTINHAS_VIDEO_MODULE` — set by **Notinhas Video** scheme configurations **Debug+Video** / **Release+Video**. Default **Notinhas** scheme excludes Recording and Video Editor sources and their XCTests (`#if NOTINHAS_VIDEO_MODULE`).
 - **Runtime gate:** `VideoModuleAvailability` — UserDefaults key `videoModule.enabled`, default off; Advanced preferences toggle when compiled in.
 - **Notinhas merge gate:** default `./scripts/run-tests.sh` (module off) is sufficient for capture/annotate/export work. Run `./scripts/run-tests.sh --video-module` when touching Recording, Video Editor, or video-gated shell/prefs/history paths.
 
@@ -37,17 +37,17 @@ Screen Recording and Accessibility TCC grants follow the code signature. Ad-hoc 
 
 ### Merge Gate (current)
 
-1. `swiftformat <paths…>` on the Swift paths you changed (or confirm no Swift changes). Typical scope: `swiftformat Snapzy SnapzyTests`.
+1. `swiftformat <paths…>` on the Swift paths you changed (or confirm no Swift changes). Typical scope: `swiftformat Notinhas NotinhasTests`.
 2. `./scripts/run-tests.sh` for logic touched, or filtered `-only-testing:` for focused suites
 3. Manual smoke appropriate to the diff (below)
 
 ### Scope Matrix
 
 - Pure refactor / docs: tests relevant to change + `./scripts/build_and_run.sh` once if shell paths touched.
-- Notinhas notes / export / geometry: run `SnapzyTests/Features/Notinhas/*` suites; manual capture → annotate → copy brief.
+- Notinhas notes / export / geometry: run `NotinhasTests/Features/Notinhas/*` suites; manual capture → annotate → copy brief.
 - Capture / permissions: confirm Screen Recording grant path; menu items disabled when permission missing.
 - Persistence: relaunch; confirm Notinhas session restore and ImgBB key round-trip (key name only in logs).
-- Upstream Snapzy merge: `./scripts/run-tests.sh` + capture/annotate smoke; preserve `Snapzy/Features/Notinhas/`.
+- Upstream Snapzy merge: `./scripts/run-tests.sh` + capture/annotate smoke; preserve `Notinhas/Features/Notinhas/`.
 
 ## Git Evidence
 

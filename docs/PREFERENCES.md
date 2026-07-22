@@ -1,16 +1,16 @@
 # Preferences
 
-Reference for the Settings window: tab structure, every section, and how preferences are stored. Verified against `Snapzy/Features/Preferences/` at HEAD (`v1.30.0-beta.4`).
+Reference for the Settings window: tab structure, every section, and how preferences are stored. Verified against `Notinhas/Features/Preferences/` at HEAD (`v1.30.0-beta.4`).
 
 ## Root
 
-- `PreferencesView` (`Snapzy/Features/Preferences/PreferencesView.swift`) — SwiftUI `TabView`, fixed 760×550, 10 tabs.
-- Selection driven by `PreferencesNavigationState.shared.selectedTab` (`Models/PreferencesNavigationState.swift`, `PreferencesTab` enum) — set programmatically from menu bar, deep links (`snapzy://settings?tab=`, see [SHORTCUTS.md](SHORTCUTS.md)), and the shortcut overlay.
-- Presented through the `Settings` scene in `SnapzyApp`; activation-policy dance handled by `AppStatusBarController` (see [APP_LIFECYCLE.md](APP_LIFECYCLE.md)).
+- `PreferencesView` (`Notinhas/Features/Preferences/PreferencesView.swift`) — SwiftUI `TabView`, fixed 760×550, nine tabs (no About/update/report tab).
+- Selection driven by `PreferencesNavigationState.shared.selectedTab` (`Models/PreferencesNavigationState.swift`, `PreferencesTab` enum) — set programmatically from menu bar, deep links (`notinhas://settings?tab=`, see [SHORTCUTS.md](SHORTCUTS.md)), and the shortcut overlay.
+- Presented through the `Settings` scene in `NotinhasApp`; activation-policy dance handled by `AppStatusBarController` (see [APP_LIFECYCLE.md](APP_LIFECYCLE.md)).
 
 ## Storage pattern
 
-- Simple prefs: `@AppStorage(PreferencesKeys.*)` directly in views; keys centralized in `Snapzy/Features/Preferences/Models/PreferencesKeys.swift`.
+- Simple prefs: `@AppStorage(PreferencesKeys.*)` directly in views; keys centralized in `Notinhas/Features/Preferences/Models/PreferencesKeys.swift`.
 - Complex structured prefs: `PreferencesManager.shared` (`PreferencesManager.swift`) behind the `PreferencesProviding` protocol (`PreferencesProviding.swift`) for DI.
 - TOML export/import covers most prefs — see [CONFIGURATION.md](CONFIGURATION.md).
 
@@ -21,15 +21,14 @@ Reference for the Settings window: tab structure, every section, and how prefere
 - **Startup**: Start at Login (`LoginItemManager` / SMAppService), Play Sounds (`playSounds`), Show Menu Bar Icon (`showMenuBarIcon`).
 - **Appearance**: Language row (`PreferencesLanguageSettingRow`), theme picker (`AppearanceModePicker` → `appearanceMode`).
 - **Storage**: Save Location (`exportLocation` + `exportLocation.bookmark`, via `SandboxFileAccessManager`).
-- **Updates**: Check Automatically / Download Automatically (bound to `SPUUpdater`), Last Checked — see [UPDATES.md](UPDATES.md).
-- **Help**: Restart Onboarding (`OnboardingFlowView.resetOnboarding()` + `.showOnboarding`), Report Issue (opens bug-report page; full bundle flow in [UPDATES.md](UPDATES.md)).
+- **Help**: Restart Onboarding (`OnboardingFlowView.resetOnboarding()` + `.showOnboarding`).
 
 ### Capture (`PreferencesCaptureSettingsView.swift`)
 
 Segmented into three panes (`CaptureSettingsPane`): General / Screenshot / Recording.
 
 - **General pane**:
-  - App Windows: Include Snapzy windows in screenshots (`screenshot.includeOwnApp`) / in recordings (`recording.includeOwnApp`).
+  - App Windows: Include Notinhas windows in screenshots (`screenshot.includeOwnApp`) / in recordings (`recording.includeOwnApp`).
   - Desktop: Hide Desktop Icons (`hideDesktopIcons`), Hide Desktop Widgets (`hideDesktopWidgets`).
   - Overlay: Show Selection Area Overlay (`screenshot.showSelectionAreaOverlay`).
   - Magnifier: Reverse Magnifier Zoom Direction (`screenshot.reverseMagnifierZoomDirection`).
@@ -96,17 +95,10 @@ Provider configuration, credentials, expiration, usage stats, and the Cloud Uplo
 
 ### Advanced (`PreferencesAdvancedSettingsView.swift`)
 
-- **Backup**: TOML Import / Export / Restore Defaults (`SnapzyConfiguration*` services).
-- **Configuration File**: grant access to `~/.config/snapzy`, Sync Now, Open Config, status/issues — see [CONFIGURATION.md](CONFIGURATION.md).
+- **Backup**: TOML Import / Export / Restore Defaults (`NotinhasConfiguration*` services).
+- **Configuration File**: grant access to `~/.config/notinhas`, Sync Now, Open Config, status/issues — see [CONFIGURATION.md](CONFIGURATION.md).
 - **Integration**: URL Scheme toggle (`urlSchemeEnabled`).
-- **Diagnostics**: enable toggle (`diagnostics.enabled`), retention days (`diagnostics.retentionDays`, default 3, range 1–30 via `LogCleanupScheduler`), Open Folder (`~/Library/Logs/Snapzy`) — see [UPDATES.md](UPDATES.md).
-
-### About (`PreferencesAboutSettingsView.swift`)
-
-- App icon/name/version+build, last update check.
-- Check for Updates + Report a Problem (`CrashReportService.presentAlert()`) — see [UPDATES.md](UPDATES.md).
-- Update channel picker (`UpdateChannelSectionView` / `PreferencesUpdateChannelSection.swift`) — stable/beta.
-- Sponsor links (`SponsorLinks`), website/GitHub/issues link row.
+- **Diagnostics**: enable toggle (`diagnostics.enabled`), retention days (`diagnostics.retentionDays`, default 3, range 1–30 via `LogCleanupScheduler`), Open Folder (`~/Library/Logs/Notinhas`) — see [UPDATES.md](UPDATES.md).
 
 ## After-capture matrix
 
@@ -129,7 +121,7 @@ flowchart LR
 
 - [SHORTCUTS.md](SHORTCUTS.md) — shortcut mechanics, defaults, conflicts
 - [CLOUD.md](CLOUD.md) — Cloud tab + uploads window
-- [UPDATES.md](UPDATES.md) — update channel, diagnostics, problem reporting
+- [UPDATES.md](UPDATES.md) — local diagnostics and manual upgrade notes
 - [APP_LIFECYCLE.md](APP_LIFECYCLE.md) — seeded defaults, activation policy, onboarding
 - [CONFIGURATION.md](CONFIGURATION.md) — TOML backup/sync of these prefs
 - [QUICK_ACCESS.md](QUICK_ACCESS.md) — overlay behavior details

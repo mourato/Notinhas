@@ -1,11 +1,11 @@
 ---
 name: testing-xctest
-description: XCTest guidance for Notinhas — geometry, composer, annotate state, ImgBB parsing, and SnapzyTests layout.
+description: XCTest guidance for Notinhas — geometry, composer, annotate state, ImgBB parsing, and NotinhasTests layout.
 ---
 
 # Testing (XCTest)
 
-Use when adding or changing automated tests under `SnapzyTests/`.
+Use when adding or changing automated tests under `NotinhasTests/`.
 
 ## When Adding Tests
 
@@ -16,14 +16,14 @@ Use when adding or changing automated tests under `SnapzyTests/`.
 
 ## Structure
 
-- Mirror source names: `SnapzyTests/Features/Notinhas/NotinhasNoteGeometryTests.swift`, etc.
+- Mirror source names: `NotinhasTests/Features/Notinhas/NotinhasNoteGeometryTests.swift`, etc.
 - One behavior per test name; assert observable outcomes, not private implementation details.
 
 ## Commands
 
 ```bash
 ./scripts/run-tests.sh
-./scripts/run-tests.sh -only-testing:SnapzyTests/NotinhasNoteGeometryTests
+./scripts/run-tests.sh -only-testing:NotinhasTests/NotinhasNoteGeometryTests
 ```
 
 ## Related

@@ -1,12 +1,12 @@
 name: ✨ Feature Request
-description: Suggest a new feature or improvement for Snapzy
+description: Suggest a new feature or improvement for Notinhas
 title: "[Feature]: "
 labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for suggesting a feature! Please describe your idea so we can evaluate and prioritize it.
+        Thanks for suggesting a feature! Notinhas prioritizes the visual-handoff loop (capture → numbered pins/notes → clipboard export). Please describe how your idea supports that workflow.
 
   - type: textarea
     id: problem
@@ -22,7 +22,7 @@ body:
     attributes:
       label: Proposed Solution
       description: Describe the solution or feature you'd like to see.
-      placeholder: It would be great if Snapzy could...
+      placeholder: It would be great if Notinhas could...
     validations:
       required: true
 
@@ -38,17 +38,17 @@ body:
     id: feature-area
     attributes:
       label: Feature Area
-      description: Which part of Snapzy does this relate to?
+      description: Which part of Notinhas does this relate to?
       options:
-        - Screenshots
-        - Screen Recording
-        - Annotation / Editing
-        - OCR / Text Extraction
-        - Menu Bar / UI
-        - Shortcuts / Quick Access
-        - Export / Sharing
-        - Settings / Preferences
-        - Auto-Update (Sparkle)
+        - Capture / Screenshots
+        - Notinhas pins & notes
+        - Annotate / Export / Clipboard
+        - Quick Access
+        - Capture History
+        - Shortcuts / URL scheme
+        - Preferences / Configuration
+        - Optional Video module
+        - Migration / Upgrade
         - Other
     validations:
       required: true
@@ -57,7 +57,7 @@ body:
     id: mockups
     attributes:
       label: Mockups / References
-      description: If you have any mockups, sketches, or references from other apps, attach them here.
+      description: If you have mockups, sketches, or references, attach them here.
     validations:
       required: false
 

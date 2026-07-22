@@ -9,7 +9,7 @@ Use when adding or changing user-visible strings, tooltips, permission toasts, o
 
 ## Rules
 
-- User-facing text lives in Snapzy localization (`*.xcstrings`) and `NotinhasL10n` where Notinhas-specific.
+- User-facing text lives in Notinhas localization (`Notinhas/Resources/Localization/*.xcstrings`) and `L10n` / Notinhas-specific helpers.
 - Keep tone short and direct — designer handoff, not marketing prose.
 - Use stable keys; do not concatenate sentences in code for grammar-sensitive languages.
 - Accessible labels should describe the action (“Add note”, “Copy to clipboard”, “Upload image”), not only the visual glyph.

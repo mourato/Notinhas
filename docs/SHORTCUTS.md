@@ -1,8 +1,8 @@
 # Shortcuts & URL Scheme Automation
 
-Global keyboard shortcuts, in-overlay capture shortcuts, Annotate editor shortcuts, conflict detection, the cheat-sheet overlay, and the `snapzy://` deep-link route table.
+Global keyboard shortcuts, in-overlay capture shortcuts, Annotate editor shortcuts, conflict detection, the cheat-sheet overlay, and the `notinhas://` deep-link route table.
 
-Verified against `Snapzy/Services/Shortcuts/`, `Snapzy/Features/Shortcuts/`, `Snapzy/Features/Annotate/Services/AnnotateShortcutManager.swift`, `Snapzy/App/SnapzyDeepLinkHandler.swift`, `Snapzy/Services/Capture/CaptureOverlayShortcutSettings.swift` at HEAD (`v1.30.0-beta.4`).
+Verified against `Notinhas/Services/Shortcuts/`, `Notinhas/Features/Shortcuts/`, `Notinhas/Features/Annotate/Services/AnnotateShortcutManager.swift`, `Notinhas/App/NotinhasDeepLinkHandler.swift`, `Notinhas/Services/Capture/CaptureOverlayShortcutSettings.swift` at HEAD (`v1.30.0-beta.4`).
 
 ## Global shortcut mechanism
 
@@ -18,13 +18,13 @@ flowchart TD
     F --> G["dispatch to capture / record / open actions"]
 ```
 
-- Engine: `KeyboardShortcutManager.shared` (`Snapzy/Services/Shortcuts/KeyboardShortcutManager.swift`) — Carbon `RegisterEventHotKey` / `UnregisterEventHotKey`; hotkey IDs use signatures `ZSF1`…`ZSFK` (`0x5A53_46xx`).
+- Engine: `KeyboardShortcutManager.shared` (`Notinhas/Services/Shortcuts/KeyboardShortcutManager.swift`) — Carbon `RegisterEventHotKey` / `UnregisterEventHotKey`; hotkey IDs use signatures `ZSF1`…`ZSFK` (`0x5A53_46xx`).
 - Config model: `ShortcutConfig { keyCode: UInt32, modifiers: UInt32 }` (Carbon modifiers), persisted as JSON in UserDefaults under per-shortcut keys (`fullscreenShortcut`, `areaShortcut`, `recordingShortcut`, …).
 - Fn modifier: custom bit `ShortcutConfig.functionCarbonModifier = 0x2000`. Carbon `RegisterEventHotKey` cannot express Fn, so Fn-containing configs are **not** Carbon-registered — they are collected into `fnBindings` and dispatched via global+local `NSEvent` keyDown monitors (`updateFnMonitors()` / `handleFnKeyDown`), matched exactly (keyCode + full modifier set incl. Fn) by `ShortcutConfig.matches(event:)`. Fn-only combos (e.g. `fn+F3`) and Fn+modifier combos (e.g. `fn+⌘+F3`) both fire; the non-Fn sibling combo is never hijacked.
   - Requires Accessibility permission (global key monitors silently deliver nothing without it) — the Shortcuts settings tab shows a hint row when an Fn binding exists but `AXIsProcessTrusted()` is false (`KeyboardShortcutManager.hasFnBoundShortcuts`).
   - Monitors are passive: unlike Carbon hotkeys, the frontmost app still receives the keystroke.
   - Monitors are installed only while `shouldRegisterShortcuts` holds and at least one Fn binding exists; temporary suppression (shortcut recording) removes them.
-- Delegate: `KeyboardShortcutDelegate.shortcutTriggered(ShortcutAction)` — implemented by `ScreenCaptureViewModel` (`Snapzy/Features/Capture/CaptureViewModel.swift`).
+- Delegate: `KeyboardShortcutDelegate.shortcutTriggered(ShortcutAction)` — implemented by `ScreenCaptureViewModel` (`Notinhas/Features/Capture/CaptureViewModel.swift`).
 - Global enable: `shortcutsEnabled` UserDefaults flag; `enable()` / `disable()` re-register everything. Restored at init if previously enabled.
 - Temporary suspension: `beginTemporaryShortcutSuppression()` / `endTemporaryShortcutSuppression()` — refcounted, unregisters hotkeys without touching the persisted enabled flag (used while recording shortcut input).
 - Per-shortcut disable set: `shortcuts.disabledGlobalActions` (`PreferencesKeys.disabledGlobalShortcuts`).
@@ -60,7 +60,7 @@ All 18 `GlobalShortcutKind`s with shipping defaults (verified in `KeyboardShortc
 
 ## Overlay shortcuts (in-overlay, not plain global hotkeys)
 
-`CaptureOverlayShortcutSettings` (`Snapzy/Services/Capture/CaptureOverlayShortcutSettings.swift`):
+`CaptureOverlayShortcutSettings` (`Notinhas/Services/Capture/CaptureOverlayShortcutSettings.swift`):
 
 - Two kinds: `applicationCapture` and `applicationRecording`; both default to single key **A** with no modifiers (child mode).
 - Child mode (modifiers == 0): pressed *inside* the area-selection / recording overlay to switch to application-window mode. Menu bar items show it as a suffix of the parent shortcut.
@@ -75,7 +75,7 @@ All 18 `GlobalShortcutKind`s with shipping defaults (verified in `KeyboardShortc
 
 ## Annotate editor shortcuts
 
-`AnnotateShortcutManager` (`Snapzy/Features/Annotate/Services/AnnotateShortcutManager.swift`):
+`AnnotateShortcutManager` (`Notinhas/Features/Annotate/Services/AnnotateShortcutManager.swift`):
 
 - 14 tool single-key shortcuts (`AnnotationToolType.defaultShortcut`, remappable): crop, selection, rectangle, filledRectangle, oval, arrow, line, text, highlighter, blur, spotlight, counter, watermark, pencil. (`mockup` excluded — internal only.)
 - Tool keys stored per-tool under prefix `annotate.shortcut.`; per-tool disable set `shortcuts.disabledAnnotateToolShortcuts`.
@@ -93,7 +93,7 @@ All 18 `GlobalShortcutKind`s with shipping defaults (verified in `KeyboardShortc
 
 ## Conflict detection
 
-`ShortcutValidationService` (`Snapzy/Services/Shortcuts/ShortcutValidationService.swift`):
+`ShortcutValidationService` (`Notinhas/Services/Shortcuts/ShortcutValidationService.swift`):
 
 - Cross-namespace duplicate checks (global ↔ annotate action ↔ independent overlay ↔ annotate tool): duplicate → `.reject` with `.error` severity, blocks assignment.
 - System screenshot conflicts: `SystemScreenshotShortcutManager` reads `com.apple.symbolichotkeys` via `UserDefaults(suiteName:)` (requires the shared-preference entitlement — see [APP_LIFECYCLE.md](APP_LIFECYCLE.md)). Symbolic hotkey IDs: 28 (save area), 29 (copy area), 30 (save screen), 31 (copy screen), 184 (screenshot options).
@@ -102,49 +102,49 @@ All 18 `GlobalShortcutKind`s with shipping defaults (verified in `KeyboardShortc
 
 ## Shortcut cheat sheet overlay
 
-- `ShortcutOverlayManager` (`Snapzy/Features/Shortcuts/ShortcutOverlayManager.swift`) — full-screen borderless `NSPanel` (`.screenSaver` level, joins all spaces), content from `ShortcutOverlayContentBuilder.buildSections()` (`Snapzy/Features/Shortcuts/ShortcutOverlayModels.swift`).
-- Open/toggle: ⇧⌘K, menu bar → Keyboard Shortcuts, or `snapzy://show/shortcuts`. Blocked while recording (`RecordingCoordinator.shared.isActive` guard).
+- `ShortcutOverlayManager` (`Notinhas/Features/Shortcuts/ShortcutOverlayManager.swift`) — full-screen borderless `NSPanel` (`.screenSaver` level, joins all spaces), content from `ShortcutOverlayContentBuilder.buildSections()` (`Notinhas/Features/Shortcuts/ShortcutOverlayModels.swift`).
+- Open/toggle: ⇧⌘K, menu bar → Keyboard Shortcuts, or `notinhas://show/shortcuts`. Blocked while recording (`RecordingCoordinator.shared.isActive` guard).
 - Esc closes (local + global monitors); "Open Settings" deep-links to Settings → Shortcuts.
 
 ## URL scheme automation
 
-Scheme: `snapzy://` (registered in `Snapzy/Resources/Info.plist` `CFBundleURLTypes`).
+Scheme: `notinhas://` (registered in `Notinhas/Resources/Info.plist` `CFBundleURLTypes`).
 
 Gate: `urlSchemeEnabled` (default `true`; Settings → Advanced → URL Scheme integration). Disabled or unknown routes are logged and ignored.
 
-Dispatch: AppleEvent `kAEGetURL` → `AppDelegate` (queued pre-launch) → `AppCoordinator.handleDeepLink` → `SnapzyDeepLinkHandler` (`Snapzy/App/SnapzyDeepLinkHandler.swift`); routes parsed by `SnapzyDeepLinkAction.init?(url:)`.
+Dispatch: AppleEvent `kAEGetURL` → `AppDelegate` (queued pre-launch) → `AppCoordinator.handleDeepLink` → `NotinhasDeepLinkHandler` (`Notinhas/App/NotinhasDeepLinkHandler.swift`); routes parsed by `NotinhasDeepLinkAction.init?(url:)`.
 
 ### Canonical route table
 
 | Route | Action |
 | --- | --- |
-| `snapzy://capture/fullscreen` | Capture fullscreen |
-| `snapzy://capture/area` | Capture area |
-| `snapzy://capture/application` | Application-window capture |
-| `snapzy://capture/active-window` | Capture active window |
-| `snapzy://capture/area-annotate` | Capture area → Annotate |
-| `snapzy://capture/scrolling` | Scrolling capture |
-| `snapzy://capture/ocr` | OCR capture |
-| `snapzy://capture/smart-element` | Smart Element capture |
-| `snapzy://capture/object-cutout` | Object cutout |
-| `snapzy://record/screen` | Start screen recording |
-| `snapzy://record/application` | Application-window recording |
-| `snapzy://open/annotate` | Open empty Annotate editor |
-| `snapzy://open/combine` | Combine images (see params below) |
-| `snapzy://open/video-editor` | Open empty Video Editor |
-| `snapzy://open/cloud-uploads` | Toggle Cloud Uploads window |
-| `snapzy://open/history` | Toggle History panel |
-| `snapzy://show/shortcuts` | Toggle shortcut cheat sheet |
-| `snapzy://settings` / `snapzy://settings?tab=<tab>` | Open Settings, optionally to a tab |
+| `notinhas://capture/fullscreen` | Capture fullscreen |
+| `notinhas://capture/area` | Capture area |
+| `notinhas://capture/application` | Application-window capture |
+| `notinhas://capture/active-window` | Capture active window |
+| `notinhas://capture/area-annotate` | Capture area → Annotate |
+| `notinhas://capture/scrolling` | Scrolling capture |
+| `notinhas://capture/ocr` | OCR capture |
+| `notinhas://capture/smart-element` | Smart Element capture |
+| `notinhas://capture/object-cutout` | Object cutout |
+| `notinhas://record/screen` | Start screen recording |
+| `notinhas://record/application` | Application-window recording |
+| `notinhas://open/annotate` | Open empty Annotate editor |
+| `notinhas://open/combine` | Combine images (see params below) |
+| `notinhas://open/video-editor` | Open empty Video Editor |
+| `notinhas://open/cloud-uploads` | Toggle Cloud Uploads window |
+| `notinhas://open/history` | Toggle History panel |
+| `notinhas://show/shortcuts` | Toggle shortcut cheat sheet |
+| `notinhas://settings` / `notinhas://settings?tab=<tab>` | Open Settings, optionally to a tab |
 
 - `open/combine` query params: repeat `?file=` with absolute paths; ≥2 valid files → combines directly, otherwise opens the combine picker (`CombineImagesCoordinator.presentPicker()`). Example:
 
   ```sh
-  open 'snapzy://open/combine?file=/tmp/first.png&file=/tmp/second.png'
+  open 'notinhas://open/combine?file=/tmp/first.png&file=/tmp/second.png'
   ```
 
-- Settings tabs: `general`, `capture`, `annotate`, `quick-access`, `history`, `shortcuts`, `permissions`, `cloud`, `advanced`, `about`. Also accepted as path form (`snapzy://settings/capture`).
-- Aliases exist for most routes — e.g. `capture/focused-window`, `capture/window`, `record/window`, `screenshot/area`, `ocr`, `annotate`, `combine`, `uploads`, `history`, `shortcuts`, `preferences`, plus tab aliases (`screenshots`, `privacy`, `config`, `toml`, …). Full alias list: `SnapzyDeepLinkAction.init?(url:)` in `Snapzy/App/SnapzyDeepLinkHandler.swift`.
+- Settings tabs: `general`, `capture`, `annotate`, `quick-access`, `history`, `shortcuts`, `permissions`, `cloud`, `advanced`, `about`. Also accepted as path form (`notinhas://settings/capture`).
+- Aliases exist for most routes — e.g. `capture/focused-window`, `capture/window`, `record/window`, `screenshot/area`, `ocr`, `annotate`, `combine`, `uploads`, `history`, `shortcuts`, `preferences`, plus tab aliases (`screenshots`, `privacy`, `config`, `toml`, …). Full alias list: `NotinhasDeepLinkAction.init?(url:)` in `Notinhas/App/NotinhasDeepLinkHandler.swift`.
 
 ## Related docs
 

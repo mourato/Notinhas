@@ -11,7 +11,7 @@ Canonical owner for Notinhas visual-handoff behavior: capture an area, place num
 
 ## Scope Boundary
 
-- Own the Notinhas module (`Snapzy/Features/Notinhas/`) and its thin hooks into Capture/Annotate export/clipboard.
+- Own the Notinhas module (`Notinhas/Features/Notinhas/`) and its thin hooks into Capture/Annotate export/clipboard.
 - Delegate menu-bar shell details to `menubar` / `macos-app-engineering`.
 - Delegate generic Swift style, concurrency, tests, and delivery commands to their skills.
 - Do **not** use this skill to grow broad screen recording, generic markup toolbelts, or unrelated cloud features unless the change directly serves the handoff loop.
@@ -31,9 +31,9 @@ Use when the user asks to change Notinhas notes/pins/rects, note editor UX, note
 
 | Concern | Path / symbol |
 |---------|----------------|
-| Geometry (pure) | `Snapzy/Features/Notinhas/Services/NotinhasNoteGeometry.swift` |
-| Note model | `Snapzy/Features/Notinhas/Models/NotinhasVisualNote.swift` |
-| State mutations | `Snapzy/Features/Notinhas/Annotate/NotinhasAnnotateState.swift` |
+| Geometry (pure) | `Notinhas/Features/Notinhas/Services/NotinhasNoteGeometry.swift` |
+| Note model | `Notinhas/Features/Notinhas/Models/NotinhasVisualNote.swift` |
+| State mutations | `Notinhas/Features/Notinhas/Annotate/NotinhasAnnotateState.swift` |
 | Editor UI | `NotinhasNoteEditorView` / `NotinhasNoteEditorCanvasOverlay` |
 | Side panel | `NotinhasNotesSidePanelView` |
 | Composition | `NotinhasNotesComposer`, `NotinhasNoteRenderer` |
@@ -45,7 +45,7 @@ Use when the user asks to change Notinhas notes/pins/rects, note editor UX, note
 
 ## Invariants
 
-- Keep Notinhas-specific logic inside `Snapzy/Features/Notinhas/` when possible; Annotate/Capture edits stay thin.
+- Keep Notinhas-specific logic inside `Notinhas/Features/Notinhas/` when possible; Annotate/Capture edits stay thin.
 - Pin/rect display order and export transforms go through `NotinhasNoteGeometry` — do not fork ad-hoc numbering in views.
 - Export preview and clipboard must include the notes panel when renderable notes exist.
 - UI on MainActor; pure geometry/`CGContext` work may be `nonisolated` as in existing code.
@@ -58,7 +58,7 @@ Reject or narrow requests that primarily add: full recording suites, generic sha
 
 ## Verification
 
-- Pure logic: `./scripts/run-tests.sh -only-testing:SnapzyTests/NotinhasNoteGeometryTests` (and other `SnapzyTests/Features/Notinhas/*` as touched).
+- Pure logic: `./scripts/run-tests.sh -only-testing:NotinhasTests/NotinhasNoteGeometryTests` (and other `NotinhasTests/Features/Notinhas/*` as touched).
 - Manual: Screen Recording granted → area capture → add pin + rect notes → Preview/export → copy → paste shows markers + notes panel.
 - Permission regressions: confirm capture still disabled/prompting correctly when Screen Recording is off.
 

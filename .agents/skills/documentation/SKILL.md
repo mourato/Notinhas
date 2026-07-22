@@ -1,6 +1,6 @@
 ---
 name: documentation
-description: Documentation guidance for Notinhas — README, AGENTS.md, upstream docs/, skills routing, and MARK organization in sources.
+description: Documentation guidance for Notinhas — README, AGENTS.md, docs/, skills routing, and MARK organization in sources.
 ---
 
 # Documentation
@@ -9,27 +9,26 @@ Use when updating project docs, agent guidance, or in-source section markers.
 
 ## Ownership
 
-- **README.md** — upstream Snapzy human docs (features, install, development). Do not rewrite as a Notinhas-only pitch unless product direction changes.
-- **AGENTS.md** — canonical agent guide for Notinhas (product intent, structure, commands, fork workflow). Edit this file for agent policy.
-- **docs/** — upstream Snapzy engineering docs (`CAPTURE.md`, `ANNOTATE.md`, `POST_CAPTURE.md`, etc.). Keep in sync when touching those flows; do not invent parallel root markdown backlogs for agent ops.
+- **README.md** — Notinhas product docs (install, handoff workflow, development). Localized: `README.vi.md`, `README.zh-CN.md`.
+- **AGENTS.md** — canonical agent guide (product intent, structure, commands, fork workflow).
+- **docs/** — engineering docs; `MIGRATION.md`, `RELEASES.md`, and `UPDATES.md` describe Notinhas distribution (no Sparkle).
 - **`.agents/skills/`** — reusable operational guidance per domain.
-- **`.agents/SKILLS_INDEX.md`** — skill catalog and routing (when present).
-- **CLAUDE.md** — optional symlink to `AGENTS.md` for tools that expect that filename; create only if tooling needs it.
+- **`.agents/SKILLS_INDEX.md`** — skill catalog and routing.
 - Source `// MARK:` — navigate large files (`AppStatusBarController`, `AnnotateState`, `NotinhasNoteGeometry`).
 
 ## Rules
 
-- Keep agent policy in `AGENTS.md`; never diverge a separate `CLAUDE.md` body.
+- Keep agent policy in `AGENTS.md`.
 - Document Screen Recording / Accessibility requirements when capture or permission UX changes.
+- Do not reintroduce Sparkle, About, Report a Problem, or `snapzy://` in user-facing docs.
+- Legacy Snapzy references belong only in `docs/MIGRATION.md` (labelled migration inputs).
 - Prefer linking to skills over duplicating long checklists in README.
-- Do not invent script targets or test commands that do not exist under `scripts/`.
 
 ## Checklist
 
 - Would a new contributor build and run from README + `AGENTS.md`?
-- Do agent docs still match `./scripts/build_and_run.sh` and `./scripts/run-tests.sh`?
-- Are deliberate fork choices (thin Notinhas module, upstream Snapzy docs) still called out?
-- Does `CLAUDE.md` resolve to `AGENTS.md` if the symlink exists (`readlink CLAUDE.md`)?
+- Do agent docs match `./scripts/build_and_run.sh` and `./scripts/run-tests.sh` with **Notinhas** scheme paths?
+- Is `docs/MIGRATION.md` updated when legacy path or Keychain migration changes?
 
 ## Related
 

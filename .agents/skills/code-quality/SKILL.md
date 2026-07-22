@@ -9,7 +9,7 @@ Use when simplifying code, moving responsibilities, or cleaning unused pieces ex
 
 ## Checklist
 
-- Reuse an existing helper in `Snapzy/Features/Notinhas/` before adding another abstraction.
+- Reuse an existing helper in `Notinhas/Features/Notinhas/` before adding another abstraction.
 - Keep side effects localized and named clearly.
 - Prefer one obvious owner for each workflow (status item, capture, annotate state, Notinhas composer, upload coordinator).
 - Keep upstream Snapzy edits thin; do not rewrite Annotate wholesale for Notinhas needs.

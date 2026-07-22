@@ -5,7 +5,7 @@ description: Swift concurrency guidance for Notinhas — MainActor UI, image exp
 
 # Swift Concurrency Expert
 
-Use for actor isolation, `Sendable`, async/await, or Swift 6 concurrency diagnostics in Notinhas/Snapzy.
+Use for actor isolation, `Sendable`, async/await, or Swift 6 concurrency diagnostics in Notinhas.
 
 ## Invariants
 

@@ -1,5 +1,5 @@
 name: 🐛 Bug Report
-description: Report a bug or unexpected behavior in Snapzy
+description: Report a bug or unexpected behavior in Notinhas
 title: "[Bug]: "
 labels: ["bug"]
 body:
@@ -23,8 +23,8 @@ body:
       label: Steps to Reproduce
       description: Steps to reproduce the behavior.
       placeholder: |
-        1. Open Snapzy
-        2. Click on '...'
+        1. Launch Notinhas
+        2. Capture an area
         3. See error
     validations:
       required: true
@@ -56,11 +56,11 @@ body:
       required: false
 
   - type: input
-    id: snapzy-version
+    id: notinhas-version
     attributes:
-      label: Snapzy Version
-      description: Which version of Snapzy are you using?
-      placeholder: e.g. 1.0.7
+      label: Notinhas Version
+      description: Which version of Notinhas are you using?
+      placeholder: e.g. 1.0.0 or commit SHA
     validations:
       required: true
 
@@ -81,12 +81,12 @@ body:
     id: install-method
     attributes:
       label: Installation Method
-      description: How did you install Snapzy?
+      description: How did you install Notinhas?
       options:
-        - Homebrew
-        - DMG download
+        - GitHub Release DMG
         - Shell script
         - Built from source
+        - Migrated from Snapzy
     validations:
       required: false
 
@@ -94,6 +94,6 @@ body:
     id: additional-context
     attributes:
       label: Additional Context
-      description: Add any other context about the problem here (e.g. crash logs, console output).
+      description: Add diagnostic excerpts from ~/Library/Logs/Notinhas/notinhas_*.txt if relevant (redact private paths).
     validations:
       required: false

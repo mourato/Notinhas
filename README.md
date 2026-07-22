@@ -1,20 +1,8 @@
 <div align="center">
-  <img src="./banner.png" width="200" height="200" alt="Snapzy banner" />
+  <img src="./banner.png" width="200" height="200" alt="Notinhas banner" />
 
-  <h1>Snapzy</h1>
-  <p><strong>Native macOS screenshots, recording, annotation, and editing from the menu bar.</strong></p>
-
-  <p>
-    <a href="https://trendshift.io/repositories/24550" target="_blank"><img src="https://trendshift.io/api/badge/repositories/24550" alt="duongductrong%2FSnapzy | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
-  </p>
-
-  <p>
-    Built with <a href="https://developer.apple.com/xcode/swiftui/">SwiftUI</a>,
-    <a href="https://developer.apple.com/documentation/appkit">AppKit</a>,
-    <a href="https://developer.apple.com/documentation/screencapturekit">ScreenCaptureKit</a>,
-    <a href="https://developer.apple.com/documentation/vision">Vision</a>, and
-    <a href="https://sparkle-project.org/">Sparkle</a>.
-  </p>
+  <h1>Notinhas</h1>
+  <p><strong>macOS visual handoff — capture, annotate with numbered pins, and copy a developer-ready brief.</strong></p>
 
   <p>
     <a href="./README.md">🇺🇸 English</a> •
@@ -26,276 +14,142 @@
     <a href="#features">Features</a> •
     <a href="#install">Install</a> •
     <a href="#shortcuts">Shortcuts</a> •
+    <a href="#automation">Automation</a> •
     <a href="#development">Development</a> •
     <a href="#documentation">Documentation</a> •
-    <a href="#community">Community</a> •
     <a href="#security">Security</a> •
-    <a href="#contributing">Contributing</a> •
-    <a href="#contributors">Contributors</a> •
-    <a href="#acknowledgments">Acknowledgments</a>
+    <a href="#contributing">Contributing</a>
   </p>
 
   <p>
-    <a href="https://github.com/duongductrong/Snapzy/stargazers"><img alt="GitHub Stars" src="https://img.shields.io/github/stars/duongductrong/Snapzy?style=flat&amp;logo=github" /></a>
-    <a href="https://github.com/duongductrong/Snapzy/network/members"><img alt="GitHub Forks" src="https://img.shields.io/github/forks/duongductrong/Snapzy?style=flat&amp;logo=github" /></a>
-    <a href="https://github.com/duongductrong/Snapzy/releases"><img alt="GitHub Downloads" src="https://img.shields.io/github/downloads/duongductrong/Snapzy/total?style=flat&amp;logo=github" /></a>
-  </p>
-  <p>
-    <a href="https://deepwiki.com/duongductrong/Snapzy"><img alt="Ask DeepWiki" src="https://deepwiki.com/badge.svg" /></a>
-    <a href="https://discord.gg/xkWDAuJkZu"><img alt="Join Discord Community" src="https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=flat&amp;logo=discord&amp;logoColor=white" /></a>
-    <a href="#featured-on"><img alt="Featured On" src="https://img.shields.io/badge/Featured%20On-Product%20Hunt%20%2B%20Unikorn-111827?style=flat&amp;logo=producthunt&amp;logoColor=white" /></a>
-  </p>
-  <p>
-    <a href="https://github.com/sponsors/duongductrong"><img alt="GitHub Sponsors" src="https://img.shields.io/badge/Sponsor-%E2%9D%A4-ff69b4?style=flat&amp;logo=github" /></a>
-    <a href="https://ko-fi.com/duongductrong"><img alt="Ko-fi Donate" src="https://img.shields.io/badge/Ko--fi-Donate-FF5E5B?style=flat&amp;logo=ko-fi&amp;logoColor=white" /></a>
+    <a href="https://github.com/mourato/Notinhas/stargazers"><img alt="GitHub Stars" src="https://img.shields.io/github/stars/mourato/Notinhas?style=flat&amp;logo=github" /></a>
+    <a href="https://github.com/mourato/Notinhas/releases"><img alt="GitHub Releases" src="https://img.shields.io/github/v/release/mourato/Notinhas?style=flat&amp;logo=github" /></a>
   </p>
 </div>
 
 ## Features
 
-- **Screenshot**: fullscreen or selected-area capture with manual/application window mode toggle (`Application Capture`, default `A`), area capture with inline annotate (annotate before saving), scrolling capture with live stitched preview, OCR text extraction, transparent object cutout capture with optional safe auto-crop, window shadow capture (macOS 14+), multi-format export (PNG/JPG/WebP), hide desktop icons/widgets, quick screenshot during recording
-- **Screen Recording**: video or GIF output, system audio + microphone, mouse click highlights, keystroke overlays, live on-screen annotations, remember last area, GIF resizing, Smart Camera metadata for Follow Mouse edits
-- **Annotation Editor**: shapes, arrows, text, watermarks, filled rectangles, blur/pixelate, automatic local sensitive-data redaction, counters, crop, remove background with crop-aware auto-crop support, mockup backgrounds with 3D renderer, zoom/pan (pinch + keyboard), drag-to-app with optional keep-editing and editor reactivation behavior, configurable tool/action shortcuts
-- **After Capture Settings**: per-mode action matrix for save, Quick Access, clipboard copy, and annotate plus a separate global remove-background auto-crop toggle (enabled by default)
-- **Video Editor**: trim with visual timeline + frame strip, zoom segments with auto-focus (Follow Mouse), wallpaper backgrounds + padding, custom export dimensions, animated GIF viewer, undo/redo
-- **Quick Access**: floating panel after every capture with copy, edit, drag-to-app, two-finger swipe dismiss, open, and delete actions
-- **Capture History**: floating history panel + full browser for recent screenshots, videos, and GIFs with type/time filters, filename search, quick copy/open/delete actions, one-click reopen in Annotate or Video Editor, editable annotation restore for committed screenshot edits, configurable panel layout, and retention policies
-- **Shortcuts**: fully configurable global shortcuts for capture, recording, and annotation tools, with per-shortcut on/off control and system conflict detection
-- **Onboarding**: splash screen, first-run language selection, guided permissions setup, and shortcut configuration for first-time users
-- **Localization**: 🇺🇸 English, 🇻🇳 Vietnamese, 🇨🇳 Simplified Chinese, 🇹🇼 Traditional Chinese, 🇪🇸 Spanish, 🇯🇵 Japanese, 🇰🇷 Korean, 🇷🇺 Russian, 🇫🇷 French, and 🇩🇪 German app localization with native macOS per-app language support
-- **Cloud Upload**: privacy-first bring-your-own-storage via AWS S3 or Cloudflare R2 — no third-party servers, manual upload from Quick Access for screenshots, videos, and GIFs, or from Annotate for screenshots, credentials stored in the macOS Keychain with optional password protection, manual encrypted credential import/export for faster setup on another Mac, upload history, configurable auto-expiration (1–90 days or permanent), lifecycle rules, custom domain support
-- **Advanced Settings**: TOML export/import, one-time config folder grant, debounced background sync, safe sync-before-open, and launch-time auto-apply for portable preferences, dotfiles, backup, and machine-to-machine setup via `~/.config/snapzy/config.toml`
-- **Updates & Diagnostics**: in-app updates via Sparkle, problem reporting with diagnostic log bundles, cache management
-- **Platform**: menu-bar app, appearance theming (light/dark/system), App Sandbox with secure file-access bookmarks
+Notinhas is a tailored fork focused on the capture → annotate → export loop for product designers handing work to developers and AI coding agents.
+
+- **Area capture** with inline annotate, scrolling capture, OCR, and object cutout
+- **Notinhas notes**: numbered pins and rectangles with concise text on the annotate canvas
+- **Clipboard-ready export**: copy the annotated image and structured note brief in one action
+- **Quick Access** floating panel after capture with copy, edit, and drag-to-app
+- **Capture history** with editable annotation restore for committed screenshot sessions
+- **Configurable shortcuts** with system conflict detection
+- **Localization**: English, Vietnamese, Simplified Chinese, Traditional Chinese, Spanish, Japanese, Korean, Russian, French, and German
+- **Portable preferences** via `~/.config/notinhas/config.toml` (export/import, launch-time auto-apply)
+- **Local diagnostics** with on-disk log retention (no telemetry)
+- **Optional Video module** (compile-time): screen recording and Video Editor — off by default; enable under **Preferences → Advanced** when built with the Video scheme
+
+Inherited upstream capture and annotate capabilities remain available; see [docs/README.md](docs/README.md) for the full engineering map.
 
 ## Install
 
 > Requires **macOS 13.0** or later.
 
-### Homebrew
+### Download a release
 
-```bash
-brew install --cask snapzy
-```
+1. Go to [Releases](https://github.com/mourato/Notinhas/releases)
+2. Download the latest `Notinhas-v<version>.dmg`
+3. Move `Notinhas.app` to `/Applications`
+4. Launch Notinhas
+5. Grant **Screen Recording** (and **Accessibility** if prompted for shortcuts) in System Settings
+6. Re-launch after granting permissions if macOS asks
+
+Upgrading from Snapzy? See [docs/MIGRATION.md](docs/MIGRATION.md) for data migration and mandatory TCC reauthorization.
 
 ### Shell script
 
 ```bash
-# Install a specific version
-curl -fsSL https://raw.githubusercontent.com/duongductrong/Snapzy/v1.29.1/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/mourato/Notinhas/main/install.sh | bash
 ```
 
-### Download a release
-
-1. Go to [Releases](https://github.com/duongductrong/Snapzy/releases)
-2. Download the latest packaged app asset, typically `Snapzy-v<version>.dmg`
-3. Move `Snapzy.app` to `/Applications`
-4. Launch Snapzy
-5. Grant Screen Recording permission when prompted in System Settings
-6. Re-launch Snapzy after granting Screen Recording if macOS asks for it
-7. Grant Microphone permission too if you want voice input in recordings
-
-> Snapzy is signed and notarized by Apple. macOS will open it without any extra steps.
-
-## Uninstall
-
-To completely remove Snapzy, reset all permissions, and clean up app data:
+### Build from source
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/duongductrong/Snapzy/master/uninstall.sh | bash
-```
-
-Or if you cloned the repo:
-
-```bash
-./uninstall.sh
-```
-
-This will remove the app from `/Applications`, delete preferences and caches, and reset TCC permissions (Screen Recording, Microphone, Accessibility). You may need to log out or reboot for permission changes to fully take effect.
-
-### Reset Permissions
-
-If you only want to reset TCC permissions (Screen Recording, Microphone, Accessibility) without uninstalling the app:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/duongductrong/Snapzy/master/reset-permissions.sh | bash
-```
-
-Or if you cloned the repo:
-
-```bash
-./reset-permissions.sh
-```
-
-## Shortcuts
-
-| Action                                                  | Shortcut |
-| ------------------------------------------------------- | -------- |
-| Fullscreen screenshot                                   | `⇧⌘3`    |
-| Area screenshot                                         | `⇧⌘4`    |
-| ↳ Toggle manual/app window mode (`Application Capture`) | `A`      |
-| Area screenshot + inline annotate                       | `⇧⌘7`    |
-| Scrolling screenshot                                    | `⇧⌘6`    |
-| Screen recording (start/stop toggle)                    | `⇧⌘5`    |
-| Pause/Resume recording (optional, recommended `⌘⇧Space`) | _unset_  |
-| OCR text capture                                        | `⇧⌘2`    |
-| Object cutout capture                                   | `⇧⌘1`    |
-| Smart element capture                                   | `⌥⇧4`    |
-| Open Annotate                                           | `⇧⌘A`    |
-| Open Video Editor                                       | `⇧⌘E`    |
-| Open Cloud Uploads                                      | `⇧⌘L`    |
-| Show shortcuts list                                     | `⇧⌘K`    |
-
-## Automation
-
-Snapzy registers the `snapzy://` URL scheme so launchers and automation tools can trigger capture actions. This integration can be toggled on or off under **Settings -> Advanced -> URL Scheme integration**.
-
-| Action                | URL                               |
-| --------------------- | --------------------------------- |
-| Fullscreen screenshot | `snapzy://capture/fullscreen`     |
-| Area screenshot       | `snapzy://capture/area`           |
-| Application window    | `snapzy://capture/application`    |
-| Active window         | `snapzy://capture/active-window`  |
-| Area annotate         | `snapzy://capture/area-annotate`  |
-| Scrolling screenshot  | `snapzy://capture/scrolling`      |
-| OCR text capture      | `snapzy://capture/ocr`            |
-| Smart element capture | `snapzy://capture/smart-element`  |
-| Object cutout capture | `snapzy://capture/object-cutout`  |
-| Screen recording      | `snapzy://record/screen`          |
-| Application recording | `snapzy://record/application`     |
-| Open Annotate         | `snapzy://open/annotate`          |
-| Combine images        | `snapzy://open/combine`           |
-| Open Video Editor     | `snapzy://open/video-editor`      |
-| Open Cloud Uploads    | `snapzy://open/cloud-uploads`     |
-| Open Capture History  | `snapzy://open/history`           |
-| Show shortcuts list   | `snapzy://show/shortcuts`         |
-| Open Settings         | `snapzy://settings`               |
-| Open Settings tab     | `snapzy://settings?tab=annotate`  |
-
-`snapzy://open/combine` opens the image picker. Automation tools can skip the
-picker by passing two or more URL-encoded local paths as repeated `file`
-parameters:
-
-```bash
-open 'snapzy://open/combine?file=/tmp/first.png&file=/tmp/second.png'
-```
-
-## Development
-
-For local setup, source builds, and first-time development workflow, start with [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
-
-If you need archive, export, or DMG packaging commands, see [docs/BUILD.md](docs/BUILD.md). If you want the contribution workflow, see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-### Local builds
-
-From a terminal, run the build assistant with no arguments:
-
-```bash
+git clone https://github.com/mourato/Notinhas.git
+cd Notinhas
 ./scripts/build_and_run.sh
 ```
 
-It lets you choose a Debug or Release build and whether to clean existing build
-artifacts first. Debug builds open `Snapzy Debug.app`. Release builds produce
-the signed `Snapzy.app` and then offer to open it from the build folder, install
-it in `/Applications`, install and open it, or exit.
-
-The local Release bundle is created at:
-
-```text
-.build/xcode-derived-data/Build/Products/Release/Snapzy.app
-```
-
-The script uses the local `Prisma Local Code Signing` identity by default. Set
-`LOCAL_CODE_SIGN_IDENTITY` to use a different Keychain identity. This local,
-self-signed identity builds without hardened runtime so it can load the bundled
-Sparkle framework. Use `LOCAL_ENABLE_HARDENED_RUNTIME=YES` only with a trusted
-Apple distribution identity. Command-line options remain available for
-automation, for example:
+## Uninstall
 
 ```bash
-./scripts/build_and_run.sh --configuration Release --clean
+curl -fsSL https://raw.githubusercontent.com/mourato/Notinhas/main/uninstall.sh | bash
 ```
 
-This local signature is intended for development and installation on trusted
-machines; it is separate from the notarized public release process.
+Or from a clone: `./uninstall.sh`
+
+Removes `/Applications/Notinhas.app`, app data under `~/Library/Application Support/Notinhas`, logs, preferences, and resets TCC grants for `com.mourato.notinhas`.
+
+## Shortcuts
+
+| Action | Shortcut |
+| --- | --- |
+| Fullscreen screenshot | `⇧⌘3` |
+| Area screenshot | `⇧⌘4` |
+| Area screenshot + inline annotate | `⇧⌘7` |
+| Scrolling screenshot | `⇧⌘6` |
+| OCR text capture | `⇧⌘2` |
+| Object cutout capture | `⇧⌘1` |
+| Smart element capture | `⌥⇧4` |
+| Open Annotate | `⇧⌘A` |
+| Show shortcuts list | `⇧⌘K` |
+
+Recording and Video Editor shortcuts apply only when the optional Video module is compiled in and enabled at runtime.
+
+## Automation
+
+Notinhas registers the `notinhas://` URL scheme. Toggle integration under **Settings → Advanced → URL Scheme integration**.
+
+| Action | URL |
+| --- | --- |
+| Area screenshot | `notinhas://capture/area` |
+| Area annotate | `notinhas://capture/area-annotate` |
+| Fullscreen screenshot | `notinhas://capture/fullscreen` |
+| Open Annotate | `notinhas://open/annotate` |
+| Open Settings | `notinhas://settings` |
+| Open Settings tab | `notinhas://settings?tab=annotate` |
+
+Full route table: [docs/SHORTCUTS.md](docs/SHORTCUTS.md).
+
+Legacy `snapzy://` URLs are **not** registered and are ignored at runtime.
+
+## Development
+
+Start with [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for Xcode setup and `./scripts/build_and_run.sh`.
+
+```bash
+open Notinhas.xcodeproj          # default Notinhas scheme (Video module off)
+./scripts/build_and_run.sh         # interactive Debug/Release build + launch
+./scripts/run-tests.sh             # XCTest suite (default scheme)
+./scripts/run-tests.sh --video-module   # optional Recording/VideoEditor tests
+```
+
+Debug builds produce `Notinhas Debug.app` (`com.mourato.notinhas.debug`) so TCC grants stay separate from release installs.
 
 ## Documentation
 
-- [Ask DeepWiki (interactive docs assistant)](https://deepwiki.com/duongductrong/Snapzy)
-- [Docs map for humans and agents](docs/README.md)
-- [Project structure and runtime architecture](docs/STRUCTURE.md)
-- [App lifecycle, onboarding, and menu bar](docs/APP_LIFECYCLE.md)
-- Capture: [screenshot flows](docs/CAPTURE.md) · [scrolling capture](docs/SCROLLING_CAPTURE.md) · [recording](docs/RECORDING.md) · [post-capture routing](docs/POST_CAPTURE.md)
-- Editors: [Quick Access](docs/QUICK_ACCESS.md) · [capture history](docs/HISTORY.md) · [Annotate](docs/ANNOTATE.md) · [Video Editor](docs/VIDEO_EDITOR.md)
-- Platform: [cloud upload](docs/CLOUD.md) · [shortcuts & URL scheme](docs/SHORTCUTS.md) · [settings reference](docs/PREFERENCES.md) · [updates & diagnostics](docs/UPDATES.md)
-- [TOML configuration export/import](docs/CONFIGURATION.md)
-- [Build and packaging guide](docs/BUILD.md)
-- [Release and update workflow](docs/RELEASES.md)
-- [Local Sparkle update testing](docs/UPDATE_TESTING.md)
-
-## Community
-
-- Join the Snapzy Discord community for support, feedback, and discussion: [https://discord.gg/xkWDAuJkZu](https://discord.gg/xkWDAuJkZu)
-
-## Featured On
-
-<p>
-  <a href="https://www.producthunt.com/products/snapzy?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-snapzy" target="_blank" rel="noopener noreferrer"><img alt="Snapzy - Think CleanShot X, but open-source and developer-friendly | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1097629&amp;theme=light&amp;t=1773585048784"></a>
-  <a href="https://unikorn.vn/p/snapzy?ref=embed-snapzy" target="_blank"><img src="https://unikorn.vn/api/widgets/badge/snapzy?theme=light" alt="Snapzy trên Unikorn.vn" style="width: 250px; height: 54px;" width="250" height="54" /></a>
-</p>
-
-## Benchmark
-
-### OCR
-
-Benchmark date: April 19, 2026. Current OCR numbers come from `scripts/run-ocr-readme-benchmark.sh` on a clean synthetic wrapped UI/article-text corpus with `12 samples / language` across `10 supported languages`. `Character accuracy` is the primary signal, `exact match` is intentionally strict, and `no-output` on this corpus is `0%` for all languages below.
-
-| Language            | Character Accuracy | Exact Match |
-| ------------------- | -----------------: | ----------: |
-| English             |             100.0% |      100.0% |
-| Vietnamese          |             100.0% |      100.0% |
-| Simplified Chinese  |              99.3% |       75.0% |
-| Traditional Chinese |              99.0% |       66.7% |
-| Spanish             |              99.9% |       91.7% |
-| Japanese            |              99.4% |       66.7% |
-| Korean              |              99.7% |       83.3% |
-| Russian             |             100.0% |      100.0% |
-| French              |              99.3% |       33.3% |
-| German              |              99.8% |       75.0% |
-
-Real-world screenshots can score lower, especially with emoji, low-contrast footers, unusual punctuation, gradients, blur, or decorative fonts.
+- [Docs map](docs/README.md)
+- [Migration from Snapzy](docs/MIGRATION.md)
+- [Project structure](docs/STRUCTURE.md)
+- [App lifecycle](docs/APP_LIFECYCLE.md)
+- [Capture flows](docs/CAPTURE.md) · [Annotate](docs/ANNOTATE.md) · [Post-capture](docs/POST_CAPTURE.md)
+- [Shortcuts & URL scheme](docs/SHORTCUTS.md) · [Preferences](docs/PREFERENCES.md)
+- [TOML configuration](docs/CONFIGURATION.md)
+- [Build & packaging](docs/BUILD.md) · [Releases](docs/RELEASES.md)
+- [Diagnostics](docs/UPDATES.md)
 
 ## Security
 
-Snapzy runs inside the macOS App Sandbox with minimal entitlements. Network requests are limited to Sparkle update checks, local loopback OAuth callback redirection, and user-initiated cloud uploads to **your own** cloud storage (AWS S3, Cloudflare R2, or Google Drive) — no data is ever sent to third-party servers. Cloud credentials and OAuth tokens are stored exclusively in the macOS Keychain, can be further protected with an optional password (SHA-256 hashed, never stored in plaintext), and can only be transferred via a manual encrypted export/import flow protected by a user-supplied archive passphrase. Snapzy collects no telemetry.
+Notinhas runs with hardened runtime and minimal entitlements. Network use is limited to user-initiated cloud uploads (when configured) and local OAuth loopback for Google Drive — no telemetry, no automatic update checks, no third-party analytics.
 
-To report a vulnerability, please use a [GitHub Security Advisory](https://github.com/duongductrong/Snapzy/security/advisories/new) or contact the maintainer privately. See [SECURITY.md](SECURITY.md) for full details.
+Report vulnerabilities privately via [GitHub Security Advisories](https://github.com/mourato/Notinhas/security/advisories/new). See [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
-Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
-
-## Contributors
-
-Thanks to all the people who contribute to Snapzy!
-
-<a href="https://github.com/duongductrong/Snapzy/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=duongductrong/Snapzy" />
-</a>
-
-## Star History
-
-<a href="https://www.star-history.com/?repos=duongductrong%2FSnapzy&type=date&logscale=&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/image?repos=duongductrong/Snapzy&type=date&theme=dark&logscale&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/image?repos=duongductrong/Snapzy&type=date&logscale&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/image?repos=duongductrong/Snapzy&type=date&logscale&legend=top-left" />
- </picture>
-</a>
-
-## Acknowledgments
-
-Snapzy is inspired by [CleanShot X](https://cleanshot.com/), an advanced screenshot and screen recording application for macOS.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. This repository tracks `mourato/Notinhas`; upstream Snapzy lives at [duongductrong/Snapzy](https://github.com/duongductrong/Snapzy).
 
 ## License
 
