@@ -20,10 +20,19 @@ Press ⌘R to build and run (**Notinhas** scheme).
 
 ## Regenerate App Icon Assets
 
-After editing `Notinhas/NotinhasIcon.icon` in Icon Composer:
+Notinhas ships a **full-bleed** app icon (the PNG already includes its blue/purple
+gradient). Prefer regenerating from that finished artwork:
 
 ```bash
 brew install imagemagick   # if magick is missing
+scripts/generate-app-icon-assets.sh \
+  --source-png Notinhas/NotinhasIcon.icon/Assets/NotinhasIcon.png \
+  --full-bleed
+```
+
+After editing `Notinhas/NotinhasIcon.icon` in Icon Composer (padded/glass style):
+
+```bash
 scripts/generate-app-icon-assets.sh
 ```
 

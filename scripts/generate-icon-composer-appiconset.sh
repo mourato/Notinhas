@@ -9,11 +9,13 @@ PLATFORM="macOS"
 RENDITION="Default"
 CANVAS_SIZE=1024
 ARTWORK_SIZE=832
+FULL_BLEED=0
 KEEP_WORK_DIR=0
 
 usage() {
   cat <<'USAGE'
-Generate a padded macOS AppIcon.appiconset from an Apple Icon Composer .icon file.
+Generate a macOS AppIcon.appiconset from an Apple Icon Composer .icon file
+or a finished full-bleed PNG.
 
 Usage:
   generate-icon-composer-appiconset.sh path/to/AppIcon.icon [options]
@@ -21,7 +23,7 @@ Usage:
 
 Options:
   --icon-document PATH   Icon Composer .icon package to render.
-  --source-png PATH      Use an already-exported Icon Composer PNG instead.
+  --source-png PATH      Use an already-exported PNG instead.
   --appiconset PATH      Output AppIcon.appiconset directory.
                          Default: AppIcon.appiconset next to the input file.
   --filename-prefix NAME Prefix for generated PNG names. Default: input basename.
@@ -29,6 +31,10 @@ Options:
   --rendition NAME       ictool rendition. Default: Default.
   --canvas-size PX       Final master canvas size. Default: 1024.
   --artwork-size PX      Rendered icon bounding box. Default: 832.
+                         Ignored with --full-bleed.
+  --full-bleed           Scale the source edge-to-edge (no transparent padding).
+                         Use for finished icons that already include their own
+                         background/gradient (Picker-style).
   --keep-work-dir        Keep temporary render files for inspection.
   -h, --help             Show this help.
 
@@ -36,6 +42,7 @@ Examples:
   ./generate-icon-composer-appiconset.sh MyIcon.icon
   ./generate-icon-composer-appiconset.sh MyIcon.icon --appiconset MyApp/Assets.xcassets/AppIcon.appiconset
   ./generate-icon-composer-appiconset.sh --source-png IconComposerExport.png --filename-prefix MyIcon
+  ./generate-icon-composer-appiconset.sh --source-png NotinhasIcon.png --full-bleed --filename-prefix NotinhasIcon
 
 Dependencies:
   - macOS + Xcode's Icon Composer ictool, unless --source-png is used.
@@ -89,6 +96,7 @@ while [[ $# -gt 0 ]]; do
     --rendition) RENDITION="${2:?Missing value for --rendition}"; shift 2 ;;
     --canvas-size) CANVAS_SIZE="${2:?Missing value for --canvas-size}"; shift 2 ;;
     --artwork-size) ARTWORK_SIZE="${2:?Missing value for --artwork-size}"; shift 2 ;;
+    --full-bleed) FULL_BLEED=1; shift ;;
     --keep-work-dir) KEEP_WORK_DIR=1; shift ;;
     -h|--help) usage; exit 0 ;;
     --*) die "Unknown option: $1" ;;
@@ -109,9 +117,13 @@ done
 [[ -n "$ICON_DOCUMENT$SOURCE_PNG" ]] || { usage >&2; exit 2; }
 
 require_positive_int "--canvas-size" "$CANVAS_SIZE"
-require_positive_int "--artwork-size" "$ARTWORK_SIZE"
-(( ARTWORK_SIZE < CANVAS_SIZE )) || die "--artwork-size must be smaller than --canvas-size"
-(( (CANVAS_SIZE - ARTWORK_SIZE) % 2 == 0 )) || die "canvas/artwork difference must be even for centered padding"
+if [[ "$FULL_BLEED" -eq 1 ]]; then
+  ARTWORK_SIZE="$CANVAS_SIZE"
+else
+  require_positive_int "--artwork-size" "$ARTWORK_SIZE"
+  (( ARTWORK_SIZE < CANVAS_SIZE )) || die "--artwork-size must be smaller than --canvas-size"
+  (( (CANVAS_SIZE - ARTWORK_SIZE) % 2 == 0 )) || die "canvas/artwork difference must be even for centered padding"
+fi
 
 MAGICK="$(command -v magick || true)"
 [[ -n "$MAGICK" ]] || die "ImageMagick is required. Install with: brew install imagemagick"
@@ -155,12 +167,16 @@ if [[ "$RAW_TRIM" != "${RAW_WIDTH}x${RAW_HEIGHT}+0+0" ]]; then
   echo "warning: continuing; avoid passing an already-padded AppIcon output." >&2
 fi
 
-"$MAGICK" "$RAW_ICON" \
-  -resize "${ARTWORK_SIZE}x${ARTWORK_SIZE}" \
-  -background none \
-  -gravity center \
-  -extent "${CANVAS_SIZE}x${CANVAS_SIZE}" \
-  "$PADDED_MASTER"
+if [[ "$FULL_BLEED" -eq 1 ]]; then
+  "$MAGICK" "$RAW_ICON" -filter Lanczos -resize "${CANVAS_SIZE}x${CANVAS_SIZE}!" "$PADDED_MASTER"
+else
+  "$MAGICK" "$RAW_ICON" \
+    -resize "${ARTWORK_SIZE}x${ARTWORK_SIZE}" \
+    -background none \
+    -gravity center \
+    -extent "${CANVAS_SIZE}x${CANVAS_SIZE}" \
+    "$PADDED_MASTER"
+fi
 
 mkdir -p "$APPICONSET_DIR"
 rm -f "$APPICONSET_DIR"/*.png
@@ -178,6 +194,8 @@ CONTENTS_JSON="$APPICONSET_DIR/Contents.json"
 
     if [[ "$PIXELS" -eq "$CANVAS_SIZE" ]]; then
       cp "$PADDED_MASTER" "$OUTPUT_FILE"
+    elif [[ "$FULL_BLEED" -eq 1 ]]; then
+      "$MAGICK" "$RAW_ICON" -filter Lanczos -resize "${PIXELS}x${PIXELS}!" "$OUTPUT_FILE"
     else
       "$MAGICK" "$RAW_ICON" -filter Lanczos -resize "${ARTWORK_PIXELS}x${ARTWORK_PIXELS}" \
         -background none -gravity center -extent "${PIXELS}x${PIXELS}" "$OUTPUT_FILE"
@@ -190,10 +208,16 @@ CONTENTS_JSON="$APPICONSET_DIR/Contents.json"
   printf '  ],\n  "info" : {\n    "author" : "xcode",\n    "version" : 1\n  }\n}\n'
 } > "$CONTENTS_JSON"
 
-EXPECTED_TRIM="${ARTWORK_SIZE}x${ARTWORK_SIZE}+$(((CANVAS_SIZE - ARTWORK_SIZE) / 2))+$(((CANVAS_SIZE - ARTWORK_SIZE) / 2))"
 MASTER_FILE="$APPICONSET_DIR/${FILENAME_PREFIX}-macOS-512x512@2x.png"
-ACTUAL_TRIM="$("$MAGICK" "$MASTER_FILE" -alpha extract -format '%@' info:)"
-[[ "$ACTUAL_TRIM" == "$EXPECTED_TRIM" ]] || die "unexpected ${CANVAS_SIZE}px alpha bounds: expected $EXPECTED_TRIM, got $ACTUAL_TRIM"
-
-echo "Generated padded AppIcon assets: $APPICONSET_DIR"
+if [[ "$FULL_BLEED" -eq 1 ]]; then
+  ACTUAL_TRIM="$("$MAGICK" "$MASTER_FILE" -alpha extract -format '%@' info:)"
+  EXPECTED_TRIM="${CANVAS_SIZE}x${CANVAS_SIZE}+0+0"
+  [[ "$ACTUAL_TRIM" == "$EXPECTED_TRIM" ]] || die "unexpected ${CANVAS_SIZE}px alpha bounds for full-bleed: expected $EXPECTED_TRIM, got $ACTUAL_TRIM"
+  echo "Generated full-bleed AppIcon assets: $APPICONSET_DIR"
+else
+  EXPECTED_TRIM="${ARTWORK_SIZE}x${ARTWORK_SIZE}+$(((CANVAS_SIZE - ARTWORK_SIZE) / 2))+$(((CANVAS_SIZE - ARTWORK_SIZE) / 2))"
+  ACTUAL_TRIM="$("$MAGICK" "$MASTER_FILE" -alpha extract -format '%@' info:)"
+  [[ "$ACTUAL_TRIM" == "$EXPECTED_TRIM" ]] || die "unexpected ${CANVAS_SIZE}px alpha bounds: expected $EXPECTED_TRIM, got $ACTUAL_TRIM"
+  echo "Generated padded AppIcon assets: $APPICONSET_DIR"
+fi
 echo "${CANVAS_SIZE}px alpha bounds: $ACTUAL_TRIM"
