@@ -262,6 +262,7 @@ enum NotinhasConfigurationDefaultDocument {
     switch kind {
     case .fullscreen: .defaultFullscreen
     case .area: .defaultArea
+    case .allInOne: nil
     case .areaAnnotate: .defaultAreaAnnotate
     case .activeWindow: .defaultActiveWindowCapture
     case .scrollingCapture: .defaultScrollingCapture

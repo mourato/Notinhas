@@ -14,6 +14,7 @@ final class ShortcutCoreTests: XCTestCase {
   func testDefaultGlobalShortcuts_matchDocumentedKeys() {
     XCTAssertEqual(ShortcutConfig.defaultFullscreen.keyCode, UInt32(kVK_ANSI_3))
     XCTAssertEqual(ShortcutConfig.defaultArea.keyCode, UInt32(kVK_ANSI_4))
+    XCTAssertEqual(ShortcutConfig.defaultAllInOne.keyCode, UInt32(kVK_ANSI_0))
     XCTAssertEqual(ShortcutConfig.defaultAreaAnnotate.keyCode, UInt32(kVK_ANSI_7))
     XCTAssertEqual(ShortcutConfig.defaultRecording.keyCode, UInt32(kVK_ANSI_5))
     XCTAssertEqual(ShortcutConfig.defaultScrollingCapture.keyCode, UInt32(kVK_ANSI_6))

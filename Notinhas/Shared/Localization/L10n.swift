@@ -34,6 +34,7 @@ nonisolated enum L10n {
     ("history-background-style.", "Settings"),
     ("history-panel-position.", "Settings"),
     ("after-capture.", "Capture"),
+    ("all-in-one.", "Capture"),
     ("capture-kind.", "Capture"),
     ("capture-storage.", "Capture"),
     ("file-access.", "Permissions"),
@@ -617,6 +618,11 @@ nonisolated enum L10n {
       "action.capture-area",
       defaultValue: "Capture Area",
       comment: "Action title for area screenshot capture"
+    )
+    static let captureAllInOne = string(
+      "action.capture-all-in-one",
+      defaultValue: "All-In-One Capture",
+      comment: "Action title for the All-In-One capture session"
     )
     static let captureAreaAnnotate = string(
       "action.capture-area-annotate",
@@ -1308,6 +1314,59 @@ nonisolated enum L10n {
       "capture-kind.recording",
       defaultValue: "Recording",
       comment: "Generic label for recording capture type"
+    )
+  }
+
+  enum AllInOne {
+    static let windowMode = string(
+      "all-in-one.mode.window",
+      defaultValue: "Window",
+      comment: "All-In-One mode label for application window capture"
+    )
+    static let captureButton = string(
+      "all-in-one.capture-button",
+      defaultValue: "Capture",
+      comment: "Primary capture button in the All-In-One action toolbar"
+    )
+    static let captureButtonAccessibility = string(
+      "all-in-one.capture-button.accessibility",
+      defaultValue: "Capture with selected mode and area",
+      comment: "Accessibility label for the All-In-One capture button"
+    )
+    static let modeAreaAccessibility = string(
+      "all-in-one.mode.area.accessibility",
+      defaultValue: "Area capture mode",
+      comment: "Accessibility label for area mode in All-In-One toolbar"
+    )
+    static let modeFullscreenAccessibility = string(
+      "all-in-one.mode.fullscreen.accessibility",
+      defaultValue: "Fullscreen capture mode",
+      comment: "Accessibility label for fullscreen mode in All-In-One toolbar"
+    )
+    static let modeWindowAccessibility = string(
+      "all-in-one.mode.window.accessibility",
+      defaultValue: "Window capture mode",
+      comment: "Accessibility label for window mode in All-In-One toolbar"
+    )
+    static let modeAnnotateAccessibility = string(
+      "all-in-one.mode.annotate.accessibility",
+      defaultValue: "Capture and annotate mode",
+      comment: "Accessibility label for annotate mode in All-In-One toolbar"
+    )
+    static let modeScrollingAccessibility = string(
+      "all-in-one.mode.scrolling.accessibility",
+      defaultValue: "Scrolling capture mode",
+      comment: "Accessibility label for scrolling mode in All-In-One toolbar"
+    )
+    static let modeOCRAccessibility = string(
+      "all-in-one.mode.ocr.accessibility",
+      defaultValue: "Text capture mode",
+      comment: "Accessibility label for OCR mode in All-In-One toolbar"
+    )
+    static let modeRecordingAccessibility = string(
+      "all-in-one.mode.recording.accessibility",
+      defaultValue: "Screen recording mode",
+      comment: "Accessibility label for recording mode in All-In-One toolbar"
     )
   }
 
@@ -3290,6 +3349,11 @@ nonisolated enum L10n {
       "preferences-shortcuts.capture-fullscreen-description",
       defaultValue: "Capture entire screen instantly",
       comment: "Description for fullscreen capture shortcut"
+    )
+    static let captureAllInOneDescription = string(
+      "preferences-shortcuts.capture-all-in-one-description",
+      defaultValue: "Open the All-In-One HUD to pick mode, area, and dimensions",
+      comment: "Description for the All-In-One capture shortcut"
     )
     static let captureAreaDescription = string(
       "preferences-shortcuts.capture-area-description",

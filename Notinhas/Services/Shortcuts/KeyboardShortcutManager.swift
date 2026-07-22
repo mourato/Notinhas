@@ -47,6 +47,12 @@ struct ShortcutConfig: Equatable, Codable {
     modifiers: UInt32(cmdKey | shiftKey)
   )
 
+  /// Cmd + Shift + 0 — suggested value only; the shortcut ships unbound (cleared) by default.
+  static let defaultAllInOne = ShortcutConfig(
+    keyCode: UInt32(kVK_ANSI_0),
+    modifiers: UInt32(cmdKey | shiftKey)
+  )
+
   /// Cmd + Shift + Space — suggested value only; the shortcut ships unbound (cleared) by default.
   static let defaultPauseResumeRecording = ShortcutConfig(
     keyCode: UInt32(kVK_Space),
@@ -511,6 +517,7 @@ extension ShortcutConfig {
 enum GlobalShortcutKind: String, CaseIterable, Codable {
   case fullscreen
   case area
+  case allInOne
   case areaAnnotate
   case activeWindow
   case scrollingCapture
@@ -545,6 +552,8 @@ extension GlobalShortcutKind {
       L10n.Actions.captureFullscreen
     case .area:
       L10n.Actions.captureArea
+    case .allInOne:
+      L10n.Actions.captureAllInOne
     case .areaAnnotate:
       L10n.Actions.captureAreaAnnotate
     case .activeWindow:
@@ -585,6 +594,7 @@ extension GlobalShortcutKind {
 enum ShortcutAction {
   case captureFullscreen
   case captureArea
+  case captureAllInOne
   case captureAreaAnnotate
   case captureApplication
   case captureActiveWindow
@@ -619,6 +629,7 @@ final class KeyboardShortcutManager {
 
   private(set) var fullscreenShortcut: ShortcutConfig
   private(set) var areaShortcut: ShortcutConfig
+  private(set) var allInOneShortcut: ShortcutConfig
   private(set) var areaAnnotateShortcut: ShortcutConfig
   private(set) var scrollingCaptureShortcut: ShortcutConfig
   private(set) var recordingShortcut: ShortcutConfig
@@ -646,6 +657,7 @@ final class KeyboardShortcutManager {
 
   private var fullscreenHotkeyRef: EventHotKeyRef?
   private var areaHotkeyRef: EventHotKeyRef?
+  private var allInOneHotkeyRef: EventHotKeyRef?
   private var areaAnnotateHotkeyRef: EventHotKeyRef?
   private var scrollingCaptureHotkeyRef: EventHotKeyRef?
   private var recordingHotkeyRef: EventHotKeyRef?
@@ -674,6 +686,7 @@ final class KeyboardShortcutManager {
   // Hotkey IDs
   private let fullscreenHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4631), id: 1) // "ZSF1"
   private let areaHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4632), id: 2) // "ZSF2"
+  private let allInOneHotkeyID = EventHotKeyID(signature: OSType(0x5A53_464C), id: 21) // "ZSFL"
   private let scrollingCaptureHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4633), id: 3) // "ZSF3"
   private let recordingHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4634), id: 4) // "ZSF4"
   private let annotateHotkeyID = EventHotKeyID(signature: OSType(0x5A53_4635), id: 5) // "ZSF5"
@@ -698,6 +711,7 @@ final class KeyboardShortcutManager {
   // UserDefaults keys
   private let fullscreenShortcutKey = "fullscreenShortcut"
   private let areaShortcutKey = "areaShortcut"
+  private let allInOneShortcutKey = "allInOneShortcut"
   private let areaAnnotateShortcutKey = "areaAnnotateShortcut"
   private let scrollingCaptureShortcutKey = "scrollingCaptureShortcut"
   private let recordingShortcutKey = "recordingShortcut"
@@ -721,6 +735,7 @@ final class KeyboardShortcutManager {
   private init() {
     fullscreenShortcut = .defaultFullscreen
     areaShortcut = .defaultArea
+    allInOneShortcut = .defaultAllInOne
     areaAnnotateShortcut = .defaultAreaAnnotate
     scrollingCaptureShortcut = .defaultScrollingCapture
     recordingShortcut = .defaultRecording
@@ -854,6 +869,7 @@ final class KeyboardShortcutManager {
     switch kind {
     case .fullscreen: return fullscreenShortcut
     case .area: return areaShortcut
+    case .allInOne: return allInOneShortcut
     case .areaAnnotate: return areaAnnotateShortcut
     case .activeWindow: return activeWindowShortcut
     case .scrollingCapture: return scrollingCaptureShortcut
@@ -894,6 +910,17 @@ final class KeyboardShortcutManager {
     mutateShortcutRegistration {
       setShortcut(config, for: .fullscreen) {
         fullscreenShortcut = $0
+      }
+      saveShortcuts()
+      saveClearedShortcuts()
+    }
+  }
+
+  /// Update All-In-One capture shortcut. Ships unbound; nil means "None".
+  func setAllInOneShortcut(_ config: ShortcutConfig?) {
+    mutateShortcutRegistration {
+      setShortcut(config, for: .allInOne) {
+        allInOneShortcut = $0
       }
       saveShortcuts()
       saveClearedShortcuts()
@@ -1110,6 +1137,11 @@ final class KeyboardShortcutManager {
     if let areaData = try? encoder.encode(areaShortcut) {
       UserDefaults.standard.set(areaData, forKey: areaShortcutKey)
     }
+    if clearedShortcuts.contains(.allInOne) {
+      UserDefaults.standard.removeObject(forKey: allInOneShortcutKey)
+    } else if let allInOneData = try? encoder.encode(allInOneShortcut) {
+      UserDefaults.standard.set(allInOneData, forKey: allInOneShortcutKey)
+    }
     if let areaAnnotateData = try? encoder.encode(areaAnnotateShortcut) {
       UserDefaults.standard.set(areaAnnotateData, forKey: areaAnnotateShortcutKey)
     }
@@ -1177,6 +1209,10 @@ final class KeyboardShortcutManager {
     if let areaData = UserDefaults.standard.data(forKey: areaShortcutKey),
        let config = try? decoder.decode(ShortcutConfig.self, from: areaData) {
       areaShortcut = config
+    }
+    if let allInOneData = UserDefaults.standard.data(forKey: allInOneShortcutKey),
+       let config = try? decoder.decode(ShortcutConfig.self, from: allInOneData) {
+      allInOneShortcut = config
     }
     if let areaAnnotateData = UserDefaults.standard.data(forKey: areaAnnotateShortcutKey),
        let config = try? decoder.decode(ShortcutConfig.self, from: areaAnnotateData) {
@@ -1295,6 +1331,11 @@ final class KeyboardShortcutManager {
       clearedShortcuts.insert(.deleteRecording)
       didMutate = true
     }
+    if UserDefaults.standard.data(forKey: allInOneShortcutKey) == nil,
+       !clearedShortcuts.contains(.allInOne) {
+      clearedShortcuts.insert(.allInOne)
+      didMutate = true
+    }
     if didMutate {
       saveClearedShortcuts()
     }
@@ -1356,6 +1397,9 @@ final class KeyboardShortcutManager {
     case areaHotkeyID.id:
       actionName = "area"
       action = .captureArea
+    case allInOneHotkeyID.id:
+      actionName = "all-in-one"
+      action = .captureAllInOne
     case areaAnnotateHotkeyID.id:
       actionName = "area-annotate"
       action = .captureAreaAnnotate
@@ -1447,6 +1491,12 @@ final class KeyboardShortcutManager {
       config: shortcut(for: .area),
       hotkeyID: areaHotkeyID,
       ref: &areaHotkeyRef
+    )
+    registerShortcutIfNeeded(
+      kind: .allInOne,
+      config: shortcut(for: .allInOne),
+      hotkeyID: allInOneHotkeyID,
+      ref: &allInOneHotkeyRef
     )
     registerShortcutIfNeeded(
       kind: .areaAnnotate,
@@ -1696,6 +1746,10 @@ final class KeyboardShortcutManager {
     if let ref = areaHotkeyRef {
       UnregisterEventHotKey(ref)
       areaHotkeyRef = nil
+    }
+    if let ref = allInOneHotkeyRef {
+      UnregisterEventHotKey(ref)
+      allInOneHotkeyRef = nil
     }
     if let ref = areaAnnotateHotkeyRef {
       UnregisterEventHotKey(ref)

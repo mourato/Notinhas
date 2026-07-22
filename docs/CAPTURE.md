@@ -11,6 +11,7 @@ flowchart TD
     A["Trigger from menu bar, global shortcut, or notinhas:// URL"] --> B{"Mode"}
 
     B --> C["Fullscreen / Area screenshot"]
+    B --> AIO["All-In-One HUD (mode + area + dimensions)"]
     B --> E["Capture Text (OCR / QR)"]
     B --> F["Smart Element Capture"]
     B --> G["Object cutout"]
@@ -36,6 +37,7 @@ flowchart TD
 
 | Mode | Default trigger | Coordinating types | Output |
 | --- | --- | --- | --- |
+| All-In-One | Menu / optional `⇧⌘0` / `notinhas://capture/all-in-one` | `AllInOneCaptureCoordinator` + Plan 035 HUD + Plan 036 refinement | Dispatches the selected mode below |
 | Fullscreen | `⇧⌘3` | `ScreenCaptureViewModel.captureFullscreen()` → `ScreenCaptureManager.captureAllDisplays(targetDisplayIDs:)` | Image file per active display |
 | Area (manual region) | `⇧⌘4` | `startAreaCapture(.manualRegion)` → `AreaSelectionController` + `FrozenAreaCaptureSession` or live path | Cropped image file |
 | Application window | Menu / shortcut / `notinhas://capture/application` | Same overlay, `.applicationWindow` mode → `ScreenCaptureManager.captureWindow(target:)` | Window image incl. shadow (macOS 14+) |
@@ -112,6 +114,16 @@ flowchart TD
 - The frozen/manual and application-window paths both preserve existing desktop icon/widget exclusion, cursor, own-app exclusion, temp-save, Quick Access, clipboard, and annotate routing behavior.
 - When own-app exclusion hides visible normal Notinhas windows for screenshot, OCR, cutout, scrolling capture, or pre-recording setup, those windows are ordered out temporarily (`HiddenWindowSession`) and restored after the capture/session finishes or is cancelled.
 - Capture toasts, alerts, open-panel prompts, and error surfaces are localized through `L10n`.
+
+### All-In-One capture session
+
+- Entry: menu bar **All-In-One Capture**, optional global shortcut (recommended `⇧⌘0`, ships unbound), or `notinhas://capture/all-in-one`.
+- `AllInOneCaptureCoordinator` (`Notinhas/Features/Capture/AllInOne/`) owns the session: Plan 035 floating HUD toolbars (mode strip + action bar) and Plan 036 selection refinement (`AllInOneSelectionRefinementController`, `AllInOneDimensionsBarView`, `CaptureLastSelectionStore`).
+- Modes in the strip: Area (default), Fullscreen, Window, Capture Markup, Scrolling, OCR, and Recording when the Video module is enabled at runtime. Timer, Smart Element, and Object Cutout stay as dedicated menu/shortcut entries.
+- If a valid last selection exists on any connected display, refinement overlays appear immediately; otherwise the coordinator starts `AreaSelectionController` for the first drag, then hands the rect to refinement. Classic `⇧⌘4` area capture is unchanged.
+- Fullscreen mode hides area refinement; Window, Scrolling, and Recording exit the HUD and call the existing `captureApplication()`, `captureScrolling()`, and `startRecordingFlow()` entry points (documented compromise to avoid rewriting those coordinators).
+- Area, Capture Markup, OCR, and Scrolling preserve the refined rect and dispatch through `ScreenCaptureViewModel` helpers (`captureArea(at:)`, `captureAreaAnnotate(at:)`, `captureOCR(at:)`, `captureScrolling(at:)`). The last rect is persisted on Capture.
+- `Escape` cancels the session; re-entry cancels any prior All-In-One session first.
 
 ### Selection overlay architecture
 

@@ -53,6 +53,8 @@ struct NotinhasDeepLinkHandler {
       screenCaptureViewModel.captureFullscreen()
     case .captureArea:
       screenCaptureViewModel.captureArea()
+    case .captureAllInOne:
+      screenCaptureViewModel.captureAllInOne()
     case .captureApplication:
       screenCaptureViewModel.captureApplication()
     case .captureActiveWindow:
@@ -128,6 +130,7 @@ struct NotinhasDeepLinkHandler {
 enum NotinhasDeepLinkAction: Equatable {
   case captureFullscreen
   case captureArea
+  case captureAllInOne
   case captureApplication
   case captureActiveWindow
   case captureAreaAnnotate
@@ -159,6 +162,8 @@ enum NotinhasDeepLinkAction: Equatable {
       self = .captureFullscreen
     case "capture/area", "capture-area", "area", "screenshot/area":
       self = .captureArea
+    case "capture/all-in-one", "capture-all-in-one", "all-in-one", "screenshot/all-in-one":
+      self = .captureAllInOne
     case "capture/application", "capture/window", "application-capture", "window-capture", "screenshot/window":
       self = .captureApplication
     case "capture/active-window", "capture/focused-window", "active-window-capture",
@@ -207,6 +212,7 @@ enum NotinhasDeepLinkAction: Equatable {
     switch self {
     case .captureFullscreen: "captureFullscreen"
     case .captureArea: "captureArea"
+    case .captureAllInOne: "captureAllInOne"
     case .captureApplication: "captureApplication"
     case .captureActiveWindow: "captureActiveWindow"
     case .captureAreaAnnotate: "captureAreaAnnotate"

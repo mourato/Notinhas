@@ -22,6 +22,7 @@ final class InlineAreaAnnotateCoordinator {
     saveDirectory: URL,
     outputFormat: ImageFormat,
     context: CaptureContext = .empty,
+    initialScreenRect: CGRect? = nil,
     onComplete: @escaping (CaptureResult) -> Void
   ) {
     closeActiveWindows()
@@ -93,6 +94,11 @@ final class InlineAreaAnnotateCoordinator {
     }
     if !windows.contains(where: { $0.displayID == primaryDisplayID }) {
       windows.first?.makeKey()
+    }
+
+    if let initialScreenRect {
+      let localRect = InlineAreaAnnotateSession.localRect(for: initialScreenRect, in: desktopFrame)
+      session.beginAnnotating(with: localRect)
     }
   }
 

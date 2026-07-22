@@ -32,11 +32,12 @@ flowchart TD
 
 ## Global shortcut table
 
-All 18 `GlobalShortcutKind`s with shipping defaults (verified in `KeyboardShortcutManager.swift`):
+All 19 `GlobalShortcutKind`s with shipping defaults (verified in `KeyboardShortcutManager.swift`):
 
 | Kind | Action | Default |
 | --- | --- | --- |
 | `fullscreen` | Capture Fullscreen | ⌘⇧3 |
+| `allInOne` | All-In-One Capture | **unbound** (recommended ⌘⇧0) |
 | `area` | Capture Area | ⌘⇧4 |
 | `areaAnnotate` | Capture Area & Annotate | ⌘⇧7 |
 | `activeWindow` | Capture Active Window | ⌘⇧9 |
@@ -55,7 +56,7 @@ All 18 `GlobalShortcutKind`s with shipping defaults (verified in `KeyboardShortc
 | `restartRecording` | Restart current recording | **unbound** |
 | `deleteRecording` | Delete in-progress recording | **unbound** |
 
-- The four unbound-by-default kinds are seeded into the cleared set on first launch (`seedDefaultClearedShortcutsOnFirstLaunchIfNeeded`) so they never shadow existing user config. `pauseResumeRecordingShortcut` keeps the recommended ⌘⇧Space as its backing value, but resolves to `nil` via `shortcut(for:)` until the user binds it.
+- The five unbound-by-default kinds are seeded into the cleared set on first launch (`seedDefaultClearedShortcutsOnFirstLaunchIfNeeded`) so they never shadow existing user config. `pauseResumeRecordingShortcut` and `allInOneShortcut` keep recommended combos as backing values, but resolve to `nil` via `shortcut(for:)` until the user binds them.
 - Editing UI: Settings → Shortcuts (see [PREFERENCES.md](PREFERENCES.md)).
 
 ## Overlay shortcuts (in-overlay, not plain global hotkeys)
@@ -120,6 +121,7 @@ Dispatch: AppleEvent `kAEGetURL` → `AppDelegate` (queued pre-launch) → `AppC
 | --- | --- |
 | `notinhas://capture/fullscreen` | Capture fullscreen |
 | `notinhas://capture/area` | Capture area |
+| `notinhas://capture/all-in-one` | All-In-One capture HUD |
 | `notinhas://capture/application` | Application-window capture |
 | `notinhas://capture/active-window` | Capture active window |
 | `notinhas://capture/area-annotate` | Capture area → Annotate |

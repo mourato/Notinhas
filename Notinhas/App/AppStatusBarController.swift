@@ -447,6 +447,17 @@ final class AppStatusBarController: ObservableObject {
     #endif
 
     // Capture Actions
+    let captureAllInOneItem = NSMenuItem(
+      title: L10n.Actions.captureAllInOne,
+      action: #selector(captureAllInOneAction),
+      keyEquivalent: ""
+    )
+    applyConfiguredShortcut(captureAllInOneItem, for: .allInOne, using: shortcutManager)
+    captureAllInOneItem.target = self
+    captureAllInOneItem.image = NSImage(systemSymbolName: "viewfinder", accessibilityDescription: nil)
+    captureAllInOneItem.isEnabled = viewModel.hasPermission
+    menu?.addItem(captureAllInOneItem)
+
     let captureAreaItem = NSMenuItem(
       title: L10n.Actions.captureArea,
       action: #selector(captureAreaAction),
@@ -746,6 +757,11 @@ final class AppStatusBarController: ObservableObject {
       recorder.togglePause()
     }
   #endif
+
+  @objc private func captureAllInOneAction() {
+    logMenuAction("captureAllInOne")
+    viewModel?.captureAllInOne()
+  }
 
   @objc private func captureAreaAction() {
     logMenuAction("captureArea")
