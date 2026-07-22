@@ -113,7 +113,7 @@ Recording/Scrolling without depending on the Video-gated `RecordingToolbarWindow
 |---|---|---:|---:|---|---|
 | 035 | Shared capture floating HUD chrome (ungated) | P1 | M | — | DONE (`e539d2bf`; thermo fixes `d58843df`) |
 | 036 | Refinable selection (handles, W×H, aspect lock, last rect) | P1 | L | 035 | DONE (`15dd97a3`; thermo fixes `adf5d650`) |
-| 037 | All-In-One session, shortcut, menu, deeplink, docs | P1 | L | 035, 036 | TODO |
+| 037 | All-In-One session, shortcut, menu, deeplink, docs | P1 | L | 035, 036 | DONE (`0bcc9145`; thermo fixes `0acd57c7`, tests `47348f62`) |
 
 ### Dependency notes (035–037)
 
