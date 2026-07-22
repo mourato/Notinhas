@@ -212,6 +212,25 @@ focused command for All-In-One, HUD placement, and coordinator tests passed
 with 17 tests. The project still retains its automatic team signing settings
 for Xcode/release workflows; the local override is intentionally script-scoped.
 
+## All-In-One resize snapping (042)
+
+The All-In-One refinement now exposes native resize cursors on all eight
+handles and resolves semantic, visual, and captured-color boundaries while
+resizing. The attraction defaults to 5 px, is configurable in Capture
+preferences, and immediately yields when the raw edge crosses the candidate.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 042 | Add native resize affordances and content-aware snapping to area refinement | P1 | L | 036, 040 | DONE (`044a0e9b`; review fixes `73d128c1`; manual Screen Recording/Accessibility smoke pending) |
+
+### Validation note (042)
+
+Focused snapping, geometry, AX, and configuration tests pass; the default
+Video-off build and full `./scripts/run-tests.sh --skip-visual` suite pass.
+CatalogTool verification remains blocked by its pre-existing hardcoded
+`Snapzy/Resources/Localization/manifest.json` path; the repository's manifest
+is under `Notinhas/Resources/Localization/manifest.json`.
+
 ## Dependency notes (026–030)
 
 - 026 must land before the bundle-ID/path cutover.
