@@ -8,7 +8,7 @@
 > and marks the separation program complete.
 >
 > **Drift check**:
-> `git diff --stat 6822c42..HEAD -- README* AGENTS.md CONTRIBUTING.md SECURITY.md docs .agents .github/ISSUE_TEMPLATE .github/workflows/release-notify.yml`
+> `git diff --stat 5bc63c6..HEAD -- README* AGENTS.md CONTRIBUTING.md SECURITY.md docs .agents .github/ISSUE_TEMPLATE .github/workflows/release-notify.yml`
 > must be empty.
 
 ## Status
@@ -18,7 +18,7 @@
 - **Risk**: MED
 - **Depends on**: `plans/029-rename-notinhas-product.md`
 - **Category**: docs
-- **Planned at**: `6822c42`, 2026-07-21
+- **Planned at**: `5bc63c6`, 2026-07-21 (reconciled after Plan 030 review fixes)
 
 ## Execution profile
 

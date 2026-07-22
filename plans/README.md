@@ -43,7 +43,7 @@ Generated/reconciled on 2026-07-21 against commit `6822c42`.
 | 027 | Remove Sparkle, Report a Problem, and About | P1 | L | 026 | DONE (`db1c0a0`, review fixes `92491f3`; full suite has two pre-existing flaky failures) |
 | 028 | Replace `snapzy://` with `notinhas://` | P1 | M | 027 | DONE (`1507d08`; full suite has two pre-existing flaky failures) |
 | 029 | Rename the technical product identity to Notinhas | P1 | L | 026–028 | DONE (`6124d74`, review fixes `163e0f1`; focused migration tests and Debug build pass) |
-| 030 | Complete documentation and final validation | P2 | L | 029 | TODO |
+| 030 | Complete documentation and final validation | P2 | L | 029 | DONE (`39f7053`, review fixes `5bc63c6`; docs/scripts residue fixed; default/video suites retain two pre-existing UI failures and Release validation remains environment-blocked) |
 
 Status values: `TODO` | `IN PROGRESS` | `DONE` | `BLOCKED (reason)` |
 | `REJECTED (rationale)` | `SUPERSEDED (replacement)`.
