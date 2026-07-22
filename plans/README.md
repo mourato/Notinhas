@@ -90,7 +90,7 @@ replace a STOP condition with an assumption.
 |---|---|---:|---:|---|---|
 | 031 | Shared Annotate shortcut→keycap helpers + presenter tests | P1 | S | — | DONE (`00178ff3`, review fixes `b120abba`) |
 | 032 | OverlayTooltip on Annotate toolbar tools and chrome | P1 | M | 031 | DONE (`fb69b316`, review fixes `f3c5b0fb`) |
-| 033 | OverlayTooltip on Annotate bottom-bar shortcut actions | P1 | S | 031 | TODO |
+| 033 | OverlayTooltip on Annotate bottom-bar shortcut actions | P1 | S | 031 | DONE (`138097e4`; thermo approve, no code fixes; deferred: hardcoded `.help("Move canvas")`) |
 | 034 | +/- steppers beside Annotate and Notinhas sliders | P1 | M | — | TODO |
 
 ### Dependency notes (031–034)
@@ -127,6 +127,9 @@ Active UI, runtime identity, installer defaults, public docs, and agent
 instructions may not use this allowlist to retain branding.
 
 ## Findings considered and rejected
+
+- Plan 033 leftover `.help("Move canvas")` English string: deferred; plan said leave unless L10n exists.
+
 
 - App-wide OverlayTooltip replacement of every `.help`: rejected for this
   round — scope is Annotate image-editor chrome first; Preferences/Video/
