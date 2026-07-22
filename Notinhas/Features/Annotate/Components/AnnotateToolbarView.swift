@@ -82,7 +82,17 @@ struct AnnotateToolbarView: View {
       ) {
         state.beginCropInteraction()
       }
-      .help(L10n.AnnotateUI.crop)
+      .overlayTooltip(
+        L10n.AnnotateUI.crop,
+        keys: AnnotateOverlayTooltipKeys.toolKeys(for: .crop, manager: annotateShortcutManager),
+        edge: .below
+      )
+      .accessibilityLabel(
+        accessibilityTitle(
+          L10n.AnnotateUI.crop,
+          keys: AnnotateOverlayTooltipKeys.toolKeys(for: .crop, manager: annotateShortcutManager)
+        )
+      )
 
       ToolbarButton(
         icon: "rectangle.on.rectangle",
@@ -91,7 +101,17 @@ struct AnnotateToolbarView: View {
       ) {
         state.toggleSidebarVisibility()
       }
-      .help(L10n.AnnotateUI.toggleSidebar)
+      .overlayTooltip(
+        L10n.AnnotateUI.toggleSidebar,
+        keys: AnnotateOverlayTooltipKeys.actionKeys(for: .toggleSidebar),
+        edge: .below
+      )
+      .accessibilityLabel(
+        accessibilityTitle(
+          L10n.AnnotateUI.toggleSidebar,
+          keys: AnnotateOverlayTooltipKeys.actionKeys(for: .toggleSidebar)
+        )
+      )
 
       ToolbarDivider()
 
@@ -192,13 +212,16 @@ struct AnnotateToolbarView: View {
   }
 
   private func annotationToolButton(for tool: AnnotationToolType, help: String? = nil) -> some View {
-    ToolbarButton(
+    let title = help ?? tool.displayName
+    let keys = AnnotateOverlayTooltipKeys.toolKeys(for: tool, manager: annotateShortcutManager)
+    return ToolbarButton(
       icon: tool.icon,
       isSelected: state.selectedTool == tool
     ) {
       state.activateTool(tool)
     }
-    .help(help ?? tool.displayName)
+    .overlayTooltip(title, keys: keys, edge: .below)
+    .accessibilityLabel(accessibilityTitle(title, keys: keys))
     .disabled(state.editorMode == .mockup && tool != .selection)
     .opacity(state.editorMode == .mockup && tool != .selection ? 0.4 : 1)
   }
@@ -208,14 +231,16 @@ struct AnnotateToolbarView: View {
       ToolbarButton(icon: "arrow.uturn.backward", isSelected: false) {
         state.undo()
       }
-      .help(L10n.Common.undo)
+      .overlayTooltip(L10n.Common.undo, keys: ["⌘", "Z"], edge: .below)
+      .accessibilityLabel(accessibilityTitle(L10n.Common.undo, keys: ["⌘", "Z"]))
       .disabled(!state.canUndo)
       .opacity(state.canUndo ? 1 : 0.4)
 
       ToolbarButton(icon: "arrow.uturn.forward", isSelected: false) {
         state.redo()
       }
-      .help(L10n.Common.redo)
+      .overlayTooltip(L10n.Common.redo, keys: ["⌘", "⇧", "Z"], edge: .below)
+      .accessibilityLabel(accessibilityTitle(L10n.Common.redo, keys: ["⌘", "⇧", "Z"]))
       .disabled(!state.canRedo)
       .opacity(state.canRedo ? 1 : 0.4)
     }
@@ -247,12 +272,16 @@ struct AnnotateToolbarView: View {
         saveAs()
       }
       .buttonStyle(.bordered)
+      .overlayTooltip(L10n.Common.saveAs, keys: ["⌘", "⇧", "S"], edge: .below)
+      .accessibilityLabel(accessibilityTitle(L10n.Common.saveAs, keys: ["⌘", "⇧", "S"]))
 
       Button(L10n.Common.done) {
         done()
       }
       .buttonStyle(.borderedProminent)
       .tint(.blue)
+      .overlayTooltip(L10n.Common.done, keys: ["⌘", "S"], edge: .below)
+      .accessibilityLabel(accessibilityTitle(L10n.Common.done, keys: ["⌘", "S"]))
     }
   }
 
@@ -262,22 +291,32 @@ struct AnnotateToolbarView: View {
         state.revertCropToOriginalBounds()
       }
       .buttonStyle(.bordered)
-      .help("\(L10n.Common.restore) \(L10n.Common.original)")
+      .overlayTooltip("\(L10n.Common.restore) \(L10n.Common.original)", edge: .below)
 
       Button(L10n.Common.cancel) {
         state.cancelCrop()
       }
       .buttonStyle(.bordered)
+      .overlayTooltip(L10n.Common.cancel, keys: ["esc"], edge: .below)
+      .accessibilityLabel(accessibilityTitle(L10n.Common.cancel, keys: ["esc"]))
 
       Button(L10n.Common.apply) {
         state.confirmCropInteraction()
       }
       .buttonStyle(.borderedProminent)
       .tint(.blue)
+      .overlayTooltip(L10n.Common.apply, keys: ["⏎"], edge: .below)
+      .accessibilityLabel(accessibilityTitle(L10n.Common.apply, keys: ["⏎"]))
     }
   }
 
   // MARK: - Actions
+
+  private func accessibilityTitle(_ title: String, keys: [String]) -> String {
+    guard !keys.isEmpty else { return title }
+    let shortcut = keys.joined(separator: "")
+    return L10n.Common.withShortcut(title, shortcut)
+  }
 
   private func saveAs() {
     if state.isCombineMode {
