@@ -377,8 +377,8 @@ final class AppStatusBarController: ObservableObject {
 
     let canvasSize = NSSize(width: 18, height: 18)
     let targetVisibleOccupancy: CGFloat = 0.89
-    // Current MenubarIcon PNG alpha bounds occupy 75.28% of its transparent canvas.
-    let sourceVisibleOccupancy: CGFloat = 0.7528
+    // Current MenubarIcon PNG alpha bounds occupy 94.29% of its transparent canvas.
+    let sourceVisibleOccupancy: CGFloat = 0.9429
     let drawSize = NSSize(
       width: canvasSize.width * targetVisibleOccupancy / sourceVisibleOccupancy,
       height: canvasSize.height * targetVisibleOccupancy / sourceVisibleOccupancy
