@@ -75,24 +75,23 @@ struct AnnotateToolbarView: View {
   // MARK: - Tool Groups
 
   private var captureToolsGroup: some View {
-    HStack(spacing: 4) {
+    let cropTitle = L10n.AnnotateUI.crop
+    let cropKeys = AnnotateOverlayTooltipKeys.toolKeys(for: .crop, manager: annotateShortcutManager)
+    let sidebarTitle = L10n.AnnotateUI.toggleSidebar
+    let sidebarKeys = AnnotateOverlayTooltipKeys.actionKeys(
+      for: .toggleSidebar,
+      manager: annotateShortcutManager
+    )
+
+    return HStack(spacing: 4) {
       ToolbarButton(
         icon: "crop",
         isSelected: state.selectedTool == .crop
       ) {
         state.beginCropInteraction()
       }
-      .overlayTooltip(
-        L10n.AnnotateUI.crop,
-        keys: AnnotateOverlayTooltipKeys.toolKeys(for: .crop, manager: annotateShortcutManager),
-        edge: .below
-      )
-      .accessibilityLabel(
-        accessibilityTitle(
-          L10n.AnnotateUI.crop,
-          keys: AnnotateOverlayTooltipKeys.toolKeys(for: .crop, manager: annotateShortcutManager)
-        )
-      )
+      .overlayTooltip(cropTitle, keys: cropKeys, edge: .below)
+      .accessibilityLabel(accessibilityTitle(cropTitle, keys: cropKeys))
 
       ToolbarButton(
         icon: "rectangle.on.rectangle",
@@ -101,17 +100,8 @@ struct AnnotateToolbarView: View {
       ) {
         state.toggleSidebarVisibility()
       }
-      .overlayTooltip(
-        L10n.AnnotateUI.toggleSidebar,
-        keys: AnnotateOverlayTooltipKeys.actionKeys(for: .toggleSidebar),
-        edge: .below
-      )
-      .accessibilityLabel(
-        accessibilityTitle(
-          L10n.AnnotateUI.toggleSidebar,
-          keys: AnnotateOverlayTooltipKeys.actionKeys(for: .toggleSidebar)
-        )
-      )
+      .overlayTooltip(sidebarTitle, keys: sidebarKeys, edge: .below)
+      .accessibilityLabel(accessibilityTitle(sidebarTitle, keys: sidebarKeys))
 
       ToolbarDivider()
 
@@ -227,20 +217,23 @@ struct AnnotateToolbarView: View {
   }
 
   private var undoRedoGroup: some View {
-    HStack(spacing: 4) {
+    let undoKeys = ["⌘", "Z"]
+    let redoKeys = ["⌘", "⇧", "Z"]
+
+    return HStack(spacing: 4) {
       ToolbarButton(icon: "arrow.uturn.backward", isSelected: false) {
         state.undo()
       }
-      .overlayTooltip(L10n.Common.undo, keys: ["⌘", "Z"], edge: .below)
-      .accessibilityLabel(accessibilityTitle(L10n.Common.undo, keys: ["⌘", "Z"]))
+      .overlayTooltip(L10n.Common.undo, keys: undoKeys, edge: .below)
+      .accessibilityLabel(accessibilityTitle(L10n.Common.undo, keys: undoKeys))
       .disabled(!state.canUndo)
       .opacity(state.canUndo ? 1 : 0.4)
 
       ToolbarButton(icon: "arrow.uturn.forward", isSelected: false) {
         state.redo()
       }
-      .overlayTooltip(L10n.Common.redo, keys: ["⌘", "⇧", "Z"], edge: .below)
-      .accessibilityLabel(accessibilityTitle(L10n.Common.redo, keys: ["⌘", "⇧", "Z"]))
+      .overlayTooltip(L10n.Common.redo, keys: redoKeys, edge: .below)
+      .accessibilityLabel(accessibilityTitle(L10n.Common.redo, keys: redoKeys))
       .disabled(!state.canRedo)
       .opacity(state.canRedo ? 1 : 0.4)
     }
@@ -267,46 +260,53 @@ struct AnnotateToolbarView: View {
   }
 
   private var annotateActionButtons: some View {
-    HStack(spacing: 8) {
+    let saveAsKeys = ["⌘", "⇧", "S"]
+    let doneKeys = ["⌘", "S"]
+
+    return HStack(spacing: 8) {
       Button(L10n.Common.saveAs) {
         saveAs()
       }
       .buttonStyle(.bordered)
-      .overlayTooltip(L10n.Common.saveAs, keys: ["⌘", "⇧", "S"], edge: .below)
-      .accessibilityLabel(accessibilityTitle(L10n.Common.saveAs, keys: ["⌘", "⇧", "S"]))
+      .overlayTooltip(L10n.Common.saveAs, keys: saveAsKeys, edge: .below)
+      .accessibilityLabel(accessibilityTitle(L10n.Common.saveAs, keys: saveAsKeys))
 
       Button(L10n.Common.done) {
         done()
       }
       .buttonStyle(.borderedProminent)
       .tint(.blue)
-      .overlayTooltip(L10n.Common.done, keys: ["⌘", "S"], edge: .below)
-      .accessibilityLabel(accessibilityTitle(L10n.Common.done, keys: ["⌘", "S"]))
+      .overlayTooltip(L10n.Common.done, keys: doneKeys, edge: .below)
+      .accessibilityLabel(accessibilityTitle(L10n.Common.done, keys: doneKeys))
     }
   }
 
   private var cropActionButtons: some View {
-    HStack(spacing: 8) {
-      Button("\(L10n.Common.restore) \(L10n.Common.original)") {
+    let restoreTitle = "\(L10n.Common.restore) \(L10n.Common.original)"
+    let cancelKeys = ["esc"]
+    let applyKeys = ["⏎"]
+
+    return HStack(spacing: 8) {
+      Button(restoreTitle) {
         state.revertCropToOriginalBounds()
       }
       .buttonStyle(.bordered)
-      .overlayTooltip("\(L10n.Common.restore) \(L10n.Common.original)", edge: .below)
+      .overlayTooltip(restoreTitle, edge: .below)
 
       Button(L10n.Common.cancel) {
         state.cancelCrop()
       }
       .buttonStyle(.bordered)
-      .overlayTooltip(L10n.Common.cancel, keys: ["esc"], edge: .below)
-      .accessibilityLabel(accessibilityTitle(L10n.Common.cancel, keys: ["esc"]))
+      .overlayTooltip(L10n.Common.cancel, keys: cancelKeys, edge: .below)
+      .accessibilityLabel(accessibilityTitle(L10n.Common.cancel, keys: cancelKeys))
 
       Button(L10n.Common.apply) {
         state.confirmCropInteraction()
       }
       .buttonStyle(.borderedProminent)
       .tint(.blue)
-      .overlayTooltip(L10n.Common.apply, keys: ["⏎"], edge: .below)
-      .accessibilityLabel(accessibilityTitle(L10n.Common.apply, keys: ["⏎"]))
+      .overlayTooltip(L10n.Common.apply, keys: applyKeys, edge: .below)
+      .accessibilityLabel(accessibilityTitle(L10n.Common.apply, keys: applyKeys))
     }
   }
 

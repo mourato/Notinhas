@@ -89,7 +89,7 @@ replace a STOP condition with an assumption.
 | Plan | Title | Priority | Effort | Depends on | Status |
 |---|---|---:|---:|---|---|
 | 031 | Shared Annotate shortcut→keycap helpers + presenter tests | P1 | S | — | DONE (`00178ff3`, review fixes `b120abba`) |
-| 032 | OverlayTooltip on Annotate toolbar tools and chrome | P1 | M | 031 | TODO |
+| 032 | OverlayTooltip on Annotate toolbar tools and chrome | P1 | M | 031 | DONE (`fb69b316`, review fixes pending) |
 | 033 | OverlayTooltip on Annotate bottom-bar shortcut actions | P1 | S | 031 | TODO |
 | 034 | +/- steppers beside Annotate and Notinhas sliders | P1 | M | — | TODO |
 
