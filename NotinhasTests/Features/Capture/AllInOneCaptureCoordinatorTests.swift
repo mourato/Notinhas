@@ -54,4 +54,30 @@ final class AllInOneCaptureCoordinatorTests: XCTestCase {
     XCTAssertEqual(window.level, .screenSaver)
     window.close()
   }
+
+  func testSessionState_updateRectPublishesSelection() {
+    let state = AllInOneCaptureSessionState(videoEnabled: false)
+    let rect = CGRect(x: 40, y: 50, width: 320, height: 180)
+    var publishedRect: CGRect?
+    state.onRectChanged = { publishedRect = $0 }
+
+    state.updateRect(rect)
+
+    XCTAssertEqual(state.currentRect, rect)
+    XCTAssertEqual(publishedRect, rect)
+  }
+
+  func testSessionState_confirmAndCancelInvokeCallbacks() {
+    let state = AllInOneCaptureSessionState(videoEnabled: false)
+    var confirmed = false
+    var cancelled = false
+    state.onConfirmCapture = { confirmed = true }
+    state.onCancel = { cancelled = true }
+
+    state.confirmCapture()
+    state.cancel()
+
+    XCTAssertTrue(confirmed)
+    XCTAssertTrue(cancelled)
+  }
 }
