@@ -2,8 +2,12 @@
 
 This directory contains the improve-skill handoff plans. Plans 001–025 are
 completed historical Notinhas UX/video work. The identity-separation round is
-026–030 because `/plans` already had an established monotonic sequence.
-Generated/reconciled on 2026-07-21 against commit `6822c42`.
+026–030. The OverlayTooltip rollout + slider steppers round is **031–034**,
+generated on 2026-07-21 against commit `df25f56f`.
+
+Execute 031–034 with the project skill
+`.agents/skills/plan-execute-review/SKILL.md` (Composer 2.5 executor → merge →
+thermo-nuclear review → fix all findings → next plan).
 
 ## Historical plan status
 
@@ -63,20 +67,42 @@ Status values: `TODO` | `IN PROGRESS` | `DONE` | `BLOCKED (reason)` |
 
 ## Required executor/reviewer loop
 
+Canonical skill: `.agents/skills/plan-execute-review/SKILL.md`.
+
 Every plan requires:
 
-1. A Composer 2.5 executor in an isolated worktree implements only the plan,
-   runs every gate, commits, merges, removes its worktree/branch, and pushes.
-   If isolation prevents integration, GPT 5.6 performs merge, cleanup, and push
-   from the returned commit.
-2. GPT 5.6 runs `/thermo-nuclear-code-quality-review` on the integrated diff.
-3. GPT 5.6 fixes every finding, reruns relevant gates, commits the fixes, and
-   starts the next plan only after that reviewed commit is integrated.
+1. Orchestrator dispatches a **Composer 2.5** executor (Cursor) or **GPT 5.6
+   Medium** (Codex) in an isolated worktree. If those models are unavailable,
+   ask the user which model to use — do not silently substitute.
+2. Executor implements only the plan, runs every gate, **commits → merges →
+   cleans up worktree/branch → pushes**. If isolation prevents integration,
+   the orchestrator completes merge/cleanup/push from the returned commit.
+3. Orchestrator runs `/thermo-nuclear-code-quality-review` on the integrated
+   diff and **fixes every finding**, commits, and pushes.
+4. Only then start the next selected plan.
 
 No executor may silently skip a gate, widen scope, delete legacy data, or
 replace a STOP condition with an assumption.
 
-## Dependency notes
+## OverlayTooltip + slider steppers (031–034)
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 031 | Shared Annotate shortcut→keycap helpers + presenter tests | P1 | S | — | TODO |
+| 032 | OverlayTooltip on Annotate toolbar tools and chrome | P1 | M | 031 | TODO |
+| 033 | OverlayTooltip on Annotate bottom-bar shortcut actions | P1 | S | 031 | TODO |
+| 034 | +/- steppers beside Annotate and Notinhas sliders | P1 | M | — | TODO |
+
+### Dependency notes (031–034)
+
+- 031 must land before 032 and 033 (shared `AnnotateOverlayTooltipKeys`).
+- 032 and 033 are independent after 031; serialize same-day merges if both
+  touch OverlayTooltipPresenter behavior to ease review.
+- 034 is independent of 031–033 (parallelizable workstream).
+- Preferences / VideoEditor OverlayTooltip and Preferences slider steppers
+  were considered and deferred (see rejected findings).
+
+## Dependency notes (026–030)
 
 - 026 must land before the bundle-ID/path cutover.
 - 027 removes shared Sparkle/preferences/release surfaces before URL and
@@ -102,6 +128,11 @@ instructions may not use this allowlist to retain branding.
 
 ## Findings considered and rejected
 
+- App-wide OverlayTooltip replacement of every `.help`: rejected for this
+  round — scope is Annotate image-editor chrome first; Preferences/Video/
+  menu bar remain discovery via shortcut overlay + Preferences.
+- Preferences / VideoEditor slider steppers in the same round: deferred;
+  plan 034 establishes the shared control on Annotate/Notinhas first.
 - Removing cloud, recording, or video: rejected; the user chose identity and
   upstream-integration separation while preserving existing features.
 - Keeping `snapzy://` as an alias: rejected by explicit decision.

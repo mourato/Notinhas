@@ -16,6 +16,7 @@ Start here to route work to the narrowest skill. For governance (where docs live
 | `capture-annotate-export` | Visual handoff loop | Notinhas pins/notes, export composition, clipboard brief, ImgBB from annotate, scope questions |
 | `project-standards` | Guidance governance | Updating AGENTS, skill registry, docs routing, known limitations |
 | `delivery-workflow` | Build, test, format, signing | Merge gates, `./scripts/*`, manual smoke scope |
+| `plan-execute-review` | Advisor→executor→thermo loop | Executing `plans/NNN-*.md` with Composer 2.5 / GPT 5.6 Medium, merge/push, and thermo finding fixes |
 | `documentation` | README, AGENTS, docs/, MARK | Project docs ownership and agent guide edits |
 | `macos-app-engineering` | SwiftUI/AppKit shell | Menu bar, capture overlays, Annotate windows, previews |
 | `menubar` | NSStatusItem / menu | Status item lifetime, capture menu behavior |
