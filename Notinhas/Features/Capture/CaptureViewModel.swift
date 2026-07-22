@@ -350,6 +350,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       captureFullscreen()
     case .captureArea:
       captureArea()
+    case .captureAllInOne:
+      captureAllInOne()
     case .captureAreaAnnotate:
       captureAreaAnnotate()
     case .captureApplication:
@@ -541,6 +543,97 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     startAreaCapture(initialInteractionMode: .manualRegion)
   }
 
+  func captureAllInOne() {
+    guard hasPermission else {
+      DiagnosticLogger.shared.log(.debug, .capture, "captureAllInOne blocked: no permission")
+      return
+    }
+
+    if isAreaSelectionActive, !AllInOneCaptureCoordinator.shared.isSessionActive {
+      DiagnosticLogger.shared.log(.debug, .capture, "captureAllInOne blocked: area selection active")
+      return
+    }
+
+    DiagnosticLogger.shared.log(.info, .capture, "All-In-One capture flow started")
+    AllInOneCaptureCoordinator.shared.start(from: self)
+  }
+
+  func setAllInOneSelectionBlocking(_ active: Bool) {
+    isAreaSelectionActive = active
+  }
+
+  func captureArea(at rect: CGRect) {
+    Task { @MainActor in
+      await performAreaCapture(at: rect)
+    }
+  }
+
+  func captureAreaAnnotate(at rect: CGRect) {
+    startInlineAreaAnnotateCapture(initialScreenRect: rect)
+  }
+
+  func captureOCR(at rect: CGRect) {
+    Task { @MainActor in
+      await performOCRCapture(at: rect)
+    }
+  }
+
+  func captureScrolling(at rect: CGRect) {
+    guard !ScrollingCaptureCoordinator.shared.isActive else {
+      AppToastManager.shared.show(
+        message: L10n.ScrollingCapture.toastSessionAlreadyActive,
+        style: .warning,
+        position: .bottomCenter
+      )
+      return
+    }
+
+    guard
+      let resolvedSaveDirectory = fileAccessManager.ensureExportDirectoryForOperation(
+        promptMessage: L10n.Recording.chooseSaveLocationMessage
+      )
+    else {
+      lastCaptureResult = .failure(.saveFailed(L10n.ScreenCapture.saveLocationPermissionRequired))
+      return
+    }
+    saveDirectory = resolvedSaveDirectory
+
+    DiagnosticLogger.shared.log(
+      .info,
+      .capture,
+      "Scrolling capture flow started from All-In-One rect",
+      context: ["format": resolvedFormat.fileExtension]
+    )
+
+    let excludeDesktopIcons = DesktopIconManager.shared.isIconHidingEnabled
+    let excludeDesktopWidgets = DesktopIconManager.shared.isWidgetHidingEnabled
+    let prefetchedContentTask = captureManager.prefetchShareableContent(
+      includeDesktopWindows: excludeDesktopIcons || excludeDesktopWidgets
+    )
+    let hiddenWindowSession = hideVisibleNormalWindowsIfNeeded(true)
+
+    Task { @MainActor in
+      if hiddenWindowSession.didHideWindows {
+        try? await Task.sleep(nanoseconds: UInt64(windowHideSettleDelay * 1_000_000_000))
+      }
+
+      let actualSaveDirectory = tempCaptureManager.resolveSaveDirectory(
+        for: .screenshot,
+        exportDirectory: resolvedSaveDirectory
+      )
+
+      ScrollingCaptureCoordinator.shared.beginSession(
+        rect: rect,
+        saveDirectory: actualSaveDirectory,
+        format: resolvedFormat,
+        prefetchedContentTask: prefetchedContentTask,
+        onSessionEnded: {
+          hiddenWindowSession.restore()
+        }
+      )
+    }
+  }
+
   func captureApplication() {
     startAreaCapture(initialInteractionMode: .applicationWindow)
   }
@@ -695,7 +788,7 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
     }
   }
 
-  private func startInlineAreaAnnotateCapture() {
+  private func startInlineAreaAnnotateCapture(initialScreenRect: CGRect? = nil) {
     if isAreaSelectionActive {
       DiagnosticLogger.shared.log(.debug, .capture, "captureAreaAnnotate blocked: already active")
       return
@@ -810,7 +903,8 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
           frozenSession: frozenSession,
           saveDirectory: actualSaveDirectory,
           outputFormat: self.resolvedFormat,
-          context: captureContext
+          context: captureContext,
+          initialScreenRect: initialScreenRect
         ) { [weak self] result in
           guard let self else {
             hiddenWindowSession.restore()
@@ -2070,6 +2164,185 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       return CGFloat(image.height) / rect.height
     }
     return NSScreen.main?.backingScaleFactor ?? 2.0
+  }
+
+  // MARK: - Known-Rect Capture (All-In-One dispatch)
+
+  private func performAreaCapture(at rect: CGRect) async {
+    guard
+      let resolvedSaveDirectory = fileAccessManager.ensureExportDirectoryForOperation(
+        promptMessage: L10n.Recording.chooseSaveLocationMessage
+      )
+    else {
+      lastCaptureResult = .failure(.saveFailed(L10n.ScreenCapture.saveLocationPermissionRequired))
+      return
+    }
+    saveDirectory = resolvedSaveDirectory
+
+    let captureContext = CaptureContext.fromFrontmostApp()
+    let showCursor = showsCursorInScreenshots
+    let excludeDesktopIcons = DesktopIconManager.shared.isIconHidingEnabled
+    let excludeDesktopWidgets = DesktopIconManager.shared.isWidgetHidingEnabled
+    let excludeOwnApplication = !includesOwnAppInScreenshots
+    let prefetchedContentTask = captureManager.prefetchShareableContent(
+      includeDesktopWindows: excludeDesktopIcons || excludeDesktopWidgets
+    )
+    let hiddenWindowSession = hideVisibleNormalWindowsIfNeeded(excludeOwnApplication)
+
+    if hiddenWindowSession.didHideWindows {
+      try? await Task.sleep(nanoseconds: UInt64(windowHideSettleDelay * 1_000_000_000))
+    }
+
+    defer { hiddenWindowSession.restore() }
+
+    isCapturing = true
+    await Task.yield()
+
+    let actualSaveDirectory = tempCaptureManager.resolveSaveDirectory(
+      for: .screenshot,
+      exportDirectory: resolvedSaveDirectory
+    )
+
+    let result = await captureManager.captureArea(
+      rect: rect,
+      saveDirectory: actualSaveDirectory,
+      format: resolvedFormat,
+      showCursor: showCursor,
+      excludeDesktopIcons: excludeDesktopIcons,
+      excludeDesktopWidgets: excludeDesktopWidgets,
+      excludeOwnApplication: excludeOwnApplication,
+      prefetchedContentTask: prefetchedContentTask,
+      context: captureContext
+    )
+
+    isCapturing = false
+    lastCaptureResult = result
+
+    if case .success = result {
+      SoundManager.playScreenshotCapture()
+    }
+  }
+
+  private func performOCRCapture(at rect: CGRect) async {
+    let excludeDesktopIcons = DesktopIconManager.shared.isIconHidingEnabled
+    let excludeDesktopWidgets = DesktopIconManager.shared.isWidgetHidingEnabled
+    let prefetchedContentTask = captureManager.prefetchShareableContent(
+      includeDesktopWindows: excludeDesktopIcons || excludeDesktopWidgets
+    )
+    let hiddenWindowSession = hideVisibleNormalWindowsIfNeeded(!includesOwnAppInScreenshots)
+
+    if hiddenWindowSession.didHideWindows {
+      try? await Task.sleep(nanoseconds: UInt64(windowHideSettleDelay * 1_000_000_000))
+    }
+
+    defer { hiddenWindowSession.restore() }
+
+    DiagnosticLogger.shared.log(
+      .info,
+      .ocr,
+      "OCR capture started from All-In-One rect",
+      context: ["rect": "\(Int(rect.width))x\(Int(rect.height))"]
+    )
+
+    do {
+      let operationStartTime = CFAbsoluteTimeGetCurrent()
+      AppStatusBarController.shared.setProcessing(true)
+
+      let captureStartTime = CFAbsoluteTimeGetCurrent()
+      guard let image = try await captureManager.captureAreaAsImage(
+        rect: rect,
+        excludeDesktopIcons: excludeDesktopIcons,
+        excludeDesktopWidgets: excludeDesktopWidgets,
+        excludeOwnApplication: !includesOwnAppInScreenshots,
+        prefetchedContentTask: prefetchedContentTask
+      ) else {
+        AppStatusBarController.shared.setProcessing(false)
+        AppToastManager.shared.show(
+          message: L10n.ScreenCapture.unableToCaptureSelectedArea,
+          style: .error,
+          position: .bottomCenter
+        )
+        QuickAccessSound.failed.play()
+        return
+      }
+      let captureDurationMs = Self.elapsedMilliseconds(since: captureStartTime)
+
+      let processingStartTime = CFAbsoluteTimeGetCurrent()
+      async let qrResultTask = detectQRCodes(in: image)
+      async let recognizedTextTask = recognizeOCRText(in: image)
+      let (qrResult, recognizedText) = await (qrResultTask, recognizedTextTask)
+      let processingDurationMs = Self.elapsedMilliseconds(since: processingStartTime)
+      let totalDurationMs = Self.elapsedMilliseconds(since: operationStartTime)
+
+      let clipboardText = OCRQRPayloadComposer.compose(
+        recognizedText: recognizedText,
+        qrDetections: qrResult.detections,
+        qrSectionTitle: L10n.OCR.qrCodesLabel
+      )
+      let performanceContext = [
+        "captureMs": captureDurationMs,
+        "processingMs": processingDurationMs,
+        "totalMs": totalDurationMs,
+      ]
+
+      AppStatusBarController.shared.setProcessing(false)
+
+      guard let clipboardText else {
+        if qrResult.unsupportedPayloadCount > 0 {
+          AppToastManager.shared.show(
+            message: L10n.OCR.qrTextOnlyUnsupported,
+            style: .warning,
+            position: .bottomCenter
+          )
+        } else {
+          AppToastManager.shared.show(
+            message: L10n.OCR.noTextFound,
+            style: .warning,
+            position: .bottomCenter
+          )
+        }
+        QuickAccessSound.failed.play()
+        return
+      }
+
+      let pasteboard = NSPasteboard.general
+      pasteboard.clearContents()
+      pasteboard.setString(clipboardText, forType: .string)
+
+      var successContext = performanceContext
+      successContext["chars"] = "\(clipboardText.count)"
+      successContext["qrCount"] = "\(qrResult.detections.count)"
+      DiagnosticLogger.shared.log(.info, .ocr, "OCR text copied to clipboard", context: successContext)
+
+      let showOCRNotification = UserDefaults.standard
+        .object(forKey: PreferencesKeys.ocrSuccessNotificationEnabled) as? Bool ?? false
+      if showOCRNotification {
+        AppToastManager.shared.show(
+          message: L10n.Common.copiedToClipboard,
+          style: .success,
+          position: .bottomCenter
+        )
+        QuickAccessSound.complete.play()
+      }
+
+      let linkDetectionEnabled = UserDefaults.standard
+        .object(forKey: PreferencesKeys.ocrLinkDetectionEnabled) as? Bool ?? true
+      if linkDetectionEnabled {
+        let detectedLinks = OCRLinkDetector.detectWebLinks(in: clipboardText)
+        if !detectedLinks.isEmpty {
+          OCRLinkPromptManager.shared.show(links: detectedLinks)
+        }
+      }
+    } catch {
+      AppStatusBarController.shared.setProcessing(false)
+      DiagnosticLogger.shared.logError(.ocr, error, "OCR capture failed")
+      AppToastManager.shared.show(
+        message: error.localizedDescription,
+        style: .error,
+        position: .bottomCenter
+      )
+      QuickAccessSound.failed.play()
+    }
   }
 
   // MARK: - OCR Capture

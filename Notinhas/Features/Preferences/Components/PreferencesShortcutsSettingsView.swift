@@ -11,6 +11,7 @@ import SwiftUI
 
 struct ShortcutsSettingsView: View {
   @State private var fullscreenShortcut: ShortcutConfig?
+  @State private var allInOneShortcut: ShortcutConfig?
   @State private var areaShortcut: ShortcutConfig?
   @State private var areaAnnotateShortcut: ShortcutConfig?
   @State private var activeWindowShortcut: ShortcutConfig?
@@ -58,6 +59,7 @@ struct ShortcutsSettingsView: View {
 
   init() {
     _fullscreenShortcut = State(initialValue: KeyboardShortcutManager.shared.shortcut(for: .fullscreen))
+    _allInOneShortcut = State(initialValue: KeyboardShortcutManager.shared.shortcut(for: .allInOne))
     _areaShortcut = State(initialValue: KeyboardShortcutManager.shared.shortcut(for: .area))
     _areaAnnotateShortcut = State(initialValue: KeyboardShortcutManager.shared.shortcut(for: .areaAnnotate))
     _activeWindowShortcut = State(initialValue: KeyboardShortcutManager.shared.shortcut(for: .activeWindow))
@@ -332,6 +334,17 @@ struct ShortcutsSettingsView: View {
             isEnabled: globalEnabledBinding(for: .fullscreen),
             validationIssue: globalValidationIssues[.fullscreen],
             onShortcutChanged: { handleGlobalShortcutChange($0, for: .fullscreen) }
+          )
+
+          ShortcutRecorderView(
+            label: L10n.Actions.captureAllInOne,
+            icon: "viewfinder",
+            description: L10n.PreferencesShortcuts.captureAllInOneDescription,
+            shortcut: $allInOneShortcut,
+            defaultShortcut: .defaultAllInOne,
+            isEnabled: globalEnabledBinding(for: .allInOne),
+            validationIssue: globalValidationIssues[.allInOne],
+            onShortcutChanged: { handleGlobalShortcutChange($0, for: .allInOne) }
           )
 
           VStack(alignment: .leading, spacing: 4) {
@@ -1091,6 +1104,9 @@ struct ShortcutsSettingsView: View {
       case .fullscreen:
         fullscreenShortcut = config
         manager.setFullscreenShortcut(config)
+      case .allInOne:
+        allInOneShortcut = config
+        manager.setAllInOneShortcut(config)
       case .area:
         areaShortcut = config
         manager.setAreaShortcut(config)

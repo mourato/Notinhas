@@ -196,6 +196,7 @@ enum ShortcutOverlayContentBuilder {
   private static func captureItems(manager: KeyboardShortcutManager) -> [ShortcutOverlayItem] {
     let areaConfig = manager.shortcut(for: .area)
     var items: [ShortcutOverlayItem] = [
+      globalItem(kind: .allInOne, icon: "viewfinder", manager: manager),
       globalItem(kind: .fullscreen, icon: "rectangle.dashed.and.paperclip", manager: manager),
       ShortcutOverlayItem(
         id: "global-\(GlobalShortcutKind.area.rawValue)",

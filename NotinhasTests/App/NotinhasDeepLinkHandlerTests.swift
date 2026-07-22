@@ -12,6 +12,7 @@ final class NotinhasDeepLinkHandlerTests: XCTestCase {
   func testCanonicalRoutesParseExpectedActions() throws {
     let cases: [(String, NotinhasDeepLinkAction)] = [
       ("notinhas://capture/fullscreen", .captureFullscreen),
+      ("notinhas://capture/all-in-one", .captureAllInOne),
       ("notinhas://capture/area", .captureArea),
       ("notinhas://capture/application", .captureApplication),
       ("notinhas://capture/area-annotate", .captureAreaAnnotate),
