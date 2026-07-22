@@ -13,6 +13,7 @@ enum AllInOneCaptureMode: String, CaseIterable, Identifiable, Equatable {
   case window
   case annotate
   case scrolling
+  case timer
   case ocr
   case recording
 
@@ -21,7 +22,9 @@ enum AllInOneCaptureMode: String, CaseIterable, Identifiable, Equatable {
   }
 
   static func availableModes(videoEnabled: Bool) -> [AllInOneCaptureMode] {
-    var modes: [AllInOneCaptureMode] = [.area, .fullscreen, .window, .annotate, .scrolling, .ocr]
+    var modes: [AllInOneCaptureMode] = [
+      .area, .fullscreen, .window, .annotate, .scrolling, .timer, .ocr,
+    ]
     if videoEnabled {
       modes.append(.recording)
     }
@@ -35,20 +38,26 @@ enum AllInOneCaptureMode: String, CaseIterable, Identifiable, Equatable {
     case .window: "macwindow"
     case .annotate: "pencil.and.scribble"
     case .scrolling: "arrow.up.and.down"
+    case .timer: "timer"
     case .ocr: "text.viewfinder"
     case .recording: "record.circle"
     }
   }
 
   var title: String {
+    compactTitle
+  }
+
+  var compactTitle: String {
     switch self {
-    case .area: L10n.Actions.captureArea
-    case .fullscreen: L10n.Actions.captureFullscreen
+    case .area: L10n.AllInOne.modeArea
+    case .fullscreen: L10n.AllInOne.modeFullscreen
     case .window: L10n.AllInOne.windowMode
-    case .annotate: L10n.Actions.captureAreaAnnotate
-    case .scrolling: L10n.Actions.scrollingCapture
-    case .ocr: L10n.Actions.captureTextOCR
-    case .recording: L10n.Actions.recordVideo
+    case .annotate: L10n.AllInOne.modeAnnotate
+    case .scrolling: L10n.AllInOne.modeScrolling
+    case .timer: L10n.AllInOne.modeTimer
+    case .ocr: L10n.AllInOne.modeOCR
+    case .recording: L10n.AllInOne.modeRecording
     }
   }
 
@@ -59,14 +68,24 @@ enum AllInOneCaptureMode: String, CaseIterable, Identifiable, Equatable {
     case .window: L10n.AllInOne.modeWindowAccessibility
     case .annotate: L10n.AllInOne.modeAnnotateAccessibility
     case .scrolling: L10n.AllInOne.modeScrollingAccessibility
+    case .timer: L10n.AllInOne.modeTimerAccessibility
     case .ocr: L10n.AllInOne.modeOCRAccessibility
     case .recording: L10n.AllInOne.modeRecordingAccessibility
     }
   }
 
+  var captureActionAccessibilityLabel: String {
+    switch self {
+    case .timer:
+      L10n.AllInOne.timerCaptureAccessibility
+    default:
+      L10n.AllInOne.captureButtonAccessibility
+    }
+  }
+
   var preservesSelectionRect: Bool {
     switch self {
-    case .area, .annotate, .scrolling, .ocr, .recording:
+    case .area, .annotate, .scrolling, .timer, .ocr, .recording:
       true
     case .fullscreen, .window:
       false

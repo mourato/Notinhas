@@ -119,7 +119,8 @@ flowchart TD
 
 - Entry: menu bar **All-In-One Capture**, optional global shortcut (recommended `⇧⌘0`, ships unbound), or `notinhas://capture/all-in-one`.
 - `AllInOneCaptureCoordinator` (`Notinhas/Features/Capture/AllInOne/`) owns the session: Plan 035 floating HUD toolbars (mode strip + action bar) and Plan 036 selection refinement (`AllInOneSelectionRefinementController`, `AllInOneDimensionsBarView`, `CaptureLastSelectionStore`).
-- Modes in the strip: Area (default), Fullscreen, Window, Capture Markup, Scrolling, OCR, and Recording when the Video module is enabled at runtime. Timer, Smart Element, and Object Cutout stay as dedicated menu/shortcut entries.
+- Modes in the strip: Area (default), Fullscreen, Window, Capture Markup, Scrolling, Timer, OCR, and Recording when the Video module is enabled at runtime. Smart Element and Object Cutout stay as dedicated menu/shortcut entries.
+- Timer runs a fixed three-second delayed **area** capture using the selected rectangle. All-In-One chrome is dismissed before the delay so it is not included in the screenshot. There is no configurable duration, preference, or countdown overlay in this release.
 - If a valid last selection exists on any connected display, refinement overlays appear immediately; otherwise the coordinator starts `AreaSelectionController` for the first drag, then hands the rect to refinement. Classic `⇧⌘4` area capture is unchanged.
 - Fullscreen mode hides area refinement; Window, Scrolling, and Recording exit the HUD and call the existing `captureApplication()`, `captureScrolling()`, and `startRecordingFlow()` entry points (documented compromise to avoid rewriting those coordinators).
 - Area, Capture Markup, OCR, and Scrolling preserve the refined rect and dispatch through `ScreenCaptureViewModel` helpers (`captureArea(at:)`, `captureAreaAnnotate(at:)`, `captureOCR(at:)`, `captureScrolling(at:)`). The last rect is persisted on Capture.

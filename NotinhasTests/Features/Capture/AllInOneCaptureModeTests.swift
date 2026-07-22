@@ -14,7 +14,7 @@ final class AllInOneCaptureModeTests: XCTestCase {
 
     XCTAssertEqual(
       modes,
-      [.area, .fullscreen, .window, .annotate, .scrolling, .ocr]
+      [.area, .fullscreen, .window, .annotate, .scrolling, .timer, .ocr]
     )
     XCTAssertFalse(modes.contains(.recording))
   }
@@ -24,7 +24,7 @@ final class AllInOneCaptureModeTests: XCTestCase {
 
     XCTAssertEqual(modes.last, .recording)
     XCTAssertTrue(modes.contains(.recording))
-    XCTAssertEqual(modes.count, 7)
+    XCTAssertEqual(modes.count, 8)
   }
 
   func testRawValues_areStable() {
@@ -33,6 +33,7 @@ final class AllInOneCaptureModeTests: XCTestCase {
     XCTAssertEqual(AllInOneCaptureMode.window.rawValue, "window")
     XCTAssertEqual(AllInOneCaptureMode.annotate.rawValue, "annotate")
     XCTAssertEqual(AllInOneCaptureMode.scrolling.rawValue, "scrolling")
+    XCTAssertEqual(AllInOneCaptureMode.timer.rawValue, "timer")
     XCTAssertEqual(AllInOneCaptureMode.ocr.rawValue, "ocr")
     XCTAssertEqual(AllInOneCaptureMode.recording.rawValue, "recording")
   }
@@ -41,6 +42,7 @@ final class AllInOneCaptureModeTests: XCTestCase {
     XCTAssertTrue(AllInOneCaptureMode.area.preservesSelectionRect)
     XCTAssertTrue(AllInOneCaptureMode.annotate.preservesSelectionRect)
     XCTAssertTrue(AllInOneCaptureMode.scrolling.preservesSelectionRect)
+    XCTAssertTrue(AllInOneCaptureMode.timer.preservesSelectionRect)
     XCTAssertTrue(AllInOneCaptureMode.ocr.preservesSelectionRect)
     XCTAssertTrue(AllInOneCaptureMode.recording.preservesSelectionRect)
     XCTAssertFalse(AllInOneCaptureMode.fullscreen.preservesSelectionRect)
@@ -51,9 +53,17 @@ final class AllInOneCaptureModeTests: XCTestCase {
     for videoEnabled in [false, true] {
       for mode in AllInOneCaptureMode.availableModes(videoEnabled: videoEnabled) {
         XCTAssertFalse(mode.title.isEmpty, mode.rawValue)
+        XCTAssertFalse(mode.compactTitle.isEmpty, mode.rawValue)
         XCTAssertFalse(mode.accessibilityLabel.isEmpty, mode.rawValue)
         XCTAssertFalse(mode.systemImage.isEmpty, mode.rawValue)
       }
     }
+  }
+
+  func testTimer_captureActionAccessibility_isSpecific() {
+    XCTAssertEqual(
+      AllInOneCaptureMode.timer.captureActionAccessibilityLabel,
+      L10n.AllInOne.timerCaptureAccessibility
+    )
   }
 }

@@ -17,6 +17,7 @@ final class AllInOneCaptureCoordinator {
   private var modeHUD: CaptureFloatingHUDWindow?
   private var actionHUD: CaptureFloatingHUDWindow?
   private var refinementController: AllInOneSelectionRefinementController?
+  private let timerScheduler = AllInOneTimerScheduler()
   private var isActive = false
   private var isAwaitingInitialSelection = false
 
@@ -27,6 +28,7 @@ final class AllInOneCaptureCoordinator {
   }
 
   func start(from viewModel: ScreenCaptureViewModel) {
+    timerScheduler.cancel()
     if isActive {
       cancel()
     }
@@ -60,10 +62,14 @@ final class AllInOneCaptureCoordinator {
   }
 
   func cancel() {
-    guard isActive else { return }
+    guard isActive else {
+      timerScheduler.cancel()
+      return
+    }
 
     isActive = false
     isAwaitingInitialSelection = false
+    timerScheduler.cancel()
     viewModel?.setAllInOneSelectionBlocking(false)
 
     refinementController?.onCancel = nil
@@ -204,7 +210,7 @@ final class AllInOneCaptureCoordinator {
   private func modeToolbarAnchor(for selectionRect: CGRect, actionToolbarSize: CGSize) -> CGRect {
     CGRect(
       x: selectionRect.midX,
-      y: selectionRect.maxY + actionToolbarSize.height + CaptureFloatingToolbarPlacement.outsideSelectionGap,
+      y: selectionRect.maxY + actionToolbarSize.height + CaptureFloatingToolbarPlacement.outsideSelectionGap + 6,
       width: 1,
       height: 1
     )
@@ -229,6 +235,22 @@ final class AllInOneCaptureCoordinator {
 
     if let rect, mode.preservesSelectionRect {
       CaptureLastSelectionStore.save(rect, userDefaults: .standard)
+    }
+
+    if mode == .timer {
+      guard let rect else {
+        DiagnosticLogger.shared.log(.info, .capture, "All-In-One timer capture ignored: no selection")
+        return
+      }
+
+      let capturedViewModel = viewModel
+      let capturedRect = rect
+      cancel()
+      timerScheduler.scheduleAreaCapture { [capturedViewModel] in
+        capturedViewModel.captureArea(at: capturedRect)
+      }
+      DiagnosticLogger.shared.log(.info, .capture, "All-In-One timer capture scheduled")
+      return
     }
 
     cancel()
@@ -262,6 +284,8 @@ final class AllInOneCaptureCoordinator {
       } else {
         viewModel.captureOCR()
       }
+    case .timer:
+      break
     case .recording:
       #if NOTINHAS_VIDEO_MODULE
         viewModel.startRecordingFlow()

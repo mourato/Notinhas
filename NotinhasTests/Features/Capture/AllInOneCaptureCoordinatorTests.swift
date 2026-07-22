@@ -32,10 +32,10 @@ final class AllInOneCaptureCoordinatorTests: XCTestCase {
     var selected: AllInOneCaptureMode?
     state.onModeSelected = { selected = $0 }
 
-    state.selectMode(.scrolling)
+    state.selectMode(.timer)
 
-    XCTAssertEqual(state.selectedMode, .scrolling)
-    XCTAssertEqual(selected, .scrolling)
+    XCTAssertEqual(state.selectedMode, .timer)
+    XCTAssertEqual(selected, .timer)
   }
 
   func testSessionState_selectUnavailableMode_isIgnored() {

@@ -1323,6 +1323,46 @@ nonisolated enum L10n {
       defaultValue: "Window",
       comment: "All-In-One mode label for application window capture"
     )
+    static let modeArea = string(
+      "all-in-one.mode.area",
+      defaultValue: "Area",
+      comment: "Compact All-In-One toolbar label for area capture"
+    )
+    static let modeFullscreen = string(
+      "all-in-one.mode.fullscreen",
+      defaultValue: "Screen",
+      comment: "Compact All-In-One toolbar label for fullscreen capture"
+    )
+    static let modeAnnotate = string(
+      "all-in-one.mode.annotate",
+      defaultValue: "Annotate",
+      comment: "Compact All-In-One toolbar label for capture and annotate"
+    )
+    static let modeScrolling = string(
+      "all-in-one.mode.scrolling",
+      defaultValue: "Scroll",
+      comment: "Compact All-In-One toolbar label for scrolling capture"
+    )
+    static let modeTimer = string(
+      "all-in-one.mode.timer",
+      defaultValue: "Timer",
+      comment: "Compact All-In-One toolbar label for delayed area capture"
+    )
+    static let modeOCR = string(
+      "all-in-one.mode.ocr",
+      defaultValue: "Text",
+      comment: "Compact All-In-One toolbar label for OCR capture"
+    )
+    static let modeRecording = string(
+      "all-in-one.mode.recording",
+      defaultValue: "Record",
+      comment: "Compact All-In-One toolbar label for screen recording"
+    )
+    static let modeSelectedAccessibilityValue = string(
+      "all-in-one.mode.selected.accessibility",
+      defaultValue: "Selected",
+      comment: "Accessibility value when an All-In-One mode is selected"
+    )
     static let captureButton = string(
       "all-in-one.capture-button",
       defaultValue: "Capture",
@@ -1367,6 +1407,36 @@ nonisolated enum L10n {
       "all-in-one.mode.recording.accessibility",
       defaultValue: "Screen recording mode",
       comment: "Accessibility label for recording mode in All-In-One toolbar"
+    )
+    static let modeTimerAccessibility = string(
+      "all-in-one.mode.timer.accessibility",
+      defaultValue: "Delayed area capture mode",
+      comment: "Accessibility label for timer mode in All-In-One toolbar"
+    )
+    static let timerCaptureAccessibility = string(
+      "all-in-one.timer.capture.accessibility",
+      defaultValue: "Start delayed area capture in three seconds",
+      comment: "Accessibility label for the All-In-One capture button when Timer is selected"
+    )
+    static let widthFieldAccessibility = string(
+      "all-in-one.dimensions.width.accessibility",
+      defaultValue: "Width",
+      comment: "Accessibility label for the All-In-One width field"
+    )
+    static let heightFieldAccessibility = string(
+      "all-in-one.dimensions.height.accessibility",
+      defaultValue: "Height",
+      comment: "Accessibility label for the All-In-One height field"
+    )
+    static let lockAspectRatioAccessibility = string(
+      "all-in-one.dimensions.lock-aspect-ratio.accessibility",
+      defaultValue: "Lock aspect ratio",
+      comment: "Accessibility label for locking aspect ratio in All-In-One dimensions bar"
+    )
+    static let unlockAspectRatioAccessibility = string(
+      "all-in-one.dimensions.unlock-aspect-ratio.accessibility",
+      defaultValue: "Unlock aspect ratio",
+      comment: "Accessibility label for unlocking aspect ratio in All-In-One dimensions bar"
     )
   }
 

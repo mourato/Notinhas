@@ -26,25 +26,7 @@ struct AllInOneDimensionsBarView: View {
 
   var body: some View {
     HStack(spacing: ToolbarConstants.itemSpacing) {
-      dimensionField(
-        label: String(localized: "W", comment: "Width abbreviation in All-In-One dimensions bar"),
-        accessibilityLabel: String(localized: "Width", comment: "All-In-One dimensions field"),
-        text: $widthText
-      ) {
-        commitWidth()
-      }
-
-      Text("×")
-        .font(.system(size: 12, weight: .medium))
-        .foregroundStyle(.secondary)
-
-      dimensionField(
-        label: String(localized: "H", comment: "Height abbreviation in All-In-One dimensions bar"),
-        accessibilityLabel: String(localized: "Height", comment: "All-In-One dimensions field"),
-        text: $heightText
-      ) {
-        commitHeight()
-      }
+      dimensionFieldGroup
 
       CaptureFloatingToolbarDivider()
 
@@ -52,8 +34,8 @@ struct AllInOneDimensionsBarView: View {
         systemName: aspectRatioLocked ? "lock.fill" : "lock.open",
         action: toggleAspectLock,
         accessibilityLabel: aspectRatioLocked
-          ? String(localized: "Unlock aspect ratio", comment: "All-In-One dimensions bar")
-          : String(localized: "Lock aspect ratio", comment: "All-In-One dimensions bar")
+          ? L10n.AllInOne.unlockAspectRatioAccessibility
+          : L10n.AllInOne.lockAspectRatioAccessibility
       )
     }
     .padding(.horizontal, ToolbarConstants.horizontalPadding)
@@ -66,25 +48,47 @@ struct AllInOneDimensionsBarView: View {
 
   // MARK: - Private
 
+  private var dimensionFieldGroup: some View {
+    HStack(spacing: 6) {
+      dimensionField(
+        accessibilityLabel: L10n.AllInOne.widthFieldAccessibility,
+        text: $widthText
+      ) {
+        commitWidth()
+      }
+
+      Text("×")
+        .font(.system(size: 12, weight: .semibold, design: .monospaced))
+        .foregroundStyle(.secondary)
+        .accessibilityHidden(true)
+
+      dimensionField(
+        accessibilityLabel: L10n.AllInOne.heightFieldAccessibility,
+        text: $heightText
+      ) {
+        commitHeight()
+      }
+    }
+    .padding(.horizontal, 8)
+    .padding(.vertical, 4)
+    .background(
+      RoundedRectangle(cornerRadius: ToolbarConstants.buttonCornerRadius)
+        .fill(Color.primary.opacity(0.06))
+    )
+  }
+
   private func dimensionField(
-    label: String,
     accessibilityLabel: String,
     text: Binding<String>,
     onCommit: @escaping () -> Void
   ) -> some View {
-    HStack(spacing: 4) {
-      Text(label)
-        .font(.system(size: 11, weight: .semibold))
-        .foregroundStyle(.secondary)
-
-      TextField("", text: text)
-        .textFieldStyle(.plain)
-        .font(.system(size: 12, weight: .medium, design: .monospaced))
-        .frame(width: 52)
-        .multilineTextAlignment(.trailing)
-        .accessibilityLabel(accessibilityLabel)
-        .onSubmit(onCommit)
-    }
+    TextField("", text: text)
+      .textFieldStyle(.plain)
+      .font(.system(size: 12, weight: .semibold, design: .monospaced))
+      .frame(width: 48)
+      .multilineTextAlignment(.trailing)
+      .accessibilityLabel(accessibilityLabel)
+      .onSubmit(onCommit)
   }
 
   private func commitWidth() {
@@ -160,8 +164,6 @@ struct AllInOneDimensionsBarView: View {
 }
 
 #Preview {
-  AllInOneDimensionsBarView(
-    rect: CGRect(x: 100, y: 200, width: 640, height: 360)
-  ) { _ in }
+  AllInOneDimensionsBarView(rect: CGRect(x: 0, y: 0, width: 640, height: 360)) { _ in }
     .padding()
 }

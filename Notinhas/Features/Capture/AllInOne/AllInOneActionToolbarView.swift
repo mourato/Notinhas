@@ -28,7 +28,7 @@ struct AllInOneActionToolbarView: View {
       }
       .buttonStyle(.borderedProminent)
       .controlSize(.regular)
-      .accessibilityLabel(L10n.AllInOne.captureButtonAccessibility)
+      .accessibilityLabel(session.selectedMode.captureActionAccessibilityLabel)
     }
     .padding(.horizontal, ToolbarConstants.horizontalPadding)
     .padding(.vertical, ToolbarConstants.verticalPadding)
