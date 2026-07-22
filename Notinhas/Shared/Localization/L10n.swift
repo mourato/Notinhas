@@ -852,6 +852,16 @@ nonisolated enum L10n {
       defaultValue: "Close",
       comment: "Generic close button title"
     )
+    static let decrease = string(
+      "common.decrease",
+      defaultValue: "Decrease",
+      comment: "Accessibility label for a control that decreases a numeric value"
+    )
+    static let increase = string(
+      "common.increase",
+      defaultValue: "Increase",
+      comment: "Accessibility label for a control that increases a numeric value"
+    )
     static let off = string(
       "common.off",
       defaultValue: "Off",

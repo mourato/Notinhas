@@ -28,6 +28,16 @@ final class SteppedSliderControlTests: XCTestCase {
     XCTAssertEqual(SteppedValue.nudge(1.0, by: 0.5, in: 1 ... 8), 1.5)
   }
 
+  func testCanNudgeFalseAtBounds() {
+    XCTAssertFalse(SteppedValue.canNudge(1, by: -1, in: 1 ... 20))
+    XCTAssertFalse(SteppedValue.canNudge(20, by: 1, in: 1 ... 20))
+  }
+
+  func testCanNudgeTrueInMidRange() {
+    XCTAssertTrue(SteppedValue.canNudge(5, by: -1, in: 1 ... 20))
+    XCTAssertTrue(SteppedValue.canNudge(5, by: 1, in: 1 ... 20))
+  }
+
   func testNudgeMatchesSteppedBindingMath() {
     let range: ClosedRange<CGFloat> = 0.05 ... 0.65
     let step: CGFloat = 0.01

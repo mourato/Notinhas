@@ -29,17 +29,17 @@ struct SteppedSliderControl: View {
   }
 
   private var canDecrement: Bool {
-    SteppedValue.nudge(value, by: -step, in: range) < value
+    SteppedValue.canNudge(value, by: -step, in: range)
   }
 
   private var canIncrement: Bool {
-    SteppedValue.nudge(value, by: step, in: range) > value
+    SteppedValue.canNudge(value, by: step, in: range)
   }
 
   var body: some View {
     HStack(spacing: 4) {
       stepperButton(systemName: "minus", isEnabled: canDecrement, delta: -step)
-        .accessibilityLabel("Decrease")
+        .accessibilityLabel(L10n.Common.decrease)
 
       Slider(
         value: $value.stepped(by: step, in: range),
@@ -50,7 +50,7 @@ struct SteppedSliderControl: View {
       .frame(width: sliderWidth)
 
       stepperButton(systemName: "plus", isEnabled: canIncrement, delta: step)
-        .accessibilityLabel("Increase")
+        .accessibilityLabel(L10n.Common.increase)
     }
   }
 
@@ -62,7 +62,8 @@ struct SteppedSliderControl: View {
     } label: {
       Image(systemName: systemName)
         .font(.system(size: 10, weight: .semibold))
-        .frame(width: 20, height: 20)
+        .frame(width: 28, height: 28)
+        .contentShape(Rectangle())
     }
     .buttonStyle(.borderless)
     .controlSize(.small)

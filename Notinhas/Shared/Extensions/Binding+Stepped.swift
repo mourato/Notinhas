@@ -10,8 +10,14 @@ import SwiftUI
 
 enum SteppedValue {
   static func nudge(_ value: CGFloat, by step: CGFloat, in range: ClosedRange<CGFloat>) -> CGFloat {
+    precondition(step != 0, "SteppedValue.nudge requires a non-zero step")
     let snapped = ((value + step) / step).rounded() * step
     return Swift.min(Swift.max(snapped, range.lowerBound), range.upperBound)
+  }
+
+  /// Whether applying `step` (signed) would change `value` after snap+clamp.
+  static func canNudge(_ value: CGFloat, by step: CGFloat, in range: ClosedRange<CGFloat>) -> Bool {
+    abs(nudge(value, by: step, in: range) - value) > 1e-9
   }
 }
 
