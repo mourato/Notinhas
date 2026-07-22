@@ -127,15 +127,21 @@ final class AreaSelectionOverlayMagnifierLayoutTests: AreaSelectionOverlayTestCa
 
   func testMagnifierZoom_worksWithEmptyBackdropsInitially() {
     let controller = AreaSelectionController.shared
+    let capturer = RecordingAreaSelectionBackdropCapturer()
+    controller.setBackdropCapturerForTesting(capturer)
+    defer {
+      controller.cancelSelection()
+      controller.resetBackdropCapturerForTesting()
+    }
 
-    // GIVEN: Starting selection session with empty backdrops (backdrop-less mode)
-    let expectation = XCTestExpectation(description: "Backdrop snapshot automatically generated")
+    // GIVEN: backdrop-less session — controller must request a capturer (synthetic under XCTest)
+    let expectation = XCTestExpectation(description: "Synthetic backdrop applied via capturer seam")
 
     controller.startSelection(mode: .recording) { _, _ in }
 
-    // Wait a brief moment for async CGWindowListCreateImage task to finish and apply the backdrop
-    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-      // Find active window in pool
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+      XCTAssertGreaterThanOrEqual(capturer.callCount, 1, "empty-backdrop session must invoke capturer")
+
       let targetDisplayID = ScreenUtility.activeDisplayID()
       let mirror = Mirror(reflecting: controller)
       if let pool = mirror.children.first(where: { $0.label == "windowPool" })?
@@ -143,10 +149,33 @@ final class AreaSelectionOverlayMagnifierLayoutTests: AreaSelectionOverlayTestCa
         let window = pool[targetDisplayID] {
         XCTAssertNotNil(window.overlayView.testSnapshotLayer.contents)
       }
-      controller.cancelSelection()
       expectation.fulfill()
     }
 
     wait(for: [expectation], timeout: 3.0)
+  }
+}
+
+/// Counts capturer calls while forwarding to the synthetic (TCC-free) implementation.
+private final class RecordingAreaSelectionBackdropCapturer: AreaSelectionBackdropCapturing, @unchecked Sendable {
+  private let lock = NSLock()
+  private let inner = SyntheticAreaSelectionBackdropCapturer()
+  private(set) var callCount = 0
+
+  func captureBackdrop(
+    displayID: CGDirectDisplayID,
+    captureRect: CGRect,
+    scaleFactor: CGFloat,
+    isVisible: Bool
+  ) async -> AreaSelectionBackdrop? {
+    lock.lock()
+    callCount += 1
+    lock.unlock()
+    return await inner.captureBackdrop(
+      displayID: displayID,
+      captureRect: captureRect,
+      scaleFactor: scaleFactor,
+      isVisible: isVisible
+    )
   }
 }

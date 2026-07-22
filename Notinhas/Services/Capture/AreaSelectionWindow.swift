@@ -118,6 +118,11 @@ final class AreaSelectionController: NSObject {
   /// app activates, so the local monitor never sees them and the selection silently resets.
   /// A global monitor still receives those events, ensuring the first gesture commits.
   private var manualSelectionGlobalMonitor: Any?
+
+  /// Backdrop grabs for magnifier / luma. Defaults to a synthetic capturer under XCTest so
+  /// host-app tests do not trigger Screen Recording TCC (see `AreaSelectionBackdropCapturerPolicy`).
+  private var backdropCapturer: any AreaSelectionBackdropCapturing =
+    AreaSelectionBackdropCapturerPolicy.makeDefault()
   private var manualSelectionKeyLocalMonitor: Any?
   private var manualSelectionKeyGlobalMonitor: Any?
   /// Re-asserts the crosshair if the app regains focus mid-drag (e.g. after a background capture
@@ -146,6 +151,16 @@ final class AreaSelectionController: NSObject {
   override private init() {
     super.init()
   }
+
+  #if DEBUG
+    func setBackdropCapturerForTesting(_ capturer: any AreaSelectionBackdropCapturing) {
+      backdropCapturer = capturer
+    }
+
+    func resetBackdropCapturerForTesting() {
+      backdropCapturer = AreaSelectionBackdropCapturerPolicy.makeDefault()
+    }
+  #endif
 
   // MARK: - Window Pool Management (Phase 1)
 
@@ -503,22 +518,15 @@ final class AreaSelectionController: NSObject {
         let sessionID = selectionSessionID
 
         Task { [weak self] in
-          let backdrop = await Task.detached { () -> AreaSelectionBackdrop? in
-            guard let cgImage = CGWindowListCreateImage(
-              captureRect,
-              .optionOnScreenOnly,
-              kCGNullWindowID,
-              .nominalResolution
-            ) else { return nil }
-            return AreaSelectionBackdrop(
-              displayID: targetDisplayID,
-              image: cgImage,
-              scaleFactor: backingScale,
-              isVisible: false
-            )
-          }.value
+          guard let self else { return }
+          let backdrop = await backdropCapturer.captureBackdrop(
+            displayID: targetDisplayID,
+            captureRect: captureRect,
+            scaleFactor: backingScale,
+            isVisible: false
+          )
 
-          guard let self, selectionSessionID == sessionID else { return }
+          guard selectionSessionID == sessionID else { return }
           guard let backdrop else {
             DiagnosticLogger.shared.log(
               .warning,
@@ -876,21 +884,14 @@ final class AreaSelectionController: NSObject {
         let captureRect = CGDisplayBounds(displayID)
         let backingScale = screen.backingScaleFactor
         let sessionID = self.selectionSessionID
+        let capturer = self.backdropCapturer
         Task { [weak self] in
-          let backdrop = await Task.detached { () -> AreaSelectionBackdrop? in
-            guard let cgImage = CGWindowListCreateImage(
-              captureRect,
-              .optionOnScreenOnly,
-              kCGNullWindowID,
-              .nominalResolution
-            ) else { return nil }
-            return AreaSelectionBackdrop(
-              displayID: displayID,
-              image: cgImage,
-              scaleFactor: backingScale,
-              isVisible: false
-            )
-          }.value
+          let backdrop = await capturer.captureBackdrop(
+            displayID: displayID,
+            captureRect: captureRect,
+            scaleFactor: backingScale,
+            isVisible: false
+          )
 
           guard let self, selectionSessionID == sessionID else { return }
           if let backdrop {

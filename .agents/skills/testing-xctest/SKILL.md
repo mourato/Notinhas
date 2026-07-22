@@ -36,6 +36,11 @@ Splash/onboarding during tests is **not** a skip-list issue: `AppLaunchPolicy`
 must keep the interactive host off under XCTest. Do not “fix” onboarding by
 skipping unrelated suites — harden launch detection instead.
 
+Area-selection magnifier/luma backdrop grabs use `AreaSelectionBackdropCapturing`.
+Under XCTest the default is `SyntheticAreaSelectionBackdropCapturer` (no Screen
+Recording TCC). Opt into the live `CGWindowListCreateImage` path with
+`NOTINHAS_ALLOW_SCREEN_CAPTURE_IN_TESTS=1` only for intentional integration checks.
+
 ## Related
 
 - Delivery gate → `delivery-workflow`

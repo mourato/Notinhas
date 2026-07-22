@@ -120,8 +120,11 @@ Options:
   -h, --help             Show this help.
 
 Environment:
-  ENABLE_VIDEO_MODULE          Set to 1 or 0 to enable/disable the Video module non-interactively.
-  NOTINHAS_SKIP_VISUAL_TESTS   Set to 1 for the same effect as --skip-visual.
+  ENABLE_VIDEO_MODULE                 Set to 1 or 0 to enable/disable the Video module non-interactively.
+  NOTINHAS_SKIP_VISUAL_TESTS          Set to 1 for the same effect as --skip-visual.
+  NOTINHAS_ALLOW_SCREEN_CAPTURE_IN_TESTS
+                                      Set to 1 to use live CGWindowListCreateImage backdrop
+                                      captures in XCTest (default: synthetic, no Screen Recording TCC).
 
 Examples:
   $0
