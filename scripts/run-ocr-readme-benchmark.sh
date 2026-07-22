@@ -28,14 +28,14 @@ cd "$REPO_ROOT"
 swiftc -module-cache-path "$MODULE_CACHE_PATH" \
   -o "$BINARY_PATH" \
   scripts/swift-tools/ocr/ocr-readme-benchmark.swift \
-  Snapzy/Services/Media/OCRService.swift \
-  Snapzy/Services/Media/OCR/VerticalCJKTextNormalizer.swift \
-  Snapzy/Services/Media/OCR/VerticalCJKBitmapAnalysis.swift \
-  Snapzy/Services/Media/OCR/OCRRequest.swift \
-  Snapzy/Services/Media/OCR/OCRResult.swift \
-  Snapzy/Services/Media/OCR/VisionOCRProfile.swift \
-  Snapzy/Services/Media/OCR/OCRBenchmarkMetrics.swift \
-  Snapzy/Services/Media/OCR/OCRBenchmarkHarness.swift
+  Notinhas/Services/Media/OCRService.swift \
+  Notinhas/Services/Media/OCR/VerticalCJKTextNormalizer.swift \
+  Notinhas/Services/Media/OCR/VerticalCJKBitmapAnalysis.swift \
+  Notinhas/Services/Media/OCR/OCRRequest.swift \
+  Notinhas/Services/Media/OCR/OCRResult.swift \
+  Notinhas/Services/Media/OCR/VisionOCRProfile.swift \
+  Notinhas/Services/Media/OCR/OCRBenchmarkMetrics.swift \
+  Notinhas/Services/Media/OCR/OCRBenchmarkHarness.swift
 
 : > "$STDERR_PATH"
 set +e

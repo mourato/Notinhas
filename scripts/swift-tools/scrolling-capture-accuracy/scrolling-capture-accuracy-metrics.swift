@@ -1,6 +1,6 @@
 //
 //  scrolling-capture-accuracy-metrics.swift
-//  Snapzy
+//  Notinhas
 //
 //  Pixel comparison helpers for Scroll Capture accuracy benchmark.
 //

@@ -1,0 +1,171 @@
+//
+//  AnnotateAnnotationToolType.swift
+//  Notinhas
+//
+//  Enum defining all available annotation tools
+//
+
+import Foundation
+
+/// Tool types available in annotation editor
+nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
+  case selection
+  case crop
+  case rectangle
+  case filledRectangle
+  case oval
+  case arrow
+  case line
+  case text
+  case highlighter
+  case blur
+  case spotlight
+  case counter
+  case notinhasNote
+  case watermark
+  case pencil
+  case mockup
+
+  var id: String {
+    rawValue
+  }
+
+  /// Annotation tools that create or edit drawable items on the image canvas.
+  /// Shared by the full Annotate window and inline area-annotate overlay so the
+  /// two surfaces stay in sync when tools are added.
+  static let drawableTools: [AnnotationToolType] = [
+    .rectangle, .filledRectangle, .oval, .arrow, .line, .text, .highlighter,
+    .blur, .spotlight, .counter, .watermark, .pencil,
+  ]
+
+  static let inlineAnnotateTools: [AnnotationToolType] = [.selection] + drawableTools
+
+  private static let inlineShapeToolSet: Set<AnnotationToolType> = [
+    .rectangle, .filledRectangle, .oval, .arrow, .line,
+  ]
+
+  static let inlineToolGroups: [[AnnotationToolType]] = [
+    [.selection],
+    drawableTools.filter { inlineShapeToolSet.contains($0) },
+    drawableTools.filter { !inlineShapeToolSet.contains($0) },
+  ]
+
+  var icon: String {
+    switch self {
+    case .selection: "cursorarrow"
+    case .crop: "crop"
+    case .rectangle: "rectangle"
+    case .filledRectangle: "rectangle.fill"
+    case .oval: "circle"
+    case .arrow: "arrow.up.right"
+    case .line: "line.diagonal"
+    case .text: "character.textbox"
+    case .highlighter: "highlighter"
+    case .blur: "eye.slash"
+    case .spotlight: "viewfinder"
+    case .counter: "list.number"
+    case .notinhasNote: "pin.circle.fill"
+    case .watermark: "seal"
+    case .pencil: "pencil"
+    case .mockup: "cube.transparent"
+    }
+  }
+
+  /// Default keyboard shortcut for this tool
+  var defaultShortcut: Character {
+    switch self {
+    case .selection: "v"
+    case .crop: "c"
+    case .rectangle: "r"
+    case .filledRectangle: "f"
+    case .oval: "o"
+    case .arrow: "a"
+    case .line: "l"
+    case .text: "t"
+    case .highlighter: "h"
+    case .blur: "b"
+    case .spotlight: "s"
+    case .counter: "n"
+    case .notinhasNote: "i"
+    case .watermark: "w"
+    case .pencil: "p"
+    case .mockup: "m"
+    }
+  }
+
+  /// Display name for the tool
+  var displayName: String {
+    switch self {
+    case .selection: L10n.Annotate.selectionTool
+    case .crop: L10n.Annotate.cropTool
+    case .rectangle: L10n.Annotate.rectangleTool
+    case .filledRectangle: L10n.Annotate.filledRectangleTool
+    case .oval: L10n.Annotate.ovalTool
+    case .arrow: L10n.Annotate.arrowTool
+    case .line: L10n.Annotate.lineTool
+    case .text: L10n.Annotate.textTool
+    case .highlighter: L10n.Annotate.highlighterTool
+    case .blur: L10n.Annotate.blurTool
+    case .spotlight: L10n.Annotate.spotlightTool
+    case .counter: L10n.Annotate.counterTool
+    case .notinhasNote: NotinhasL10n.noteTool
+    case .watermark: L10n.Annotate.watermarkTool
+    case .pencil: L10n.Annotate.pencilTool
+    case .mockup: L10n.Annotate.mockupTool
+    }
+  }
+
+  var supportsQuickPropertiesBar: Bool {
+    switch self {
+    case .rectangle, .filledRectangle, .oval, .arrow, .line, .text, .highlighter, .blur, .spotlight, .counter,
+         .notinhasNote, .watermark, .pencil:
+      true
+    case .selection, .crop, .mockup:
+      false
+    }
+  }
+
+  /// Drawable tools that should only commit a new blank-canvas item after a
+  /// drag intent. Counter stays click-to-place, text keeps its click-to-edit
+  /// flow, and freehand tools keep their existing path-count behavior.
+  var requiresDragToCreateAnnotation: Bool {
+    switch self {
+    case .rectangle, .filledRectangle, .oval, .arrow, .line, .blur, .spotlight, .watermark:
+      true
+    case .selection, .crop, .text, .highlighter, .counter, .pencil, .mockup, .notinhasNote:
+      false
+    }
+  }
+
+  var supportsQuickStrokeColor: Bool {
+    switch self {
+    case .rectangle, .filledRectangle, .oval, .arrow, .line, .text, .highlighter, .counter, .watermark, .pencil:
+      true
+    case .selection, .crop, .blur, .spotlight, .mockup, .notinhasNote:
+      false
+    }
+  }
+
+  var supportsQuickFillColor: Bool {
+    false
+  }
+
+  var supportsQuickStrokeWidth: Bool {
+    switch self {
+    case .rectangle, .filledRectangle, .oval, .arrow, .line, .highlighter, .blur, .counter, .pencil, .notinhasNote:
+      true
+    case .selection, .crop, .text, .watermark, .spotlight, .mockup:
+      false
+    }
+  }
+
+  var supportsQuickCornerRadius: Bool {
+    switch self {
+    case .rectangle, .filledRectangle, .text, .spotlight:
+      true
+    case .selection, .crop, .oval, .arrow, .line, .highlighter, .blur, .counter, .watermark, .pencil, .mockup,
+         .notinhasNote:
+      false
+    }
+  }
+}

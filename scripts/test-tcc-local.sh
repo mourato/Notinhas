@@ -15,13 +15,13 @@ set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 TEST_DIR="/tmp/test-tcc-snapzy"
-CERT_NAME="Snapzy Self-Signed"
-ENTITLEMENTS="$PROJECT_DIR/Snapzy/Snapzy.entitlements"
-INSTALL_PATH="/Applications/Snapzy.app"
+CERT_NAME="Notinhas Self-Signed"
+ENTITLEMENTS="$PROJECT_DIR/Notinhas/Notinhas.entitlements"
+INSTALL_PATH="/Applications/Notinhas.app"
 
 build_archive() {
   local version_label="$1"
-  local archive_path="$TEST_DIR/$version_label/Snapzy.xcarchive"
+  local archive_path="$TEST_DIR/$version_label/Notinhas.xcarchive"
 
   echo "=== Building archive ($version_label) ==="
   mkdir -p "$TEST_DIR/$version_label"
@@ -34,8 +34,8 @@ build_archive() {
 
   echo "  → Building (this may take a few minutes)..."
   xcodebuild archive \
-    -project "$PROJECT_DIR/Snapzy.xcodeproj" \
-    -scheme Snapzy \
+    -project "$PROJECT_DIR/Notinhas.xcodeproj" \
+    -scheme Notinhas \
     -configuration Release \
     -archivePath "$archive_path" \
     -derivedDataPath "$TEST_DIR/DerivedData" \
@@ -58,14 +58,14 @@ sign_and_install() {
   local version_label="$1"
   local identity="$2"
   local archive_label="${3:-$version_label}"  # defaults to version_label if not specified
-  local archive_path="$TEST_DIR/$archive_label/Snapzy.xcarchive"
-  local app_path="$TEST_DIR/$version_label/Snapzy.app"
+  local archive_path="$TEST_DIR/$archive_label/Notinhas.xcarchive"
+  local app_path="$TEST_DIR/$version_label/Notinhas.app"
 
   echo "=== Signing ($version_label) with identity: $identity ==="
 
   # Copy from archive
   rm -rf "$app_path"
-  ditto "$archive_path/Products/Applications/Snapzy.app" "$app_path"
+  ditto "$archive_path/Products/Applications/Notinhas.app" "$app_path"
 
   # Pre-process entitlements: codesign does NOT substitute Xcode variables
   local bundle_id
@@ -94,7 +94,7 @@ sign_and_install() {
   # Install
   echo "  → Installing to $INSTALL_PATH..."
   # Kill app if running
-  killall Snapzy 2>/dev/null || true
+  killall Notinhas 2>/dev/null || true
   sleep 1
   rm -rf "$INSTALL_PATH"
   ditto "$app_path" "$INSTALL_PATH"
@@ -130,7 +130,7 @@ case "$cmd" in
     sign_and_install "v1" "$CERT_NAME"
     echo ""
     echo "📋 Next steps:"
-    echo "   1. Open Snapzy from /Applications"
+    echo "   1. Open Notinhas from /Applications"
     echo "   2. Grant Screen Recording permission in System Settings"
     echo "   3. Grant Microphone permission (if prompted)"
     echo "   4. Run: ./scripts/test-tcc-local.sh build-v2"
@@ -142,7 +142,7 @@ case "$cmd" in
     sign_and_install "v2" "$CERT_NAME" "v1"
     echo ""
     echo "📋 Check:"
-    echo "   1. Open Snapzy from /Applications"
+    echo "   1. Open Notinhas from /Applications"
     echo "   2. Verify Screen Recording + Microphone permissions are STILL granted ✅"
     echo "   3. (Optional) Run: ./scripts/test-tcc-local.sh compare"
     ;;
@@ -153,7 +153,7 @@ case "$cmd" in
     sign_and_install "adhoc" "-" "v1"
     echo ""
     echo "📋 Check:"
-    echo "   1. Open Snapzy from /Applications"
+    echo "   1. Open Notinhas from /Applications"
     echo "   2. Observe: permissions are LOST ❌ (expected with ad-hoc)"
     ;;
 

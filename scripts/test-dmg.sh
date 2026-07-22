@@ -12,23 +12,23 @@ fi
 echo "Creating temporary build workspace with a valid dummy App bundle..."
 TEMP_DIR="temp-dmg-test"
 rm -rf "$TEMP_DIR"
-mkdir -p "$TEMP_DIR/Snapzy.app/Contents/MacOS"
+mkdir -p "$TEMP_DIR/Notinhas.app/Contents/MacOS"
 
 # Create dummy executable and Info.plist so Finder parses it as a single valid App
-echo '#!/bin/bash' > "$TEMP_DIR/Snapzy.app/Contents/MacOS/Snapzy"
-chmod +x "$TEMP_DIR/Snapzy.app/Contents/MacOS/Snapzy"
+echo '#!/bin/bash' > "$TEMP_DIR/Notinhas.app/Contents/MacOS/Notinhas"
+chmod +x "$TEMP_DIR/Notinhas.app/Contents/MacOS/Notinhas"
 
-cat > "$TEMP_DIR/Snapzy.app/Contents/Info.plist" <<EOF
+cat > "$TEMP_DIR/Notinhas.app/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>Snapzy</string>
+    <string>Notinhas</string>
     <key>CFBundleIdentifier</key>
     <string>com.snapzy.test-layout</string>
     <key>CFBundleName</key>
-    <string>Snapzy</string>
+    <string>Notinhas</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
@@ -39,24 +39,24 @@ EOF
 
 # Create build output directory if not exists
 mkdir -p build
-rm -f build/Snapzy-layout-test.dmg
+rm -f build/Notinhas-layout-test.dmg
 
 echo "Generating test DMG with create-dmg..."
 create-dmg \
-  --volname "Snapzy Test Layout" \
+  --volname "Notinhas Test Layout" \
   --background "assets/dmg-background.png" \
   --window-size 660 400 \
   --icon-size 120 \
-  --icon "Snapzy.app" 180 170 \
+  --icon "Notinhas.app" 180 170 \
   --app-drop-link 480 170 \
   --no-internet-enable \
-  "build/Snapzy-layout-test.dmg" \
-  "$TEMP_DIR/Snapzy.app"
+  "build/Notinhas-layout-test.dmg" \
+  "$TEMP_DIR/Notinhas.app"
 
 echo "Cleaning up temporary workspace..."
 rm -rf "$TEMP_DIR"
 
 echo "--------------------------------------------------------"
-echo "Success! Test DMG created at: build/Snapzy-layout-test.dmg"
+echo "Success! Test DMG created at: build/Notinhas-layout-test.dmg"
 echo "You can double-click this file in Finder to verify the background and icon alignment."
 echo "--------------------------------------------------------"

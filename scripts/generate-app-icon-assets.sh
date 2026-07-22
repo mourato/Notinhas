@@ -40,8 +40,8 @@ for arg in "$@"; do
 done
 
 DEFAULT_ARGS=()
-[[ "$HAS_INPUT" -eq 1 ]] || DEFAULT_ARGS+=(--icon-document "$ROOT_DIR/Snapzy/SnapzyIcon.icon")
-[[ "$HAS_APPICONSET" -eq 1 ]] || DEFAULT_ARGS+=(--appiconset "$ROOT_DIR/Snapzy/Resources/Assets.xcassets/AppIcon.appiconset")
-[[ "$HAS_PREFIX" -eq 1 ]] || DEFAULT_ARGS+=(--filename-prefix "SnapzyIcon")
+[[ "$HAS_INPUT" -eq 1 ]] || DEFAULT_ARGS+=(--icon-document "$ROOT_DIR/Notinhas/NotinhasIcon.icon")
+[[ "$HAS_APPICONSET" -eq 1 ]] || DEFAULT_ARGS+=(--appiconset "$ROOT_DIR/Notinhas/Resources/Assets.xcassets/AppIcon.appiconset")
+[[ "$HAS_PREFIX" -eq 1 ]] || DEFAULT_ARGS+=(--filename-prefix "NotinhasIcon")
 
 exec "$GENERATOR" "${DEFAULT_ARGS[@]}" "$@"

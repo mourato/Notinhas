@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# reset-permissions.sh — Reset all TCC permissions for Snapzy
+# reset-permissions.sh — Reset all TCC permissions for Notinhas
 #
 # Usage:
 #   ./reset-permissions.sh           # Interactive mode (asks for confirmation)
@@ -8,8 +8,8 @@
 
 set -euo pipefail
 
-APP_NAME="Snapzy"
-APP_PATH="/Applications/Snapzy.app"
+APP_NAME="Notinhas"
+APP_PATH="/Applications/Notinhas.app"
 FALLBACK_BUNDLE_ID="com.trongduong.snapzy"
 
 # ─── Auto-detect bundle ID from app name ─────────────────────────
@@ -135,7 +135,7 @@ echo -e "${YELLOW}  Resetting TCC Permissions                           ${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 echo ""
 
-# TCC services used by Snapzy
+# TCC services used by Notinhas
 TCC_SERVICES=(
   "ScreenCapture"
   "Microphone"

@@ -1,16 +1,16 @@
 #!/bin/bash
-# Run the Snapzy XCTest suite with CI-like local settings.
+# Run the Notinhas XCTest suite with CI-like local settings.
 #
 # Usage:
 #   ./scripts/run-tests.sh
 #   ./scripts/run-tests.sh --video-module
-#   ./scripts/run-tests.sh -only-testing:SnapzyTests/SomeTests
+#   ./scripts/run-tests.sh -only-testing:NotinhasTests/SomeTests
 #   ./scripts/run-tests.sh --open-result
 
 set -euo pipefail
 
-PROJECT="${PROJECT:-Snapzy.xcodeproj}"
-SCHEME="${SCHEME:-Snapzy}"
+PROJECT="${PROJECT:-Notinhas.xcodeproj}"
+SCHEME="${SCHEME:-Notinhas}"
 CONFIGURATION="${CONFIGURATION:-Debug}"
 DESTINATION="${DESTINATION:-platform=macOS}"
 BUILD_DIR="${BUILD_DIR:-build}"
@@ -61,7 +61,7 @@ die() {
 
 apply_video_module_settings() {
   if [[ "${ENABLE_VIDEO_MODULE:-0}" == "1" ]]; then
-    SCHEME="Snapzy Video"
+    SCHEME="Notinhas Video"
     case "$CONFIGURATION" in
       Debug)
         CONFIGURATION="Debug+Video"
@@ -71,7 +71,7 @@ apply_video_module_settings() {
         ;;
     esac
   else
-    SCHEME="Snapzy"
+    SCHEME="Notinhas"
   fi
 }
 
@@ -90,8 +90,8 @@ Options:
   --result-bundle PATH   Result bundle path. Default: ${RESULT_BUNDLE_PATH}
   --source-packages PATH SwiftPM package cache path. Default: ${SOURCE_PACKAGES_PATH}
   --keep-result          Do not remove the previous result bundle before running.
-  --video-module         Run Recording/VideoEditor XCTests (Snapzy Video / Debug+Video).
-  --no-video-module      Explicit default: Snapzy scheme without Video module.
+  --video-module         Run Recording/VideoEditor XCTests (Notinhas Video / Debug+Video).
+  --no-video-module      Explicit default: Notinhas scheme without Video module.
   -h, --help             Show this help.
 
 Environment:
@@ -101,8 +101,8 @@ Examples:
   $0
   $0 --video-module
   ENABLE_VIDEO_MODULE=1 $0
-  $0 -only-testing:SnapzyTests/CaptureOutputNamingTests
-  SNAPZY_RUN_MICROPHONE_INTEGRATION=1 $0 -only-testing:SnapzyTests/MicrophoneAudioCapturerTests/testMicrophoneAudioCapturerStartStopRealMicrophoneIntegration
+  $0 -only-testing:NotinhasTests/CaptureOutputNamingTests
+  NOTINHAS_RUN_MICROPHONE_INTEGRATION=1 $0 -only-testing:NotinhasTests/MicrophoneAudioCapturerTests/testMicrophoneAudioCapturerStartStopRealMicrophoneIntegration
 EOF
 }
 

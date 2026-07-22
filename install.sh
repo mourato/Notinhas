@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# install.sh — Install Snapzy from GitHub Releases
+# install.sh — Install Notinhas from GitHub Releases
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/duongductrong/Snapzy/master/install.sh | bash
-#   curl -fsSL https://raw.githubusercontent.com/duongductrong/Snapzy/v1.2.3/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/duongductrong/Notinhas/master/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/duongductrong/Notinhas/v1.2.3/install.sh | bash
 #   VERSION=1.2.3 bash install.sh
 #
 # The script downloads the DMG from GitHub Releases, mounts it,
-# copies Snapzy.app to /Applications, and cleans up.
+# copies Notinhas.app to /Applications, and cleans up.
 
 set -euo pipefail
 
@@ -39,7 +39,7 @@ fail()  { printf "${RED}✖${RESET} %s\n" "$*" >&2; exit 1; }
 # Pre-flight checks
 # ---------------------------------------------------------------------------
 
-[[ "$(uname -s)" == "Darwin" ]] || fail "Snapzy is a macOS app. This script only works on macOS."
+[[ "$(uname -s)" == "Darwin" ]] || fail "Notinhas is a macOS app. This script only works on macOS."
 
 for cmd in curl hdiutil; do
   command -v "$cmd" &>/dev/null || fail "Required command not found: $cmd"
@@ -49,7 +49,7 @@ done
 # Resolve version
 # ---------------------------------------------------------------------------
 
-REPO="duongductrong/Snapzy"
+REPO="duongductrong/Notinhas"
 
 if [[ -z "${VERSION:-}" ]]; then
   info "Fetching latest release version…"
@@ -63,10 +63,10 @@ fi
 # Strip leading "v" if present
 VERSION="${VERSION#v}"
 
-DMG_NAME="Snapzy-v${VERSION}.dmg"
+DMG_NAME="Notinhas-v${VERSION}.dmg"
 DOWNLOAD_URL="https://github.com/${REPO}/releases/download/v${VERSION}/${DMG_NAME}"
 
-printf "\n${BOLD}Snapzy Installer${RESET}  •  v%s\n\n" "$VERSION"
+printf "\n${BOLD}Notinhas Installer${RESET}  •  v%s\n\n" "$VERSION"
 
 # ---------------------------------------------------------------------------
 # Download
@@ -96,37 +96,37 @@ hdiutil attach "$DMG_PATH" -nobrowse -quiet -mountpoint "$MOUNT_POINT" \
 
 INSTALL_DIR="/Applications"
 
-info "Copying Snapzy.app to ${INSTALL_DIR}…"
+info "Copying Notinhas.app to ${INSTALL_DIR}…"
 
 # Remove existing installation if present
-if [[ -d "${INSTALL_DIR}/Snapzy.app" ]]; then
-  warn "Existing Snapzy.app found — replacing."
-  rm -rf "${INSTALL_DIR}/Snapzy.app"
+if [[ -d "${INSTALL_DIR}/Notinhas.app" ]]; then
+  warn "Existing Notinhas.app found — replacing."
+  rm -rf "${INSTALL_DIR}/Notinhas.app"
 fi
 
-cp -R "${MOUNT_POINT}/Snapzy.app" "${INSTALL_DIR}/" \
-  || fail "Failed to copy Snapzy.app. You may need to run with sudo."
+cp -R "${MOUNT_POINT}/Notinhas.app" "${INSTALL_DIR}/" \
+  || fail "Failed to copy Notinhas.app. You may need to run with sudo."
 
 info "Unmounting disk image…"
 hdiutil detach "$MOUNT_POINT" -quiet 2>/dev/null || true
 
-ok "Installed Snapzy.app to ${INSTALL_DIR}"
+ok "Installed Notinhas.app to ${INSTALL_DIR}"
 
 # ---------------------------------------------------------------------------
 # Post-install
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
-# NOTE: Snapzy is now notarized by Apple (Developer ID).
+# NOTE: Notinhas is now notarized by Apple (Developer ID).
 # macOS automatically verifies the notarization ticket and removes quarantine.
 # The xattr bypass below is intentionally kept commented — uncomment if a
 # future build is ad-hoc signed or unsigned (e.g., local CI test builds).
 # ---------------------------------------------------------------------------
 # info "Removing quarantine attribute…"
-# xattr -cr "${INSTALL_DIR}/Snapzy.app" 2>/dev/null || true
+# xattr -cr "${INSTALL_DIR}/Notinhas.app" 2>/dev/null || true
 # ok "Quarantine attribute removed"
 
 printf "\n${GREEN}${BOLD}Installation complete!${RESET}\n\n"
-printf "  Launch Snapzy from your Applications folder or Spotlight.\n"
-printf "  Snapzy is notarized by Apple — no quarantine bypass needed.\n"
+printf "  Launch Notinhas from your Applications folder or Spotlight.\n"
+printf "  Notinhas is notarized by Apple — no quarantine bypass needed.\n"
 printf "  On first launch, grant ${BOLD}Screen Recording${RESET} permission when prompted.\n\n"

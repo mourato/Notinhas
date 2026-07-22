@@ -4,8 +4,8 @@
 set -e
 
 # --- Configuration ---
-SCHEME="Snapzy"
-PROJECT="Snapzy.xcodeproj"
+SCHEME="Notinhas"
+PROJECT="Notinhas.xcodeproj"
 
 # Colors
 BLUE='\033[0;34m'

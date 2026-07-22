@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# uninstall.sh — Completely remove Snapzy and reset ALL related permissions
+# uninstall.sh — Completely remove Notinhas and reset ALL related permissions
 #
 # Usage:
 #   ./scripts/uninstall.sh           # Interactive mode (asks for confirmation)
@@ -8,7 +8,7 @@
 # What this script does:
 #   1. Kills the running app
 #   2. Resets ALL TCC permissions (Screen Recording, Microphone, Accessibility, etc.)
-#   3. Removes Snapzy.app from /Applications
+#   3. Removes Notinhas.app from /Applications
 #   4. Removes Application Support data (captures, preferences, caches)
 #   5. Removes user preferences (defaults)
 #   6. Removes saved application state
@@ -23,8 +23,8 @@
 
 set -euo pipefail
 
-APP_NAME="Snapzy"
-APP_PATH="/Applications/Snapzy.app"
+APP_NAME="Notinhas"
+APP_PATH="/Applications/Notinhas.app"
 FALLBACK_BUNDLE_ID="com.trongduong.snapzy"
 
 # ─── Auto-detect bundle ID from app name ─────────────────────────
@@ -113,7 +113,7 @@ echo -e "${YELLOW}  Resetting TCC Permissions                           ${NC}"
 echo -e "${YELLOW}═══════════════════════════════════════════════════════${NC}"
 echo ""
 
-# TCC services used by Snapzy
+# TCC services used by Notinhas
 # NOTE: tccutil uses SHORT names (not kTCCService* constants)
 TCC_SERVICES=(
   "ScreenCapture"      # Screen Recording (shown as "Screen & System Audio Recording" on macOS 15+)
@@ -234,7 +234,7 @@ done
 defaults delete "${BUNDLE_ID}.Sparkle" 2>/dev/null || true
 
 # ─── 9. Login items ─────────────────────────────────────────────
-# NOTE: sfltool resetbtm resets ALL apps' login items, not just Snapzy.
+# NOTE: sfltool resetbtm resets ALL apps' login items, not just Notinhas.
 # Skipped intentionally to avoid affecting other applications.
 info "Login items: skipped (no safe per-app reset available)"
 
@@ -251,7 +251,7 @@ for tmp_dir in \
 done
 
 # ─── 11. Sandbox containers ─────────────────────────────────────
-# Snapzy does NOT use App Sandbox. If a container exists, it's from
+# Notinhas does NOT use App Sandbox. If a container exists, it's from
 # macOS internal bookkeeping and requires sudo to remove.
 # We skip this to avoid requiring elevated privileges.
 container="$HOME/Library/Containers/$BUNDLE_ID"
@@ -269,7 +269,7 @@ echo -e "${GREEN}║  ✅ $APP_NAME has been completely uninstalled         ║$
 echo -e "${GREEN}║  ✅ All TCC permissions have been reset              ║${NC}"
 echo -e "${GREEN}╠══════════════════════════════════════════════════════╣${NC}"
 echo -e "${GREEN}║  To reinstall, download from:                       ║${NC}"
-echo -e "${GREEN}║  https://github.com/duongductrong/Snapzy/releases   ║${NC}"
+echo -e "${GREEN}║  https://github.com/duongductrong/Notinhas/releases   ║${NC}"
 echo -e "${GREEN}╚══════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "${YELLOW}💡 Tip: You may need to log out and back in (or reboot)${NC}"

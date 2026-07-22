@@ -1,6 +1,6 @@
 //
 //  qr-detection-performance-probe.swift
-//  Snapzy
+//  Notinhas
 //
 //  Local Vision QR detector timing probe for OCR capture latency checks.
 //

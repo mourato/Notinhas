@@ -3,11 +3,11 @@
 # This validates the manual release path without Apple Developer credentials.
 set -euo pipefail
 
-APP_NAME="Snapzy"
-PROJECT="Snapzy.xcodeproj"
+APP_NAME="Notinhas"
+PROJECT="Notinhas.xcodeproj"
 BUILD_DIR="build"
-ARCHIVE_PATH="$BUILD_DIR/Snapzy.xcarchive"
-APP_PATH="$BUILD_DIR/Snapzy.app"
+ARCHIVE_PATH="$BUILD_DIR/Notinhas.xcarchive"
+APP_PATH="$BUILD_DIR/Notinhas.app"
 
 if [[ -t 1 ]]; then
   BLUE=$'\033[0;34m'
@@ -49,9 +49,9 @@ xcodebuild -project "$PROJECT" \
 success "Archive created at $ARCHIVE_PATH"
 
 info "Extracting app bundle from archive..."
-[[ -d "$ARCHIVE_PATH/Products/Applications/Snapzy.app" ]] ||
-  fail "Archive does not contain Snapzy.app at the expected path."
-ditto "$ARCHIVE_PATH/Products/Applications/Snapzy.app" "$APP_PATH"
+[[ -d "$ARCHIVE_PATH/Products/Applications/Notinhas.app" ]] ||
+  fail "Archive does not contain Notinhas.app at the expected path."
+ditto "$ARCHIVE_PATH/Products/Applications/Notinhas.app" "$APP_PATH"
 
 info "Signing the app ad hoc for local verification..."
 SIGN_IDENTITY="-"
@@ -60,7 +60,7 @@ xattr -rc "$APP_PATH"
 
 BUNDLE_ID=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP_PATH/Contents/Info.plist")
 PROCESSED_ENTITLEMENTS="$BUILD_DIR/processed-entitlements-dryrun.plist"
-sed "s/\$(PRODUCT_BUNDLE_IDENTIFIER)/$BUNDLE_ID/g" Snapzy/Snapzy.entitlements > "$PROCESSED_ENTITLEMENTS"
+sed "s/\$(PRODUCT_BUNDLE_IDENTIFIER)/$BUNDLE_ID/g" Notinhas/Notinhas.entitlements > "$PROCESSED_ENTITLEMENTS"
 
 codesign --force --sign "$SIGN_IDENTITY" \
   -o runtime \
@@ -77,14 +77,14 @@ success "Hardened runtime verified: $HR_FLAGS"
 if command -v create-dmg >/dev/null 2>&1; then
   info "Generating preview DMG..."
   create-dmg \
-    --volname "Snapzy" \
+    --volname "Notinhas" \
     --background "assets/dmg-background.png" \
     --window-size 660 400 \
     --icon-size 120 \
-    --icon "Snapzy.app" 180 170 \
+    --icon "Notinhas.app" 180 170 \
     --app-drop-link 480 170 \
     --no-internet-enable \
-    "$BUILD_DIR/Snapzy-dryrun.dmg" \
+    "$BUILD_DIR/Notinhas-dryrun.dmg" \
     "$APP_PATH"
 else
   warn "create-dmg is not installed; skipping DMG preview."
