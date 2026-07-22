@@ -550,8 +550,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   ///
   /// Note: macOS 13+ prefers `application(_:open:)` over the legacy
   /// `application(_:openFiles:)`, and the latter is silently skipped on
-  /// recent OS releases. We only act on file URLs here so that the existing
-  /// Apple Event handler for `snapzy://` deep links keeps working.
+  /// recent OS releases. We only act on file URLs here; URL-scheme events are
+  /// handled separately and only the registered `notinhas://` scheme is
+  /// accepted.
   func application(_: NSApplication, open urls: [URL]) {
     let fileURLs = urls.filter(\.isFileURL)
     guard !fileURLs.isEmpty else { return }
