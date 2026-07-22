@@ -22,6 +22,7 @@ final class AllInOneCaptureCoordinator {
   private let timerScheduler = AllInOneTimerScheduler()
   private var isActive = false
   private var isAwaitingInitialSelection = false
+  private var sessionGeneration = UUID()
 
   private init() {}
 
@@ -37,6 +38,8 @@ final class AllInOneCaptureCoordinator {
 
     self.viewModel = viewModel
     isActive = true
+    let generation = UUID()
+    sessionGeneration = generation
 
     let state = AllInOneCaptureSessionState()
     state.onModeActivated = { [weak self] mode in
@@ -52,7 +55,7 @@ final class AllInOneCaptureCoordinator {
 
     if viewModel.isFreezeAreaCaptureEnabled {
       Task { @MainActor [weak self] in
-        await self?.startWithFrozenSessionIfNeeded()
+        await self?.startWithFrozenSessionIfNeeded(generation: generation)
       }
     } else {
       continueStartup()
@@ -65,20 +68,26 @@ final class AllInOneCaptureCoordinator {
       return
     }
 
+    sessionGeneration = UUID()
     tearDownSession(invalidateFrozenSession: true)
     DiagnosticLogger.shared.log(.info, .capture, "All-In-One capture session cancelled")
   }
 
   // MARK: - Private
 
-  private func startWithFrozenSessionIfNeeded() async {
-    guard isActive, let viewModel else { return }
+  private func startWithFrozenSessionIfNeeded(generation: UUID) async {
+    guard isActive, sessionGeneration == generation, let viewModel else { return }
 
     switch await viewModel.prepareAllInOneFrozenSelectionSession() {
     case .success(let session):
+      guard isActive, sessionGeneration == generation else {
+        session.invalidate()
+        return
+      }
       frozenSession = session
       continueStartup()
     case .failure(let error):
+      guard isActive, sessionGeneration == generation else { return }
       viewModel.lastCaptureResult = .failure(error)
       tearDownSession(invalidateFrozenSession: true)
     }

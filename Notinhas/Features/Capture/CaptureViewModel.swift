@@ -1194,29 +1194,14 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
             }
           } else if self.lazyAreaSnapshotFailedDisplayIDs.contains(selection.displayID) {
             DiagnosticLogger.shared.log(
-              .info,
+              .error,
               .capture,
-              "Using live area capture fallback after lazy snapshot failure",
+              "Frozen area capture cannot continue after lazy snapshot failure",
               context: ["displayID": "\(selection.displayID)"]
-            )
-            let result = await self.captureManager.captureArea(
-              rect: selection.rect,
-              saveDirectory: actualSaveDirectory,
-              format: self.resolvedFormat,
-              showCursor: showCursor,
-              excludeDesktopIcons: excludeDesktopIcons,
-              excludeDesktopWidgets: excludeDesktopWidgets,
-              excludeOwnApplication: excludeOwnApplication,
-              prefetchedContentTask: prefetchedContentTask,
-              context: selectionContext
             )
             frozenSession.invalidate()
             self.isCapturing = false
-            self.lastCaptureResult = result
-
-            if case .success = result {
-              SoundManager.playScreenshotCapture()
-            }
+            self.lastCaptureResult = .failure(.captureFailed(L10n.ScreenCapture.selectionOutsideDisplayBounds))
           } else {
             frozenSession.invalidate()
             self.isCapturing = false
@@ -1714,11 +1699,11 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
       } catch {
         guard activeAreaSelectionSessionID == sessionID else { return }
         lazyAreaSnapshotFailedDisplayIDs.insert(displayID)
-        AreaSelectionController.shared.enableLiveFallbackSelection(for: displayID)
+        AreaSelectionController.shared.cancelSelection()
         DiagnosticLogger.shared.logError(
           .capture,
           error,
-          "Lazy frozen display snapshot failed; enabled live fallback",
+          "Lazy frozen display snapshot failed; cancelled frozen selection",
           context: ["displayID": "\(displayID)"]
         )
       }
