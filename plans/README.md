@@ -91,7 +91,7 @@ replace a STOP condition with an assumption.
 | 031 | Shared Annotate shortcut→keycap helpers + presenter tests | P1 | S | — | DONE (`00178ff3`, review fixes `b120abba`) |
 | 032 | OverlayTooltip on Annotate toolbar tools and chrome | P1 | M | 031 | DONE (`fb69b316`, review fixes `f3c5b0fb`) |
 | 033 | OverlayTooltip on Annotate bottom-bar shortcut actions | P1 | S | 031 | DONE (`138097e4`; thermo approve, no code fixes; deferred: hardcoded `.help("Move canvas")`) |
-| 034 | +/- steppers beside Annotate and Notinhas sliders | P1 | M | — | DONE (`cf041200`, review fixes pending) |
+| 034 | +/- steppers beside Annotate and Notinhas sliders | P1 | M | — | DONE (`cf041200`, review fixes `44c8836f`) |
 
 ### Dependency notes (031–034)
 
