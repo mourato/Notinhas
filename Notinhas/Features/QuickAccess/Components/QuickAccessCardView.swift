@@ -29,6 +29,7 @@ struct QuickAccessCardView: View {
   @State private var cloudUploadProgress: Double = 0
   @State private var isImgBBUploading = false
   @State private var imgbbUploadError: String?
+  @State private var cardScreenFrame: CGRect = .zero
   @ObservedObject private var imgbbCredentialStore = NotinhasImgBBCredentialStore.shared
   private let imgbbUploadCoordinator = NotinhasUploadCoordinator()
   @Environment(\.accessibilityReduceMotion) var reduceMotion
@@ -52,6 +53,31 @@ struct QuickAccessCardView: View {
   }
 
   var body: some View {
+    cardSurface
+      .modifier(
+        QuickAccessCardHoverPrimeModifier(
+          cardScreenFrame: $cardScreenFrame,
+          onAppearReset: resetCardPresentationState,
+          schedulePrime: scheduleHoverPrime
+        )
+      )
+      .onReceive(manager.$items) { updatedItems in
+        guard let currentItem = updatedItems.first(where: { $0.id == item.id }) else { return }
+        if !currentItem.isWindowOpen, swipeOffset != 0, !isSwiping, !isDismissing {
+          withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            swipeOffset = 0
+          }
+        }
+      }
+      .alert(NotinhasL10n.imgbbUploadFailed, isPresented: imgbbUploadErrorBinding) {
+        Button(L10n.Common.ok, role: .cancel) {}
+      } message: {
+        Text(imgbbUploadError ?? "")
+      }
+      .animation(QuickAccessAnimations.hoverOverlay, value: isHovering)
+  }
+
+  private var cardSurface: some View {
     ZStack(alignment: .center) {
       thumbnailLayer
 
@@ -107,19 +133,7 @@ struct QuickAccessCardView: View {
     .offset(x: reduceMotion ? 0 : swipeOffset)
     .rotationEffect(.degrees(reduceMotion ? 0 : Double(swipeOffset) * 0.03))
     .onHover { hovering in
-      withAnimation(QuickAccessAnimations.hoverOverlay) {
-        isHovering = hovering
-      }
-      onHover?(hovering)
-
-      // Pause/resume countdown on hover if enabled
-      if manager.pauseCountdownOnHover {
-        if hovering {
-          manager.pauseCountdown(for: item.id)
-        } else {
-          manager.resumeCountdown(for: item.id)
-        }
-      }
+      applyHovering(hovering)
     }
     .onTapGesture(count: 2) {
       handleDoubleClick()
@@ -133,34 +147,65 @@ struct QuickAccessCardView: View {
       isDragging = false
       isHovering = false
     }
-    .onAppear {
-      isDismissing = false
-      swipeOffset = 0
-      isSwiping = false
-      isDragging = false
-      isHovering = false
-    }
-    .onReceive(manager.$items) { updatedItems in
-      guard let currentItem = updatedItems.first(where: { $0.id == item.id }) else { return }
-      if !currentItem.isWindowOpen, swipeOffset != 0, !isSwiping, !isDismissing {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-          swipeOffset = 0
-        }
-      }
-    }
-    .alert(NotinhasL10n.imgbbUploadFailed, isPresented: Binding(
+  }
+
+  private var imgbbUploadErrorBinding: Binding<Bool> {
+    Binding(
       get: { imgbbUploadError != nil },
-      set: {
-        if !$0 {
+      set: { isPresented in
+        if !isPresented {
           imgbbUploadError = nil
         }
       }
-    )) {
-      Button(L10n.Common.ok, role: .cancel) {}
-    } message: {
-      Text(imgbbUploadError ?? "")
+    )
+  }
+
+  private func resetCardPresentationState() {
+    isDismissing = false
+    swipeOffset = 0
+    isSwiping = false
+    isDragging = false
+    isHovering = false
+  }
+
+  // MARK: - Hover
+
+  private func applyHovering(_ hovering: Bool) {
+    withAnimation(QuickAccessAnimations.hoverOverlay) {
+      isHovering = hovering
     }
-    .animation(QuickAccessAnimations.hoverOverlay, value: isHovering)
+    onHover?(hovering)
+
+    if manager.pauseCountdownOnHover {
+      if hovering {
+        manager.pauseCountdown(for: item.id)
+      } else {
+        manager.resumeCountdown(for: item.id)
+      }
+    }
+  }
+
+  private func scheduleHoverPrime() {
+    DispatchQueue.main.async {
+      primeHoverIfPointerOverCard()
+    }
+  }
+
+  private func primeHoverIfPointerOverCard() {
+    guard !isDismissing else { return }
+
+    let mouseLocation = NSEvent.mouseLocation
+    guard QuickAccessHoverSeeding.shouldSeedHover(
+      mouseLocation: mouseLocation,
+      cardFrame: cardScreenFrame
+    ) else {
+      return
+    }
+    guard manager.acceptsPanelMouse(at: mouseLocation) else { return }
+
+    applyHovering(true)
+    let windowNumber = manager.quickAccessPanelWindowNumber ?? 0
+    QuickAccessHoverSeeding.postSyntheticMouseMoved(at: mouseLocation, windowNumber: windowNumber)
   }
 
   // MARK: - Computed Properties
@@ -816,6 +861,65 @@ struct QuickAccessCardView: View {
           context: ["fileName": item.url.lastPathComponent]
         )
       }
+    }
+  }
+}
+
+// MARK: - Hover screen bounds
+
+private struct QuickAccessCardHoverPrimeModifier: ViewModifier {
+  @Binding var cardScreenFrame: CGRect
+  let onAppearReset: () -> Void
+  let schedulePrime: () -> Void
+
+  func body(content: Content) -> some View {
+    content
+      .background(
+        QuickAccessCardScreenBoundsReporter { screenFrame in
+          cardScreenFrame = screenFrame
+        }
+      )
+      .onAppear {
+        onAppearReset()
+        schedulePrime()
+      }
+      .onChange(of: cardScreenFrame) { newFrame in
+        guard newFrame.width > 0, newFrame.height > 0 else { return }
+        schedulePrime()
+      }
+  }
+}
+
+private struct QuickAccessCardScreenBoundsReporter: NSViewRepresentable {
+  let onResolveScreenFrame: (CGRect) -> Void
+
+  func makeNSView(context _: Context) -> ReportingView {
+    let view = ReportingView()
+    view.onResolveScreenFrame = onResolveScreenFrame
+    return view
+  }
+
+  func updateNSView(_ nsView: ReportingView, context _: Context) {
+    nsView.onResolveScreenFrame = onResolveScreenFrame
+  }
+
+  final class ReportingView: NSView {
+    var onResolveScreenFrame: ((CGRect) -> Void)?
+
+    override func viewDidMoveToWindow() {
+      super.viewDidMoveToWindow()
+      reportFrame()
+    }
+
+    override func layout() {
+      super.layout()
+      reportFrame()
+    }
+
+    private func reportFrame() {
+      guard let window else { return }
+      let screenFrame = window.convertToScreen(convert(bounds, to: nil))
+      onResolveScreenFrame?(screenFrame)
     }
   }
 }

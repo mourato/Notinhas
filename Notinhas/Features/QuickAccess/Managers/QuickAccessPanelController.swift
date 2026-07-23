@@ -202,10 +202,14 @@ final class QuickAccessPanelController {
     panel?.resumeMouseMonitors()
   }
 
-  /// Self-heal the panel's hover monitors after editor windows close (a stalled
-  /// runloop can get the global event tap silently disabled by the system).
+  /// Self-heal the panel's hover monitors after panel show or card-stack remounts
+  /// (a stalled runloop can get the global event tap silently disabled).
   func reinstallMouseMonitors() {
     panel?.reinstallMouseMonitors()
+  }
+
+  func containsInteractivePoint(_ screenPoint: NSPoint) -> Bool {
+    panel?.containsInteractivePoint(screenPoint) ?? false
   }
 
   /// Check if panel is currently visible
