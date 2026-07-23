@@ -15,6 +15,59 @@ struct NotinhasNoteEditorPanelPlacement: Equatable {
     origin = nil
   }
 
+  /// Non-mutating origin for layout; falls back to automatic placement without persisting.
+  func displayOrigin(
+    selectionBounds: CGRect,
+    panelSize: CGSize,
+    in containerBounds: CGRect,
+    margin: CGFloat = 12
+  ) -> CGPoint {
+    if let origin {
+      return NotinhasNoteGeometry.clampedEditorPanelOrigin(
+        origin,
+        panelSize: panelSize,
+        in: containerBounds,
+        margin: margin
+      )
+    }
+
+    return NotinhasNoteGeometry.editorOrigin(
+      forSelectionBounds: selectionBounds,
+      panelSize: panelSize,
+      in: containerBounds,
+      margin: margin
+    )
+  }
+
+  mutating func ensureSeeded(
+    selectionBounds: CGRect,
+    panelSize: CGSize,
+    in containerBounds: CGRect,
+    margin: CGFloat = 12
+  ) {
+    guard origin == nil else { return }
+    origin = NotinhasNoteGeometry.editorOrigin(
+      forSelectionBounds: selectionBounds,
+      panelSize: panelSize,
+      in: containerBounds,
+      margin: margin
+    )
+  }
+
+  mutating func reclamp(
+    panelSize: CGSize,
+    in containerBounds: CGRect,
+    margin: CGFloat = 12
+  ) {
+    guard let origin else { return }
+    self.origin = NotinhasNoteGeometry.clampedEditorPanelOrigin(
+      origin,
+      panelSize: panelSize,
+      in: containerBounds,
+      margin: margin
+    )
+  }
+
   mutating func resolvedOrigin(
     selectionBounds: CGRect,
     panelSize: CGSize,

@@ -14,7 +14,7 @@ struct NotinhasNoteEditorCanvasOverlay: View {
 
   @State private var draftNote: NotinhasVisualNote?
   @State private var openingSnapshot: NotinhasVisualNote?
-  @State private var panelOrigin: CGPoint?
+  @State private var panelPlacement = NotinhasNoteEditorPanelPlacement()
   @State private var dragStartOrigin: CGPoint?
 
   var body: some View {
@@ -39,10 +39,10 @@ struct NotinhasNoteEditorCanvasOverlay: View {
         isRectangular: note.target.isRectangular,
         in: workArea
       )
-      let origin = displayPanelOrigin(
+      let origin = panelPlacement.displayOrigin(
         selectionBounds: selectionInWorkArea,
         panelSize: panelSize,
-        workArea: workArea
+        in: workArea
       )
       let displayNumber = state.notinhasDisplayNumber(for: editingID) ?? 1
 
@@ -61,7 +61,12 @@ struct NotinhasNoteEditorCanvasOverlay: View {
           onCancel: cancelEditing,
           onDelete: deleteEditing,
           onPanelDragChanged: { translation in
-            handlePanelDragChanged(translation, origin: origin, panelSize: panelSize, workArea: workArea)
+            handlePanelDragChanged(
+              translation,
+              selectionBounds: selectionInWorkArea,
+              panelSize: panelSize,
+              workArea: workArea
+            )
           },
           onPanelDragEnded: endPanelDrag
         )
@@ -69,76 +74,45 @@ struct NotinhasNoteEditorCanvasOverlay: View {
       }
       .frame(width: hostSize.width, height: hostSize.height, alignment: .topLeading)
       .onAppear {
-        seedPanelOriginIfNeeded(
+        panelPlacement.ensureSeeded(
           selectionBounds: selectionInWorkArea,
           panelSize: panelSize,
-          workArea: workArea
+          in: workArea
         )
       }
       .task(id: editingID) {
         ensureDraftSeeded(from: note)
       }
       .onChange(of: panelSize) { _ in
-        reclampPanelOrigin(selectionBounds: selectionInWorkArea, panelSize: panelSize, workArea: workArea)
+        panelPlacement.reclamp(panelSize: panelSize, in: workArea)
       }
       .onChange(of: hostSize) { _ in
-        reclampPanelOrigin(selectionBounds: selectionInWorkArea, panelSize: panelSize, workArea: workArea)
+        panelPlacement.reclamp(panelSize: panelSize, in: workArea)
       }
       .onDisappear {
-        panelOrigin = nil
+        panelPlacement.reset()
         dragStartOrigin = nil
       }
     }
   }
 
-  private func displayPanelOrigin(
-    selectionBounds: CGRect,
-    panelSize: CGSize,
-    workArea: CGRect
-  ) -> CGPoint {
-    if let panelOrigin {
-      return NotinhasNoteGeometry.clampedEditorPanelOrigin(
-        panelOrigin,
-        panelSize: panelSize,
-        in: workArea
-      )
-    }
-
-    return NotinhasNoteGeometry.editorOrigin(
-      forSelectionBounds: selectionBounds,
-      panelSize: panelSize,
-      in: workArea
-    )
-  }
-
-  private func seedPanelOriginIfNeeded(
-    selectionBounds: CGRect,
-    panelSize: CGSize,
-    workArea: CGRect
-  ) {
-    guard panelOrigin == nil else { return }
-    panelOrigin = NotinhasNoteGeometry.editorOrigin(
-      forSelectionBounds: selectionBounds,
-      panelSize: panelSize,
-      in: workArea
-    )
-  }
-
   private func handlePanelDragChanged(
     _ translation: CGSize,
-    origin: CGPoint,
+    selectionBounds: CGRect,
     panelSize: CGSize,
     workArea: CGRect
   ) {
     if dragStartOrigin == nil {
-      dragStartOrigin = origin
+      dragStartOrigin = panelPlacement.displayOrigin(
+        selectionBounds: selectionBounds,
+        panelSize: panelSize,
+        in: workArea
+      )
     }
     guard let dragStartOrigin else { return }
-    panelOrigin = NotinhasNoteGeometry.clampedEditorPanelOrigin(
-      CGPoint(
-        x: dragStartOrigin.x + translation.width,
-        y: dragStartOrigin.y + translation.height
-      ),
+    panelPlacement.applyDrag(
+      from: dragStartOrigin,
+      translation: translation,
       panelSize: panelSize,
       in: workArea
     )
@@ -146,26 +120,6 @@ struct NotinhasNoteEditorCanvasOverlay: View {
 
   private func endPanelDrag() {
     dragStartOrigin = nil
-  }
-
-  private func reclampPanelOrigin(
-    selectionBounds: CGRect,
-    panelSize: CGSize,
-    workArea: CGRect
-  ) {
-    if let panelOrigin {
-      self.panelOrigin = NotinhasNoteGeometry.clampedEditorPanelOrigin(
-        panelOrigin,
-        panelSize: panelSize,
-        in: workArea
-      )
-    } else {
-      seedPanelOriginIfNeeded(
-        selectionBounds: selectionBounds,
-        panelSize: panelSize,
-        workArea: workArea
-      )
-    }
   }
 
   private func draftTextBinding(for note: NotinhasVisualNote) -> Binding<String> {
