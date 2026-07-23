@@ -193,6 +193,37 @@ final class NotinhasNoteEditorInteractionTests: XCTestCase {
     XCTAssertNotEqual(afterEndDrag, duringDrag)
   }
 
+  func testEndDragThenReclampRecoversFromMidDragContainerShrink() {
+    var placement = NotinhasNoteEditorPanelPlacement()
+    _ = placement.resolvedOrigin(
+      selectionBounds: selection,
+      panelSize: panelSize,
+      in: container
+    )
+    placement.beginDrag(
+      selectionBounds: selection,
+      panelSize: panelSize,
+      in: container
+    )
+    placement.updateDrag(
+      translation: CGSize(width: 400, height: 300),
+      panelSize: panelSize,
+      in: container
+    )
+    let shrunkenContainer = CGRect(x: 0, y: 0, width: 360, height: 280)
+    // Simulate ignored onChange during drag:
+    placement.reclamp(panelSize: panelSize, in: shrunkenContainer)
+    placement.endDrag()
+    placement.reclamp(panelSize: panelSize, in: shrunkenContainer)
+    let recovered = placement.displayOrigin(
+      selectionBounds: selection,
+      panelSize: panelSize,
+      in: shrunkenContainer
+    )
+    XCTAssertLessThanOrEqual(recovered.x + panelSize.width, shrunkenContainer.maxX - 12)
+    XCTAssertLessThanOrEqual(recovered.y + panelSize.height, shrunkenContainer.maxY - 12)
+  }
+
   func testBeginDragUsesSeededOriginAndEndDragClearsAnchor() {
     var placement = NotinhasNoteEditorPanelPlacement()
 

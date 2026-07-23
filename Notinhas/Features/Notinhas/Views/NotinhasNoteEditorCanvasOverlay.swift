@@ -69,7 +69,9 @@ struct NotinhasNoteEditorCanvasOverlay: View {
               workArea: workArea
             )
           },
-          onPanelDragEnded: endPanelDrag
+          onPanelDragEnded: {
+            endPanelDrag(panelSize: panelSize, workArea: workArea)
+          }
         )
         .offset(x: origin.x, y: origin.y)
       }
@@ -147,8 +149,13 @@ struct NotinhasNoteEditorCanvasOverlay: View {
     )
   }
 
-  private func endPanelDrag() {
+  private func endPanelDrag(panelSize: CGSize, workArea: CGRect) {
     panelPlacement.endDrag()
+    // Mid-drag host/panel onChange is ignored while `isDragging`; reclamp once so a
+    // resize that happened without further drag samples cannot leave the origin OOB.
+    panelPlacement.reclamp(panelSize: panelSize, in: workArea)
+    lastTrackedPanelSize = panelSize
+    lastTrackedHostSize = workArea.size
   }
 
   private func draftTextBinding(for note: NotinhasVisualNote) -> Binding<String> {
