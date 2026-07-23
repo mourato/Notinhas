@@ -16,8 +16,10 @@ Canonical owner of project-level guidance governance for Notinhas.
 ## Scope Boundary
 
 - Use this skill for AGENTS maintenance, policy updates, skill registry, and repository standards.
-- Implementation details stay in domain skills (`capture-annotate-export`, `macos-app-engineering`, etc.).
-- Delivery commands and merge gates stay in `delivery-workflow`.
+- Implementation details stay in domain skills (`capture-annotate-export` and
+  the global `macos-app-engineering` skill, with its Notinhas overlay).
+- Delivery commands and merge gates stay in the global `delivery-workflow` skill
+  and its Notinhas overlay.
 
 ## When to Use
 
@@ -36,8 +38,10 @@ Use when the user asks to update AGENTS, document project policy, track known li
 - **Skill template**: Prefer section order — Role, Scope Boundary, When to Use, domain guidance, Verification (when relevant), Related Skills, References.
 - **Reuse policy**: `reuse → extend → create` for Notinhas helpers before new types.
 - **Clean registry**: Periodically audit `.agents/skills` for stale guidance or Picker-era leakage.
-- **Command surface sync**: When `scripts/*` change, update `AGENTS.md` and `delivery-workflow` in the same change.
-- **Preview standard**: Keep preview-related guidance in `macos-app-engineering`.
+- **Command surface sync**: When `scripts/*` change, update `AGENTS.md` and the
+  global `delivery-workflow` overlay in the same change.
+- **Preview standard**: Keep preview-related guidance in the global
+  `macos-app-engineering` skill and its overlay.
 - **Fork awareness**: Preserve `Notinhas/Features/Notinhas/` across `upstream` merges; do not delete Notinhas modules during conflict resolution.
 
 ## Information Routing
@@ -70,7 +74,7 @@ Generated report artifacts: prefer `/tmp` or `.agents/reports/` (create only whe
 ## Related Skills
 
 - `../documentation/SKILL.md`
-- `../delivery-workflow/SKILL.md`
+- Global `delivery-workflow` and `.agents/overlays/delivery-workflow.md`
 - `../capture-annotate-export/SKILL.md`
 
 ## References

@@ -12,13 +12,15 @@ Canonical owner for Notinhas visual-handoff behavior: capture an area, place num
 ## Scope Boundary
 
 - Own the Notinhas module (`Notinhas/Features/Notinhas/`) and its thin hooks into Capture/Annotate export/clipboard.
-- Delegate menu-bar shell details to `menubar` / `macos-app-engineering`.
+- Delegate menu-bar shell details to the global `menubar` and
+  `macos-app-engineering` skills, with their Notinhas overlays.
 - Delegate generic Swift style, concurrency, tests, and delivery commands to their skills.
 - Do **not** use this skill to grow broad screen recording, generic markup toolbelts, or unrelated cloud features unless the change directly serves the handoff loop.
 - Screen recording and Video Editor are **optional** inherited features, gated
   at compile time (`NOTINHAS_VIDEO_MODULE`) and runtime
   (`VideoModuleAvailability` / `videoModule.enabled`, default off). Notinhas
-  handoff work does not require them; see `delivery-workflow` for build/test
+  handoff work does not require them; see the global `delivery-workflow` skill
+  and its Notinhas overlay for build/test
   with the Video module on.
 
 ## When to Use
@@ -68,12 +70,12 @@ Reject or narrow requests that primarily add: full recording suites, generic sha
 
 ## Related Skills
 
-- `../delivery-workflow/SKILL.md` — build/test/format commands
-- `../macos-app-engineering/SKILL.md` — SwiftUI/AppKit hosting
-- `../debugging-diagnostics/SKILL.md` — permission/signing failures
-- `../testing-xctest/SKILL.md` — XCTest layout
-- `../data-persistence/SKILL.md` — session/API key keys
-- `../project-standards/SKILL.md` — where guidance lives
+- Global `delivery-workflow` — build/test/format commands
+- Global `macos-app-engineering` — SwiftUI/AppKit hosting
+- `debugging-diagnostics` — permission/signing failures
+- `testing-xctest` — XCTest layout
+- `data-persistence` — session/API key keys
+- `project-standards` — where guidance lives
 
 ## References
 

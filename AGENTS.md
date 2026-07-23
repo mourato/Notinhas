@@ -30,11 +30,20 @@ renaming, moving, or rewriting upstream code merely to match a new design.
 
 ## Skills
 
-Project-specific agent skills live under `.agents/skills/`. Choose the narrowest
-relevant skill from its description; use `project-standards` for guidance
-governance and routing policy.
+Global macOS capabilities provide the portable rules for
+`accessibility-audit`, `apple-design`, `code-quality`, `delivery-workflow`,
+`macos-app-engineering`, `menubar`, and `swift-conventions`. When one of these
+global skills is active, load its matching `.agents/overlays/<skill-name>.md`
+companion after the global skill; the overlay supplies Notinhas facts and must
+not weaken global safety, privacy, or repository-integrity rules. Do not create
+same-name local skill copies.
+
+Project-specific agent skills remain under `.agents/skills/`. Choose the
+narrowest relevant skill from its description; use `project-standards` for
+guidance governance and routing policy.
 `project-standards` owns guidance governance (where docs live, skill template, anti-drift).
 `capture-annotate-export` owns the visual handoff loop (capture → pins/notes → clipboard export).
+`plan-execute-review` owns execution of plans and its review pipeline.
 Keep Notinhas behavior guidance aligned with Product Intent above; do not reintroduce
 unrelated product skills from other apps.
 
