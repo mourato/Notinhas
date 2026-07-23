@@ -64,6 +64,8 @@ final class NotinhasAnnotateStateTests: XCTestCase {
       imageBounds: bounds,
       from: .zero
     )
+    XCTAssertEqual(state.notinhasNotes[0].target, note.target)
+    XCTAssertNotNil(state.notinhasMovePreviewTarget)
     state.notinhasCommitMovingNote()
 
     guard case .point(let movedPoint) = state.notinhasNotes[0].target else {
@@ -75,7 +77,25 @@ final class NotinhasAnnotateStateTests: XCTestCase {
     XCTAssertEqual(state.notinhasNotes[0].target, note.target)
   }
 
-  func testCancelMovingNoteDoesNotCreateUndoCheckpoint() {
+  func testMovingNotePreviewDoesNotPublishUntilCommit() {
+    let state = makeState()
+    let note = makeNote()
+    state.notinhasNotes = [note]
+    let bounds = CGRect(x: 0, y: 0, width: 200, height: 200)
+
+    state.notinhasBeginMovingNote(id: note.id)
+    state.notinhasUpdateMovingNote(
+      to: CGPoint(x: 12, y: 8),
+      imageBounds: bounds,
+      from: .zero
+    )
+
+    XCTAssertEqual(state.notinhasNotes[0].target, note.target)
+    XCTAssertNotNil(state.notinhasMovePreviewTarget)
+    XCTAssertNotEqual(state.notinhasResolvedTarget(for: note.id), note.target)
+  }
+
+  func testCancelMovingNoteClearsPreviewWithoutMutatingNotes() {
     let state = makeState()
     let note = makeNote()
     state.notinhasNotes = [note]
@@ -90,6 +110,8 @@ final class NotinhasAnnotateStateTests: XCTestCase {
     state.notinhasCancelMovingNote()
 
     XCTAssertEqual(state.notinhasNotes[0].target, note.target)
+    XCTAssertNil(state.notinhasMovePreviewTarget)
+    XCTAssertNil(state.notinhasMovingNoteID)
     XCTAssertFalse(state.canUndo)
   }
 
