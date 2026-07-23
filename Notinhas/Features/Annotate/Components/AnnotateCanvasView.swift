@@ -323,17 +323,6 @@ struct AnnotateCanvasView: View {
             .frame(width: foregroundWidth, height: foregroundHeight)
             .clipped()
           }
-
-          // Keep Notinhas editor inside the mockup-transformed group so pins and panel stay aligned.
-          if state.notinhasEditingNoteID != nil {
-            NotinhasNoteEditorCanvasOverlay(
-              state: state,
-              scale: scale,
-              canvasBounds: foregroundBounds,
-              hostSize: CGSize(width: foregroundWidth, height: foregroundHeight)
-            )
-            .frame(width: foregroundWidth, height: foregroundHeight)
-          }
         }
         .offset(x: offset.x, y: offset.y)
         .modifier(MockupTransformModifier(state: state, isEnabled: shouldShowMockupTransforms))
@@ -356,6 +345,20 @@ struct AnnotateCanvasView: View {
       ))
       .scaleEffect(state.zoomLevel)
       .offset(x: state.panOffset.width, y: state.panOffset.height)
+
+      if state.notinhasEditingNoteID != nil {
+        NotinhasNoteEditorCanvasOverlay(
+          state: state,
+          scale: scale,
+          canvasBounds: foregroundBounds,
+          hostSize: containerSize,
+          foregroundOffset: offset,
+          backgroundDisplaySize: CGSize(width: bgWidth, height: bgHeight),
+          zoomLevel: state.zoomLevel,
+          panOffset: state.panOffset
+        )
+        .frame(width: containerSize.width, height: containerSize.height)
+      }
     }
     .onAppear {
       state.updateViewportMetrics(

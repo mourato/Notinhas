@@ -7,28 +7,41 @@ struct NotinhasNoteEditorCanvasOverlay: View {
   let scale: CGFloat
   let canvasBounds: CGRect
   let hostSize: CGSize
+  let foregroundOffset: CGPoint
+  let backgroundDisplaySize: CGSize
+  let zoomLevel: CGFloat
+  let panOffset: CGSize
 
   @State private var draftNote: NotinhasVisualNote?
   @State private var openingSnapshot: NotinhasVisualNote?
+  @State private var panelPlacement = NotinhasNoteEditorPanelPlacement()
 
   var body: some View {
     if let editingID = state.notinhasEditingNoteID,
        let note = state.notinhasNotes.first(where: { $0.id == editingID }) {
-      let hostBounds = CGRect(origin: .zero, size: hostSize)
-      let selectionDisplay = NotinhasNoteGeometry.selectionDisplayBounds(
+      let workArea = CGRect(origin: .zero, size: hostSize)
+      let selectionInForeground = NotinhasNoteGeometry.selectionDisplayBounds(
         for: note.target,
         canvasBounds: canvasBounds,
         displayScale: scale,
         pinDiameter: note.pinDiameter
       )
+      let selectionInWorkArea = NotinhasNoteGeometry.selectionBoundsInEditorWorkArea(
+        selectionInForeground: selectionInForeground,
+        foregroundOffsetInBackground: foregroundOffset,
+        backgroundDisplaySize: backgroundDisplaySize,
+        workAreaSize: hostSize,
+        zoomLevel: zoomLevel,
+        panOffset: panOffset
+      )
       let panelSize = NotinhasNoteGeometry.editorPanelSize(
         isRectangular: note.target.isRectangular,
-        in: hostBounds
+        in: workArea
       )
-      let origin = NotinhasNoteGeometry.editorOrigin(
-        forSelectionBounds: selectionDisplay,
+      let origin = panelPlacement.displayOrigin(
+        selectionBounds: selectionInWorkArea,
         panelSize: panelSize,
-        in: hostBounds
+        in: workArea
       )
       let displayNumber = state.notinhasDisplayNumber(for: editingID) ?? 1
 
@@ -45,15 +58,62 @@ struct NotinhasNoteEditorCanvasOverlay: View {
           showsAreaStyle: note.target.isRectangular,
           onCommit: commitEditing,
           onCancel: cancelEditing,
-          onDelete: deleteEditing
+          onDelete: deleteEditing,
+          onPanelDragChanged: { translation in
+            handlePanelDragChanged(
+              translation,
+              selectionBounds: selectionInWorkArea,
+              panelSize: panelSize,
+              workArea: workArea
+            )
+          },
+          onPanelDragEnded: endPanelDrag
         )
         .offset(x: origin.x, y: origin.y)
       }
       .frame(width: hostSize.width, height: hostSize.height, alignment: .topLeading)
+      .onAppear {
+        panelPlacement.ensureSeeded(
+          selectionBounds: selectionInWorkArea,
+          panelSize: panelSize,
+          in: workArea
+        )
+      }
       .task(id: editingID) {
         ensureDraftSeeded(from: note)
       }
+      .onChange(of: panelSize) { _ in
+        panelPlacement.reclamp(panelSize: panelSize, in: workArea)
+      }
+      .onChange(of: hostSize) { _ in
+        panelPlacement.reclamp(panelSize: panelSize, in: workArea)
+      }
+      .onDisappear {
+        panelPlacement.reset()
+      }
     }
+  }
+
+  private func handlePanelDragChanged(
+    _ translation: CGSize,
+    selectionBounds: CGRect,
+    panelSize: CGSize,
+    workArea: CGRect
+  ) {
+    panelPlacement.beginDrag(
+      selectionBounds: selectionBounds,
+      panelSize: panelSize,
+      in: workArea
+    )
+    panelPlacement.updateDrag(
+      translation: translation,
+      panelSize: panelSize,
+      in: workArea
+    )
+  }
+
+  private func endPanelDrag() {
+    panelPlacement.endDrag()
   }
 
   private func draftTextBinding(for note: NotinhasVisualNote) -> Binding<String> {

@@ -178,4 +178,87 @@ final class NotinhasNoteGeometryTests: XCTestCase {
     XCTAssertEqual(rectSize.width, 300, accuracy: 0.001)
     XCTAssertEqual(rectSize.height, 280, accuracy: 0.001)
   }
+
+  func testClampedEditorPanelOriginKeepsOriginInsideBounds() {
+    let container = CGRect(x: 0, y: 0, width: 500, height: 400)
+    let panelSize = CGSize(width: 200, height: 160)
+    let origin = CGPoint(x: 120, y: 80)
+
+    let clamped = NotinhasNoteGeometry.clampedEditorPanelOrigin(
+      origin,
+      panelSize: panelSize,
+      in: container
+    )
+
+    XCTAssertEqual(clamped, origin)
+  }
+
+  func testClampedEditorPanelOriginClampsLeftAndTopEdges() {
+    let container = CGRect(x: 0, y: 0, width: 500, height: 400)
+    let panelSize = CGSize(width: 200, height: 160)
+    let origin = NotinhasNoteGeometry.clampedEditorPanelOrigin(
+      CGPoint(x: -40, y: -20),
+      panelSize: panelSize,
+      in: container
+    )
+
+    XCTAssertEqual(origin.x, 12, accuracy: 0.001)
+    XCTAssertEqual(origin.y, 12, accuracy: 0.001)
+  }
+
+  func testClampedEditorPanelOriginClampsRightAndBottomEdges() {
+    let container = CGRect(x: 0, y: 0, width: 500, height: 400)
+    let panelSize = CGSize(width: 200, height: 160)
+    let origin = NotinhasNoteGeometry.clampedEditorPanelOrigin(
+      CGPoint(x: 420, y: 360),
+      panelSize: panelSize,
+      in: container
+    )
+
+    XCTAssertEqual(origin.x, 288, accuracy: 0.001)
+    XCTAssertEqual(origin.y, 228, accuracy: 0.001)
+  }
+
+  func testClampedEditorPanelOriginHonorsNonZeroContainerOrigin() {
+    let container = CGRect(x: 40, y: 30, width: 500, height: 400)
+    let panelSize = CGSize(width: 200, height: 160)
+    let origin = NotinhasNoteGeometry.clampedEditorPanelOrigin(
+      CGPoint(x: 10, y: 10),
+      panelSize: panelSize,
+      in: container
+    )
+
+    XCTAssertEqual(origin.x, 52, accuracy: 0.001)
+    XCTAssertEqual(origin.y, 42, accuracy: 0.001)
+  }
+
+  func testClampedEditorPanelOriginPinsOversizedPanelToTopLeftInset() {
+    let container = CGRect(x: 0, y: 0, width: 220, height: 180)
+    let panelSize = CGSize(width: 300, height: 280)
+    let origin = NotinhasNoteGeometry.clampedEditorPanelOrigin(
+      CGPoint(x: 90, y: 70),
+      panelSize: panelSize,
+      in: container
+    )
+
+    XCTAssertEqual(origin.x, 12, accuracy: 0.001)
+    XCTAssertEqual(origin.y, 12, accuracy: 0.001)
+  }
+
+  func testSelectionBoundsInEditorWorkAreaMapsForegroundRectWithZoomAndPan() {
+    let selection = CGRect(x: 20, y: 30, width: 40, height: 40)
+    let mapped = NotinhasNoteGeometry.selectionBoundsInEditorWorkArea(
+      selectionInForeground: selection,
+      foregroundOffsetInBackground: CGPoint(x: 10, y: 20),
+      backgroundDisplaySize: CGSize(width: 200, height: 160),
+      workAreaSize: CGSize(width: 400, height: 300),
+      zoomLevel: 2,
+      panOffset: CGSize(width: 6, height: -4)
+    )
+
+    XCTAssertEqual(mapped.origin.x, 66, accuracy: 0.001)
+    XCTAssertEqual(mapped.origin.y, 86, accuracy: 0.001)
+    XCTAssertEqual(mapped.width, 80, accuracy: 0.001)
+    XCTAssertEqual(mapped.height, 80, accuracy: 0.001)
+  }
 }

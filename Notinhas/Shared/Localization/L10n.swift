@@ -3220,6 +3220,11 @@ nonisolated enum L10n {
       defaultValue: "Note color",
       comment: "Notinhas note editor color button accessibility label"
     )
+    static let noteEditorDragHint = string(
+      "annotate.notinhas.note-editor-drag-hint",
+      defaultValue: "Drag to move this note editor",
+      comment: "VoiceOver hint for draggable regions of the contextual Notinhas note editor"
+    )
     static let pointTargetLabel = string(
       "annotate.notinhas.point-target",
       defaultValue: "Point",

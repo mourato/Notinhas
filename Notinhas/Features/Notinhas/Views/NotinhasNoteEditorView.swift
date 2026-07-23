@@ -12,6 +12,8 @@ struct NotinhasNoteEditorView: View {
   let onCommit: () -> Void
   let onCancel: () -> Void
   let onDelete: () -> Void
+  var onPanelDragChanged: ((CGSize) -> Void)?
+  var onPanelDragEnded: (() -> Void)?
 
   @FocusState private var isFocused: Bool
 
@@ -19,58 +21,96 @@ struct NotinhasNoteEditorView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
-      HStack(spacing: 8) {
-        Text("\(displayNumber)")
-          .font(.system(size: 12, weight: .bold, design: .rounded))
-          .foregroundStyle(.white)
-          .frame(width: 22, height: 22)
-          .background(Circle().fill(color.color))
-
-        Text(NotinhasL10n.noteEditorTitle)
-          .font(.system(size: 13, weight: .semibold))
-
-        Spacer(minLength: 0)
-
-        colorMenu
-      }
-
-      TextField(NotinhasL10n.noteEditorPlaceholder, text: $text, axis: .vertical)
-        .textFieldStyle(.roundedBorder)
-        .lineLimit(3 ... 6)
-        .frame(minHeight: 60)
-        .focused($isFocused)
-        .onSubmit(onCommit)
-
+      header
+      noteTextField
       if showsAreaStyle {
         areaStyleControls
         areaStrokeWidthControl
       }
-
-      HStack(spacing: 6) {
-        Button(role: .destructive) { onDelete() } label: {
-          Image(systemName: "trash")
-        }
-        .overlayTooltip(NotinhasL10n.deleteNote, edge: .above)
-        .accessibilityLabel(NotinhasL10n.deleteNote)
-
-        Spacer(minLength: 4)
-
-        Button(NotinhasL10n.cancel) { onCancel() }
-          .keyboardShortcut(.cancelAction)
-          .overlayTooltip(NotinhasL10n.cancel, keys: ["esc"], edge: .above)
-
-        Button(NotinhasL10n.save) { onCommit() }
-          .keyboardShortcut(.defaultAction)
-          .overlayTooltip(NotinhasL10n.save, keys: ["⌘", "⏎"], edge: .above)
-      }
+      footer
     }
     .padding(12)
     .frame(width: panelWidth, alignment: .topLeading)
     .frame(maxHeight: maxPanelHeight, alignment: .topLeading)
     .fixedSize(horizontal: false, vertical: true)
-    .background(.regularMaterial, in: panelShape)
+    .background {
+      ZStack {
+        panelShape.fill(.regularMaterial)
+        panelDragSurface
+      }
+    }
     .clipShape(panelShape)
+    .accessibilityHint(NotinhasL10n.noteEditorDragHint)
     .onAppear { isFocused = true }
+  }
+
+  private var header: some View {
+    HStack(spacing: 8) {
+      Text("\(displayNumber)")
+        .font(.system(size: 12, weight: .bold, design: .rounded))
+        .foregroundStyle(.white)
+        .frame(width: 22, height: 22)
+        .background(Circle().fill(color.color))
+        .allowsHitTesting(false)
+
+      Text(NotinhasL10n.noteEditorTitle)
+        .font(.system(size: 13, weight: .semibold))
+        .allowsHitTesting(false)
+
+      Spacer(minLength: 0)
+        .allowsHitTesting(false)
+
+      colorMenu
+    }
+  }
+
+  private var noteTextField: some View {
+    TextField(NotinhasL10n.noteEditorPlaceholder, text: $text, axis: .vertical)
+      .textFieldStyle(.roundedBorder)
+      .lineLimit(3 ... 6)
+      .frame(minHeight: 60)
+      .focused($isFocused)
+      .onSubmit(onCommit)
+  }
+
+  private var footer: some View {
+    HStack(spacing: 6) {
+      Button(role: .destructive) { onDelete() } label: {
+        Image(systemName: "trash")
+      }
+      .overlayTooltip(NotinhasL10n.deleteNote, edge: .above)
+      .accessibilityLabel(NotinhasL10n.deleteNote)
+
+      Spacer(minLength: 4)
+        .allowsHitTesting(false)
+
+      Button(NotinhasL10n.cancel) { onCancel() }
+        .keyboardShortcut(.cancelAction)
+        .overlayTooltip(NotinhasL10n.cancel, keys: ["esc"], edge: .above)
+
+      Button(NotinhasL10n.save) { onCommit() }
+        .keyboardShortcut(.defaultAction)
+        .overlayTooltip(NotinhasL10n.save, keys: ["⌘", "⏎"], edge: .above)
+    }
+  }
+
+  /// Full-panel drag surface behind content. Non-interactive labels use hit-test passthrough
+  /// so padding, gaps, and chrome drag; TextField, Menu, buttons, and slider stay on top.
+  private var panelDragSurface: some View {
+    Color.clear
+      .contentShape(Rectangle())
+      .gesture(panelDragGesture)
+      .accessibilityHidden(true)
+  }
+
+  private var panelDragGesture: some Gesture {
+    DragGesture(minimumDistance: 6)
+      .onChanged { value in
+        onPanelDragChanged?(value.translation)
+      }
+      .onEnded { _ in
+        onPanelDragEnded?()
+      }
   }
 
   private var colorMenu: some View {
@@ -129,6 +169,7 @@ struct NotinhasNoteEditorView: View {
       Text(NotinhasL10n.areaStylePickerLabel)
         .font(.system(size: 11, weight: .medium))
         .foregroundStyle(.secondary)
+        .allowsHitTesting(false)
 
       HStack(spacing: 6) {
         ForEach(NotinhasAreaStyle.allCases) { style in
@@ -140,6 +181,7 @@ struct NotinhasNoteEditorView: View {
           )
         }
         Spacer(minLength: 0)
+          .allowsHitTesting(false)
       }
     }
   }
@@ -149,6 +191,8 @@ struct NotinhasNoteEditorView: View {
       Text(NotinhasL10n.areaStrokeWidthLabel)
         .font(.system(size: 11, weight: .medium))
         .foregroundStyle(.secondary)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .allowsHitTesting(false)
 
       SteppedSliderControl(
         value: $areaStrokeWidth,
@@ -160,6 +204,7 @@ struct NotinhasNoteEditorView: View {
         .font(.system(size: 11, weight: .medium).monospacedDigit())
         .foregroundStyle(.secondary)
         .frame(width: 28, alignment: .trailing)
+        .allowsHitTesting(false)
     }
     .accessibilityElement(children: .combine)
     .accessibilityLabel(NotinhasL10n.areaStrokeWidthLabel)
