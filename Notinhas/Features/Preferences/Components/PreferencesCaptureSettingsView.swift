@@ -527,8 +527,13 @@ struct CaptureSettingsView: View {
                 title: L10n.PreferencesCapture.highlightSizeTitle,
                 description: L10n.PreferencesCapture.highlightSizeDescription(Int(mouseHighlightSize))
               ) {
-                Slider(value: $mouseHighlightSize.stepped(by: 2, in: 30 ... 100), in: 30 ... 100)
-                  .frame(width: 140)
+                HStack(spacing: 8) {
+                  SteppedSliderControl(value: $mouseHighlightSize, step: 2, in: 30 ... 100, sliderWidth: 72)
+                  Text("\(Int(mouseHighlightSize)) px")
+                    .frame(width: 42, alignment: .trailing)
+                    .monospacedDigit()
+                    .foregroundColor(.secondary)
+                }
               }
 
               SettingRow(
@@ -538,8 +543,18 @@ struct CaptureSettingsView: View {
                   String(format: "%.1f", mouseHighlightAnimDuration)
                 )
               ) {
-                Slider(value: $mouseHighlightAnimDuration.stepped(by: 0.1, in: 0.3 ... 2.0), in: 0.3 ... 2.0)
-                  .frame(width: 140)
+                HStack(spacing: 8) {
+                  SteppedSliderControl(
+                    value: $mouseHighlightAnimDuration,
+                    step: 0.1,
+                    in: 0.3 ... 2.0,
+                    sliderWidth: 72
+                  )
+                  Text(String(format: "%.1f s", mouseHighlightAnimDuration))
+                    .frame(width: 42, alignment: .trailing)
+                    .monospacedDigit()
+                    .foregroundColor(.secondary)
+                }
               }
 
               SettingRow(
@@ -571,8 +586,13 @@ struct CaptureSettingsView: View {
                 title: L10n.PreferencesCapture.opacityTitle,
                 description: L10n.PreferencesCapture.opacityDescription(Int(mouseHighlightOpacity * 100))
               ) {
-                Slider(value: $mouseHighlightOpacity.stepped(by: 0.05, in: 0.2 ... 1.0), in: 0.2 ... 1.0)
-                  .frame(width: 140)
+                HStack(spacing: 8) {
+                  SteppedSliderControl(value: $mouseHighlightOpacity, step: 0.05, in: 0.2 ... 1.0, sliderWidth: 72)
+                  Text("\(Int(mouseHighlightOpacity * 100))%")
+                    .frame(width: 42, alignment: .trailing)
+                    .monospacedDigit()
+                    .foregroundColor(.secondary)
+                }
               }
 
               HStack {
@@ -594,8 +614,13 @@ struct CaptureSettingsView: View {
                 title: L10n.PreferencesCapture.fontSizeTitle,
                 description: L10n.PreferencesCapture.fontSizeDescription(Int(keystrokeFontSize))
               ) {
-                Slider(value: $keystrokeFontSize.stepped(by: 1, in: 12 ... 32), in: 12 ... 32)
-                  .frame(width: 140)
+                HStack(spacing: 8) {
+                  SteppedSliderControl(value: $keystrokeFontSize, step: 1, in: 12 ... 32, sliderWidth: 72)
+                  Text("\(Int(keystrokeFontSize)) pt")
+                    .frame(width: 42, alignment: .trailing)
+                    .monospacedDigit()
+                    .foregroundColor(.secondary)
+                }
               }
 
               SettingRow(
@@ -620,8 +645,18 @@ struct CaptureSettingsView: View {
                   String(format: "%.1f", keystrokeDisplayDuration)
                 )
               ) {
-                Slider(value: $keystrokeDisplayDuration.stepped(by: 0.5, in: 0.5 ... 5.0), in: 0.5 ... 5.0)
-                  .frame(width: 140)
+                HStack(spacing: 8) {
+                  SteppedSliderControl(
+                    value: $keystrokeDisplayDuration,
+                    step: 0.5,
+                    in: 0.5 ... 5.0,
+                    sliderWidth: 72
+                  )
+                  Text(String(format: "%.1f s", keystrokeDisplayDuration))
+                    .frame(width: 42, alignment: .trailing)
+                    .monospacedDigit()
+                    .foregroundColor(.secondary)
+                }
               }
 
               HStack {

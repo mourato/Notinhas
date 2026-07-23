@@ -7,17 +7,17 @@
 
 import SwiftUI
 
-struct SteppedSliderControl: View {
-  @Binding var value: CGFloat
-  let step: CGFloat
-  let range: ClosedRange<CGFloat>
+struct SteppedSliderControl<Value: BinaryFloatingPoint>: View {
+  @Binding var value: Value
+  let step: Value
+  let range: ClosedRange<Value>
   var sliderWidth: CGFloat?
   var onEditingChanged: (Bool) -> Void = { _ in }
 
   init(
-    value: Binding<CGFloat>,
-    step: CGFloat,
-    in range: ClosedRange<CGFloat>,
+    value: Binding<Value>,
+    step: Value,
+    in range: ClosedRange<Value>,
     sliderWidth: CGFloat? = nil,
     onEditingChanged: @escaping (Bool) -> Void = { _ in }
   ) {
@@ -42,19 +42,29 @@ struct SteppedSliderControl: View {
         .accessibilityLabel(L10n.Common.decrease)
 
       Slider(
-        value: $value.stepped(by: step, in: range),
-        in: range,
+        value: sliderBinding,
+        in: Double(range.lowerBound) ... Double(range.upperBound),
         onEditingChanged: onEditingChanged
       )
       .controlSize(.small)
       .frame(width: sliderWidth)
+      .accessibilityValue(Text(String(describing: value)))
 
       stepperButton(systemName: "plus", isEnabled: canIncrement, delta: step)
         .accessibilityLabel(L10n.Common.increase)
     }
   }
 
-  private func stepperButton(systemName: String, isEnabled: Bool, delta: CGFloat) -> some View {
+  private var sliderBinding: Binding<Double> {
+    Binding(
+      get: { Double(value) },
+      set: { newValue in
+        value = SteppedValue.snapped(Value(newValue), by: step, in: range)
+      }
+    )
+  }
+
+  private func stepperButton(systemName: String, isEnabled: Bool, delta: Value) -> some View {
     Button {
       onEditingChanged(true)
       value = SteppedValue.nudge(value, by: delta, in: range)

@@ -54,4 +54,26 @@ final class SteppedSliderControlTests: XCTestCase {
 
     XCTAssertEqual(nudged, bindingValue, accuracy: 0.000_001)
   }
+
+  func testDoubleNudgeSnapsFractionalValue() {
+    XCTAssertEqual(SteppedValue.nudge(1.0, by: 0.25, in: 0.75 ... 1.75), 1.25)
+  }
+
+  func testDoubleBindingClampsAndSnapsAtUpperBound() {
+    let range = 0.0 ... 1000.0
+    var bindingValue = 975.0
+    let binding = Binding(
+      get: { bindingValue },
+      set: { bindingValue = $0 }
+    ).stepped(by: 50, in: range)
+
+    binding.wrappedValue = 1_025
+
+    XCTAssertEqual(bindingValue, 1_000)
+  }
+
+  func testDoubleCanNudgeIsDisabledAtEndpoints() {
+    XCTAssertFalse(SteppedValue.canNudge(0.75, by: -0.25, in: 0.75 ... 1.75))
+    XCTAssertFalse(SteppedValue.canNudge(1.75, by: 0.25, in: 0.75 ... 1.75))
+  }
 }

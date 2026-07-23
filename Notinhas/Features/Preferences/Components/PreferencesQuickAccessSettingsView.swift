@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct QuickAccessSettingsView: View {
+  private static let overlayScaleRange = 0.75 ... 1.5
+
   @ObservedObject private var manager = QuickAccessManager.shared
   @ObservedObject private var trackpadSwipeModeStore = QuickAccessTrackpadSwipeModeStore.shared
 
@@ -41,16 +43,7 @@ struct QuickAccessSettingsView: View {
           title: L10n.PreferencesQuickAccess.overlaySizeTitle,
           description: L10n.PreferencesQuickAccess.overlaySizeDescription
         ) {
-          HStack(spacing: 8) {
-            Text(verbatim: "S")
-              .font(.caption)
-              .foregroundColor(.secondary)
-            Slider(value: $manager.overlayScale.stepped(by: 0.25, in: 0.75 ... 1.5), in: 0.75 ... 1.5)
-              .frame(width: 100)
-            Text(verbatim: "L")
-              .font(.caption)
-              .foregroundColor(.secondary)
-          }
+          scalePicker(selection: $manager.overlayScale, range: Self.overlayScaleRange)
         }
 
         SettingRow(
@@ -58,22 +51,7 @@ struct QuickAccessSettingsView: View {
           title: L10n.PreferencesQuickAccess.cornerButtonSizeTitle,
           description: L10n.PreferencesQuickAccess.cornerButtonSizeDescription
         ) {
-          HStack(spacing: 8) {
-            Text(verbatim: "S")
-              .font(.caption)
-              .foregroundColor(.secondary)
-            Slider(
-              value: $manager.cornerButtonScale.stepped(
-                by: 0.25,
-                in: QuickAccessCornerButtonMetrics.scaleRange
-              ),
-              in: QuickAccessCornerButtonMetrics.scaleRange
-            )
-            .frame(width: 100)
-            Text(verbatim: "L")
-              .font(.caption)
-              .foregroundColor(.secondary)
-          }
+          scalePicker(selection: $manager.cornerButtonScale, range: QuickAccessCornerButtonMetrics.scaleRange)
         }
       }
 
@@ -130,8 +108,7 @@ struct QuickAccessSettingsView: View {
 
             Spacer()
 
-            Slider(value: $manager.autoDismissDelay.stepped(by: 1, in: 3 ... 30), in: 3 ... 30)
-              .frame(width: 120)
+            SteppedSliderControl(value: $manager.autoDismissDelay, step: 1, in: 3 ... 30, sliderWidth: 72)
 
             Text("\(Int(manager.autoDismissDelay))s")
               .frame(width: 35)
@@ -177,8 +154,7 @@ struct QuickAccessSettingsView: View {
             description: L10n.PreferencesQuickAccess.swipeSensitivityDescription
           ) {
             HStack(spacing: 8) {
-              Slider(value: $manager.swipeSensitivity.stepped(by: 0.25, in: 0.5 ... 3.0), in: 0.5 ... 3.0)
-                .frame(width: 100)
+              SteppedSliderControl(value: $manager.swipeSensitivity, step: 0.25, in: 0.5 ... 3.0, sliderWidth: 72)
               Text("\(Int(manager.swipeSensitivity * 100))%")
                 .frame(width: 42)
                 .monospacedDigit()
@@ -223,6 +199,25 @@ struct QuickAccessSettingsView: View {
   }
 
   // MARK: - Helpers
+
+  private func scalePicker(selection: Binding<Double>, range: ClosedRange<Double>) -> some View {
+    Picker("", selection: selection) {
+      ForEach(scaleChoices(in: range), id: \.self) { scale in
+        Text("\(Int(scale * 100))%")
+          .tag(scale)
+      }
+    }
+    .labelsHidden()
+    .pickerStyle(.menu)
+    .fixedSize()
+    .frame(width: 100, alignment: .trailing)
+    .accessibilityValue(Text("\(Int(selection.wrappedValue * 100))%"))
+  }
+
+  private func scaleChoices(in range: ClosedRange<Double>) -> [Double] {
+    let count = Int(((range.upperBound - range.lowerBound) / 0.25).rounded())
+    return (0 ... count).map { range.lowerBound + (Double($0) * 0.25) }
+  }
 
   private var autoCloseDescription: String {
     if manager.autoDismissEnabled {
