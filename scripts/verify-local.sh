@@ -506,13 +506,65 @@ strict_failure() {
 
 run_commands() {
   local status=0
-  local command
-  for command in "${RESOLVED_COMMANDS[@]}"; do
-    info "running: ${command}"
-    if ! eval "$command"; then
+  local script abs selector
+  local -a selectors=()
+  local -a test_args=()
+
+  if [[ "$FULL" -eq 1 ]]; then
+    info "running: ${RUN_TESTS}"
+    if [[ "$FORCE_VIDEO" -eq 1 ]]; then
+      if ! "$RUN_TESTS" --video-module; then
+        status=1
+      fi
+    elif ! "$RUN_TESTS"; then
       status=1
     fi
+    return "$status"
+  fi
+
+  for script in "${SHELL_SCRIPTS[@]}"; do
+    abs="${REPO_ROOT}/${script}"
+    info "running: bash -n ${abs}"
+    if ! bash -n "$abs"; then
+      status=1
+    fi
+    if script_supports_help "$abs"; then
+      info "running: ${abs} --help"
+      if ! "$abs" --help; then
+        status=1
+      fi
+    fi
   done
+
+  if [[ ${#DOC_PATHS[@]} -gt 0 ]]; then
+    info "running: git -C ${REPO_ROOT} diff --check ${BASE_REF} -- <documentation paths>"
+    if ! git -C "$REPO_ROOT" diff --check "$BASE_REF" -- "${DOC_PATHS[@]}"; then
+      status=1
+    fi
+  fi
+
+  if [[ ${#VIDEO_SELECTORS[@]} -gt 0 ]]; then
+    selectors+=("${VIDEO_SELECTORS[@]}")
+  fi
+  if [[ ${#XCTEST_SELECTORS[@]} -gt 0 ]]; then
+    selectors+=("${XCTEST_SELECTORS[@]}")
+  fi
+  if [[ ${#selectors[@]} -gt 0 ]]; then
+    if [[ "$FORCE_VIDEO" -eq 1 || ${#VIDEO_SELECTORS[@]} -gt 0 ]]; then
+      test_args+=("--video-module")
+    fi
+    local sorted_selectors
+    sorted_selectors="$(printf '%s\n' "${selectors[@]}" | LC_ALL=C sort -u)"
+    while IFS= read -r selector; do
+      [[ -n "$selector" ]] || continue
+      test_args+=("-only-testing:${selector}")
+    done <<<"$sorted_selectors"
+    info "running: ${RUN_TESTS} ${test_args[*]}"
+    if ! "$RUN_TESTS" "${test_args[@]}"; then
+      status=1
+    fi
+  fi
+
   return "$status"
 }
 
