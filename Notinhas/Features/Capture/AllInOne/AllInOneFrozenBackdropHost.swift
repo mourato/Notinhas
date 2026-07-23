@@ -9,6 +9,8 @@ import AppKit
 
 @MainActor
 final class AllInOneFrozenBackdropHost {
+  static let windowLevel = NSWindow.Level(rawValue: NSWindow.Level.floating.rawValue - 1)
+
   private final class BackdropPanel: NSPanel {
     init(screen: NSScreen, backdrop: AreaSelectionBackdrop) {
       super.init(
@@ -24,7 +26,7 @@ final class AllInOneFrozenBackdropHost {
       collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
       // Keep the frozen pixels above normal app windows, but below the selection
       // overlays and All-In-One HUDs that are ordered after this host.
-      level = .floating
+      level = AllInOneFrozenBackdropHost.windowLevel
 
       let imageView = NSImageView(frame: NSRect(origin: .zero, size: screen.frame.size))
       imageView.imageScaling = .scaleAxesIndependently

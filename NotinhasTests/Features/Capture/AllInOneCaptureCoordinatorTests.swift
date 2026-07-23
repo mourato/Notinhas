@@ -61,6 +61,10 @@ final class AllInOneCaptureCoordinatorTests: XCTestCase {
     window.close()
   }
 
+  func testFrozenBackdropWindowLevel_isBelowSelectionOverlay() {
+    XCTAssertLessThan(AllInOneFrozenBackdropHost.windowLevel, NSWindow.Level.floating)
+  }
+
   func testSessionState_updateRectPublishesSelection() {
     let state = AllInOneCaptureSessionState(videoEnabled: false)
     let rect = CGRect(x: 40, y: 50, width: 320, height: 180)

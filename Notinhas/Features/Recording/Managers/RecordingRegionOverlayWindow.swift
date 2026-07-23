@@ -147,6 +147,10 @@ final class RecordingRegionOverlayWindow: NSPanel {
     overlayView.refreshCursor()
   }
 
+  func refreshCursor() {
+    overlayView.refreshCursor()
+  }
+
   /// Active resize handle while the user is dragging a resize affordance.
   var currentResizeHandle: RecordingResizeHandle? {
     overlayView.currentResizeHandle
@@ -487,7 +491,6 @@ enum RecordingResizeHandleCursorGeometry {
       return CGRect(x: rect.maxX - hs, y: rect.midY - hs, width: hs * 2, height: hs * 2)
     }
   }
-
 }
 
 // MARK: - Drawing helpers (continued)

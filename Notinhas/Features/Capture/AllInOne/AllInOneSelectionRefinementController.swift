@@ -122,6 +122,7 @@ final class AllInOneSelectionRefinementController: NSObject {
     overlay.interactionDelegate = self
     overlay.setInteractionEnabled(true)
     overlay.orderFrontRegardless()
+    overlay.refreshCursor()
     return overlay
   }
 
