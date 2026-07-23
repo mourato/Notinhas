@@ -14,7 +14,7 @@
 - **Risk**: MED
 - **Depends on**: plans/047-local-plan-preflight.md
 - **Category**: tests
-- **Planned at**: commit `d4c52d12`, 2026-07-23
+- **Planned at**: commit `ac45736c`, 2026-07-23
 
 ## Execution profile
 
