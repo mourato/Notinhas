@@ -69,6 +69,25 @@ Or directly:
 xcodebuild test -project Notinhas.xcodeproj -scheme Notinhas -configuration Debug
 ```
 
+## Plan preflight (read-only)
+
+Before dispatching or implementing a handoff plan, run the local preflight
+command. It inspects plan metadata, `plans/README.md` dependency status,
+explicit scope paths, drift since the plan’s `Planned at` SHA, and worktree
+cleanliness. It does **not** commit, merge, push, or replace thermo review or
+manual capture/TCC/WindowServer gates.
+
+```bash
+./scripts/plan-preflight.sh plans/047-local-plan-preflight.md \
+  --scope scripts/plan-preflight.sh \
+  --scope scripts/tests/plan-preflight.sh \
+  --report build/plan-preflight/047.json --json
+```
+
+Use `--new-file <path>` for scope entries the plan will create. Prefer
+`build/plan-preflight/` for generated reports (ignored by Git). Fixture
+coverage: `scripts/tests/plan-preflight.sh`.
+
 ## Optional Video module
 
 ```bash

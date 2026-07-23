@@ -89,8 +89,16 @@ model and owns review + finding fixes.
 
 ### 1. Orchestrator — preflight
 
-- Confirm `plans/README.md` dependencies for this plan are `DONE`.
-- Run the plan’s drift check against `Planned at`.
+- Run `./scripts/plan-preflight.sh` as the **first local action** before
+  dispatch or implementation. Pass the plan path, every in-scope path via
+  repeated `--scope` / `--new-file`, and optionally
+  `--report build/plan-preflight/<plan>.json --json` for machine-readable
+  evidence. The command is read-only and never replaces merge, push, thermo
+  review, or manual capture/TCC/WindowServer gates.
+- Confirm `plans/README.md` dependencies for this plan are `DONE` (also checked
+  by preflight).
+- Run the plan’s drift check against `Planned at` (also checked by preflight
+  for tracked scope paths).
 - If drifted, reconcile the plan before dispatch (do not hand a stale plan).
 - Inline the **full plan file text** into the subagent prompt (worktrees may
   not see uncommitted `plans/`).

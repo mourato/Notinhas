@@ -48,6 +48,11 @@ unrelated product skills from other apps.
   Use `--skip-visual` (or `NOTINHAS_SKIP_VISUAL_TESTS=1`) locally to skip suites
   that flash real capture overlays / Quick Access panels on screen; still run the
   full suite (or those suites alone) when changing those areas.
+- `./scripts/plan-preflight.sh plans/NNN-*.md --scope <path> [--new-file <path>]`
+  — read-only preflight for implementation plans (dependency, scope, drift, and
+  worktree checks). Write JSON evidence under `build/plan-preflight/` when
+  needed. A passing preflight does not replace code review or manual
+  capture/TCC/WindowServer validation.
 - `swiftformat <paths…>` — format Swift in place (install once:
   `brew install swiftformat`). Rules live in `.swiftformat` (two-space indent,
   120-column maximum). Scope paths as needed, e.g. `swiftformat Notinhas
