@@ -11,10 +11,18 @@ import Foundation
 struct NotinhasNoteEditorPanelPlacement: Equatable {
   private(set) var origin: CGPoint?
   private var dragAnchorOrigin: CGPoint?
+  private var lastReclampPanelSize: CGSize?
+  private var lastReclampContainerSize: CGSize?
+
+  var isDragging: Bool {
+    dragAnchorOrigin != nil
+  }
 
   mutating func reset() {
     origin = nil
     dragAnchorOrigin = nil
+    lastReclampPanelSize = nil
+    lastReclampContainerSize = nil
   }
 
   /// Non-mutating origin for layout; falls back to automatic placement without persisting.
@@ -25,12 +33,7 @@ struct NotinhasNoteEditorPanelPlacement: Equatable {
     margin: CGFloat = 12
   ) -> CGPoint {
     if let origin {
-      return NotinhasNoteGeometry.clampedEditorPanelOrigin(
-        origin,
-        panelSize: panelSize,
-        in: containerBounds,
-        margin: margin
-      )
+      return origin
     }
 
     return NotinhasNoteGeometry.editorOrigin(
@@ -54,6 +57,7 @@ struct NotinhasNoteEditorPanelPlacement: Equatable {
       in: containerBounds,
       margin: margin
     )
+    recordReclampSizes(panelSize: panelSize, containerSize: containerBounds.size)
   }
 
   mutating func reclamp(
@@ -62,12 +66,21 @@ struct NotinhasNoteEditorPanelPlacement: Equatable {
     margin: CGFloat = 12
   ) {
     guard let origin else { return }
+    guard !isDragging else { return }
+    let containerSize = containerBounds.size
+    if let lastReclampPanelSize,
+       let lastReclampContainerSize,
+       NotinhasNoteGeometry.sizesAreEffectivelyEqual(lastReclampPanelSize, panelSize),
+       NotinhasNoteGeometry.sizesAreEffectivelyEqual(lastReclampContainerSize, containerSize) {
+      return
+    }
     self.origin = NotinhasNoteGeometry.clampedEditorPanelOrigin(
       origin,
       panelSize: panelSize,
       in: containerBounds,
       margin: margin
     )
+    recordReclampSizes(panelSize: panelSize, containerSize: containerSize)
   }
 
   mutating func resolvedOrigin(
@@ -149,5 +162,11 @@ struct NotinhasNoteEditorPanelPlacement: Equatable {
       in: containerBounds,
       margin: margin
     )
+    recordReclampSizes(panelSize: panelSize, containerSize: containerBounds.size)
+  }
+
+  private mutating func recordReclampSizes(panelSize: CGSize, containerSize: CGSize) {
+    lastReclampPanelSize = panelSize
+    lastReclampContainerSize = containerSize
   }
 }

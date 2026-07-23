@@ -152,6 +152,15 @@ nonisolated enum NotinhasNoteGeometry {
     return CGSize(width: width, height: height)
   }
 
+  /// Returns true when both dimensions differ by at most `epsilon` (sub-point layout noise).
+  static func sizesAreEffectivelyEqual(
+    _ lhs: CGSize,
+    _ rhs: CGSize,
+    epsilon: CGFloat = 0.5
+  ) -> Bool {
+    abs(lhs.width - rhs.width) <= epsilon && abs(lhs.height - rhs.height) <= epsilon
+  }
+
   /// Clamps a proposed editor-panel origin inside the editor work area.
   static func clampedEditorPanelOrigin(
     _ proposedOrigin: CGPoint,
