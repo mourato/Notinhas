@@ -434,7 +434,7 @@ instructions may not use this allowlist to retain branding.
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |---|---|---:|---:|---|---|
-| 054 | Adopt global macOS skills with Notinhas overlays | P1 | M | global plan 004 merged | TODO |
+| 054 | Adopt global macOS skills with Notinhas overlays | P1 | M | global plan 004 merged | DONE |
 
 Execute 054 only after the canonical global skill bundle is merged. Preserve
 `capture-annotate-export`, `plan-execute-review`, and `project-standards` as
