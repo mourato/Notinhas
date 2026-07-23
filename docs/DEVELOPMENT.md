@@ -33,6 +33,10 @@ Output: `~/Library/Developer/Xcode/DerivedData/Notinhas-*/Build/Products/Debug/N
 
 ## Run the local debug app
 
+Use `./scripts/build_and_run.sh` as the canonical local entry point (build, launch,
+verify, log streaming, and optional Video module). `./scripts/launch.sh` remains as a
+legacy compatibility wrapper that forwards to `./scripts/build_and_run.sh --logs`.
+
 ```bash
 ./scripts/build_and_run.sh
 ```

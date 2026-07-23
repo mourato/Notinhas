@@ -14,7 +14,8 @@ Build/run failures, choosing verification depth, assessing merge readiness, or G
 | Command | Purpose |
 | ------- | ------- |
 | `open Notinhas.xcodeproj` | Develop and run in Xcode (`⌘R`). Default scheme **Notinhas** = Video module off. |
-| `./scripts/build_and_run.sh` | Build and launch the isolated debug app (codesign via `LOCAL_CODE_SIGN_IDENTITY`, default `Prisma Local Code Signing`). Interactive prompt asks whether to include the Video module; non-interactive: `--video-module`, `--no-video-module`, or `ENABLE_VIDEO_MODULE=1` / `0`. |
+| `./scripts/build_and_run.sh` | **Canonical** build and launch for the isolated debug app (codesign via `LOCAL_CODE_SIGN_IDENTITY`, default `Prisma Local Code Signing`). Interactive prompt asks whether to include the Video module; non-interactive: `--video-module`, `--no-video-module`, or `ENABLE_VIDEO_MODULE=1` / `0`. |
+| `./scripts/launch.sh` | **Legacy compatibility** only — forwards to `./scripts/build_and_run.sh --logs`. Prefer the canonical command for verify, telemetry, Video module, and other options. |
 | `./scripts/build_and_run.sh --video-module` | Build with Recording + Video Editor (`Notinhas Video` scheme, **Debug+Video** / **Release+Video**). |
 | `./scripts/build_and_run.sh --no-video-module` | Explicit default: **Notinhas** scheme, module off. |
 | `./scripts/run-tests.sh` | Run the XCTest suite with default **Notinhas** scheme (**Debug**); results under `build/`. Recording/VideoEditor tests are **not** compiled in. |
