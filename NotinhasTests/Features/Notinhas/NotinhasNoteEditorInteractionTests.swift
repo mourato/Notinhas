@@ -83,7 +83,8 @@ final class NotinhasNoteEditorInteractionTests: XCTestCase {
     )
 
     let shrunkenContainer = CGRect(x: 0, y: 0, width: 360, height: 280)
-    let reclamped = placement.resolvedOrigin(
+    placement.reclamp(panelSize: panelSize, in: shrunkenContainer)
+    let reclamped = placement.displayOrigin(
       selectionBounds: selection,
       panelSize: panelSize,
       in: shrunkenContainer
@@ -91,6 +92,105 @@ final class NotinhasNoteEditorInteractionTests: XCTestCase {
 
     XCTAssertLessThanOrEqual(reclamped.x + panelSize.width, shrunkenContainer.maxX - 12)
     XCTAssertLessThanOrEqual(reclamped.y + panelSize.height, shrunkenContainer.maxY - 12)
+  }
+
+  func testDisplayOriginIsStableWhenCalledRepeatedly() {
+    var placement = NotinhasNoteEditorPanelPlacement()
+    _ = placement.resolvedOrigin(
+      selectionBounds: selection,
+      panelSize: panelSize,
+      in: container
+    )
+
+    let first = placement.displayOrigin(
+      selectionBounds: selection,
+      panelSize: panelSize,
+      in: container
+    )
+    let second = placement.displayOrigin(
+      selectionBounds: selection,
+      panelSize: panelSize,
+      in: container
+    )
+    let third = placement.displayOrigin(
+      selectionBounds: selection,
+      panelSize: panelSize,
+      in: container
+    )
+
+    XCTAssertEqual(first, second)
+    XCTAssertEqual(second, third)
+  }
+
+  func testSubPointContainerNoiseDoesNotMoveSeededOrigin() {
+    var placement = NotinhasNoteEditorPanelPlacement()
+    let seeded = placement.resolvedOrigin(
+      selectionBounds: selection,
+      panelSize: panelSize,
+      in: container
+    )
+
+    let noisyContainer = CGRect(x: 0, y: 0, width: 800.3, height: 600.2)
+    let afterDisplay = placement.displayOrigin(
+      selectionBounds: selection,
+      panelSize: panelSize,
+      in: noisyContainer
+    )
+    placement.reclamp(panelSize: panelSize, in: noisyContainer)
+    let afterReclamp = placement.displayOrigin(
+      selectionBounds: selection,
+      panelSize: panelSize,
+      in: noisyContainer
+    )
+
+    XCTAssertEqual(afterDisplay, seeded)
+    XCTAssertEqual(afterReclamp, seeded)
+  }
+
+  func testReclampIgnoredDuringActiveDrag() {
+    var placement = NotinhasNoteEditorPanelPlacement()
+    _ = placement.resolvedOrigin(
+      selectionBounds: selection,
+      panelSize: panelSize,
+      in: container
+    )
+    placement.beginDrag(
+      selectionBounds: selection,
+      panelSize: panelSize,
+      in: container
+    )
+    placement.updateDrag(
+      translation: CGSize(width: 50, height: 30),
+      panelSize: panelSize,
+      in: container
+    )
+    let duringDrag = placement.displayOrigin(
+      selectionBounds: selection,
+      panelSize: panelSize,
+      in: container
+    )
+
+    let shrunkenContainer = CGRect(x: 0, y: 0, width: 360, height: 280)
+    placement.reclamp(panelSize: panelSize, in: shrunkenContainer)
+    let afterIgnoredReclamp = placement.displayOrigin(
+      selectionBounds: selection,
+      panelSize: panelSize,
+      in: shrunkenContainer
+    )
+
+    XCTAssertEqual(afterIgnoredReclamp, duringDrag)
+
+    placement.endDrag()
+    placement.reclamp(panelSize: panelSize, in: shrunkenContainer)
+    let afterEndDrag = placement.displayOrigin(
+      selectionBounds: selection,
+      panelSize: panelSize,
+      in: shrunkenContainer
+    )
+
+    XCTAssertLessThanOrEqual(afterEndDrag.x + panelSize.width, shrunkenContainer.maxX - 12)
+    XCTAssertLessThanOrEqual(afterEndDrag.y + panelSize.height, shrunkenContainer.maxY - 12)
+    XCTAssertNotEqual(afterEndDrag, duringDrag)
   }
 
   func testBeginDragUsesSeededOriginAndEndDragClearsAnchor() {

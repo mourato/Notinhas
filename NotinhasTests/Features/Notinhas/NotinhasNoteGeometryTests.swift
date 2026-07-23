@@ -179,6 +179,15 @@ final class NotinhasNoteGeometryTests: XCTestCase {
     XCTAssertEqual(rectSize.height, 280, accuracy: 0.001)
   }
 
+  func testSizesAreEffectivelyEqualTreatsSubPointNoiseAsEqual() {
+    let base = CGSize(width: 300, height: 200)
+    let noisy = CGSize(width: 300.3, height: 200.2)
+    let different = CGSize(width: 301, height: 200)
+
+    XCTAssertTrue(NotinhasNoteGeometry.sizesAreEffectivelyEqual(base, noisy))
+    XCTAssertFalse(NotinhasNoteGeometry.sizesAreEffectivelyEqual(base, different))
+  }
+
   func testClampedEditorPanelOriginKeepsOriginInsideBounds() {
     let container = CGRect(x: 0, y: 0, width: 500, height: 400)
     let panelSize = CGSize(width: 200, height: 160)

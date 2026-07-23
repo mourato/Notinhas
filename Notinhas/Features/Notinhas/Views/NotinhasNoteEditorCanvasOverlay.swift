@@ -15,6 +15,8 @@ struct NotinhasNoteEditorCanvasOverlay: View {
   @State private var draftNote: NotinhasVisualNote?
   @State private var openingSnapshot: NotinhasVisualNote?
   @State private var panelPlacement = NotinhasNoteEditorPanelPlacement()
+  @State private var lastTrackedPanelSize: CGSize?
+  @State private var lastTrackedHostSize: CGSize?
 
   var body: some View {
     if let editingID = state.notinhasEditingNoteID,
@@ -78,20 +80,53 @@ struct NotinhasNoteEditorCanvasOverlay: View {
           panelSize: panelSize,
           in: workArea
         )
+        lastTrackedPanelSize = panelSize
+        lastTrackedHostSize = hostSize
       }
       .task(id: editingID) {
         ensureDraftSeeded(from: note)
       }
-      .onChange(of: panelSize) { _ in
-        panelPlacement.reclamp(panelSize: panelSize, in: workArea)
+      .onChange(of: panelSize) { newPanelSize in
+        reconcilePlacementIfNeeded(
+          panelSize: newPanelSize,
+          hostSize: hostSize,
+          workArea: workArea
+        )
       }
-      .onChange(of: hostSize) { _ in
-        panelPlacement.reclamp(panelSize: panelSize, in: workArea)
+      .onChange(of: hostSize) { newHostSize in
+        let updatedWorkArea = CGRect(origin: .zero, size: newHostSize)
+        reconcilePlacementIfNeeded(
+          panelSize: panelSize,
+          hostSize: newHostSize,
+          workArea: updatedWorkArea
+        )
       }
       .onDisappear {
         panelPlacement.reset()
+        lastTrackedPanelSize = nil
+        lastTrackedHostSize = nil
       }
     }
+  }
+
+  private func reconcilePlacementIfNeeded(
+    panelSize: CGSize,
+    hostSize: CGSize,
+    workArea: CGRect
+  ) {
+    guard !panelPlacement.isDragging else { return }
+
+    let panelChanged = lastTrackedPanelSize.map {
+      !NotinhasNoteGeometry.sizesAreEffectivelyEqual($0, panelSize)
+    } ?? true
+    let hostChanged = lastTrackedHostSize.map {
+      !NotinhasNoteGeometry.sizesAreEffectivelyEqual($0, hostSize)
+    } ?? true
+    guard panelChanged || hostChanged else { return }
+
+    panelPlacement.reclamp(panelSize: panelSize, in: workArea)
+    lastTrackedPanelSize = panelSize
+    lastTrackedHostSize = hostSize
   }
 
   private func handlePanelDragChanged(
