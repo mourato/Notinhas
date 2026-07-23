@@ -25,7 +25,16 @@ Use when adding or changing automated tests under `NotinhasTests/`.
 ./scripts/run-tests.sh
 ./scripts/run-tests.sh --skip-visual
 ./scripts/run-tests.sh -only-testing:NotinhasTests/NotinhasNoteGeometryTests
+./scripts/verify-local.sh --base main --plan-only
+./scripts/verify-local.sh --base main --plan-only --strict
+./scripts/verify-local.sh --base main --execute
 ```
+
+`./scripts/verify-local.sh` maps changed paths through `scripts/verification-map.tsv`.
+Unknown application paths and rows marked `manual-required` must stay visible in the
+report; `--strict` fails instead of treating them as fully verified. The command reuses
+`./scripts/run-tests.sh` for XCTest execution and does not replace full-suite or manual
+UI/TCC/WindowServer gates when overlays, permissions, or unmapped surfaces change.
 
 `--skip-visual` / `NOTINHAS_SKIP_VISUAL_TESTS=1` skips host suites that flash real
 area-selection overlays, Quick Access panels, or status-bar activation onto the

@@ -53,6 +53,13 @@ unrelated product skills from other apps.
   worktree checks). Write JSON evidence under `build/plan-preflight/` when
   needed. A passing preflight does not replace code review or manual
   capture/TCC/WindowServer validation.
+- `./scripts/verify-local.sh --base <ref> [--plan-only] [--execute] [--strict]`
+  — changed-surface local verification planner/runner. Maps touched paths to
+  XCTest selectors, shell checks, and manual gates via
+  `scripts/verification-map.tsv`; writes reports under `build/verification/`.
+  Default is `--plan-only`. Use `--strict` for conservative failures on unmapped
+  or manual-required paths. This narrows deterministic feedback; it does not
+  replace the full test suite or manual gates when the surface requires them.
 - `swiftformat <paths…>` — format Swift in place (install once:
   `brew install swiftformat`). Rules live in `.swiftformat` (two-space indent,
   120-column maximum). Scope paths as needed, e.g. `swiftformat Notinhas
