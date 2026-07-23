@@ -7,7 +7,7 @@
 > in `plans/README.md` — unless a reviewer dispatched you and told you they
 > maintain the index.
 >
-> **Drift check (run first)**: `git diff --stat 84be0955..HEAD -- Notinhas/Features/QuickAccess/Components/QuickAccessCardView.swift Notinhas/Features/QuickAccess/QuickAccessPanel.swift Notinhas/Features/QuickAccess/QuickAccessManager.swift Notinhas/Features/QuickAccess/Managers/QuickAccessPanelController.swift docs/QUICK_ACCESS.md NotinhasTests/Features/QuickAccess`
+> **Drift check (run first)**: `git diff --stat b7a76965..HEAD -- Notinhas/Features/QuickAccess/Components/QuickAccessCardView.swift Notinhas/Features/QuickAccess/QuickAccessPanel.swift Notinhas/Features/QuickAccess/QuickAccessManager.swift Notinhas/Features/QuickAccess/Managers/QuickAccessPanelController.swift docs/QUICK_ACCESS.md NotinhasTests/Features/QuickAccess`
 > If any in-scope file changed since this plan was written, compare the
 > "Current state" excerpts against the live code before proceeding; on a
 > mismatch, treat it as a STOP condition.
@@ -19,7 +19,7 @@
 - **Risk**: MED — mouse-passthrough + nonactivating panel hover is historically fragile; wrong self-heal can steal clicks from apps underneath.
 - **Depends on**: none
 - **Category**: bug
-- **Planned at**: commit `84be0955`, 2026-07-23
+- **Planned at**: commit `b7a76965`, 2026-07-23
 
 ## Execution profile
 

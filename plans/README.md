@@ -468,7 +468,8 @@ right of the mode strip with a 16pt gap and equal height.
 
 ## Annotate interaction regressions (056–058)
 
-Generated 2026-07-23 against commit `84be0955`. Observed while manually
+Generated 2026-07-23 against commit `b7a76965` (plans authored on
+`84be0955`; Planned-at refreshed after indexing). Observed while manually
 verifying plan 055, but **not caused by 055** (All-In-One capture chrome).
 Likely noticed after plan 052 (contextual editor free-drag). Three fix plans:
 editor placement tremble, annotate shape + Notinhas marker drag-start hitch,

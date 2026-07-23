@@ -7,7 +7,7 @@
 > in `plans/README.md` — unless a reviewer dispatched you and told you they
 > maintain the index.
 >
-> **Drift check (run first)**: `git diff --stat 84be0955..HEAD -- Notinhas/Features/Notinhas/Views/NotinhasNoteEditorCanvasOverlay.swift Notinhas/Features/Notinhas/Services/NotinhasNoteEditorPanelPlacement.swift Notinhas/Features/Notinhas/Services/NotinhasNoteGeometry.swift Notinhas/Features/Annotate/Components/AnnotateCanvasView.swift NotinhasTests/Features/Notinhas/NotinhasNoteEditorInteractionTests.swift NotinhasTests/Features/Notinhas/NotinhasNoteGeometryTests.swift`
+> **Drift check (run first)**: `git diff --stat b7a76965..HEAD -- Notinhas/Features/Notinhas/Views/NotinhasNoteEditorCanvasOverlay.swift Notinhas/Features/Notinhas/Services/NotinhasNoteEditorPanelPlacement.swift Notinhas/Features/Notinhas/Services/NotinhasNoteGeometry.swift Notinhas/Features/Annotate/Components/AnnotateCanvasView.swift NotinhasTests/Features/Notinhas/NotinhasNoteEditorInteractionTests.swift NotinhasTests/Features/Notinhas/NotinhasNoteGeometryTests.swift`
 > If any in-scope file changed since this plan was written, compare the
 > "Current state" excerpts against the live code before proceeding; on a
 > mismatch, treat it as a STOP condition.
@@ -19,7 +19,7 @@
 - **Risk**: MED — touches SwiftUI overlay placement that plan 052 just introduced; wrong clamp policy can leave the box clipped or fight the drag gesture.
 - **Depends on**: none
 - **Category**: bug
-- **Planned at**: commit `84be0955`, 2026-07-23
+- **Planned at**: commit `b7a76965`, 2026-07-23
 
 ## Execution profile
 

@@ -7,7 +7,7 @@
 > in `plans/README.md` — unless a reviewer dispatched you and told you they
 > maintain the index.
 >
-> **Drift check (run first)**: `git diff --stat 84be0955..HEAD -- Notinhas/Features/Annotate/Components/AnnotateCanvasDrawingView.swift Notinhas/Features/Notinhas/Annotate/NotinhasAnnotateState.swift Notinhas/Features/Annotate/AnnotateState.swift NotinhasTests/Features/Notinhas/NotinhasAnnotateStateTests.swift NotinhasTests/Features/Annotate`
+> **Drift check (run first)**: `git diff --stat b7a76965..HEAD -- Notinhas/Features/Annotate/Components/AnnotateCanvasDrawingView.swift Notinhas/Features/Notinhas/Annotate/NotinhasAnnotateState.swift Notinhas/Features/Annotate/AnnotateState.swift NotinhasTests/Features/Notinhas/NotinhasAnnotateStateTests.swift NotinhasTests/Features/Annotate`
 > If any in-scope file changed since this plan was written, compare the
 > "Current state" excerpts against the live code before proceeding; on a
 > mismatch, treat it as a STOP condition.
@@ -19,7 +19,7 @@
 - **Risk**: MED — AppKit canvas interaction + `@Published` invalidation; easy to regress selection chrome or multi-select drag.
 - **Depends on**: none
 - **Category**: bug / perf
-- **Planned at**: commit `84be0955`, 2026-07-23
+- **Planned at**: commit `b7a76965`, 2026-07-23
 
 ## Execution profile
 
