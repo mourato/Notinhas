@@ -465,3 +465,39 @@ right of the mode strip with a 16pt gap and equal height.
 - Flipping dimensions to the left of the mode strip when near the trailing screen
   edge: rejected by product decision — clamp/pin the pair; never invert.
 - Vertically stacking HUDs when the pair does not fit: rejected — never stack.
+
+## Annotate interaction regressions (056–058)
+
+Generated 2026-07-23 against commit `84be0955`. Observed while manually
+verifying plan 055, but **not caused by 055** (All-In-One capture chrome).
+Likely noticed after plan 052 (contextual editor free-drag). Three fix plans:
+editor placement tremble, annotate shape + Notinhas marker drag-start hitch,
+and Quick Access hover chrome inconsistency.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 056 | Stabilize Notinhas contextual editor placement (stop tremble) | P1 | M | — | TODO |
+| 057 | Remove annotate shape and Notinhas marker drag-start hitch | P1 | M | — | TODO |
+| 058 | Restore reliable Quick Access hover action chrome | P2 | M | — | TODO |
+
+### Dependency notes (056–058)
+
+- **056 ∥ 057**: parallel — different folders (Notinhas overlay placement vs
+  `AnnotateCanvasDrawingView` / marker move publishing).
+- **058**: technically parallel, priority P2 — land after or beside 056/057
+  when bandwidth allows; no code dependency on them.
+- Do **not** attribute these fixes to plan 055 or reopen All-In-One chrome.
+
+### Findings considered and rejected (056–058 round)
+
+- Blaming plan 055 for editor tremble / shape hitch / QA hover: rejected —
+  055 touches All-In-One HUD/overlay files only; symptoms live on Annotate /
+  Notinhas / Quick Access paths (052 for editor drag).
+- One mega-plan covering all three symptoms: rejected — separate roots.
+- Separate plans for shape hitch vs marker hitch: rejected — shared canvas
+  invalidation / publish story; one plan (057).
+- Separate Quick Access characterization spike before fixing: deferred unless
+  the targeted B/D fixes in 058 fail the manual checklist.
+- Instruments time-profile as a hard done gate for 057: deferred — manual
+  hitch gate + invalidation contract tests are enough.
+- Raising Quick Access above Annotate or making QA a key window: rejected.
