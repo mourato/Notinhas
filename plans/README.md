@@ -479,7 +479,7 @@ and Quick Access hover chrome inconsistency.
 |---|---|---:|---:|---|---|
 | 056 | Stabilize Notinhas contextual editor placement (stop tremble) | P1 | M | — | DONE (`c8d9f9d0`; thermo fix `5b3ce7ab`; manual Annotate tremble gate PENDING) |
 | 057 | Remove annotate shape and Notinhas marker drag-start hitch | P1 | M | — | DONE (`cb0a7e31`; thermo fix `b14d32a1`; manual Annotate hitch gate PENDING) |
-| 058 | Restore reliable Quick Access hover action chrome | P2 | M | — | DONE (; thermo fix ; manual QA hover checklist PENDING) |
+| 058 | Restore reliable Quick Access hover action chrome | P2 | M | — | DONE (`55d0a44a`; thermo fix `e99e7dde`; manual QA hover checklist PENDING) |
 
 ### Dependency notes (056–058)
 
