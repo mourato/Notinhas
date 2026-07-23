@@ -48,6 +48,7 @@ final class QuickAccessPanel: NSPanel {
     guard isMonitorsSuspended else { return }
     isMonitorsSuspended = false
     installMouseMonitors()
+    refreshMousePassthrough()
   }
 
   /// Reinstall monitors after a runloop stall. macOS can silently disable the global
@@ -55,9 +56,12 @@ final class QuickAccessPanel: NSPanel {
   /// which leaves hover dead until the monitors are recreated. No-op while suspended
   /// (e.g. during an active capture session).
   func reinstallMouseMonitors() {
-    guard !isMonitorsSuspended else { return }
+    guard QuickAccessMouseMonitorPolicy.shouldReinstallMonitors(isSuspended: isMonitorsSuspended) else {
+      return
+    }
     removeMouseMonitors()
     installMouseMonitors()
+    refreshMousePassthrough()
   }
 
   func updatePassthroughRegion(itemCount: Int, scale: CGFloat) {

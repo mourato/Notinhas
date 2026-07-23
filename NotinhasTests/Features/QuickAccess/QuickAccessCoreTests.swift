@@ -16,6 +16,62 @@ final class QuickAccessCoreTests: XCTestCase {
   private static var retainedActionStores: [QuickAccessActionConfigurationStore] = []
   private static var retainedPinWindowStates: [QuickAccessPinWindowState] = []
 
+  func testQuickAccessHoverSeeding_detectsPointerInsideCardFrame() {
+    let frame = CGRect(x: 100, y: 100, width: 180, height: 112)
+
+    XCTAssertTrue(
+      QuickAccessHoverSeeding.shouldSeedHover(
+        mouseLocation: NSPoint(x: 150, y: 150),
+        cardFrame: frame
+      )
+    )
+    XCTAssertTrue(
+      QuickAccessHoverSeeding.shouldSeedHover(
+        mouseLocation: NSPoint(x: 100, y: 100),
+        cardFrame: frame
+      )
+    )
+    XCTAssertFalse(
+      QuickAccessHoverSeeding.shouldSeedHover(
+        mouseLocation: NSPoint(x: 50, y: 150),
+        cardFrame: frame
+      )
+    )
+    XCTAssertFalse(
+      QuickAccessHoverSeeding.shouldSeedHover(
+        mouseLocation: NSPoint(x: 150, y: 250),
+        cardFrame: frame
+      )
+    )
+    XCTAssertFalse(
+      QuickAccessHoverSeeding.shouldSeedHover(
+        mouseLocation: NSPoint(x: 150, y: 150),
+        cardFrame: .zero
+      )
+    )
+  }
+
+  func testQuickAccessMouseMonitorPolicy_skipsReinstallWhileSuspended() {
+    XCTAssertTrue(QuickAccessMouseMonitorPolicy.shouldReinstallMonitors(isSuspended: false))
+    XCTAssertFalse(QuickAccessMouseMonitorPolicy.shouldReinstallMonitors(isSuspended: true))
+  }
+
+  func testQuickAccessPanel_reinstallMouseMonitorsRefreshesPassthroughOutsideCards() {
+    let panelHeight =
+      QuickAccessLayout.scaledCardHeight(1) * 5
+        + QuickAccessLayout.cardSpacing * 4
+        + QuickAccessLayout.containerPadding * 2
+    let panel = QuickAccessPanel(
+      contentRect: NSRect(x: 100, y: 100, width: 204, height: panelHeight)
+    )
+    defer { panel.close() }
+
+    panel.updatePassthroughRegion(itemCount: 1, scale: 1)
+    panel.reinstallMouseMonitors()
+
+    XCTAssertFalse(panel.containsInteractivePoint(NSPoint(x: 150, y: panel.frame.maxY - 10)))
+  }
+
   func testQuickAccessItem_formatsVideoDurationAndOmitsInvalidDurations() {
     let thumbnail = NSImage(size: CGSize(width: 16, height: 16))
     let video = QuickAccessItem(

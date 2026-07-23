@@ -671,18 +671,27 @@ final class QuickAccessManager: ObservableObject {
 
   func setWindowOpen(id: UUID, isOpen: Bool) {
     if let index = items.firstIndex(where: { $0.id == id }) {
+      let wasOpen = items[index].isWindowOpen
+      guard wasOpen != isOpen else { return }
+
       PerfSignpost.event("setWindowOpenCommit")
       // No inline withAnimation here: QuickAccessStackView's
       // `.animation(value: visibleItems.count)` is the single driver for the
       // hide/reappear spring. Wrapping this mutation too would compound two springs.
       items[index].isWindowOpen = isOpen
 
-      if !isOpen {
-        // An editor window just closed and the card reappeared: self-heal the
-        // hover monitors in case the runloop stall got the global event tap killed.
-        panelController.reinstallMouseMonitors()
-      }
+      // Card stack remount (editor open/close): self-heal hover monitors in case a
+      // runloop stall silently disabled the global event tap.
+      panelController.reinstallMouseMonitors()
     }
+  }
+
+  func acceptsPanelMouse(at screenPoint: NSPoint) -> Bool {
+    panelController.containsInteractivePoint(screenPoint)
+  }
+
+  var quickAccessPanelWindowNumber: Int? {
+    panelController.window?.windowNumber
   }
 
   private func setPinState(id: UUID, isPinned: Bool, closePinWindow: Bool) {
@@ -1272,6 +1281,7 @@ final class QuickAccessManager: ObservableObject {
       itemCount: visiblePanelItemCount,
       scale: CGFloat(overlayScale)
     )
+    panelController.reinstallMouseMonitors()
     installEditHotKeyIfNeeded()
     DiagnosticLogger.shared.log(
       .debug,
