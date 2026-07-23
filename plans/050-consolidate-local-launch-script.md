@@ -14,7 +14,7 @@
 - **Risk**: LOW
 - **Depends on**: none
 - **Category**: tech-debt
-- **Planned at**: commit `d4c52d12`, 2026-07-23
+- **Planned at**: commit `6def28c5`, 2026-07-23
 
 ## Execution profile
 
