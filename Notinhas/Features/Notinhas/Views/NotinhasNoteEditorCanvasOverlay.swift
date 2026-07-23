@@ -15,7 +15,6 @@ struct NotinhasNoteEditorCanvasOverlay: View {
   @State private var draftNote: NotinhasVisualNote?
   @State private var openingSnapshot: NotinhasVisualNote?
   @State private var panelPlacement = NotinhasNoteEditorPanelPlacement()
-  @State private var dragStartOrigin: CGPoint?
 
   var body: some View {
     if let editingID = state.notinhasEditingNoteID,
@@ -91,7 +90,6 @@ struct NotinhasNoteEditorCanvasOverlay: View {
       }
       .onDisappear {
         panelPlacement.reset()
-        dragStartOrigin = nil
       }
     }
   }
@@ -102,16 +100,12 @@ struct NotinhasNoteEditorCanvasOverlay: View {
     panelSize: CGSize,
     workArea: CGRect
   ) {
-    if dragStartOrigin == nil {
-      dragStartOrigin = panelPlacement.displayOrigin(
-        selectionBounds: selectionBounds,
-        panelSize: panelSize,
-        in: workArea
-      )
-    }
-    guard let dragStartOrigin else { return }
-    panelPlacement.applyDrag(
-      from: dragStartOrigin,
+    panelPlacement.beginDrag(
+      selectionBounds: selectionBounds,
+      panelSize: panelSize,
+      in: workArea
+    )
+    panelPlacement.updateDrag(
       translation: translation,
       panelSize: panelSize,
       in: workArea
@@ -119,7 +113,7 @@ struct NotinhasNoteEditorCanvasOverlay: View {
   }
 
   private func endPanelDrag() {
-    dragStartOrigin = nil
+    panelPlacement.endDrag()
   }
 
   private func draftTextBinding(for note: NotinhasVisualNote) -> Binding<String> {

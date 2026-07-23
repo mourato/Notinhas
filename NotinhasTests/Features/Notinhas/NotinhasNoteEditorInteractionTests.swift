@@ -92,4 +92,29 @@ final class NotinhasNoteEditorInteractionTests: XCTestCase {
     XCTAssertLessThanOrEqual(reclamped.x + panelSize.width, shrunkenContainer.maxX - 12)
     XCTAssertLessThanOrEqual(reclamped.y + panelSize.height, shrunkenContainer.maxY - 12)
   }
+
+  func testBeginDragUsesSeededOriginAndEndDragClearsAnchor() {
+    var placement = NotinhasNoteEditorPanelPlacement()
+
+    placement.beginDrag(
+      selectionBounds: selection,
+      panelSize: panelSize,
+      in: container
+    )
+    placement.updateDrag(
+      translation: CGSize(width: 30, height: 10),
+      panelSize: panelSize,
+      in: container
+    )
+    placement.endDrag()
+
+    let retained = placement.displayOrigin(
+      selectionBounds: CGRect(x: 500, y: 400, width: 28, height: 28),
+      panelSize: panelSize,
+      in: container
+    )
+
+    XCTAssertEqual(retained.x, selection.maxX + 24 + 30, accuracy: 0.001)
+    XCTAssertEqual(retained.y, selection.midY - panelSize.height / 2 + 10, accuracy: 0.001)
+  }
 }

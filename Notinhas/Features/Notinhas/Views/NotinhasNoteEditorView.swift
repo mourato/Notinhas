@@ -51,15 +51,17 @@ struct NotinhasNoteEditorView: View {
         .foregroundStyle(.white)
         .frame(width: 22, height: 22)
         .background(Circle().fill(color.color))
+        .allowsHitTesting(false)
 
       Text(NotinhasL10n.noteEditorTitle)
         .font(.system(size: 13, weight: .semibold))
+        .allowsHitTesting(false)
 
       Spacer(minLength: 0)
+        .allowsHitTesting(false)
 
       colorMenu
     }
-    .background(panelDragSurface)
   }
 
   private var noteTextField: some View {
@@ -80,6 +82,7 @@ struct NotinhasNoteEditorView: View {
       .accessibilityLabel(NotinhasL10n.deleteNote)
 
       Spacer(minLength: 4)
+        .allowsHitTesting(false)
 
       Button(NotinhasL10n.cancel) { onCancel() }
         .keyboardShortcut(.cancelAction)
@@ -89,9 +92,10 @@ struct NotinhasNoteEditorView: View {
         .keyboardShortcut(.defaultAction)
         .overlayTooltip(NotinhasL10n.save, keys: ["⌘", "⏎"], edge: .above)
     }
-    .background(panelDragSurface)
   }
 
+  /// Full-panel drag surface behind content. Non-interactive labels use hit-test passthrough
+  /// so padding, gaps, and chrome drag; TextField, Menu, buttons, and slider stay on top.
   private var panelDragSurface: some View {
     Color.clear
       .contentShape(Rectangle())
@@ -165,6 +169,7 @@ struct NotinhasNoteEditorView: View {
       Text(NotinhasL10n.areaStylePickerLabel)
         .font(.system(size: 11, weight: .medium))
         .foregroundStyle(.secondary)
+        .allowsHitTesting(false)
 
       HStack(spacing: 6) {
         ForEach(NotinhasAreaStyle.allCases) { style in
@@ -176,9 +181,9 @@ struct NotinhasNoteEditorView: View {
           )
         }
         Spacer(minLength: 0)
+          .allowsHitTesting(false)
       }
     }
-    .background(panelDragSurface)
   }
 
   private var areaStrokeWidthControl: some View {
@@ -187,7 +192,7 @@ struct NotinhasNoteEditorView: View {
         .font(.system(size: 11, weight: .medium))
         .foregroundStyle(.secondary)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(panelDragSurface)
+        .allowsHitTesting(false)
 
       SteppedSliderControl(
         value: $areaStrokeWidth,
@@ -199,7 +204,7 @@ struct NotinhasNoteEditorView: View {
         .font(.system(size: 11, weight: .medium).monospacedDigit())
         .foregroundStyle(.secondary)
         .frame(width: 28, alignment: .trailing)
-        .background(panelDragSurface)
+        .allowsHitTesting(false)
     }
     .accessibilityElement(children: .combine)
     .accessibilityLabel(NotinhasL10n.areaStrokeWidthLabel)

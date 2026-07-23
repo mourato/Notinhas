@@ -10,9 +10,11 @@ import Foundation
 
 struct NotinhasNoteEditorPanelPlacement: Equatable {
   private(set) var origin: CGPoint?
+  private var dragAnchorOrigin: CGPoint?
 
   mutating func reset() {
     origin = nil
+    dragAnchorOrigin = nil
   }
 
   /// Non-mutating origin for layout; falls back to automatic placement without persisting.
@@ -74,25 +76,60 @@ struct NotinhasNoteEditorPanelPlacement: Equatable {
     in containerBounds: CGRect,
     margin: CGFloat = 12
   ) -> CGPoint {
-    if let origin {
-      let clamped = NotinhasNoteGeometry.clampedEditorPanelOrigin(
-        origin,
-        panelSize: panelSize,
-        in: containerBounds,
-        margin: margin
-      )
-      self.origin = clamped
-      return clamped
-    }
-
-    let automatic = NotinhasNoteGeometry.editorOrigin(
-      forSelectionBounds: selectionBounds,
+    ensureSeeded(
+      selectionBounds: selectionBounds,
       panelSize: panelSize,
       in: containerBounds,
       margin: margin
     )
-    origin = automatic
-    return automatic
+    return displayOrigin(
+      selectionBounds: selectionBounds,
+      panelSize: panelSize,
+      in: containerBounds,
+      margin: margin
+    )
+  }
+
+  mutating func beginDrag(
+    selectionBounds: CGRect,
+    panelSize: CGSize,
+    in containerBounds: CGRect,
+    margin: CGFloat = 12
+  ) {
+    if dragAnchorOrigin == nil {
+      ensureSeeded(
+        selectionBounds: selectionBounds,
+        panelSize: panelSize,
+        in: containerBounds,
+        margin: margin
+      )
+      dragAnchorOrigin = displayOrigin(
+        selectionBounds: selectionBounds,
+        panelSize: panelSize,
+        in: containerBounds,
+        margin: margin
+      )
+    }
+  }
+
+  mutating func updateDrag(
+    translation: CGSize,
+    panelSize: CGSize,
+    in containerBounds: CGRect,
+    margin: CGFloat = 12
+  ) {
+    guard let dragAnchorOrigin else { return }
+    applyDrag(
+      from: dragAnchorOrigin,
+      translation: translation,
+      panelSize: panelSize,
+      in: containerBounds,
+      margin: margin
+    )
+  }
+
+  mutating func endDrag() {
+    dragAnchorOrigin = nil
   }
 
   mutating func applyDrag(
