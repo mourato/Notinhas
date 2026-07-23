@@ -650,11 +650,12 @@ final class DrawingCanvasNSView: NSView {
     // Selection uses image coordinates
     if state.selectedTool == .selection {
       if let annotation = hitTestAnnotation(at: imagePoint) {
+        // Start the gesture first so selection publishers skip full redraw while dragging.
+        beginAnnotationDrag(anchor: annotation, at: imagePoint)
         if !state.isAnnotationSelected(annotation.id) {
           _ = state.selectAnnotation(at: imagePoint)
-          state.selectedTool = annotation.type.toolType
         }
-        beginAnnotationDrag(anchor: annotation, at: imagePoint)
+        state.selectedTool = annotation.type.toolType
         return
       } else {
         beginAreaSelection(at: imagePoint)
@@ -669,10 +670,10 @@ final class DrawingCanvasNSView: NSView {
     if state.selectedTool != .crop,
        let annotation = hitTestAnnotation(at: imagePoint),
        !Self.shouldPrioritizeCanvasMarkup(over: annotation, selectedTool: state.selectedTool) {
-      // Selection and local gesture buffers must be ready before the first mouseDragged.
+      // Gesture locals first so selection/@Published sinks skip full redraw at drag start.
+      beginAnnotationDrag(anchor: annotation, at: imagePoint)
       state.selectedAnnotationId = annotation.id
       state.selectedTool = annotation.type.toolType
-      beginAnnotationDrag(anchor: annotation, at: imagePoint)
       return
     }
 

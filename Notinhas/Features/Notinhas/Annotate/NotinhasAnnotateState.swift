@@ -169,7 +169,11 @@ extension AnnotateState {
 
   func notinhasNote(at point: CGPoint) -> NotinhasVisualNote? {
     for note in notinhasNotes.reversed() {
-      if NotinhasNoteGeometry.hitTest(note: note, at: point) {
+      var candidate = note
+      if let resolved = notinhasResolvedTarget(for: note.id) {
+        candidate.target = resolved
+      }
+      if NotinhasNoteGeometry.hitTest(note: candidate, at: point) {
         return note
       }
     }
