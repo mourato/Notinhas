@@ -66,6 +66,16 @@ is_interactive_terminal() {
   [[ -t 0 && -t 1 ]]
 }
 
+canonicalize_path() {
+  local path="$1"
+  python3 - "$path" <<'PY'
+import os
+import sys
+
+print(os.path.realpath(sys.argv[1]))
+PY
+}
+
 normalize_path() {
   local path="$1"
   if [[ -z "$path" ]]; then
@@ -77,6 +87,7 @@ normalize_path() {
   if [[ "$path" != /* ]]; then
     die "install path must be absolute: $path"
   fi
+  path="$(canonicalize_path "$path")"
   if [[ "$path" == "/" ]]; then
     die "refusing to use filesystem root as install path"
   fi
@@ -91,7 +102,9 @@ normalize_path() {
 
 is_system_install_path() {
   local path="$1"
-  [[ "$path" == /Applications/* ]]
+  local system_root
+  system_root="$(canonicalize_path "/Applications")"
+  [[ "$path" == "$system_root"/* ]]
 }
 
 validate_install_path() {
@@ -131,7 +144,9 @@ validate_clean_workspace() {
   if [[ "$path" == "$PROJECT_DIR" || "$path" == "$PROJECT_DIR/"* ]]; then
     die "refusing to clean the repository: $path"
   fi
-  if [[ "$path" == /Applications || "$path" == /Applications/* ]]; then
+  local system_root
+  system_root="$(canonicalize_path "/Applications")"
+  if [[ "$path" == "$system_root" || "$path" == "$system_root"/* ]]; then
     die "refusing to clean /Applications: $path"
   fi
   if [[ "$path" != "$TEST_DIR" && "$path" != "$TEST_DIR/"* ]]; then
@@ -367,6 +382,7 @@ check_cert() {
 
 clean_workspace() {
   local target="$1"
+  target="$(canonicalize_path "$target")"
   validate_clean_workspace "$target"
   echo "Cleaning test artifacts in $target..."
   rm -rf "$target"
