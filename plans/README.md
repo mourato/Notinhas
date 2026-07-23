@@ -144,7 +144,7 @@ capture rather than a new generic timer subsystem.
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |---|---|---:|---:|---|---|
-| 038 | Refine All-In-One chrome and add delayed area capture | P1 | M | 035–037 | IN PROGRESS (implementation `c97eef68`; automated gates pass, manual smoke pending) |
+| 038 | Refine All-In-One chrome and add delayed area capture | P1 | M | 035–037 | DONE (`c97eef68`; automated gates and manual smoke complete) |
 
 ### Dependency notes (038)
 
@@ -288,7 +288,7 @@ automated contract plus the required manual WindowServer cursor gate.
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |---|---|---:|---:|---|---|
-| 046 | Restore All-In-One resize cursors over frozen backdrops | P1 | M | 042, 045 | IN PROGRESS (automated gates pass; manual WindowServer cursor gate pending) |
+| 046 | Restore All-In-One resize cursors over frozen backdrops | P1 | M | 042, 045 | DONE (`ce1066fa`; automated gates and manual WindowServer cursor gate complete) |
 
 ### Dependency notes (046)
 
@@ -303,6 +303,31 @@ automated contract plus the required manual WindowServer cursor gate.
   Preferences/Capture smoke checks should be serialized with 043.
 - 045 must preserve the existing `FrozenAreaCaptureSession` composite crop and
   must not turn ImgBB/Cloud or unrelated capture modes into dependencies.
+
+## Local delivery automation (047–051)
+
+This round intentionally excludes CI, GitHub Actions, hosted runners, and PR
+gates. The project is personal and local, but versioning discipline remains
+mandatory: every implemented plan still requires commit, merge, cleanup, push,
+and integrated review. These plans automate mechanical preparation and
+evidence collection around that discipline; they do not remove any Git gate.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 047 | Add a local preflight command for implementation plans | P1 | M | — | TODO |
+| 048 | Select local verification from the changed surface | P1 | M | 047 | TODO |
+| 049 | Automate the mandatory local Git integration protocol | P1 | M | 047, 048 | TODO |
+| 050 | Make build_and_run the sole local launch implementation | P2 | S | — | TODO |
+| 051 | Make the local TCC test isolated and auditable | P2 | M | — | TODO |
+
+### Dependency notes (047–051)
+
+- 047 establishes the preflight/evidence contract consumed by 048 and 049.
+- 048 must land before 049 so Git integration can require a resolved local
+  verification report rather than relying on agent memory.
+- 050 and 051 are independent local workstreams and can be executed separately.
+- None of these plans changes CI or removes mandatory commit, merge, cleanup,
+  push, or integrated-review stages.
 
 ## Dependency notes (026–030)
 
@@ -356,3 +381,9 @@ instructions may not use this allowlist to retain branding.
 - Upgrading classic ⌘⇧4 to refine-before-capture in the same round: deferred —
   All-In-One owns refinement first to avoid regressing the fast area path.
 - Migrating Scrolling HUD onto shared host in 035: deferred — optional DRY later.
+- CI workflow optimization: intentionally excluded from plans 047–051 because
+  the maintainer explicitly deferred hosted CI and PR automation for this
+  personal local fork.
+- Removing merge or push from the delivery protocol: rejected — versioning
+  discipline remains mandatory even for local use; only the mechanical protocol
+  is being automated.
