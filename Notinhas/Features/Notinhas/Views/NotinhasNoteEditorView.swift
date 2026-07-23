@@ -104,7 +104,10 @@ struct NotinhasNoteEditorView: View {
   }
 
   private var panelDragGesture: some Gesture {
-    DragGesture(minimumDistance: 6)
+    // Measure in global space: the panel moves itself via `.offset`, so a `.local`
+    // gesture would report translation relative to the moving frame and feed back
+    // into the offset each frame, making the box tremble while dragging.
+    DragGesture(minimumDistance: 6, coordinateSpace: .global)
       .onChanged { value in
         onPanelDragChanged?(value.translation)
       }
