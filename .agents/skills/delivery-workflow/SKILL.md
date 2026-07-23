@@ -20,6 +20,8 @@ Build/run failures, choosing verification depth, assessing merge readiness, or G
 | `./scripts/run-tests.sh` | Run the XCTest suite with default **Notinhas** scheme (**Debug**); results under `build/`. Recording/VideoEditor tests are **not** compiled in. |
 | `./scripts/run-tests.sh --video-module` | Run Recording/VideoEditor XCTests (**Notinhas Video** / **Debug+Video**). Also: `ENABLE_VIDEO_MODULE=1` or `--no-video-module`. |
 | `./scripts/run-tests.sh --skip-visual` | Local focus aid: skip suites that order real overlays/panels onto the display (`NOTINHAS_SKIP_VISUAL_TESTS=1`). Not a merge-gate substitute when capture overlay / Quick Access / status-bar activation change. Area-selection backdrop grabs default to synthetic under XCTest (no Screen Recording TCC); opt into live capture with `NOTINHAS_ALLOW_SCREEN_CAPTURE_IN_TESTS=1`. |
+| `./scripts/plan-preflight.sh plans/NNN-*.md --scope <path> [--new-file <path>]` | Read-only plan preflight (dependency, scope, drift, worktree). Prefer `build/plan-preflight/` for JSON evidence. |
+| `./scripts/verify-local.sh --base <ref> --plan-only` | Changed-surface verification planner: maps touched paths to XCTest selectors, shell checks, and manual gates. Add `--strict` to fail on unmapped/manual-required paths; add `--execute` to run deterministic checks. Does **not** replace the full suite or manual TCC/WindowServer gates. |
 | `swiftformat <paths…>` | Format Swift in place (`brew install swiftformat`; `.swiftformat`: 2-space indent, 120 columns). Scope paths as needed — e.g. `swiftformat Notinhas NotinhasTests`. |
 
 Do **not** treat plain `swift build` as sufficient acceptance — Info.plist, signing, and Screen Recording permissions matter for capture flows.
@@ -39,8 +41,11 @@ Screen Recording and Accessibility TCC grants follow the code signature. Ad-hoc 
 ### Merge Gate (current)
 
 1. `swiftformat <paths…>` on the Swift paths you changed (or confirm no Swift changes). Typical scope: `swiftformat Notinhas NotinhasTests`.
-2. `./scripts/run-tests.sh` for logic touched, or filtered `-only-testing:` for focused suites
-3. Manual smoke appropriate to the diff (below)
+2. `./scripts/verify-local.sh --base <integration-ref> --plan-only --strict` when you need a conservative changed-surface plan before running tests.
+3. `./scripts/run-tests.sh` for logic touched, `./scripts/verify-local.sh --base <integration-ref> --execute` for mapped deterministic subsets, or filtered `-only-testing:` for focused suites.
+4. Manual smoke appropriate to the diff (below)
+
+`verify-local` narrows deterministic local feedback. It does **not** replace `./scripts/run-tests.sh` without `--full`, visual suites, or manual capture/TCC/WindowServer checks when the touched surface requires them.
 
 ### Scope Matrix
 

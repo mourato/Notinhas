@@ -88,6 +88,27 @@ Use `--new-file <path>` for scope entries the plan will create. Prefer
 `build/plan-preflight/` for generated reports (ignored by Git). Fixture
 coverage: `scripts/tests/plan-preflight.sh`.
 
+## Changed-surface verification (local)
+
+After editing code, run the local verification planner to resolve which deterministic
+checks apply to the touched paths. It reuses `./scripts/run-tests.sh` for XCTest
+selectors, runs `bash -n` / `--help` for touched shell scripts, and surfaces
+`manual-required` items instead of claiming full coverage.
+
+```bash
+./scripts/verify-local.sh --base main --plan-only
+./scripts/verify-local.sh --base main --plan-only --strict
+./scripts/verify-local.sh --base main --execute
+./scripts/verify-local.sh --full --execute   # explicit full-suite delegate
+```
+
+Reports are written to `build/verification/` by default. Fixture coverage:
+`scripts/tests/verify-local.sh`.
+
+This command narrows local deterministic feedback. It does **not** replace the full
+`./scripts/run-tests.sh` gate, visual overlay suites, or manual Screen Recording /
+Accessibility / TCC / WindowServer / clipboard checks when those surfaces change.
+
 ## Optional Video module
 
 ```bash
