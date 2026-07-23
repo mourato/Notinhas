@@ -429,3 +429,13 @@ instructions may not use this allowlist to retain branding.
 - Removing merge or push from the delivery protocol: rejected — versioning
   discipline remains mandatory even for local use; only the mechanical protocol
   is being automated.
+
+## Global macOS skill overlay adoption
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 054 | Adopt global macOS skills with Notinhas overlays | P1 | M | global plan 004 merged | TODO |
+
+Execute 054 only after the canonical global skill bundle is merged. Preserve
+`capture-annotate-export`, `plan-execute-review`, and `project-standards` as
+Notinhas-local specialists; migrate only the seven cross-project skills.
