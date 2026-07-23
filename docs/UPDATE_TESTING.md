@@ -25,7 +25,13 @@ project are **not applicable**.
 
 ```bash
 ./scripts/test-dmg.sh          # DMG layout and bundle checks when available
-./scripts/test-tcc-local.sh    # TCC grant helpers for local debug builds
+./scripts/test-tcc-local.sh    # Local TCC persistence diagnostic (isolated by default)
 ```
+
+`test-tcc-local.sh` installs to `/tmp/test-tcc-notinhas/Applications/Notinhas.app`
+by default, writes stage metadata under `/tmp/test-tcc-notinhas/reports/`, and
+requires `--install-path` plus `--allow-system-install` to touch
+`/Applications/Notinhas.app`. Permission results still require manual inspection
+in System Settings after each stage.
 
 For maintainer release steps see [RELEASES.md](RELEASES.md).

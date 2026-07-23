@@ -36,24 +36,46 @@ Push a release and check the "Import self-signed certificate" step in the workfl
 ## Local Testing
 
 Use `scripts/test-tcc-local.sh` to verify TCC permissions persist across
-same-identity replacements locally:
+same-identity replacements locally. The helper defaults to an isolated install
+under `/tmp/test-tcc-notinhas/Applications/Notinhas.app` so it does not replace
+your `/Applications/Notinhas.app` unless you explicitly opt in.
 
 ```bash
 # Step 1: Generate cert and import into login keychain
 ./scripts/create-signing-cert.sh
 
-# Step 2: Build, sign with self-signed cert, install as build v1
+# Step 2: Build, sign with self-signed cert, install as build-v1
 ./scripts/test-tcc-local.sh build-v1
-# → Open app → Grant Screen Recording + Microphone
+# → Open the reported isolated app path
+# → Grant Screen Recording + Microphone manually in System Settings
 
-# Step 3: Re-sign and replace with the same identity
+# Step 3: Re-sign and reinstall from the same v1 archive
 ./scripts/test-tcc-local.sh build-v2
-# → Open app → Verify permissions are STILL granted ✅
+# → Open the reported app path
+# → Verify permissions are STILL granted ✅
 
 # (Optional) Compare with ad-hoc to prove the difference
 ./scripts/test-tcc-local.sh compare
-# → Open app → Permissions are LOST ❌
+# → Open the reported app path
+# → Permissions are LOST ❌ (expected ad-hoc control)
 ```
+
+Each stage writes a metadata report under `/tmp/test-tcc-notinhas/reports/`
+with the stage label, archive path, install path, signing identity kind, and
+verification result. Reports never include certificate passwords, private key
+material, or permission database contents.
+
+System installation is opt-in only:
+
+```bash
+./scripts/test-tcc-local.sh \
+  --install-path /Applications/Notinhas.app \
+  --allow-system-install \
+  build-v1
+```
+
+Non-interactive runs refuse `/Applications` unless both flags are present.
+Interactive runs also require typing the exact install path to confirm.
 
 Clean up test artifacts when done:
 
