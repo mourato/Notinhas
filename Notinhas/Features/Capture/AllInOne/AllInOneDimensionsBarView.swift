@@ -40,9 +40,10 @@ struct AllInOneDimensionsBarView: View {
           : L10n.AllInOne.lockAspectRatioAccessibility
       )
     }
+    // Match mode-strip button content height before shared padding (outer ≈ 58).
+    .frame(minHeight: Self.modeButtonContentHeight)
     .padding(.horizontal, ToolbarConstants.horizontalPadding)
     .padding(.vertical, ToolbarConstants.verticalPadding)
-    .frame(minHeight: Self.modeButtonContentHeight)
     .captureFloatingToolbarMaterial()
     .onChange(of: rect) { newRect in
       syncFields(from: newRect)

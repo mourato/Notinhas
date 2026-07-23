@@ -150,7 +150,8 @@ final class AllInOneCaptureCoordinator {
       guard let self, isActive, isAwaitingInitialSelection else { return }
       positionHUDs()
       modeHUD?.showAboveCaptureOverlay()
-      actionHUD?.showAboveCaptureOverlay()
+      // Keep action HUD ordered out until a selection rect exists; raising it here
+      // would re-show an empty material pill after positionHUDs() hides it.
     }
   }
 
@@ -210,10 +211,11 @@ final class AllInOneCaptureCoordinator {
 
     guard let modeHUD else { return }
 
-    modeHUD.refreshContentSize()
+    // Refresh sizes without single-toolbar reposition; paired/absolute placement follows.
+    modeHUD.refreshContentSize(reposition: false)
 
     if showsDimensions, let actionHUD {
-      actionHUD.refreshContentSize()
+      actionHUD.refreshContentSize(reposition: false)
       let screen = NSScreen.screens.first(where: { $0.frame.intersects(anchorRect) })
         ?? ScreenUtility.activeScreen()
       let screenFrame = screen.visibleFrame
