@@ -14,7 +14,7 @@
 - **Risk**: HIGH
 - **Depends on**: none
 - **Category**: security
-- **Planned at**: commit `d4c52d12`, 2026-07-23
+- **Planned at**: commit `f31ab568`, 2026-07-23
 
 ## Execution profile
 
