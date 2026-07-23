@@ -243,6 +243,18 @@ main() {
     run_integrate "$repo" --apply --source-branch advisor/feature --target-branch main --remote origin \
       --reviewed-commit "$sha"
 
+  local bad_evidence_root bad_preflight bad_verify bad_manifest
+  bad_evidence_root="$(mktemp -d "${TMPDIR:-/tmp}/integrate-plan-bad-evidence.XXXXXX")"
+  bad_preflight="${bad_evidence_root}/preflight.json"
+  bad_verify="${bad_evidence_root}/verify.txt"
+  bad_manifest="${bad_evidence_root}/manifest.json"
+  write_preflight_report "$bad_preflight" "$(git -C "$repo" rev-parse main)"
+  write_verify_report "$bad_verify"
+  write_integration_manifest "$bad_manifest" "advisor/feature" "$sha" "$bad_preflight" "$bad_verify"
+  assert_exit "apply rejects mismatched preflight head" 1 \
+    run_integrate "$repo" --apply --source-branch advisor/feature --target-branch main --remote origin \
+      --evidence "$bad_manifest" --reviewed-commit "$sha"
+
   assert_exit "apply with evidence succeeds" 0 \
     run_integrate "$repo" --apply --fetch --cleanup \
       --source-branch advisor/feature --target-branch main --remote origin \

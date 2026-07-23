@@ -342,6 +342,8 @@ def validate_preflight(path: pathlib.Path) -> None:
     payload = json.loads(read_text(path))
     if payload.get("result") != "pass":
         fail(f"preflight evidence failed: {path}")
+    if payload.get("currentHead") != source_sha:
+        fail(f"preflight currentHead mismatch: {path}")
 
 def validate_verify_local(path: pathlib.Path) -> None:
     text = read_text(path)
@@ -382,6 +384,8 @@ if text.lstrip().startswith("{"):
             fail("preflight evidence result must be pass")
         sys.exit(0)
     if payload.get("result") == "pass":
+        if payload.get("currentHead") != source_sha:
+            fail("preflight currentHead mismatch")
         if reviewed_commit != source_sha:
             fail("reviewed commit must match source tip")
         sys.exit(0)
@@ -389,6 +393,12 @@ if text.lstrip().startswith("{"):
 
 first_line = text.splitlines()[0] if text else ""
 if first_line.startswith("plan-preflight:") and "pass" in first_line:
+    current_head = next(
+        (line.split(":", 1)[1].strip() for line in text.splitlines() if line.startswith("currentHead:")),
+        "",
+    )
+    if current_head != source_sha:
+        fail("preflight currentHead mismatch")
     if reviewed_commit != source_sha:
         fail("reviewed commit must match source tip")
     sys.exit(0)
@@ -438,6 +448,11 @@ run_apply() {
   info "APPLY: starting guarded integration"
   if [[ "$FETCH" -eq 1 ]]; then
     git -C "$REPO_ROOT" fetch "$REMOTE"
+  fi
+  local current_source_sha
+  current_source_sha="$(resolve_ref "$SOURCE_BRANCH" || true)"
+  if [[ "$current_source_sha" != "$source_sha" ]]; then
+    stop "source branch changed after evidence validation"
   fi
   git -C "$REPO_ROOT" checkout "$TARGET_BRANCH"
   if ! git -C "$REPO_ROOT" merge --no-ff "$SOURCE_BRANCH"; then
