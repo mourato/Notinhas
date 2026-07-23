@@ -17,7 +17,7 @@ Use for crashes, flaky capture/annotate, permission failures, wrong export outpu
 
 - **Screen Recording not granted** — capture menu disabled or flows blocked (`ScreenCaptureManager`, `ScreenCaptureViewModel` / `CaptureViewModel`).
 - **Accessibility not granted** — Smart Element, scrolling capture, or window resolver paths fail (`SmartElementQueryService`, `ActiveWindowResolver`).
-- **Signing identity changes** — TCC grants reset; re-grant Screen Recording / Accessibility after ad-hoc resign.
+- **Signing identity changes** — TCC grants reset; re-grant Screen Recording / Accessibility after ad-hoc resign. For local persistence checks, use `./scripts/test-tcc-local.sh` with its isolated default install path; only use `--install-path` and `--allow-system-install` when you intentionally target `/Applications`.
 - **Export / clipboard** — notes panel missing from copied image; check `AnnotateExporter.composeNotinhasIfNeeded` and renderable note filter.
 - **Geometry / hit-testing** — wrong pin order, move/delete not registering; check `NotinhasNoteGeometry` and `NotinhasAnnotateState`.
 - **ImgBB upload** — missing API key (`notinhas.imgbb.apiKey`), network/API errors; never log key values.

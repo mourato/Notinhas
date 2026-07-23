@@ -35,7 +35,7 @@ Do **not** treat plain `swift build` as sufficient acceptance — Info.plist, si
 
 ## Signing Note
 
-Screen Recording and Accessibility TCC grants follow the code signature. Ad-hoc or changed signing identities can reset grants. See `scripts/test-tcc-local.sh` when debugging permission regressions after rebuilds.
+Screen Recording and Accessibility TCC grants follow the code signature. Ad-hoc or changed signing identities can reset grants. For local persistence checks, run `scripts/test-tcc-local.sh` (`build-v1` → grant permissions manually → `build-v2` → optional `compare`). The helper defaults to an isolated install under `/tmp/test-tcc-notinhas/Applications/Notinhas.app`, writes stage metadata under `/tmp/test-tcc-notinhas/reports/`, and requires `--install-path` plus `--allow-system-install` to replace `/Applications/Notinhas.app`. Permission persistence still requires manual observation in System Settings.
 
 ## Validation Scope
 
