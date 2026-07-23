@@ -14,7 +14,7 @@
 - **Risk**: HIGH
 - **Depends on**: plans/047-local-plan-preflight.md, plans/048-local-changed-surface-verification.md
 - **Category**: dx
-- **Planned at**: commit `d4c52d12`, 2026-07-23
+- **Planned at**: commit `a44249e3`, 2026-07-23
 
 ## Execution profile
 
