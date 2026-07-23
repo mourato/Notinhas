@@ -84,11 +84,12 @@ struct HistorySettingsView: View {
             Text(L10n.PreferencesHistory.panelSizeSmall)
               .font(.caption)
               .foregroundColor(.secondary)
-            Slider(
-              value: $manager.panelScale.stepped(by: 0.05, in: HistoryFloatingLayout.scaleRange),
-              in: HistoryFloatingLayout.scaleRange
+            SteppedSliderControl(
+              value: $manager.panelScale,
+              step: 0.05,
+              in: HistoryFloatingLayout.scaleRange,
+              sliderWidth: 56
             )
-            .frame(width: 120)
             Text(L10n.PreferencesHistory.panelSizeLarge)
               .font(.caption)
               .foregroundColor(.secondary)
@@ -97,7 +98,7 @@ struct HistorySettingsView: View {
               .monospacedDigit()
               .foregroundColor(.secondary)
           }
-          .frame(width: 220, alignment: .trailing)
+          .frame(width: 280, alignment: .trailing)
         }
 
         SettingRow(
@@ -107,16 +108,18 @@ struct HistorySettingsView: View {
         ) {
           HStack(spacing: 8) {
             Text("\(manager.maxDisplayedItems)")
-              .frame(width: 28, alignment: .trailing)
+              .frame(width: 36, alignment: .trailing)
               .monospacedDigit()
               .foregroundColor(.secondary)
-            Slider(value: Binding(
-              get: { Double(manager.maxDisplayedItems) },
-              set: { manager.maxDisplayedItems = Int($0) }
-            ).stepped(by: 1, in: 3 ... 20), in: 3 ... 20)
-              .frame(width: 120)
+            Stepper(
+              "",
+              value: $manager.maxDisplayedItems,
+              in: 3 ... 20
+            )
+            .labelsHidden()
+            .accessibilityLabel(L10n.PreferencesHistory.maxItemsTitle)
           }
-          .frame(width: 220, alignment: .trailing)
+          .frame(width: 120, alignment: .trailing)
         }
       }
 
@@ -127,17 +130,17 @@ struct HistorySettingsView: View {
           description: retentionDaysDescription
         ) {
           HStack(spacing: 8) {
-            Text(historyRetentionDays == 0 ? "∞" : "\(historyRetentionDays)")
-              .frame(width: 28, alignment: .trailing)
-              .monospacedDigit()
-              .foregroundColor(.secondary)
-            Slider(value: Binding(
-              get: { Double(historyRetentionDays) },
-              set: { historyRetentionDays = Int($0) }
-            ).stepped(by: 1, in: 0 ... 90), in: 0 ... 90)
-              .frame(width: 120)
+            boundedIntegerField(
+              value: $historyRetentionDays,
+              range: 0 ... 90,
+              zeroLabel: "∞"
+            )
+            .accessibilityLabel(L10n.PreferencesHistory.retentionDaysTitle)
+            Stepper("", value: $historyRetentionDays, in: 0 ... 90)
+              .labelsHidden()
+              .accessibilityLabel(L10n.PreferencesHistory.retentionDaysTitle)
           }
-          .frame(width: 220, alignment: .trailing)
+          .frame(width: 150, alignment: .trailing)
         }
 
         SettingRow(
@@ -146,17 +149,17 @@ struct HistorySettingsView: View {
           description: L10n.PreferencesHistory.maxCountDescription
         ) {
           HStack(spacing: 8) {
-            Text(historyMaxCount == 0 ? "∞" : "\(historyMaxCount)")
-              .frame(width: 36, alignment: .trailing)
-              .monospacedDigit()
-              .foregroundColor(.secondary)
-            Slider(value: Binding(
-              get: { Double(historyMaxCount) },
-              set: { historyMaxCount = Int($0) }
-            ).stepped(by: 50, in: 0 ... 1000), in: 0 ... 1000)
-              .frame(width: 120)
+            boundedIntegerField(
+              value: $historyMaxCount,
+              range: 0 ... 1000,
+              zeroLabel: "∞"
+            )
+            .accessibilityLabel(L10n.PreferencesHistory.maxCountTitle)
+            Stepper("", value: $historyMaxCount, in: 0 ... 1000, step: 50)
+              .labelsHidden()
+              .accessibilityLabel(L10n.PreferencesHistory.maxCountTitle)
           }
-          .frame(width: 220, alignment: .trailing)
+          .frame(width: 150, alignment: .trailing)
         }
       }
 
@@ -213,6 +216,28 @@ struct HistorySettingsView: View {
       return L10n.PreferencesHistory.keepForever
     }
     return L10n.PreferencesHistory.deleteAfterDays(historyRetentionDays)
+  }
+
+  private func boundedIntegerField(
+    value: Binding<Int>,
+    range: ClosedRange<Int>,
+    zeroLabel: String
+  ) -> some View {
+    TextField(
+      "",
+      text: Binding(
+        get: { value.wrappedValue == 0 ? zeroLabel : "\(value.wrappedValue)" },
+        set: { newValue in
+          guard let parsed = Int(newValue) else { return }
+          value.wrappedValue = min(max(parsed, range.lowerBound), range.upperBound)
+        }
+      )
+    )
+    .labelsHidden()
+    .multilineTextAlignment(.trailing)
+    .frame(width: 52)
+    .monospacedDigit()
+    .accessibilityValue(Text(value.wrappedValue == 0 ? zeroLabel : "\(value.wrappedValue)"))
   }
 
   private func clearHistoryWithConfirmation() {
