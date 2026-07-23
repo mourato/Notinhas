@@ -11,18 +11,11 @@ struct AllInOneActionToolbarView: View {
   @ObservedObject var session: AllInOneCaptureSessionState
 
   var body: some View {
-    HStack(spacing: ToolbarConstants.itemSpacing) {
-      if session.selectedMode.showsDimensionsBar, let rect = session.currentRect {
-        AllInOneDimensionsBarView(rect: rect) { updated in
-          session.updateRect(updated)
-        }
-
-        CaptureFloatingToolbarDivider()
+    if session.selectedMode.showsDimensionsBar, let rect = session.currentRect {
+      AllInOneDimensionsBarView(rect: rect) { updated in
+        session.updateRect(updated)
       }
     }
-    .padding(.horizontal, ToolbarConstants.horizontalPadding)
-    .padding(.vertical, ToolbarConstants.verticalPadding)
-    .captureFloatingToolbarMaterial()
   }
 }
 

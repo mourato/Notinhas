@@ -439,3 +439,29 @@ instructions may not use this allowlist to retain branding.
 Execute 054 only after the canonical global skill bundle is merged. Preserve
 `capture-annotate-export`, `plan-execute-review`, and `project-standards` as
 Notinhas-local specialists; migrate only the seven cross-project skills.
+
+## All-In-One capture visual polish (055)
+
+Generated 2026-07-23 against commit `8ae2567c`. Removes the continuous white
+selection stroke (keeps handles) in All-In-One refinement, restyles the
+dimensions HUD to match the mode strip, and places dimensions always to the
+right of the mode strip with a 16pt gap and equal height.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 055 | Polish All-In-One selection chrome and side-by-side HUD layout | P1 | M | — | IN PROGRESS |
+
+### Dependency notes (055)
+
+- 055 is independent of completed rounds 035–054; it refines chrome/layout shipped
+  by the All-In-One capture work (035–041).
+- Do not reopen settled decisions in the plan (no order invert, no vertical stack,
+  no `AreaSelectionWindow` border change).
+
+### Findings considered and rejected (055 round)
+
+- Removing the white border during initial area drag (`AreaSelectionWindow`):
+  deferred — out of scope; only All-In-One refinement chrome.
+- Flipping dimensions to the left of the mode strip when near the trailing screen
+  edge: rejected by product decision — clamp/pin the pair; never invert.
+- Vertically stacking HUDs when the pair does not fit: rejected — never stack.

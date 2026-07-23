@@ -48,6 +48,11 @@ final class CaptureFloatingHUDWindow: NSPanel {
     orderFrontRegardless()
   }
 
+  func show(at origin: CGPoint) {
+    setFrameOrigin(origin)
+    orderFrontRegardless()
+  }
+
   func showAboveCaptureOverlay() {
     level = .screenSaver
     orderFrontRegardless()
