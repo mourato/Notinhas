@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct AllInOneDimensionsBarView: View {
+  private static let modeButtonContentHeight: CGFloat = 46
+
   let rect: CGRect
   let onRectChanged: (CGRect) -> Void
 
@@ -38,6 +40,8 @@ struct AllInOneDimensionsBarView: View {
           : L10n.AllInOne.lockAspectRatioAccessibility
       )
     }
+    // Match mode-strip button content height before shared padding (outer ≈ 58).
+    .frame(minHeight: Self.modeButtonContentHeight)
     .padding(.horizontal, ToolbarConstants.horizontalPadding)
     .padding(.vertical, ToolbarConstants.verticalPadding)
     .captureFloatingToolbarMaterial()
@@ -69,12 +73,6 @@ struct AllInOneDimensionsBarView: View {
         commitHeight()
       }
     }
-    .padding(.horizontal, 8)
-    .padding(.vertical, 4)
-    .background(
-      RoundedRectangle(cornerRadius: ToolbarConstants.buttonCornerRadius)
-        .fill(Color.primary.opacity(0.06))
-    )
   }
 
   private func dimensionField(

@@ -11,6 +11,46 @@ enum CaptureFloatingToolbarPlacement {
   static let screenEdgeInset: CGFloat = 10
   static let outsideSelectionGap: CGFloat = 20
   static let insideSelectionBottomInset: CGFloat = 24
+  static let interToolbarGap: CGFloat = 16
+
+  struct PairedOrigins: Equatable {
+    let leading: CGPoint
+    let trailing: CGPoint?
+  }
+
+  static func pairedFrameOrigins(
+    leadingSize: CGSize,
+    trailingSize: CGSize?,
+    anchorRect: CGRect,
+    screenFrame: CGRect,
+    gap: CGFloat = interToolbarGap
+  ) -> PairedOrigins {
+    guard let trailingSize else {
+      let leading = frameOrigin(
+        toolbarSize: leadingSize,
+        anchorRect: anchorRect,
+        screenFrame: screenFrame
+      )
+      return PairedOrigins(leading: leading, trailing: nil)
+    }
+
+    let pairHeight = max(leadingSize.height, trailingSize.height)
+    let pairWidth = leadingSize.width + gap + trailingSize.width
+    let pairSize = CGSize(width: pairWidth, height: pairHeight)
+
+    let pairOrigin = frameOrigin(
+      toolbarSize: pairSize,
+      anchorRect: anchorRect,
+      screenFrame: screenFrame
+    )
+
+    let trailing = CGPoint(
+      x: pairOrigin.x + leadingSize.width + gap,
+      y: pairOrigin.y
+    )
+
+    return PairedOrigins(leading: pairOrigin, trailing: trailing)
+  }
 
   static func frameOrigin(
     toolbarSize: CGSize,

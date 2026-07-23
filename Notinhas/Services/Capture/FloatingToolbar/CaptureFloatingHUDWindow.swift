@@ -48,6 +48,11 @@ final class CaptureFloatingHUDWindow: NSPanel {
     orderFrontRegardless()
   }
 
+  func show(at origin: CGPoint) {
+    setFrameOrigin(origin)
+    orderFrontRegardless()
+  }
+
   func showAboveCaptureOverlay() {
     level = .screenSaver
     orderFrontRegardless()
@@ -58,7 +63,7 @@ final class CaptureFloatingHUDWindow: NSPanel {
     positionNearAnchor(screen: nil)
   }
 
-  func refreshContentSize() {
+  func refreshContentSize(reposition: Bool = true) {
     guard let hostingView else { return }
 
     hostingView.layoutSubtreeIfNeeded()
@@ -68,7 +73,9 @@ final class CaptureFloatingHUDWindow: NSPanel {
     setContentSize(fittingSize)
     cachedContentSize = fittingSize
     invalidateShadow()
-    positionNearAnchor(screen: nil)
+    if reposition {
+      positionNearAnchor(screen: nil)
+    }
   }
 
   override var canBecomeKey: Bool {

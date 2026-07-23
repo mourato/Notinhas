@@ -150,7 +150,8 @@ final class AllInOneCaptureCoordinator {
       guard let self, isActive, isAwaitingInitialSelection else { return }
       positionHUDs()
       modeHUD?.showAboveCaptureOverlay()
-      actionHUD?.showAboveCaptureOverlay()
+      // Keep action HUD ordered out until a selection rect exists; raising it here
+      // would re-show an empty material pill after positionHUDs() hides it.
     }
   }
 
@@ -205,29 +206,33 @@ final class AllInOneCaptureCoordinator {
 
   private func positionHUDs() {
     let anchorRect = sessionState?.currentRect ?? defaultAnchorRect()
+    let showsDimensions = sessionState?.selectedMode.showsDimensionsBar == true
+      && sessionState?.currentRect != nil
 
-    if let actionHUD {
-      actionHUD.refreshContentSize()
-      actionHUD.show(anchorRect: anchorRect)
-    }
+    guard let modeHUD else { return }
 
-    if let modeHUD, let actionHUD {
-      modeHUD.refreshContentSize()
-      let modeAnchor = modeToolbarAnchor(for: anchorRect, actionToolbarSize: actionHUD.frame.size)
-      modeHUD.show(anchorRect: modeAnchor)
-    } else if let modeHUD {
-      modeHUD.refreshContentSize()
+    // Refresh sizes without single-toolbar reposition; paired/absolute placement follows.
+    modeHUD.refreshContentSize(reposition: false)
+
+    if showsDimensions, let actionHUD {
+      actionHUD.refreshContentSize(reposition: false)
+      let screen = NSScreen.screens.first(where: { $0.frame.intersects(anchorRect) })
+        ?? ScreenUtility.activeScreen()
+      let screenFrame = screen.visibleFrame
+      let origins = CaptureFloatingToolbarPlacement.pairedFrameOrigins(
+        leadingSize: modeHUD.frame.size,
+        trailingSize: actionHUD.frame.size,
+        anchorRect: anchorRect,
+        screenFrame: screenFrame
+      )
+      modeHUD.show(at: origins.leading)
+      if let trailing = origins.trailing {
+        actionHUD.show(at: trailing)
+      }
+    } else {
+      actionHUD?.orderOut(nil)
       modeHUD.show(anchorRect: anchorRect)
     }
-  }
-
-  private func modeToolbarAnchor(for selectionRect: CGRect, actionToolbarSize: CGSize) -> CGRect {
-    CGRect(
-      x: selectionRect.midX,
-      y: selectionRect.maxY + actionToolbarSize.height + CaptureFloatingToolbarPlacement.outsideSelectionGap + 6,
-      width: 1,
-      height: 1
-    )
   }
 
   private func defaultAnchorRect() -> CGRect {

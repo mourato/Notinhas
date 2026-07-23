@@ -124,6 +124,7 @@ final class AllInOneSelectionRefinementController: NSObject {
 
   private func makeRegionOverlay(for screen: NSScreen) -> RecordingRegionOverlayWindow {
     let overlay = RecordingRegionOverlayWindow(screen: screen, highlightRect: currentRect)
+    overlay.setDrawsContinuousBorder(false)
     overlay.interactionDelegate = self
     overlay.setInteractionEnabled(true)
     overlay.orderFrontRegardless()

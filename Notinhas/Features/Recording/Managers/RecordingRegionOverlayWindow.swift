@@ -140,6 +140,12 @@ final class RecordingRegionOverlayWindow: NSPanel {
     overlayView.needsDisplay = true
   }
 
+  /// When false, resize handles still draw but the continuous white outline is omitted.
+  func setDrawsContinuousBorder(_ drawsContinuousBorder: Bool) {
+    overlayView.drawsContinuousBorder = drawsContinuousBorder
+    overlayView.needsDisplay = true
+  }
+
   /// Enable or disable mouse interaction (disabled during recording)
   func setInteractionEnabled(_ enabled: Bool) {
     ignoresMouseEvents = !enabled
@@ -208,6 +214,7 @@ final class RecordingRegionOverlayWindow: NSPanel {
 final class RecordingRegionOverlayView: NSView {
   var highlightRect: CGRect
   var showBorder: Bool = true
+  var drawsContinuousBorder: Bool = true
   var isInteractionEnabled: Bool = false
   var guidance: RecordingRegionOverlayGuidance? {
     didSet {
@@ -885,12 +892,13 @@ extension RecordingRegionOverlayView {
       let handlePadding: CGFloat = 25
       let borderArea = clampedRect.insetBy(dx: -handlePadding, dy: -handlePadding)
       if borderArea.intersects(dirtyRect) {
-        let borderPath = NSBezierPath(rect: clampedRect)
-        borderPath.lineWidth = borderWidth
-        borderColor.setStroke()
-        borderPath.stroke()
+        if drawsContinuousBorder {
+          let borderPath = NSBezierPath(rect: clampedRect)
+          borderPath.lineWidth = borderWidth
+          borderColor.setStroke()
+          borderPath.stroke()
+        }
 
-        // Draw resize handles
         drawRecordingResizeHandles(for: clampedRect)
       }
     }
@@ -1158,11 +1166,12 @@ extension RecordingRegionOverlayView {
     NSColor.clear.setFill()
     localRect.fill(using: .copy)
 
-    // Draw border
-    let borderPath = NSBezierPath(rect: localRect)
-    borderPath.lineWidth = borderWidth
-    borderColor.setStroke()
-    borderPath.stroke()
+    if drawsContinuousBorder {
+      let borderPath = NSBezierPath(rect: localRect)
+      borderPath.lineWidth = borderWidth
+      borderColor.setStroke()
+      borderPath.stroke()
+    }
 
     // Draw size indicator (show full screen-space dimensions, not clipped)
     let sizeText = "\(Int(screenRect.width)) x \(Int(screenRect.height))"
