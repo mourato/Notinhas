@@ -41,7 +41,9 @@ unrelated product skills from other apps.
 ## Build, Test, and Run
 
 - `open Notinhas.xcodeproj` — develop and run in Xcode (`⌘R`).
-- `./scripts/build_and_run.sh` — build and launch the isolated debug app.
+- `./scripts/build_and_run.sh` — canonical build and launch for the isolated debug app.
+- `./scripts/launch.sh` — legacy compatibility wrapper that forwards to
+  `./scripts/build_and_run.sh --logs`; prefer the canonical command for all options.
 - `./scripts/run-tests.sh` — run the XCTest suite with results in `build/`
   (default **Notinhas** scheme). Use `--video-module` (or `ENABLE_VIDEO_MODULE=1`)
   for Recording/VideoEditor XCTests via **Notinhas Video** / **Debug+Video**.
