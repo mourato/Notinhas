@@ -91,6 +91,7 @@ Notinhas/Features/VideoEditor/**	video-module	NotinhasTests/VideoEditorZoomAndAu
 scripts/**	shell		no	Bash syntax and help checks for touched scripts
 docs/**	docs		no	Documentation routing review
 .agents/skills/**	docs		no	Skill routing review
+.agents/overlays/**	docs		no	Overlay routing review
 AGENTS.md	docs		no	Repository guidance review
 plans/**	docs		no	Plan metadata review
 Notinhas/**	manual-required		required	No mapped XCTest selector for this application path

@@ -11,7 +11,7 @@
 - **Priority**: P1
 - **Effort**: M
 - **Risk**: MED
-- **Depends on**: global plan `/Users/usuario/.agents/plans/004-globalize-macos-skills-and-overlay-contract.md` merged to global `main`
+- **Depends on**: global Plan 004 (`/Users/usuario/.agents/plans/004-globalize-macos-skills-and-overlay-contract.md`) merged to `/Users/usuario/.agents` `main`; this dependency must be checked in that global checkout, not inferred from any historical Notinhas-local Plan 004.
 - **Category**: migration / dx / docs
 - **Planned at**: commit `1b0c9da4`, 2026-07-23
 
@@ -40,15 +40,19 @@ constraints in local overlays.
 - `capture-annotate-export`, `plan-execute-review`, and `project-standards`
   remain Notinhas-specific and must not be removed.
 - The canonical validation commands are
-  `./scripts/run-tests.sh`, `./scripts/verify-local.sh`, and the plan preflight;
-  this guidance-only change must not claim product tests were run if no source
-  changed.
+  `./scripts/run-tests.sh`, `./scripts/verify-local.sh`, and the plan preflight.
+  Plan preflight is a pre-implementation drift/dependency/scope check; after
+  edits, use the committed-scope audit and structural checks. This guidance-only
+  change must not claim product tests were run if no source changed.
 
 ## Scope
 
 **In scope**
 
 - `AGENTS.md`
+- `scripts/verification-map.tsv` — one docs/manual-review mapping row for
+  `.agents/overlays/**`, so `verify-local.sh` classifies the new companions like
+  existing skill guidance instead of treating them as an unmapped surface.
 - `.agents/overlays/` with seven Notinhas overlay files
 - `.agents/skills/project-standards/SKILL.md`
 - `.agents/skills/capture-annotate-export/SKILL.md` and
@@ -59,8 +63,9 @@ constraints in local overlays.
 
 **Out of scope**
 
-- `Notinhas/**`, `NotinhasTests/**`, `scripts/**`, Xcode files, release files,
-  upstream remotes, and product behavior
+- `Notinhas/**`, `NotinhasTests/**`, scripts other than the single
+  `scripts/verification-map.tsv` row, Xcode files, release files, upstream
+  remotes, and product behavior
 - `capture-annotate-export`, `plan-execute-review`, `project-standards`, and
   any other local specialist skill
 - Any global skill content; that belongs to the global plan
@@ -85,17 +90,26 @@ rules into the overlays.
 
 ### Step 1: Confirm prerequisite and clean integration base
 
-Confirm the global seven skills are discoverable through the active harness and
-that the working tree is clean. Create an explicit branch:
+Before editing, run the plan preflight against the clean integration base and
+confirm the dependency directly in the global checkout. The global Plan 004
+dependency cannot be inferred from a Notinhas-local Plan 004 with the same
+number; verify `/Users/usuario/.agents` `main` and the seven global skill paths
+there. Create an explicit branch:
 
 ```sh
 git switch main
 git pull --ff-only origin main
 git switch -c chore/notinhas-global-skill-overlays
+./scripts/plan-preflight.sh plans/054-adopt-global-macos-skill-overlays.md --scope .agents --scope AGENTS.md --scope scripts/verification-map.tsv
+git -C /Users/usuario/.agents status --short --branch
+git -C /Users/usuario/.agents merge-base --is-ancestor e885e11 main
 ```
 
 **Verify**: `git status --short --branch` → clean feature branch; the global
-skill paths resolve and are not local same-name copies.
+Plan 004 commit is an ancestor of the global checkout's `main`; the global
+skill paths resolve and are not local same-name copies. This is the required
+pre-edit plan-preflight invocation; do not treat a dirty post-edit worktree as
+a preflight pass.
 
 ### Step 2: Add Notinhas overlays and routing
 
@@ -120,27 +134,32 @@ specialist Notinhas skills.
 
 ### Step 4: Validate and review
 
-Run:
+After implementation, run:
 
 ```sh
 git diff --check
 ./scripts/verify-local.sh --base main --plan-only --strict
-./scripts/plan-preflight.sh plans/054-adopt-global-macos-skill-overlays.md --scope .agents --scope AGENTS.md
+git diff --name-status main...HEAD
+find .agents/overlays -maxdepth 1 -type f -name '*.md' -print | sort
+find .agents/skills -mindepth 2 -maxdepth 2 -name SKILL.md -print | sort
 ```
 
 Expected result: no whitespace errors; the changed-surface report classifies
-the change as guidance-only; plan preflight reports no drift or scope error.
+the change as guidance-only; the committed-scope audit lists only the approved
+guidance and plan paths; seven overlays exist, the seven duplicate global skill
+copies do not, and retained specialist skills remain. Plan preflight is not a
+post-change gate.
 Do not run the full XCTest suite unless the changed-surface tool reports a
 product path or the reviewer requests it.
 
 ### Step 5: Commit, push, merge, and clean up
 
-Stage only `AGENTS.md`, `.agents/`, and the plan files. Because this repository
+Stage only `AGENTS.md`, `.agents/`, the single validation-map row, and the plan files. Because this repository
 ignores `/plans`, force-add only this plan document if the team has decided to
 version the plan itself:
 
 ```sh
-git add AGENTS.md .agents/ plans/README.md
+git add AGENTS.md .agents/ scripts/verification-map.tsv plans/README.md
 git add -f plans/054-adopt-global-macos-skill-overlays.md
 git diff --cached --check
 ```
@@ -174,6 +193,10 @@ Remove only the disposable worktree created for this branch. Never delete
 - Confirm no duplicate local `SKILL.md` exists for the seven global names.
 - Confirm retained Notinhas skills have no broken relative links.
 - Run `./scripts/verify-local.sh --base main --plan-only --strict`.
+- Record the pre-edit plan preflight and global prerequisite checks; do not
+  report plan preflight as a post-change validation.
+- Audit the committed scope with `git diff --name-status main...HEAD` and the
+  structural overlay/no-duplicate/reference checks.
 - Manually inspect that capture/annotate/export guidance remains local and that
   Video-module and TCC constraints were not moved into global skills.
 
@@ -182,8 +205,10 @@ Remove only the disposable worktree created for this branch. Never delete
 - [ ] Seven Notinhas overlays exist under `.agents/overlays/`.
 - [ ] `AGENTS.md` explicitly routes global skill plus overlay.
 - [ ] Seven duplicate local skill directories are removed; specialists remain.
-- [ ] Guidance checks and plan preflight pass.
-- [ ] No product source or scripts changed.
+- [ ] Pre-edit plan preflight and global prerequisite checks are recorded;
+      post-change guidance checks and committed-scope audit pass.
+- [ ] No product source, runtime script, Xcode, or configuration files changed;
+      only the approved `scripts/verification-map.tsv` validation row changed.
 - [ ] Commit, PR push, merge, local cleanup, remote branch cleanup, and worktree
       cleanup are complete and recorded.
 - [ ] `plans/README.md` marks Plan 054 according to the repository convention.
