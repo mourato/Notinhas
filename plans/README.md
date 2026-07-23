@@ -449,7 +449,7 @@ right of the mode strip with a 16pt gap and equal height.
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |---|---|---:|---:|---|---|
-| 055 | Polish All-In-One selection chrome and side-by-side HUD layout | P1 | M | — | IN PROGRESS |
+| 055 | Polish All-In-One selection chrome and side-by-side HUD layout | P1 | M | — | DONE (`2437ce5c`; review fixes in `7c617bf8`; manual All-In-One visual gate PENDING) |
 
 ### Dependency notes (055)
 
