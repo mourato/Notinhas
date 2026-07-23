@@ -109,6 +109,31 @@ This command narrows local deterministic feedback. It does **not** replace the f
 `./scripts/run-tests.sh` gate, visual overlay suites, or manual Screen Recording /
 Accessibility / TCC / WindowServer / clipboard checks when those surfaces change.
 
+## Local Git integration protocol
+
+After preflight and changed-surface verification succeed, use the integration
+protocol runner to standardize commit → merge → cleanup → push. Default mode is
+**dry-run** (no Git side effects). `--apply` requires explicit source/target
+refs, remote name, evidence path, and `--reviewed-commit` matching the source
+tip. The command never force-pushes, auto-resolves conflicts, or marks plans
+`DONE` in `plans/README.md`; integrated thermo review remains mandatory.
+
+```bash
+./scripts/integrate-plan.sh --dry-run \
+  --source-branch advisor/049-local-git-integration-protocol \
+  --target-branch main --remote origin
+
+./scripts/integrate-plan.sh --apply --fetch --cleanup \
+  --source-branch advisor/049-local-git-integration-protocol \
+  --target-branch main --remote origin \
+  --evidence build/integration/049-evidence.json \
+  --reviewed-commit <source-sha>
+```
+
+Evidence manifests use `kind: notinhas-integration-evidence` and reference
+passing preflight JSON plus a `verify-local` report for the source commit.
+Fixture coverage: `scripts/tests/integrate-plan.sh`.
+
 ## Optional Video module
 
 ```bash

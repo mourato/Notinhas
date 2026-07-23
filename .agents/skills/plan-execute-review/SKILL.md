@@ -54,8 +54,10 @@ model and owns review + finding fixes.
    thermo-reviewed, and every finding is fixed and committed.
 3. Executor works in an **isolated git worktree** (or equivalent isolation).
 4. After a successful executor run, the executor (or orchestrator if isolation
-   blocked integration) must: **commit → merge into the integration branch →
-   remove worktree/branch cleanup → push**.
+   blocked integration) must run the guarded local protocol via
+   `./scripts/integrate-plan.sh`: **commit → merge into the integration branch →
+   remove worktree/branch cleanup → push**. Default to `--dry-run` for inspection;
+   use `--apply` only with explicit refs, evidence, and reviewed commit SHA.
 5. After integration, the orchestrator runs
    `/thermo-nuclear-code-quality-review` on the integrated diff.
 6. **Every** thermo finding must be treated (fixed or explicitly deferred with
@@ -73,6 +75,7 @@ model and owns review + finding fixes.
          ▼
 ┌─────────────────┐
 │ Executor        │  implement plan in worktree; run every gate
+│                 │  integrate-plan.sh (dry-run, then --apply when authorized)
 │                 │  commit → merge → cleanup → push
 └────────┬────────┘
          │ return STATUS report + SHAs
@@ -111,10 +114,16 @@ Prompt the subagent to:
 - Touch only in-scope files.
 - Run every verification command; report evidence.
 - Commit with Conventional Commits matching recent `git log`.
-- Merge into the repo’s integration branch (usually `main`, or the branch the
-  user named).
-- Delete the worktree and feature branch after a successful merge.
-- Push the integration branch.
+- Run `./scripts/plan-preflight.sh` and `./scripts/verify-local.sh` first;
+  capture reports under `build/plan-preflight/` and `build/verification/`.
+- Preview integration with `./scripts/integrate-plan.sh --dry-run` using
+  explicit `--source-branch`, `--target-branch`, and `--remote`.
+- When the orchestrator authorizes mutation, run `./scripts/integrate-plan.sh
+  --apply --fetch` with `--evidence` (integration manifest or passing reports)
+  and `--reviewed-commit` matching the source tip; add `--cleanup` only after a
+  successful push and only for the recorded source branch/worktree.
+- The script performs merge (`--no-ff`), push (never `--force`), and optional
+  cleanup. It does not mark plans `DONE`; thermo review still follows.
 - Reply with:
 
 ```
