@@ -8,6 +8,7 @@
 
 ## Status
 
+- **Status**: DONE — merged to `main` as `6b35981e` via PR #1.
 - **Priority**: P1
 - **Effort**: M
 - **Risk**: MED
