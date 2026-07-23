@@ -358,7 +358,7 @@ VideoEditor or Annotate.
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |---|---|---:|---:|---|---|
-| 053 | Standardize Preferences numeric controls with stepped sliders and discrete alternatives | P1 | L | — | TODO |
+| 053 | Standardize Preferences numeric controls with stepped sliders and discrete alternatives | P1 | L | — | DONE (`047dbd1f`; review fix `2f7adb48`) |
 
 ### Dependency notes (053)
 
