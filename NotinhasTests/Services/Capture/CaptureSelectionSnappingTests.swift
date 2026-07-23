@@ -302,6 +302,29 @@ final class CaptureSelectionSnappingTests: XCTestCase {
     }
   }
 
+  func testHandleCursorGeometry_edgeHitSpansFullSideBetweenCorners() {
+    let rect = CGRect(x: 100, y: 100, width: 200, height: 120)
+    let hitSize: CGFloat = 10
+
+    // Mid-edge away from the visual grip still resizes that edge.
+    let topEdgeAwayFromMid = CGPoint(x: rect.minX + 40, y: rect.maxY)
+    XCTAssertEqual(
+      RecordingResizeHandleCursorGeometry.handle(at: topEdgeAwayFromMid, in: rect, hitSize: hitSize),
+      .top
+    )
+
+    let leftEdgeAwayFromMid = CGPoint(x: rect.minX, y: rect.minY + 40)
+    XCTAssertEqual(
+      RecordingResizeHandleCursorGeometry.handle(at: leftEdgeAwayFromMid, in: rect, hitSize: hitSize),
+      .left
+    )
+
+    let topHit = RecordingResizeHandleCursorGeometry.hitRect(for: .top, in: rect, hitSize: hitSize)
+    XCTAssertEqual(topHit.minX, rect.minX + hitSize)
+    XCTAssertEqual(topHit.width, rect.width - hitSize * 2)
+    XCTAssertTrue(topHit.contains(topEdgeAwayFromMid))
+  }
+
   func testPerceptualDifference_increasesWithContrast() {
     let low = (r: CGFloat(0.5), g: CGFloat(0.5), b: CGFloat(0.5), a: CGFloat(1))
     let near = (r: CGFloat(0.52), g: CGFloat(0.52), b: CGFloat(0.52), a: CGFloat(1))

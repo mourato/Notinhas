@@ -470,33 +470,18 @@ enum RecordingResizeHandleCursorGeometry {
     .topLeft, .top, .topRight, .left, .right, .bottomLeft, .bottom, .bottomRight,
   ]
 
+  /// Hit-test order: corners first (diagonal resize), then full edge strips between corners.
   static func handle(at point: CGPoint, in rect: CGRect, hitSize: CGFloat) -> RecordingResizeHandle? {
-    let hs = hitSize
-
-    if CGRect(x: rect.minX - hs, y: rect.maxY - hs, width: hs * 2, height: hs * 2).contains(point) {
-      return .topLeft
-    }
-    if CGRect(x: rect.maxX - hs, y: rect.maxY - hs, width: hs * 2, height: hs * 2).contains(point) {
-      return .topRight
-    }
-    if CGRect(x: rect.minX - hs, y: rect.minY - hs, width: hs * 2, height: hs * 2).contains(point) {
-      return .bottomLeft
-    }
-    if CGRect(x: rect.maxX - hs, y: rect.minY - hs, width: hs * 2, height: hs * 2).contains(point) {
-      return .bottomRight
+    for handle in [.topLeft, .topRight, .bottomLeft, .bottomRight] as [RecordingResizeHandle] {
+      if hitRect(for: handle, in: rect, hitSize: hitSize).contains(point) {
+        return handle
+      }
     }
 
-    if CGRect(x: rect.midX - hs, y: rect.maxY - hs, width: hs * 2, height: hs * 2).contains(point) {
-      return .top
-    }
-    if CGRect(x: rect.midX - hs, y: rect.minY - hs, width: hs * 2, height: hs * 2).contains(point) {
-      return .bottom
-    }
-    if CGRect(x: rect.minX - hs, y: rect.midY - hs, width: hs * 2, height: hs * 2).contains(point) {
-      return .left
-    }
-    if CGRect(x: rect.maxX - hs, y: rect.midY - hs, width: hs * 2, height: hs * 2).contains(point) {
-      return .right
+    for handle in [.top, .bottom, .left, .right] as [RecordingResizeHandle] {
+      if hitRect(for: handle, in: rect, hitSize: hitSize).contains(point) {
+        return handle
+      }
     }
 
     return nil
@@ -514,13 +499,34 @@ enum RecordingResizeHandleCursorGeometry {
     case .bottomRight:
       return CGRect(x: rect.maxX - hs, y: rect.minY - hs, width: hs * 2, height: hs * 2)
     case .top:
-      return CGRect(x: rect.midX - hs, y: rect.maxY - hs, width: hs * 2, height: hs * 2)
+      // Full top edge between corner hit squares.
+      return CGRect(
+        x: rect.minX + hs,
+        y: rect.maxY - hs,
+        width: max(0, rect.width - hs * 2),
+        height: hs * 2
+      )
     case .bottom:
-      return CGRect(x: rect.midX - hs, y: rect.minY - hs, width: hs * 2, height: hs * 2)
+      return CGRect(
+        x: rect.minX + hs,
+        y: rect.minY - hs,
+        width: max(0, rect.width - hs * 2),
+        height: hs * 2
+      )
     case .left:
-      return CGRect(x: rect.minX - hs, y: rect.midY - hs, width: hs * 2, height: hs * 2)
+      return CGRect(
+        x: rect.minX - hs,
+        y: rect.minY + hs,
+        width: hs * 2,
+        height: max(0, rect.height - hs * 2)
+      )
     case .right:
-      return CGRect(x: rect.maxX - hs, y: rect.midY - hs, width: hs * 2, height: hs * 2)
+      return CGRect(
+        x: rect.maxX - hs,
+        y: rect.minY + hs,
+        width: hs * 2,
+        height: max(0, rect.height - hs * 2)
+      )
     }
   }
 }
@@ -1140,13 +1146,19 @@ extension RecordingRegionOverlayView {
   }
 
   private func drawHandleBar(_ rect: CGRect) {
+    let radius = min(rect.width, rect.height) / 2
+
     // Draw shadow
-    let shadowPath = NSBezierPath(rect: rect.offsetBy(dx: 0, dy: -1))
+    let shadowPath = NSBezierPath(
+      roundedRect: rect.offsetBy(dx: 0, dy: -1),
+      xRadius: radius,
+      yRadius: radius
+    )
     NSColor.black.withAlphaComponent(0.5).setFill()
     shadowPath.fill()
 
-    // Draw white bar
-    let path = NSBezierPath(rect: rect)
+    // Draw white bar with rounded ends
+    let path = NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius)
     NSColor.white.setFill()
     path.fill()
   }
