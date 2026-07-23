@@ -200,9 +200,18 @@ struct QuickAccessSettingsView: View {
 
   // MARK: - Helpers
 
-  private func scalePicker(selection: Binding<Double>, range: ClosedRange<Double>) -> some View {
-    Picker("", selection: selection) {
-      ForEach(scaleChoices(in: range), id: \.self) { scale in
+  private func scalePicker(
+    selection: Binding<Double>,
+    range: ClosedRange<Double>,
+    step: Double = 0.25
+  ) -> some View {
+    let normalizedSelection = Binding(
+      get: { SteppedValue.snapped(selection.wrappedValue, by: step, in: range) },
+      set: { selection.wrappedValue = $0 }
+    )
+
+    return Picker("", selection: normalizedSelection) {
+      ForEach(scaleChoices(in: range, step: step), id: \.self) { scale in
         Text("\(Int(scale * 100))%")
           .tag(scale)
       }
@@ -211,12 +220,14 @@ struct QuickAccessSettingsView: View {
     .pickerStyle(.menu)
     .fixedSize()
     .frame(width: 100, alignment: .trailing)
-    .accessibilityValue(Text("\(Int(selection.wrappedValue * 100))%"))
+    .accessibilityValue(Text("\(Int(normalizedSelection.wrappedValue * 100))%"))
   }
 
-  private func scaleChoices(in range: ClosedRange<Double>) -> [Double] {
-    let count = Int(((range.upperBound - range.lowerBound) / 0.25).rounded())
-    return (0 ... count).map { range.lowerBound + (Double($0) * 0.25) }
+  private func scaleChoices(in range: ClosedRange<Double>, step: Double) -> [Double] {
+    let count = Int(((range.upperBound - range.lowerBound) / step).rounded())
+    return (0 ... count).map { index in
+      min(range.lowerBound + (Double(index) * step), range.upperBound)
+    }
   }
 
   private var autoCloseDescription: String {

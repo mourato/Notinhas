@@ -329,6 +329,45 @@ evidence collection around that discipline; they do not remove any Git gate.
 - None of these plans changes CI or removes mandatory commit, merge, cleanup,
   push, or integrated-review stages.
 
+## Notinhas editor ergonomics (052)
+
+The next focused Notinhas change addresses a visual-handoff friction point:
+the contextual note editor can cover image evidence while the user writes a
+comment. It is separate from the right-side summary panel and must remain
+transient UI state, outside the exported composition.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 052 | Make the Notinhas contextual editor freely draggable | P1 | M | — | DONE (e0376193) |
+
+### Dependency notes (052)
+
+- 052 is independent of the completed capture, preferences, cloud, and local-delivery rounds.
+- The plan must preserve the existing `NotinhasNoteGeometry.editorOrigin` automatic first-placement policy while adding a separate UI-space clamp for the transient dragged position.
+- The editor box must stay inside the center editing area and must not alter the side-panel summary, persisted note session, undo history, export, or clipboard render.
+
+## Preferences numeric controls (053)
+
+The Preferences audit found 13 direct sliders across Capture, Quick Access, and
+History. They share stepped values but not the same semantics: scalar visual
+settings benefit from slider + exact value + `−/+`, finite scale settings
+are clearer as explicit choices, and History counts/retention need precise
+Stepper/numeric editing because zero means unlimited/forever. This follow-up
+extends the shared control shipped by Plan 034 without widening that plan into
+VideoEditor or Annotate.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 053 | Standardize Preferences numeric controls with stepped sliders and discrete alternatives | P1 | L | — | TODO |
+
+### Dependency notes (053)
+
+- 053 is independent of Plan 052 and the completed capture/local-delivery rounds.
+- 053 reuses the shared `SteppedSliderControl` from Plan 034, but it must not
+  modify Annotate/Notinhas call sites or introduce VideoEditor/Recording scope.
+- The scalar slider adoption should be validated before the History numeric
+  field/Stepper migration because the latter has special zero-value semantics.
+
 ## Dependency notes (026–030)
 
 - 026 must land before the bundle-ID/path cutover.
@@ -363,6 +402,9 @@ instructions may not use this allowlist to retain branding.
   menu bar remain discovery via shortcut overlay + Preferences.
 - Preferences / VideoEditor slider steppers in the same round: deferred;
   plan 034 establishes the shared control on Annotate/Notinhas first.
+- Treating all Preferences values as sliders: rejected for Plan 053; Quick
+  Access finite scale choices and History exact/special-value counts have
+  clearer Picker or numeric Stepper semantics.
 - Removing cloud, recording, or video: rejected; the user chose identity and
   upstream-integration separation while preserving existing features.
 - Keeping `snapzy://` as an alias: rejected by explicit decision.
