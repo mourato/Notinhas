@@ -279,6 +279,24 @@ outside this screenshot-area behavior.
 |---|---|---:|---:|---|---|
 | 045 | Honor Freeze Screen in All-In-One and freeze every connected display | P1 | L | — | DONE |
 
+## All-In-One cursor regression (046)
+
+Plan 046 restores resize-cursor delivery after the frozen backdrop host was
+introduced. It keeps the frozen pixels visible while making the backdrop's
+window level explicitly lower than the selection overlays and adds the narrow
+automated contract plus the required manual WindowServer cursor gate.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 046 | Restore All-In-One resize cursors over frozen backdrops | P1 | M | 042, 045 | TODO |
+
+### Dependency notes (046)
+
+- 046 depends on 042 for the existing eight-handle geometry/cursor mapping and
+  on 045 for the frozen backdrop host that introduced the regression.
+- The automated level/geometry tests are necessary but insufficient; the
+  physical cursor gate must be run with the real All-In-One overlays visible.
+
 ### Dependency notes (045)
 
 - 045 is independent of 043 and 044 at the source level, but its final manual
