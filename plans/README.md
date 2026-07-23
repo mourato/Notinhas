@@ -478,7 +478,7 @@ and Quick Access hover chrome inconsistency.
 | Plan | Title | Priority | Effort | Depends on | Status |
 |---|---|---:|---:|---|---|
 | 056 | Stabilize Notinhas contextual editor placement (stop tremble) | P1 | M | — | DONE (`c8d9f9d0`; thermo fix `5b3ce7ab`; manual Annotate tremble gate PENDING) |
-| 057 | Remove annotate shape and Notinhas marker drag-start hitch | P1 | M | — | TODO |
+| 057 | Remove annotate shape and Notinhas marker drag-start hitch | P1 | M | — | IN PROGRESS (`implement/057-annotate-drag-start-hitch`) |
 | 058 | Restore reliable Quick Access hover action chrome | P2 | M | — | TODO |
 
 ### Dependency notes (056–058)

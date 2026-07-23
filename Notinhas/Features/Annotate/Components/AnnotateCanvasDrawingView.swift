@@ -210,13 +210,32 @@ final class DrawingCanvasNSView: NSView {
       .sink { [weak self] _ in self?.invalidateDrawing() }
       .store(in: &stateObservers)
     state.$notinhasNotes
-      .sink { [weak self] _ in self?.invalidateDrawing() }
+      .sink { [weak self] _ in
+        guard let self else { return }
+        // Marker moves keep a gesture-local preview; notes publish only on commit.
+        if state.notinhasMovingNoteID != nil {
+          return
+        }
+        invalidateDrawing()
+      }
       .store(in: &stateObservers)
     state.$selectedAnnotationIds
-      .sink { [weak self] _ in self?.invalidateDrawing() }
+      .sink { [weak self] _ in
+        guard let self else { return }
+        if isDraggingAnnotation || isResizingAnnotation {
+          return
+        }
+        invalidateDrawing()
+      }
       .store(in: &stateObservers)
     state.$selectedAnnotationId
-      .sink { [weak self] _ in self?.invalidateDrawing() }
+      .sink { [weak self] _ in
+        guard let self else { return }
+        if isDraggingAnnotation || isResizingAnnotation {
+          return
+        }
+        invalidateDrawing()
+      }
       .store(in: &stateObservers)
     state.$editingTextAnnotationId
       .sink { [weak self] _ in self?.invalidateDrawing() }
@@ -243,6 +262,12 @@ final class DrawingCanvasNSView: NSView {
     for layerView in layerViews {
       layerView.needsDisplay = true
     }
+  }
+
+  /// Redraw only the Notinhas notes layer (static above + draft preview).
+  private func invalidateNotinhasNotesLayer() {
+    staticAboveLayerView.needsDisplay = true
+    previewLayerView.needsDisplay = true
   }
 
   /// Redraw only the per-frame layers (overlay/dragged/preview) — the static
@@ -625,14 +650,12 @@ final class DrawingCanvasNSView: NSView {
     // Selection uses image coordinates
     if state.selectedTool == .selection {
       if let annotation = hitTestAnnotation(at: imagePoint) {
+        // Start the gesture first so selection publishers skip full redraw while dragging.
+        beginAnnotationDrag(anchor: annotation, at: imagePoint)
         if !state.isAnnotationSelected(annotation.id) {
           _ = state.selectAnnotation(at: imagePoint)
-          // Reflect clicked annotation's tool type in toolbar
-          Task { @MainActor in
-            state.selectedTool = annotation.type.toolType
-          }
         }
-        beginAnnotationDrag(anchor: annotation, at: imagePoint)
+        state.selectedTool = annotation.type.toolType
         return
       } else {
         beginAreaSelection(at: imagePoint)
@@ -647,13 +670,10 @@ final class DrawingCanvasNSView: NSView {
     if state.selectedTool != .crop,
        let annotation = hitTestAnnotation(at: imagePoint),
        !Self.shouldPrioritizeCanvasMarkup(over: annotation, selectedTool: state.selectedTool) {
-      // Set local tracking synchronously to avoid race condition with mouseDragged
+      // Gesture locals first so selection/@Published sinks skip full redraw at drag start.
       beginAnnotationDrag(anchor: annotation, at: imagePoint)
-      // Update state asynchronously (for UI reflection)
-      Task { @MainActor in
-        state.selectedAnnotationId = annotation.id
-        state.selectedTool = annotation.type.toolType
-      }
+      state.selectedAnnotationId = annotation.id
+      state.selectedTool = annotation.type.toolType
       return
     }
 
@@ -1262,7 +1282,7 @@ final class DrawingCanvasNSView: NSView {
       state.notinhasBeginMovingNote(id: note.id)
       notinhasMoveStartPoint = imagePoint
       notinhasIsMovingNote = false
-      invalidateDrawing()
+      invalidateNotinhasNotesLayer()
       return true
     }
 
@@ -1285,7 +1305,7 @@ final class DrawingCanvasNSView: NSView {
           imageBounds: notinhasImageBounds(),
           from: startPoint
         )
-        invalidateLiveLayers()
+        invalidateNotinhasNotesLayer()
         return true
       }
     }
@@ -1342,8 +1362,12 @@ final class DrawingCanvasNSView: NSView {
       return lhs.creationOrder < rhs.creationOrder
     }
     for (index, note) in ordered.enumerated() {
+      var displayNote = note
+      if let preview = state.notinhasResolvedTarget(for: note.id), preview != note.target {
+        displayNote.target = preview
+      }
       NotinhasNoteRenderer.draw(
-        note: note,
+        note: displayNote,
         displayNumber: index + 1,
         isSelected: note.id == state.notinhasSelectedNoteID,
         in: context,

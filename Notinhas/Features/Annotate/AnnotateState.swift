@@ -1293,6 +1293,8 @@ final class AnnotateState: ObservableObject {
   var notinhasNoteDrawStart: CGPoint?
   var notinhasMovingNoteID: UUID?
   var notinhasMoveOriginalTarget: NotinhasNoteTarget?
+  /// Gesture-local target while a marker move is active; not published until commit.
+  var notinhasMovePreviewTarget: NotinhasNoteTarget?
   /// Imported image assets referenced by `.embeddedImage(assetId)` annotations.
   @Published private(set) var embeddedImageAssets: [UUID: NSImage] = [:]
   /// Non-blocking warning for large multi-image imports.

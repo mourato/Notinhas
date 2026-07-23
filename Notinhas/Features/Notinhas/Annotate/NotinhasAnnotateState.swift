@@ -93,6 +93,7 @@ extension AnnotateState {
     guard let note = notinhasNotes.first(where: { $0.id == id }) else { return }
     notinhasMovingNoteID = id
     notinhasMoveOriginalTarget = note.target
+    notinhasMovePreviewTarget = nil
   }
 
   func notinhasUpdateMovingNote(
@@ -100,15 +101,23 @@ extension AnnotateState {
     imageBounds: CGRect,
     from startPoint: CGPoint
   ) {
-    guard let id = notinhasMovingNoteID,
-          let original = notinhasMoveOriginalTarget,
-          let index = notinhasNotes.firstIndex(where: { $0.id == id }) else { return }
+    guard notinhasMovingNoteID != nil,
+          let original = notinhasMoveOriginalTarget else { return }
     let delta = CGPoint(x: imagePoint.x - startPoint.x, y: imagePoint.y - startPoint.y)
-    notinhasNotes[index].target = NotinhasNoteGeometry.translated(
+    notinhasMovePreviewTarget = NotinhasNoteGeometry.translated(
       original,
       by: delta,
       within: imageBounds
     )
+  }
+
+  /// Resolved target for canvas drawing and hit tests while a move gesture is active.
+  func notinhasResolvedTarget(for noteID: UUID) -> NotinhasNoteTarget? {
+    guard let note = notinhasNotes.first(where: { $0.id == noteID }) else { return nil }
+    if noteID == notinhasMovingNoteID, let preview = notinhasMovePreviewTarget {
+      return preview
+    }
+    return note.target
   }
 
   func notinhasCommitMovingNote() {
@@ -119,25 +128,23 @@ extension AnnotateState {
       return
     }
 
-    let finalTarget = notinhasNotes[index].target
+    let finalTarget = notinhasMovePreviewTarget ?? notinhasNotes[index].target
     if finalTarget != original {
       var checkpointNotes = notinhasNotes
       checkpointNotes[index].target = original
       saveNotinhasNotesUndoCheckpoint(checkpointNotes)
     }
+    notinhasNotes[index].target = finalTarget
 
     notinhasMovingNoteID = nil
     notinhasMoveOriginalTarget = nil
+    notinhasMovePreviewTarget = nil
   }
 
   func notinhasCancelMovingNote() {
-    if let id = notinhasMovingNoteID,
-       let original = notinhasMoveOriginalTarget,
-       let index = notinhasNotes.firstIndex(where: { $0.id == id }) {
-      notinhasNotes[index].target = original
-    }
     notinhasMovingNoteID = nil
     notinhasMoveOriginalTarget = nil
+    notinhasMovePreviewTarget = nil
   }
 
   /// Closes the note editor. Pass `revertLiveAppearance` to restore the opening snapshot
@@ -162,7 +169,11 @@ extension AnnotateState {
 
   func notinhasNote(at point: CGPoint) -> NotinhasVisualNote? {
     for note in notinhasNotes.reversed() {
-      if NotinhasNoteGeometry.hitTest(note: note, at: point) {
+      var candidate = note
+      if let resolved = notinhasResolvedTarget(for: note.id) {
+        candidate.target = resolved
+      }
+      if NotinhasNoteGeometry.hitTest(note: candidate, at: point) {
         return note
       }
     }
