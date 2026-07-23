@@ -871,6 +871,7 @@ private struct QuickAccessCardHoverPrimeModifier: ViewModifier {
   @Binding var cardScreenFrame: CGRect
   let onAppearReset: () -> Void
   let schedulePrime: () -> Void
+  @State private var didSchedulePrimeForAppearance = false
 
   func body(content: Content) -> some View {
     content
@@ -881,12 +882,20 @@ private struct QuickAccessCardHoverPrimeModifier: ViewModifier {
       )
       .onAppear {
         onAppearReset()
-        schedulePrime()
+        didSchedulePrimeForAppearance = false
+        // Frame may still be zero; onChange below primes once when bounds resolve.
+        schedulePrimeIfNeeded(for: cardScreenFrame)
       }
       .onChange(of: cardScreenFrame) { newFrame in
-        guard newFrame.width > 0, newFrame.height > 0 else { return }
-        schedulePrime()
+        schedulePrimeIfNeeded(for: newFrame)
       }
+  }
+
+  private func schedulePrimeIfNeeded(for frame: CGRect) {
+    guard !didSchedulePrimeForAppearance else { return }
+    guard frame.width > 0, frame.height > 0 else { return }
+    didSchedulePrimeForAppearance = true
+    schedulePrime()
   }
 }
 
