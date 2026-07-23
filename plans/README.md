@@ -314,7 +314,7 @@ evidence collection around that discipline; they do not remove any Git gate.
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |---|---|---:|---:|---|---|
-| 047 | Add a local preflight command for implementation plans | P1 | M | — | TODO |
+| 047 | Add a local preflight command for implementation plans | P1 | M | — | DONE (`d15cb500`; executor `90ce86c5`; 20 fixtures pass; thermo review approved) |
 | 048 | Select local verification from the changed surface | P1 | M | 047 | TODO |
 | 049 | Automate the mandatory local Git integration protocol | P1 | M | 047, 048 | TODO |
 | 050 | Make build_and_run the sole local launch implementation | P2 | S | — | TODO |
