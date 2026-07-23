@@ -64,6 +64,7 @@ final class RecordingRegionOverlayWindow: NSPanel {
   weak var interactionDelegate: RecordingRegionOverlayDelegate?
 
   private let overlayView: RecordingRegionOverlayView
+  private var receivesKeyboardInput = false
 
   init(screen: NSScreen, highlightRect: CGRect) {
     overlayView = RecordingRegionOverlayView(
@@ -89,11 +90,13 @@ final class RecordingRegionOverlayWindow: NSPanel {
     sharingType = .none
     level = .floating
     ignoresMouseEvents = true
+    acceptsMouseMovedEvents = true
     hasShadow = false
     hidesOnDeactivate = false
     isReleasedWhenClosed = false
     collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
     animationBehavior = .none // Disable window animations for instant appearance
+    becomesKeyOnlyIfNeeded = true
 
     isMovable = false
     isMovableByWindowBackground = false
@@ -151,6 +154,24 @@ final class RecordingRegionOverlayWindow: NSPanel {
     overlayView.refreshCursor()
   }
 
+  /// Allow the All-In-One refinement controller to move key ownership to the
+  /// overlay under the pointer without activating the application.
+  func setReceivesKeyboardInput(_ receivesKeyboardInput: Bool) {
+    self.receivesKeyboardInput = receivesKeyboardInput
+  }
+
+  func activateKeyboardInputIfNeeded() {
+    guard receivesKeyboardInput else { return }
+    makeKey()
+    makeFirstResponder(overlayView)
+    overlayView.updateTrackingAreas()
+    overlayView.refreshCursor()
+  }
+
+  var isGestureInProgress: Bool {
+    overlayView.isGestureInProgress
+  }
+
   /// Active resize handle while the user is dragging a resize affordance.
   var currentResizeHandle: RecordingResizeHandle? {
     overlayView.currentResizeHandle
@@ -173,7 +194,7 @@ final class RecordingRegionOverlayWindow: NSPanel {
 
   // Non-activating: prevent stealing focus from other apps
   override var canBecomeKey: Bool {
-    false
+    receivesKeyboardInput
   }
 
   override var canBecomeMain: Bool {
@@ -214,6 +235,10 @@ final class RecordingRegionOverlayView: NSView {
   /// Resize state exposed for refinement snapping integration.
   var currentResizeHandle: RecordingResizeHandle? {
     isResizing ? activeHandle : nil
+  }
+
+  var isGestureInProgress: Bool {
+    isDragging || isResizing || isNewSelecting
   }
 
   // Cross-display event monitors — allow drag/resize/reselect gestures to continue

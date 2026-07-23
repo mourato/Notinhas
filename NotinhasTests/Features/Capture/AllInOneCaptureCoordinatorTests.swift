@@ -65,6 +65,21 @@ final class AllInOneCaptureCoordinatorTests: XCTestCase {
     XCTAssertLessThan(AllInOneFrozenBackdropHost.windowLevel, NSWindow.Level.floating)
   }
 
+  func testRefinementOverlay_keyOwnershipControlsCanBecomeKey() {
+    guard let screen = NSScreen.main else {
+      XCTFail("Expected a main screen")
+      return
+    }
+    let overlay = RecordingRegionOverlayWindow(screen: screen, highlightRect: screen.frame.insetBy(dx: 80, dy: 80))
+    defer { overlay.close() }
+
+    XCTAssertFalse(overlay.canBecomeKey)
+    overlay.setReceivesKeyboardInput(true)
+    XCTAssertTrue(overlay.canBecomeKey)
+    overlay.setReceivesKeyboardInput(false)
+    XCTAssertFalse(overlay.canBecomeKey)
+  }
+
   func testSessionState_updateRectPublishesSelection() {
     let state = AllInOneCaptureSessionState(videoEnabled: false)
     let rect = CGRect(x: 40, y: 50, width: 320, height: 180)

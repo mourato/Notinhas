@@ -14,6 +14,8 @@ final class AllInOneSelectionRefinementController: NSObject {
 
   private var currentRect: CGRect
   private var regionOverlayWindows: [ObjectIdentifier: RecordingRegionOverlayWindow] = [:]
+  private var cursorTrackingTimer: Timer?
+  private var keyboardOwnerOverlayID: ObjectIdentifier?
   private var localEscapeMonitor: Any?
   private var globalEscapeMonitor: Any?
   private var screenParametersObserver: NSObjectProtocol?
@@ -60,6 +62,7 @@ final class AllInOneSelectionRefinementController: NSObject {
     if let globalEscapeMonitor {
       NSEvent.removeMonitor(globalEscapeMonitor)
     }
+    cursorTrackingTimer?.invalidate()
     backdropTasks.values.forEach { $0.cancel() }
     regionOverlayWindows.removeAll()
   }
@@ -70,6 +73,7 @@ final class AllInOneSelectionRefinementController: NSObject {
     tearDownOverlays()
     observeScreenParameters()
     reconcileScreenOverlays()
+    startCursorTrackingIfNeeded()
     installEscapeMonitorsIfNeeded()
     refreshBackdropCache()
     publishRectChange()
@@ -80,6 +84,7 @@ final class AllInOneSelectionRefinementController: NSObject {
     removeScreenParametersObserver()
     cancelBackdropTasks()
     semanticProvider.clearCache()
+    stopCursorTracking()
     tearDownOverlays()
     resizeStartRect = nil
     activeResizeHandle = nil
@@ -154,6 +159,9 @@ final class AllInOneSelectionRefinementController: NSObject {
     let removedScreenIDs = regionOverlayWindows.keys.filter { !screenIDs.contains($0) }
     for screenID in removedScreenIDs {
       guard let overlay = regionOverlayWindows[screenID] else { continue }
+      if keyboardOwnerOverlayID == ObjectIdentifier(overlay) {
+        keyboardOwnerOverlayID = nil
+      }
       overlay.interactionDelegate = nil
       overlay.close()
       regionOverlayWindows.removeValue(forKey: screenID)
@@ -175,6 +183,60 @@ final class AllInOneSelectionRefinementController: NSObject {
       overlay.close()
     }
     regionOverlayWindows.removeAll()
+    keyboardOwnerOverlayID = nil
+  }
+
+  // MARK: - Cursor ownership
+
+  /// A nonactivating panel receives reliable cursor rects only while it owns
+  /// key-window state. Polling the pointer lets All-In-One keep the app in the
+  /// background while moving that ownership between per-display overlays.
+  private func startCursorTrackingIfNeeded() {
+    guard cursorTrackingTimer == nil else { return }
+    let timer = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
+      MainActor.assumeIsolated {
+        self?.handleCursorTrackingTick()
+      }
+    }
+    RunLoop.main.add(timer, forMode: .common)
+    cursorTrackingTimer = timer
+  }
+
+  private func handleCursorTrackingTick() {
+    guard !regionOverlayWindows.isEmpty else { return }
+
+    if let ownerID = keyboardOwnerOverlayID,
+       let owner = regionOverlayWindows[ownerID],
+       owner.isGestureInProgress {
+      owner.refreshCursor()
+      return
+    }
+
+    let location = NSEvent.mouseLocation
+    guard let overlay = regionOverlayWindows.values.first(where: { $0.frame.contains(location) }) else {
+      NSCursor.arrow.set()
+      return
+    }
+
+    let overlayID = ObjectIdentifier(overlay)
+    if overlayID != keyboardOwnerOverlayID {
+      if let previousOwnerID = keyboardOwnerOverlayID,
+         let previousOwner = regionOverlayWindows[previousOwnerID] {
+        previousOwner.setReceivesKeyboardInput(false)
+      }
+      keyboardOwnerOverlayID = overlayID
+      overlay.setReceivesKeyboardInput(true)
+      overlay.orderFrontRegardless()
+      overlay.activateKeyboardInputIfNeeded()
+    } else {
+      overlay.refreshCursor()
+    }
+  }
+
+  private func stopCursorTracking() {
+    cursorTrackingTimer?.invalidate()
+    cursorTrackingTimer = nil
+    keyboardOwnerOverlayID = nil
   }
 
   private func updateRect(_ rect: CGRect, notifyDuringInteraction: Bool = true) {
