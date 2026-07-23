@@ -152,6 +152,76 @@ nonisolated enum NotinhasNoteGeometry {
     return CGSize(width: width, height: height)
   }
 
+  /// Clamps a proposed editor-panel origin inside the editor work area.
+  static func clampedEditorPanelOrigin(
+    _ proposedOrigin: CGPoint,
+    panelSize: CGSize,
+    in containerBounds: CGRect,
+    margin: CGFloat = 12
+  ) -> CGPoint {
+    let minX = containerBounds.minX + margin
+    let minY = containerBounds.minY + margin
+    let maxX = containerBounds.maxX - margin - panelSize.width
+    let maxY = containerBounds.maxY - margin - panelSize.height
+
+    let clampedX = maxX < minX ? minX : max(minX, min(proposedOrigin.x, maxX))
+    let clampedY = maxY < minY ? minY : max(minY, min(proposedOrigin.y, maxY))
+    return CGPoint(x: clampedX, y: clampedY)
+  }
+
+  /// Maps selection bounds from foreground display space into the center-pane work area.
+  static func selectionBoundsInEditorWorkArea(
+    selectionInForeground: CGRect,
+    foregroundOffsetInBackground: CGPoint,
+    backgroundDisplaySize: CGSize,
+    workAreaSize: CGSize,
+    zoomLevel: CGFloat,
+    panOffset: CGSize
+  ) -> CGRect {
+    let selectionInBackground = selectionInForeground.offsetBy(
+      dx: foregroundOffsetInBackground.x,
+      dy: foregroundOffsetInBackground.y
+    )
+    let backgroundOrigin = CGPoint(
+      x: (workAreaSize.width - backgroundDisplaySize.width) / 2,
+      y: (workAreaSize.height - backgroundDisplaySize.height) / 2
+    )
+    let selectionInWorkArea = selectionInBackground.offsetBy(
+      dx: backgroundOrigin.x,
+      dy: backgroundOrigin.y
+    )
+    let pivot = CGPoint(x: workAreaSize.width / 2, y: workAreaSize.height / 2)
+    return rectTransformedForViewport(
+      selectionInWorkArea,
+      zoom: zoomLevel,
+      pan: panOffset,
+      around: pivot
+    )
+  }
+
+  static func rectTransformedForViewport(
+    _ rect: CGRect,
+    zoom: CGFloat,
+    pan: CGSize,
+    around pivot: CGPoint
+  ) -> CGRect {
+    let mapPoint: (CGPoint) -> CGPoint = { point in
+      CGPoint(
+        x: pivot.x + (point.x - pivot.x) * zoom + pan.width,
+        y: pivot.y + (point.y - pivot.y) * zoom + pan.height
+      )
+    }
+
+    let topLeft = mapPoint(rect.origin)
+    let bottomRight = mapPoint(CGPoint(x: rect.maxX, y: rect.maxY))
+    return CGRect(
+      x: min(topLeft.x, bottomRight.x),
+      y: min(topLeft.y, bottomRight.y),
+      width: abs(bottomRight.x - topLeft.x),
+      height: abs(bottomRight.y - topLeft.y)
+    )
+  }
+
   static func displayNumber(for note: NotinhasVisualNote, in notes: [NotinhasVisualNote]) -> Int {
     let ordered = orderedRenderableNotes(notes)
     guard let index = ordered.firstIndex(where: { $0.id == note.id }) else {

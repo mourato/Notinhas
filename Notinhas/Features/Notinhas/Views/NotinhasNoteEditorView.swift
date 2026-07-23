@@ -12,6 +12,8 @@ struct NotinhasNoteEditorView: View {
   let onCommit: () -> Void
   let onCancel: () -> Void
   let onDelete: () -> Void
+  var onPanelDragChanged: ((CGSize) -> Void)?
+  var onPanelDragEnded: (() -> Void)?
 
   @FocusState private var isFocused: Bool
 
@@ -33,6 +35,10 @@ struct NotinhasNoteEditorView: View {
 
         colorMenu
       }
+      .contentShape(Rectangle())
+      .accessibilityElement(children: .combine)
+      .accessibilityHint(NotinhasL10n.noteEditorDragHint)
+      .gesture(panelDragGesture)
 
       TextField(NotinhasL10n.noteEditorPlaceholder, text: $text, axis: .vertical)
         .textFieldStyle(.roundedBorder)
@@ -43,6 +49,7 @@ struct NotinhasNoteEditorView: View {
 
       if showsAreaStyle {
         areaStyleControls
+          .gesture(panelDragGesture)
         areaStrokeWidthControl
       }
 
@@ -63,6 +70,8 @@ struct NotinhasNoteEditorView: View {
           .keyboardShortcut(.defaultAction)
           .overlayTooltip(NotinhasL10n.save, keys: ["⌘", "⏎"], edge: .above)
       }
+      .contentShape(Rectangle())
+      .gesture(panelDragGesture)
     }
     .padding(12)
     .frame(width: panelWidth, alignment: .topLeading)
@@ -71,6 +80,16 @@ struct NotinhasNoteEditorView: View {
     .background(.regularMaterial, in: panelShape)
     .clipShape(panelShape)
     .onAppear { isFocused = true }
+  }
+
+  private var panelDragGesture: some Gesture {
+    DragGesture(minimumDistance: 4)
+      .onChanged { value in
+        onPanelDragChanged?(value.translation)
+      }
+      .onEnded { _ in
+        onPanelDragEnded?()
+      }
   }
 
   private var colorMenu: some View {

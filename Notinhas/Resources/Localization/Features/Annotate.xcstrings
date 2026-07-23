@@ -171,6 +171,16 @@
         }
       }
     },
+    "annotate.notinhas.note-editor-drag-hint": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag to move this note editor"
+          }
+        }
+      }
+    },
     "annotate.notinhas.color-red": {
       "localizations": {
         "en": {
