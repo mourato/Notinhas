@@ -318,7 +318,7 @@ evidence collection around that discipline; they do not remove any Git gate.
 | 048 | Select local verification from the changed surface | P1 | M | 047 | DONE (`6f22343f`; executor `8a29df2e`; 25 fixtures pass; review fix `fee4fe08`) |
 | 049 | Automate the mandatory local Git integration protocol | P1 | M | 047, 048 | DONE (`db852f45`; 22 executor fixtures, 23 after review fix `d22678d4`) |
 | 050 | Make build_and_run the sole local launch implementation | P2 | S | — | DONE (`6af68793`; executor `b201ff5d`; syntax/help/verify gates pass) |
-| 051 | Make the local TCC test isolated and auditable | P2 | M | — | TODO |
+| 051 | Make the local TCC test isolated and auditable | P2 | M | — | DONE (`a8470d9c`; executor `930c9893`; review fix `ed460b60`; automated safety gates pass, manual TCC flow remains) |
 
 ### Dependency notes (047–051)
 
