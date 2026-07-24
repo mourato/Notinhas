@@ -37,3 +37,11 @@ _Avoid_: chrome inline de captura, toolbar do editor Annotate
 **Chrome inline de captura**:
 Controles de ferramenta desenhados dentro do mesmo painel fullscreen do Capture Markup.
 _Avoid_: barra flutuante de captura (HUD), CaptureFloatingHUDWindow
+
+**Chrome de seleção compartilhado**:
+Métricas, geometria dos handles em L, hit-tests e cursores de redimensionamento da área selecionada, reutilizados por All-in-One/Recording e Capture Markup.
+_Avoid_: host de overlay unificado, aspect lock, snapping, ferramentas de anotar
+
+**Host de seleção**:
+O painel/sessão que apresenta a seleção (ex.: `RecordingRegionOverlayWindow` ou `InlineAreaAnnotate*`), incluindo política de sessão além do chrome visual.
+_Avoid_: chrome de seleção compartilhado

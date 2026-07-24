@@ -514,6 +514,31 @@ Markup vs All-In-One: product chose **A — infra/platform reuse, distinct looks
 | 059 | Restore arrow cursor over All-In-One floating HUDs | P1 | S | — | DONE (`bc52694b`, merge `1674f81c`; thermo APPROVE; manual HUD hover smoke PENDING) |
 | 060 | Extract shared screen-edge origin clamp for capture chrome | P2 | S | 059 (order) | DONE (`882945ce`, merge `bec96f8a`; thermo APPROVE) |
 
+## Shared selection chrome (061)
+
+Generated 2026-07-24 against commit `549c03e1`. Grill decision: Capture Markup
+adopts All-In-One/Recording **visual + L-handles + hit/cursors** only; extract
+shared chrome; **keep hosts separate**; no aspect lock/snapping in Markup.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 061 | Share All-In-One selection chrome with Capture Markup | P1 | M | — | TODO |
+
+### Dependency notes (061)
+
+- Soft: commit/land the session-wide All-In-One HUD cursor exclusion follow-up
+  first if it is still uncommitted WIP on overlapping capture files.
+- Does not depend on 059/060 code for correctness; builds on the same
+  componentization direction.
+
+### Findings considered and rejected (061 round)
+
+- Unifying `InlineAreaAnnotatePanel` with `RecordingRegionOverlayWindow`: rejected —
+  hosts mix session/annotate policy with chrome.
+- Porting aspect lock / snapping into Capture Markup: rejected by product —
+  visual + handles + hit/cursors only.
+- Making Markup the visual source of truth: rejected — Markup adopts AIO/Recording.
+
 ### Dependency notes (059–060)
 
 - **059 first**: bugfix for crosshair-over-HUD during All-In-One refinement.
