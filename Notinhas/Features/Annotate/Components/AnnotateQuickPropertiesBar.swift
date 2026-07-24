@@ -155,20 +155,18 @@ struct AnnotateQuickPropertiesBar: View {
   ]
 
   var body: some View {
-    ViewThatFits(in: .horizontal) {
-      barContent(density: .regular)
-      barContent(density: .compact)
+    // Horizontal ViewThatFits(regular→compact) no longer works once the active
+    // row wraps: regular reports a fitting width after wrapping, so compact was
+    // almost never selected. Prefer compact for active (denser wrapped rows);
+    // idle stays regular single-row chrome.
+    Group {
+      if state.showsQuickPropertiesBar {
+        activePropertiesContent(density: .compact)
+      } else {
+        idlePropertiesContent(density: .regular)
+      }
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-  }
-
-  @ViewBuilder
-  private func barContent(density: QuickPropertiesDensity) -> some View {
-    if state.showsQuickPropertiesBar {
-      activePropertiesContent(density: density)
-    } else {
-      idlePropertiesContent(density: density)
-    }
+    .frame(maxWidth: .infinity, alignment: .topLeading)
   }
 
   private func activePropertiesContent(density: QuickPropertiesDensity) -> some View {
