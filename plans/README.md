@@ -522,7 +522,7 @@ shared chrome; **keep hosts separate**; no aspect lock/snapping in Markup.
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |---|---|---:|---:|---|---|
-| 061 | Share All-In-One selection chrome with Capture Markup | P1 | M | — | TODO |
+| 061 | Share All-In-One selection chrome with Capture Markup | P1 | M | — | DONE (`4c8c83dc`; MANUAL_SMOKE: PENDING) |
 
 ### Dependency notes (061)
 
