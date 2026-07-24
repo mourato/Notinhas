@@ -184,6 +184,17 @@ final class AllInOneCaptureCoordinator {
       self?.cancel()
     }
     refinementController = controller
+    controller.cursorExclusionFrames = { [weak self] in
+      guard let self else { return [] }
+      var frames: [CGRect] = []
+      if let modeHUD, modeHUD.isVisible {
+        frames.append(modeHUD.frame)
+      }
+      if let actionHUD, actionHUD.isVisible {
+        frames.append(actionHUD.frame)
+      }
+      return frames
+    }
     controller.present()
   }
 
