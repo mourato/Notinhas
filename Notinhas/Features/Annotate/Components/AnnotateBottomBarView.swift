@@ -249,10 +249,10 @@ struct AnnotateBottomBarView: View {
     Picker("", selection: $state.editorMode) {
       Label(L10n.AnnotateUI.modeAnnotate, systemImage: "pencil.and.outline")
         .tag(AnnotateState.EditorMode.annotate)
-      Label(L10n.AnnotateUI.modeMockup, systemImage: "cube.transparent")
-        .tag(AnnotateState.EditorMode.mockup)
       Label(L10n.AnnotateUI.modePreview, systemImage: "eye")
         .tag(AnnotateState.EditorMode.preview)
+      Label(L10n.AnnotateUI.modeMockup, systemImage: "cube.transparent")
+        .tag(AnnotateState.EditorMode.mockup)
     }
     .pickerStyle(.segmented)
     .frame(width: 220)
