@@ -8,7 +8,7 @@
 > maintain the index.
 >
 > **Drift check (run first)**:
-> `git diff --stat c444ca35..HEAD -- \
+> `git diff --stat e48b5268..HEAD -- \
 >   Notinhas/Features/Recording/Managers/RecordingRegionOverlayWindow.swift \
 >   Notinhas/Features/Annotate/InlineAreaAnnotateWindow.swift \
 >   Notinhas/Services/Capture \
@@ -26,7 +26,7 @@
 - **Depends on**: none (soft: prefer landing after the session-wide All-In-One HUD
   cursor exclusion follow-up is committed if it is still local WIP)
 - **Category**: tech-debt
-- ****Planned at**: commit `c444ca35`, 2026-07-24
+- **Planned at**: commit `e48b5268`, 2026-07-24
 
 ## Execution profile
 
@@ -74,7 +74,7 @@ Markup-local parallel chrome:
 - Session host (`InlineAreaAnnotateCoordinator` / panel / selecting→annotating)
   stays Markup-owned.
 
-Load-bearing excerpts as of `c444ca35`:
+Load-bearing excerpts as of `e48b5268`:
 
 ```swift
 // RecordingRegionOverlayWindow.swift — AIO refinement typically omits continuous border

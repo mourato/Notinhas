@@ -516,7 +516,7 @@ Markup vs All-In-One: product chose **A — infra/platform reuse, distinct looks
 
 ## Shared selection chrome (061)
 
-Generated 2026-07-24 against commit `c444ca35`. Grill decision: Capture Markup
+Generated 2026-07-24 against commit `e48b5268`. Grill decision: Capture Markup
 adopts All-In-One/Recording **visual + L-handles + hit/cursors** only; extract
 shared chrome; **keep hosts separate**; no aspect lock/snapping in Markup.
 
