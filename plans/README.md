@@ -502,3 +502,39 @@ and Quick Access hover chrome inconsistency.
 - Instruments time-profile as a hard done gate for 057: deferred — manual
   hitch gate + invalidation contract tests are enough.
 - Raising Quick Access above Annotate or making QA a key window: rejected.
+
+## Capture chrome infra reuse (059–060)
+
+Generated 2026-07-24 against commit `5c30ed4b`. Grill + improve on Capture
+Markup vs All-In-One: product chose **A — infra/platform reuse, distinct looks**
+(keep button sizes, bar heights, materials, and hosting models separate).
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 059 | Restore arrow cursor over All-In-One floating HUDs | P1 | S | — | TODO |
+| 060 | Extract shared screen-edge origin clamp for capture chrome | P2 | S | 059 (order) | TODO |
+
+### Dependency notes (059–060)
+
+- **059 first**: bugfix for crosshair-over-HUD during All-In-One refinement.
+- **060 after 059**: soft code dependency (different files); serialize to keep
+  review diffs focused. 060 must **not** change placement constants or Markup layout.
+- Parallelizable with unrelated rounds; not parallel with each other by policy.
+
+### Findings considered and rejected (059–060 round)
+
+- Unifying Capture Markup hosting into `CaptureFloatingHUDWindow`: rejected —
+  would recreate cursor ownership bugs and break annotate hit-testing/key response.
+- Merging `InlineAreaControlGeometry` with `CaptureFloatingToolbarPlacement`:
+  rejected — prefer-above vs prefer-below, different gaps/insets, action rail vs
+  paired HUDs.
+- Forcing shared materials (`.hudWindow` vs `.ultraThinMaterial`): rejected —
+  visual drift; not infra.
+- Unifying mode-strip 54×46 buttons with Markup 32×32 tool buttons: rejected —
+  product particularity.
+- Sharing All-In-One refinement snapping/aspect-lock with Markup annotate resize:
+  rejected — different product phases.
+- Wiring InlineArea center-clamp to the floating origin clamp in 060: rejected
+  by default — inverted-range fallbacks differ (mid vs minimum).
+- Expanding 059 into `AreaSelectionController` first-drag cursor timer: deferred
+  unless manual smoke shows the bug only there after refinement is fixed.

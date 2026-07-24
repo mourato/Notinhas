@@ -19,3 +19,21 @@ _Avoid_: caixa de comentários, editor de comentários
 **Área útil do editor**:
 O espaço disponível para editar a imagem, incluindo o canvas e o fundo/padding, mas excluindo toolbar, barra de propriedades, barra inferior e painel lateral.
 _Avoid_: janela inteira, área da imagem
+
+## Capture session chrome
+
+**Capture Markup**:
+O fluxo de captura com marcação ao vivo sobre a área selecionada, sem abrir o editor de imagens completo.
+_Avoid_: All-in-One, anotar depois no editor
+
+**All-in-One**:
+O fluxo único de captura que escolhe o modo (área, anotar, OCR, etc.) e refina a seleção com barras flutuantes separadas.
+_Avoid_: Capture Markup, seletor genérico de modo
+
+**Barra flutuante de captura (HUD)**:
+Painel borderless separado (fora do overlay de seleção) que hospeda controles durante All-in-One ou recording.
+_Avoid_: chrome inline de captura, toolbar do editor Annotate
+
+**Chrome inline de captura**:
+Controles de ferramenta desenhados dentro do mesmo painel fullscreen do Capture Markup.
+_Avoid_: barra flutuante de captura (HUD), CaptureFloatingHUDWindow
