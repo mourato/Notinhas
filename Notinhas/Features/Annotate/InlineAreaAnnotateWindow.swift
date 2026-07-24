@@ -835,41 +835,15 @@ private struct InlineAreaResizeHandlesOverlay: View {
   var body: some View {
     Canvas { context, size in
       let rect = CGRect(origin: .zero, size: size)
-      let layout = CaptureSelectionChromeLayout.layout(for: rect)
       let colors = CaptureSelectionChromeAppearance.colors(
         for: CaptureSelectionChromeAppearanceContext(backdropLuma: nil)
       )
 
-      for (handle, anchor) in CaptureSelectionHandleGeometry.cornerAnchors(
+      for bar in CaptureSelectionHandleGeometry.handleBars(
         in: rect,
         coordinateSpace: .topLeftOrigin
       ) {
-        guard layout.availableHandles.contains(handle) else { continue }
-        let bars = CaptureSelectionHandleGeometry.cornerHandleBars(
-          for: handle,
-          anchor: anchor,
-          coordinateSpace: .topLeftOrigin,
-          layout: layout
-        )
-        drawHandleBar(bars.horizontal, colors: colors, context: &context)
-        drawHandleBar(bars.vertical, colors: colors, context: &context)
-      }
-
-      for (handle, anchor) in CaptureSelectionHandleGeometry.edgeAnchors(
-        in: rect,
-        coordinateSpace: .topLeftOrigin
-      ) {
-        guard layout.availableHandles.contains(handle) else { continue }
-        drawHandleBar(
-          CaptureSelectionHandleGeometry.edgeHandleBar(
-            for: handle,
-            anchor: anchor,
-            coordinateSpace: .topLeftOrigin,
-            layout: layout
-          ),
-          colors: colors,
-          context: &context
-        )
+        drawHandleBar(bar, colors: colors, coordinateSpace: .topLeftOrigin, context: &context)
       }
     }
   }
@@ -877,14 +851,20 @@ private struct InlineAreaResizeHandlesOverlay: View {
   private func drawHandleBar(
     _ rect: CGRect,
     colors: CaptureSelectionChromeColors,
+    coordinateSpace: CaptureSelectionCoordinateSpace,
     context: inout GraphicsContext
   ) {
+    let cornerRadius = CaptureSelectionChromeMetrics.handleCornerRadius
+    let shadowOffset = CaptureSelectionChromeMetrics.handleShadowOffset(for: coordinateSpace)
     context.fill(
-      Path(rect.offsetBy(dx: 0, dy: 1)),
+      Path(
+        roundedRect: rect.offsetBy(dx: shadowOffset.width, dy: shadowOffset.height),
+        cornerRadius: cornerRadius
+      ),
       with: .color(.black.opacity(colors.shadowOpacity))
     )
     context.fill(
-      Path(rect),
+      Path(roundedRect: rect, cornerRadius: cornerRadius),
       with: .color(
         Color(
           red: colors.strokeRed,

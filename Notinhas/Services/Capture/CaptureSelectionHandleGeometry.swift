@@ -57,6 +57,42 @@ struct CaptureSelectionChromeLayout: Equatable {
 enum CaptureSelectionHandleGeometry {
   static let allHandles: [CaptureSelectionResizeHandle] = CaptureSelectionResizeHandle.allCases
 
+  /// Returns every visible handle bar using the same ordering and adaptive layout in each host.
+  static func handleBars(
+    in rect: CGRect,
+    coordinateSpace: CaptureSelectionCoordinateSpace,
+    layout: CaptureSelectionChromeLayout? = nil
+  ) -> [CGRect] {
+    let resolvedLayout = layout ?? CaptureSelectionChromeLayout.layout(for: rect)
+    var bars: [CGRect] = []
+
+    for (handle, anchor) in cornerAnchors(in: rect, coordinateSpace: coordinateSpace) {
+      guard resolvedLayout.availableHandles.contains(handle) else { continue }
+      let cornerBars = cornerHandleBars(
+        for: handle,
+        anchor: anchor,
+        coordinateSpace: coordinateSpace,
+        layout: resolvedLayout
+      )
+      bars.append(cornerBars.horizontal)
+      bars.append(cornerBars.vertical)
+    }
+
+    for (handle, anchor) in edgeAnchors(in: rect, coordinateSpace: coordinateSpace) {
+      guard resolvedLayout.availableHandles.contains(handle) else { continue }
+      bars.append(
+        edgeHandleBar(
+          for: handle,
+          anchor: anchor,
+          coordinateSpace: coordinateSpace,
+          layout: resolvedLayout
+        )
+      )
+    }
+
+    return bars
+  }
+
   // MARK: - Hit testing
 
   /// Hit-test order: corners first (diagonal resize), then full edge strips between corners.

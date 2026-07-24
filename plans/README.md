@@ -594,3 +594,48 @@ separate; give both AIO HUDs one layer/first-click/cursor ownership policy.
 - Fixing the AIO HUD symptom by raising only `modeHUD`, making the bars key, or
   adding another cursor timer: rejected — both bars need one explicit ownership
   contract and focus must remain with the captured app.
+
+## Annotate editor chrome + Counter absorption (063–066)
+
+Generated 2026-07-24 against commit `9f7ff8c8` from a grilled product handoff
+(annotated editor screenshot). Execute **063 → 064 → 065 → 066** (separate
+PRs/commits). Chrome first; Counter absorption last.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 063 | Reorder mode tabs to Annotate / Preview / Mockup | P1 | S | — | TODO |
+| 064 | Lead toolbar with Undo/Redo before Crop | P1 | S | — (after 063 by policy) | TODO |
+| 065 | Wrap quick properties instead of clipping/overlap | P1 | M | — (after 064 by policy) | TODO |
+| 066 | Absorb Counter into Notinha | P1 | L | — (after 065 by policy) | TODO |
+
+### Dependency notes (063–066)
+
+- No hard code dependencies between 063–065; serialize by product order for
+  review clarity.
+- 066 is last: migration + shortcut + inline toolbelt risk; do not mix with
+  quick-bar wrap in the same PR.
+- `CONTEXT.md` already records optional text on Notinha visual; 066 must not
+  revert that glossary line.
+- Execute via `.agents/skills/plan-execute-review/SKILL.md`.
+
+### Product decisions (063–066)
+
+- Tabs: **Annotate → Preview → Mockup** (behavior unchanged; default Annotate).
+- Toolbar: **Undo | Redo ‖ Crop | Sidebar ‖ Rotate… ‖ tools…**
+- Quick bar: **automatic width wrap** for all overflowing tool combos; host
+  height may grow past 48pt; no “⋯” menu; no fixed primary/secondary row policy.
+- Counter absorbed into Notinha: one Note tool; text optional; numbering stays
+  Notinha `creationOrder`; migrate legacy counters → empty Notinhas (append) on
+  session open; shortcut **`n`** for Note; **`i` retired**; Notinha replaces
+  Counter in inline `drawableTools`; ADR required; pin handles / Selection
+  multi-edit deferred.
+
+### Findings considered and rejected (063–066)
+
+- Keeping Counter and Notinha as separate tools: rejected — product unify B.
+- Adopting Counter baked integers as display numbers: rejected — keep Notinha
+  renumbering.
+- Leaving Counter render-only forever without migration: rejected — one-shot
+  migrate to empty Notinhas.
+- Fixed primary/secondary quick-bar rows: rejected — automatic wrap only.
+- Pin drag-handle resize and Selection multi-edit of pins: deferred follow-ups.

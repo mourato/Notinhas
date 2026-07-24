@@ -862,36 +862,28 @@ extension RecordingRegionOverlayView {
   }
 
   private func drawRecordingResizeHandles(for rect: CGRect) {
-    let layout = CaptureSelectionChromeLayout.layout(for: rect)
     let colors = CaptureSelectionChromeAppearance
       .colors(for: CaptureSelectionChromeAppearanceContext(backdropLuma: nil))
 
-    for (handle, anchor) in CaptureSelectionHandleGeometry.cornerAnchors(in: rect, coordinateSpace: .bottomLeftOrigin) {
-      guard layout.availableHandles.contains(handle) else { continue }
-      let bars = CaptureSelectionHandleGeometry.cornerHandleBars(
-        for: handle,
-        anchor: anchor,
-        layout: layout
-      )
-      drawHandleBar(bars.horizontal, colors: colors)
-      drawHandleBar(bars.vertical, colors: colors)
-    }
-
-    for (handle, anchor) in CaptureSelectionHandleGeometry.edgeAnchors(in: rect, coordinateSpace: .bottomLeftOrigin) {
-      guard layout.availableHandles.contains(handle) else { continue }
-      drawHandleBar(
-        CaptureSelectionHandleGeometry.edgeHandleBar(for: handle, anchor: anchor, layout: layout),
-        colors: colors
-      )
+    for bar in CaptureSelectionHandleGeometry.handleBars(
+      in: rect,
+      coordinateSpace: .bottomLeftOrigin
+    ) {
+      drawHandleBar(bar, colors: colors, coordinateSpace: .bottomLeftOrigin)
     }
   }
 
-  private func drawHandleBar(_ rect: CGRect, colors: CaptureSelectionChromeColors) {
-    let radius = min(rect.width, rect.height) / 2
+  private func drawHandleBar(
+    _ rect: CGRect,
+    colors: CaptureSelectionChromeColors,
+    coordinateSpace: CaptureSelectionCoordinateSpace
+  ) {
+    let radius = CaptureSelectionChromeMetrics.handleCornerRadius
+    let shadowOffset = CaptureSelectionChromeMetrics.handleShadowOffset(for: coordinateSpace)
 
     // Draw shadow
     let shadowPath = NSBezierPath(
-      roundedRect: rect.offsetBy(dx: 0, dy: -1),
+      roundedRect: rect.offsetBy(dx: shadowOffset.width, dy: shadowOffset.height),
       xRadius: radius,
       yRadius: radius
     )

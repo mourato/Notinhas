@@ -76,11 +76,13 @@ private struct AllInOneCaptureToolbarModeButton: View {
   private var backgroundFill: Color {
     if isSelected {
       if reduceTransparency {
-        return colorScheme == .dark
-          ? Color.white.opacity(0.22)
-          : Color.primary.opacity(0.14)
+        let opacity = isHovered ? 0.3 : 0.22
+        return colorScheme == .dark ? Color.white.opacity(opacity) : Color.primary.opacity(opacity * 0.65)
       }
-      return Color.accentColor.opacity(colorScheme == .dark ? 0.42 : 0.18)
+      let opacity = colorScheme == .dark
+        ? (isHovered ? 0.52 : 0.42)
+        : (isHovered ? 0.28 : 0.18)
+      return Color.accentColor.opacity(opacity)
     }
 
     if isHovered {

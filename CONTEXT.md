@@ -5,8 +5,8 @@ This context defines the vocabulary for the Notinhas capture-to-annotate handoff
 ## Language
 
 **Notinha visual**:
-Uma marcação numerada associada a um ponto ou área da imagem e a um comentário textual.
-_Avoid_: anotação de texto genérica, comentário isolado
+Uma marcação numerada associada a um ponto ou área da imagem; o comentário textual é opcional (badge válido sem texto).
+_Avoid_: anotação de texto genérica, comentário isolado, Counter (ferramenta legada absorvida)
 
 **Caixa contextual de edição**:
 A interface temporária que edita o comentário e os controles visuais da Notinha visual ativa.

@@ -183,6 +183,39 @@ final class CaptureSelectionChromeTests: XCTestCase {
     )
   }
 
+  func testHandleBars_largeRectangleAreSharedAcrossCoordinateSpaces() {
+    let bottomLeftBars = CaptureSelectionHandleGeometry.handleBars(
+      in: rect,
+      coordinateSpace: .bottomLeftOrigin
+    )
+    let topLeftBars = CaptureSelectionHandleGeometry.handleBars(
+      in: CGRect(origin: .zero, size: rect.size),
+      coordinateSpace: .topLeftOrigin
+    )
+
+    XCTAssertEqual(bottomLeftBars.count, 12)
+    XCTAssertEqual(topLeftBars.count, 12)
+    XCTAssertEqual(
+      bottomLeftBars.map { CGSize(width: $0.width, height: $0.height) },
+      topLeftBars.map { CGSize(width: $0.width, height: $0.height) }
+    )
+  }
+
+  func testHandleStyle_usesRoundedEndsAndCoordinateAwareShadow() {
+    XCTAssertEqual(
+      CaptureSelectionChromeMetrics.handleCornerRadius,
+      CaptureSelectionChromeMetrics.handleThickness / 2
+    )
+    XCTAssertEqual(
+      CaptureSelectionChromeMetrics.handleShadowOffset(for: .bottomLeftOrigin),
+      CGSize(width: 0, height: -1)
+    )
+    XCTAssertEqual(
+      CaptureSelectionChromeMetrics.handleShadowOffset(for: .topLeftOrigin),
+      CGSize(width: 0, height: 1)
+    )
+  }
+
   // MARK: - Adaptive layout
 
   func testLayout_largeRectangle_keepsAllHandlesAndDefaultMetrics() {
