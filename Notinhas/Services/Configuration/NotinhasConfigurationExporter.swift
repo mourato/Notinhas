@@ -232,6 +232,7 @@ enum NotinhasConfigurationExporter {
   }
 
   private static func writeAnnotate(_ writer: inout SimpleTOMLWriter, defaults: UserDefaults) {
+    let chromeStore = AnnotateChromeConfigurationStore.shared
     writer.section("annotate")
     writer.value(
       "clipboard_image_open_behavior",
@@ -244,6 +245,17 @@ enum NotinhasConfigurationExporter {
     )
     writer.value("quick_properties_sync", AnnotateQuickPropertiesSyncPreference.isEnabled(userDefaults: defaults))
     writer.value("combine_save_as_edit", CombineSaveAsEditPreference.isEnabled(userDefaults: defaults))
+    writer.stringArray("chrome_toolbar_order", chromeStore.toolbarItemOrder.map(\.rawValue))
+    writer.stringArray("chrome_bottom_order", chromeStore.bottomActionOrder.map(\.rawValue))
+    writer.stringArray(
+      "chrome_enabled",
+      chromeStore.toolbarItemOrder
+        .filter { chromeStore.isEnabled($0) }
+        .map(\.rawValue)
+        + chromeStore.bottomActionOrder
+        .filter { chromeStore.isEnabled($0) }
+        .map(\.rawValue)
+    )
   }
 
   private static func language(defaults: UserDefaults) -> String {

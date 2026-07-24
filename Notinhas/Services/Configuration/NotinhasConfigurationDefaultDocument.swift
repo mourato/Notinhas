@@ -182,6 +182,12 @@ enum NotinhasConfigurationDefaultDocument {
     writer.value("bring_forward_after_drag", false)
     writer.value("quick_properties_sync", true)
     writer.value("combine_save_as_edit", true)
+    writer.stringArray("chrome_toolbar_order", AnnotateChromeItem.defaultToolbarOrder.map(\.rawValue))
+    writer.stringArray("chrome_bottom_order", AnnotateChromeItem.defaultBottomOrder.map(\.rawValue))
+    writer.stringArray(
+      "chrome_enabled",
+      AnnotateChromeItem.defaultEnabledItems.map(\.rawValue).sorted()
+    )
   }
 
   private static func writeShortcuts(_ writer: inout SimpleTOMLWriter) {

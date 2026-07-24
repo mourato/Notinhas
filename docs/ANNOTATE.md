@@ -92,6 +92,11 @@ The `.accessory` activation-policy revert is deferred to a later runloop turn (s
 - Range 0.25–16x: `minimumZoomLevel 0.25`, default max 4.0, `hardMaximumZoomLevel 16.0`; `effectiveMaximumZoomLevel` grows to `1/fitScale` for very long captures.
 - Input: pinch magnification, ⌘+scroll, Space+drag pan, ⌘=/⌘−/⌘0 (fit); zoom picker presets + `1:1` actual-pixels in bottom bar.
 
+## Editor chrome customization
+
+- Preferences → Annotate: reorder and show/hide toolbar and bottom-bar actions (`AnnotateChromeConfigurationStore`, keys `annotate.chrome.*`). Always-on anchors: Undo/Redo (leading), Selection (before drawing tools), Done (trailing). Cutout shares order with drawing tools. Cloud upload in the bottom bar still requires cloud configuration and Quick Access cloud action enablement.
+- Inline area-annotate (`InlineAreaControlDeck`) uses the same drawing-tool order/enable subset from the store.
+
 ## Backgrounds & Mockups
 
 - `BackgroundStyle` (`Models/AnnotateBackgroundStyle.swift`): none / gradient (8 `GradientPreset`s) / wallpaper(URL) / blurred(URL) / solidColor. `BlurredBackgroundEffect`: soft / frosted / vivid / dim.

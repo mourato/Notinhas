@@ -70,7 +70,8 @@ renders directly without an inner picker.
 
 ### Annotate (`PreferencesAnnotateSettingsView.swift`)
 
-- Behavior section only:
+- **Editor chrome** (`AnnotateChromeCustomizationView`): reorder and enable/disable toolbar items (crop, background, rotate, drawing tools, cutout, Save as) and bottom-bar actions (New window, Share, ImgBB, Cloud, Pin, Copy, Delete). Selection, Undo, Redo, and Done always stay visible; zoom, pan, mode tabs, and Drag to app are fixed. Keys `annotate.chrome.toolbarOrder.v1`, `annotate.chrome.bottomOrder.v1`, `annotate.chrome.enabled.v1`; Reset chrome restores defaults. Inline Capture Markup uses the same drawing-tool order/enable subset.
+- Behavior section:
   - Sync Tool Defaults / quick-properties sync (`annotate.quickPropertiesSyncEnabled`, default on).
   - Combine Save-as-Edit (`annotate.combineSaveAsEdit`, default on).
   - Clipboard image open behavior (`annotate.clipboardImageOpenBehavior`): `ask` (default) / `loadAutomatically` / `doNothing` (`AnnotateClipboardImageBehavior`).

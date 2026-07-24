@@ -1324,6 +1324,7 @@ private struct InlineAreaHudMaterialBackground: NSViewRepresentable {
 
 private struct InlineAreaControlDeck<MoveGesture: Gesture>: View {
   @ObservedObject var session: InlineAreaAnnotateSession
+  @ObservedObject private var chromeStore = AnnotateChromeConfigurationStore.shared
   let maxWidth: CGFloat
   let moveGesture: MoveGesture
 
@@ -1335,7 +1336,7 @@ private struct InlineAreaControlDeck<MoveGesture: Gesture>: View {
 
         InlineAreaDivider()
 
-        ForEach(Array(AnnotationToolType.inlineToolGroups.enumerated()), id: \.offset) { index, tools in
+        ForEach(Array(chromeStore.inlineToolGroups().enumerated()), id: \.offset) { index, tools in
           if index > 0 {
             InlineAreaDivider()
           }
@@ -1369,6 +1370,16 @@ private struct InlineAreaControlDeck<MoveGesture: Gesture>: View {
     .padding(.vertical, InlineAreaToolbarMetrics.verticalPadding)
     .inlineAreaPanelChrome()
     .animation(.easeOut(duration: 0.16), value: session.state.selectedTool)
+    .onAppear(perform: ensureValidSelectedTool)
+    .onChange(of: chromeStore.toolbarItemOrder) { _ in ensureValidSelectedTool() }
+    .onChange(of: chromeStore.enabledItems) { _ in ensureValidSelectedTool() }
+  }
+
+  private func ensureValidSelectedTool() {
+    guard let chromeItem = AnnotateChromeItem(annotationTool: session.state.selectedTool) else { return }
+    if !chromeStore.isEnabled(chromeItem) {
+      session.state.activateTool(.selection)
+    }
   }
 }
 
