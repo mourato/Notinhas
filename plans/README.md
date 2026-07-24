@@ -563,3 +563,34 @@ shared chrome; **keep hosts separate**; no aspect lock/snapping in Markup.
   by default — inverted-range fallbacks differ (mid vs minimum).
 - Expanding 059 into `AreaSelectionController` first-drag cursor timer: deferred
   unless manual smoke shows the bug only there after refinement is fixed.
+
+## Unified selection contract and All-In-One HUD ownership (062)
+
+Generated 2026-07-24 against commit `0169e0fd`. Grill decision: share the
+selection interaction contract and snapping engine while keeping session hosts
+separate; give both AIO HUDs one layer/first-click/cursor ownership policy.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 062 | Unify selection behavior and All-In-One HUD ownership | P1 | L | 059, 060, 061 | DONE (`74dc58cf`, `cad6f1b5`; review fix `bf329f70`; focused/default/video tests pass; manual WindowServer/TCC/two-display matrix PENDING) |
+
+### Dependency notes (062)
+
+- 062A extracts/adopts the shared selection contract first: adaptive chrome,
+  confirmed-area minimum, contrast policy, and host-supplied snapping.
+- 062B follows in the same plan: both AIO HUDs share explicit level state,
+  first-click handling, and one cursor arbiter.
+- Do not reopen 059–061; this plan addresses the remaining behavior gaps those
+  plans intentionally left out.
+
+### Findings considered and rejected (062)
+
+- Merging Markup, Recording, and AIO into one selection host: rejected — their
+  session, coordinate, annotation, recording, and control policies differ.
+- Sharing AIO aspect lock with Markup: rejected — snapping is shared, aspect
+  lock remains an AIO refinement peculiarity.
+- Forcing Accessibility/image capture into every host: rejected — candidate
+  availability varies and no new TCC pipeline is in scope.
+- Fixing the AIO HUD symptom by raising only `modeHUD`, making the bars key, or
+  adding another cursor timer: rejected — both bars need one explicit ownership
+  contract and focus must remain with the captured app.
