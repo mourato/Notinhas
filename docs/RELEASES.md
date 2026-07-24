@@ -44,7 +44,6 @@ See [BUILD.md](BUILD.md) for Debug builds, icon regeneration, and DMG creation.
 1. Create tag `vX.Y.Z` on `main`.
 2. Run the **Release Publish** workflow (or upload manually).
 3. Attach `Notinhas-vX.Y.Z.dmg` and write release notes (user-facing changes, migration/TCC notes when bundle ID or permissions change).
-4. **Release Notify** workflow posts to Discord when `DISCORD_WEBHOOK_URL` is configured.
 
 ## User upgrade notes
 
