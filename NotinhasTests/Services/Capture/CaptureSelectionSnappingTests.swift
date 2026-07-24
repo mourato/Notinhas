@@ -10,6 +10,20 @@ final class CaptureSelectionSnappingTests: XCTestCase {
   private let configuration = CaptureSelectionSnappingConfiguration(snapDistance: 5, colorSensitivity: 3)
   private let desktop = CGRect(x: 0, y: 0, width: 1_000, height: 800)
 
+  func testConfigurationFromPreferences_clampsSharedSettings() throws {
+    let suiteName = "CaptureSelectionSnappingTests.configuration"
+    let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+    defaults.removePersistentDomain(forName: suiteName)
+    defaults.set(19, forKey: PreferencesKeys.captureSelectionSnapDistance)
+    defaults.set(4, forKey: PreferencesKeys.captureSelectionColorSensitivity)
+
+    XCTAssertEqual(
+      CaptureSelectionSnappingConfiguration.fromPreferences(defaults),
+      CaptureSelectionSnappingConfiguration(snapDistance: 19, colorSensitivity: 4)
+    )
+    defaults.removePersistentDomain(forName: suiteName)
+  }
+
   func testResolve_noCandidateOutsideRadius_returnsProposedRect() {
     let proposed = CGRect(x: 100, y: 100, width: 200, height: 120)
     let candidates = [

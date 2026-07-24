@@ -416,7 +416,7 @@ extension RecordingRegionOverlayView {
       proposedRect: resized,
       handle: handle,
       candidates: candidates,
-      configuration: CaptureSelectionSnappingConfiguration(),
+      configuration: CaptureSelectionSnappingConfiguration.fromPreferences(),
       desktopBounds: Self.unifiedDesktopFrame,
       minSize: minimumSelectionSize
     ).rect

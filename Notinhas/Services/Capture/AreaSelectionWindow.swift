@@ -139,6 +139,10 @@ final class AreaSelectionController: NSObject {
   /// instead of the selection crosshair while this controller is presenting.
   var cursorExclusionFrames: () -> [CGRect] = { [] }
 
+  /// Optional session-owned cursor arbiter. A non-nil result takes precedence over
+  /// the default selection overlay cursor.
+  var cursorOwner: ((CGPoint) -> CaptureSelectionCursorKind?)?
+
   /// Whether the overlay should be dismissed immediately after a selection is made.
   /// When `false`, the caller is responsible for calling `cancelSelection()` to dismiss.
   /// Prefer the `dismissesAfterSelection` start parameter over `setDismissesAfterSelection`:
@@ -1056,6 +1060,10 @@ final class AreaSelectionController: NSObject {
     guard isPresenting else { return }
 
     let location = NSEvent.mouseLocation
+    if let kind = cursorOwner?(location) {
+      CaptureSelectionCursorPolicy.apply(kind)
+      return
+    }
     if CaptureFloatingCursorExclusion.contains(location, in: cursorExclusionFrames()) {
       NSCursor.arrow.set()
       return
@@ -1149,6 +1157,7 @@ final class AreaSelectionController: NSObject {
     windowSelectionSnapshot = nil
     keyboardOwnerDisplayID = nil
     cursorExclusionFrames = { [] }
+    cursorOwner = nil
   }
 
   private func beginManualSelection(at screenPoint: CGPoint, from window: AreaSelectionWindow) {
@@ -1199,6 +1208,10 @@ final class AreaSelectionController: NSObject {
   /// process-global, so asserting via the source window's overlay view covers cross-display drags.
   private func reassertManualSelectionCursor() {
     guard manualSelectionStartPoint != nil else { return }
+    if let kind = cursorOwner?(NSEvent.mouseLocation) {
+      CaptureSelectionCursorPolicy.apply(kind)
+      return
+    }
     if CaptureFloatingCursorExclusion.contains(NSEvent.mouseLocation, in: cursorExclusionFrames()) {
       NSCursor.arrow.set()
       return

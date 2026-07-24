@@ -74,13 +74,14 @@ enum CaptureSelectionCursorPolicy {
 @MainActor
 final class AllInOneCaptureCursorArbiter {
   var hudExclusionFrames: () -> [CGRect] = { [] }
+  var fallbackCursor: (() -> CaptureSelectionCursorKind?)?
   var overlayCandidate: ((CGPoint) -> CaptureSelectionCursorKind?)?
 
   func resolvedCursor(at location: CGPoint) -> CaptureSelectionCursorKind? {
     if CaptureFloatingCursorExclusion.contains(location, in: hudExclusionFrames()) {
       return .arrow
     }
-    return overlayCandidate?(location)
+    return overlayCandidate?(location) ?? fallbackCursor?()
   }
 
   func commit(at location: CGPoint, markupSelectingCrosshair: Bool = false) {

@@ -151,7 +151,11 @@ final class InlineAreaAnnotateSession: ObservableObject {
   }
 
   func beginAnnotating(with localRect: CGRect) {
-    let clampedRect = clampedSelectionRect(localRect.standardized)
+    let confirmedRect = CaptureSelectionGeometry.normalized(
+      localRect.standardized,
+      minSize: CaptureSelectionChromeMetrics.confirmedMinimumSize
+    )
+    let clampedRect = clampedSelectionRect(confirmedRect)
     guard clampedRect.width > 5, clampedRect.height > 5,
           let crop = cropImage(for: clampedRect) else { return }
 

@@ -41,4 +41,11 @@ final class CaptureSelectionCursorPolicyTests: XCTestCase {
     XCTAssertEqual(arbiter.resolvedCursor(at: CGPoint(x: 150, y: 120)), .arrow)
     XCTAssertEqual(arbiter.resolvedCursor(at: CGPoint(x: 10, y: 10)), .resize(.right))
   }
+
+  func testArbiter_usesFallbackWhenOverlayCandidateIsUnavailable() {
+    let arbiter = AllInOneCaptureCursorArbiter()
+    arbiter.fallbackCursor = { .crosshair }
+
+    XCTAssertEqual(arbiter.resolvedCursor(at: CGPoint(x: 10, y: 10)), .crosshair)
+  }
 }

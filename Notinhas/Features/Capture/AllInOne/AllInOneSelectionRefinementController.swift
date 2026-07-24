@@ -45,7 +45,10 @@ final class AllInOneSelectionRefinementController: NSObject {
     backdropCapturer: (any AreaSelectionBackdropCapturing)? = nil,
     frozenBackdrops: [CGDirectDisplayID: AreaSelectionBackdrop]? = nil
   ) {
-    currentRect = CaptureSelectionGeometry.normalized(initialRect)
+    currentRect = CaptureSelectionGeometry.normalized(
+      initialRect,
+      minSize: CaptureSelectionSnapping.refinementMinimumSize
+    )
     self.aspectLocked = aspectLocked
     lockedAspectRatio = aspectRatio ?? CaptureSelectionGeometry.aspectRatio(of: initialRect)
     self.snappingConfiguration = snappingConfiguration ?? Self.loadSnappingConfiguration()
@@ -408,15 +411,7 @@ final class AllInOneSelectionRefinementController: NSObject {
   }
 
   private static func loadSnappingConfiguration() -> CaptureSelectionSnappingConfiguration {
-    let defaults = UserDefaults.standard
-    let snapDistance = defaults.object(forKey: PreferencesKeys.captureSelectionSnapDistance) as? Int
-      ?? Int(CaptureSelectionSnappingConfiguration.defaultSnapDistance)
-    let colorSensitivity = defaults.object(forKey: PreferencesKeys.captureSelectionColorSensitivity) as? Int
-      ?? CaptureSelectionSnappingConfiguration.defaultColorSensitivity
-    return CaptureSelectionSnappingConfiguration(
-      snapDistance: CGFloat(snapDistance),
-      colorSensitivity: colorSensitivity
-    )
+    CaptureSelectionSnappingConfiguration.fromPreferences()
   }
 
   private func captureHandle(from recordingHandle: RecordingResizeHandle) -> CaptureSelectionResizeHandle {

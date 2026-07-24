@@ -64,7 +64,8 @@ final class AllInOneCaptureCoordinatorTests: XCTestCase {
 
   func testFloatingHUD_acceptsFirstMouseWhileRemainingNonKey() {
     let window = CaptureFloatingHUDWindow()
-    XCTAssertTrue(window.acceptsFirstMouse(for: nil))
+    window.setContent(AnyView(Text("All-In-One")))
+    XCTAssertTrue(window.contentView?.acceptsFirstMouse(for: nil) == true)
     XCTAssertFalse(window.canBecomeKey)
     window.close()
   }

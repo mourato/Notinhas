@@ -128,10 +128,6 @@ final class CaptureFloatingHUDWindow: NSPanel {
     false
   }
 
-  func acceptsFirstMouse(for _: NSEvent?) -> Bool {
-    true
-  }
-
   /// Floating HUDs stay non-key, so AppKit cursor rects rarely apply. Force the
   /// standard arrow whenever the pointer enters this panel (All-In-One / capture chrome).
   override func cursorUpdate(with _: NSEvent) {

@@ -20,6 +20,17 @@ struct CaptureSelectionSnappingConfiguration: Equatable, Sendable {
   let snapDistance: CGFloat
   let colorSensitivity: Int
 
+  static func fromPreferences(_ defaults: UserDefaults = .standard) -> CaptureSelectionSnappingConfiguration {
+    let snapDistance = defaults.object(forKey: PreferencesKeys.captureSelectionSnapDistance) as? Int
+      ?? Int(defaultSnapDistance)
+    let colorSensitivity = defaults.object(forKey: PreferencesKeys.captureSelectionColorSensitivity) as? Int
+      ?? defaultColorSensitivity
+    return CaptureSelectionSnappingConfiguration(
+      snapDistance: CGFloat(snapDistance),
+      colorSensitivity: colorSensitivity
+    )
+  }
+
   init(snapDistance: CGFloat = Self.defaultSnapDistance, colorSensitivity: Int = Self.defaultColorSensitivity) {
     self.snapDistance = Self.clampedSnapDistance(snapDistance)
     self.colorSensitivity = Self.clampedColorSensitivity(colorSensitivity)

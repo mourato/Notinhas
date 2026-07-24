@@ -169,7 +169,10 @@ final class AllInOneCaptureCoordinator {
   }
 
   private func beginRefinement(with rect: CGRect) {
-    let normalized = CaptureSelectionGeometry.normalized(rect)
+    let normalized = CaptureSelectionGeometry.normalized(
+      rect,
+      minSize: CaptureSelectionChromeMetrics.confirmedMinimumSize
+    )
     sessionState?.currentRect = normalized
     positionHUDs()
 
@@ -220,8 +223,14 @@ final class AllInOneCaptureCoordinator {
     cursorArbiter.hudExclusionFrames = { [weak self] in
       self?.visibleHUDFrames() ?? []
     }
+    cursorArbiter.fallbackCursor = { [weak self] in
+      self?.isAwaitingInitialSelection == true ? .crosshair : .arrow
+    }
     cursorArbiter.overlayCandidate = { [weak self] location in
       self?.refinementController?.cursorKind(at: location)
+    }
+    AreaSelectionController.shared.cursorOwner = { [weak self] location in
+      self?.cursorArbiter.resolvedCursor(at: location)
     }
     let timer = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
       MainActor.assumeIsolated {
@@ -240,6 +249,8 @@ final class AllInOneCaptureCoordinator {
   private func stopCursorOwnership() {
     cursorOwnershipTimer?.invalidate()
     cursorOwnershipTimer = nil
+    AreaSelectionController.shared.cursorOwner = nil
+    cursorArbiter.fallbackCursor = nil
     cursorArbiter.overlayCandidate = nil
     cursorArbiter.hudExclusionFrames = { [] }
   }

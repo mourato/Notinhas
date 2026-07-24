@@ -233,4 +233,14 @@ final class CaptureSelectionChromeTests: XCTestCase {
 
     XCTAssertEqual(resized.width, CaptureSelectionChromeMetrics.confirmedMinimumSize, accuracy: 0.001)
   }
+
+  func testConfirmedArea_normalizesTinyInitialRectToSharedMinimum() {
+    let confirmed = CaptureSelectionGeometry.normalized(
+      CGRect(x: 10, y: 20, width: 6, height: 8),
+      minSize: CaptureSelectionChromeMetrics.confirmedMinimumSize
+    )
+
+    XCTAssertEqual(confirmed.width, CaptureSelectionChromeMetrics.confirmedMinimumSize)
+    XCTAssertEqual(confirmed.height, CaptureSelectionChromeMetrics.confirmedMinimumSize)
+  }
 }

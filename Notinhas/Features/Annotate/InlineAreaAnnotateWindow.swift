@@ -486,7 +486,9 @@ private struct InlineAreaAnnotateRootView: View {
       .position(x: rect.midX, y: rect.midY)
       .allowsHitTesting(false)
 
-    ForEach(Array(CaptureSelectionChromeLayout.layout(for: rect).availableHandles), id: \.self) { handle in
+    let layout = CaptureSelectionChromeLayout.layout(for: rect)
+    ForEach(CaptureSelectionHandleGeometry.allHandles.filter { layout.availableHandles.contains($0) },
+            id: \.self) { handle in
       let hitRect = CaptureSelectionHandleGeometry.hitRect(
         for: handle,
         in: rect,
@@ -553,7 +555,7 @@ private struct InlineAreaAnnotateRootView: View {
     translation: CGSize,
     containerSize: CGSize
   ) -> CGRect {
-    CaptureSelectionResizeAdapter.resizedRect(
+    let proposedRect = CaptureSelectionResizeAdapter.resizedRect(
       original: start.standardized,
       handle: handle,
       translation: CGPoint(x: translation.width, y: translation.height),
@@ -561,6 +563,15 @@ private struct InlineAreaAnnotateRootView: View {
       containerSize: containerSize,
       minSize: CaptureSelectionChromeMetrics.confirmedMinimumSize
     )
+    let desktopBounds = CGRect(origin: .zero, size: containerSize)
+    return CaptureSelectionSnapping.resolve(
+      proposedRect: proposedRect,
+      handle: handle,
+      candidates: CaptureSelectionSnapping.screenBoundaryCandidates(for: desktopBounds),
+      configuration: CaptureSelectionSnappingConfiguration.fromPreferences(),
+      desktopBounds: desktopBounds,
+      minSize: CaptureSelectionChromeMetrics.confirmedMinimumSize
+    ).rect
   }
 
   private func controlPlacement(

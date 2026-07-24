@@ -14,7 +14,7 @@ final class CaptureFloatingHUDWindowTests: XCTestCase {
     let window = CaptureFloatingHUDWindow()
     window.setContent(AnyView(Text("HUD")))
 
-    XCTAssertTrue(window.acceptsFirstMouse(for: nil))
+    XCTAssertTrue(window.contentView?.acceptsFirstMouse(for: nil) == true)
     XCTAssertFalse(window.canBecomeKey)
 
     window.close()
