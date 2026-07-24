@@ -671,3 +671,24 @@ decision to share Background/Notes chrome on an exclusive left dock.
 - Keeping Notes on the right with shared chrome only: rejected — left dock B.
 - Notes only while Note tool active: rejected — auto when notes exist (A).
 
+## Annotate chrome customization (069)
+
+Generated 2026-07-24 against commit `92ac11a9`. Mirrors Quick Access order/enable
+prefs for the Annotate editor (no card slots).
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 069 | Customize Annotate editor chrome order and visibility | P1 | L | — | TODO |
+
+### Product decisions (069)
+
+- Surfaces: drawing tools + top chrome (Crop, Add background, Rotate, Cutout, Save as) + bottom actions.
+- Order + enable/disable only (no Center-top style slots on Annotate).
+- Always on: Selection, Undo, Redo, Done.
+- Fixed (not customizable): zoom, pan, mode tabs, Drag to app.
+- Inline annotate uses the same drawing-tool order/enable subset.
+- **Required engineering reuse:** extract `PreferencesReorderToggleList` (+ row);
+  adopt in Quick Access (slot badge as accessory) and Annotate (no accessory).
+  Do not fork a second drag/toggle list implementation.
+
+
