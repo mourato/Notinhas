@@ -60,7 +60,7 @@ enum CaptureFloatingToolbarPlacement {
     let x = rect.midX - toolbarSize.width / 2
     let minX = screenFrame.minX + screenEdgeInset
     let maxX = screenFrame.maxX - toolbarSize.width - screenEdgeInset
-    let safeX = clampedOrigin(x, minimum: minX, maximum: maxX)
+    let safeX = CaptureFloatingScreenClamp.clampedOrigin(x, minimum: minX, maximum: maxX)
 
     let minY = screenFrame.minY + screenEdgeInset
     let maxY = screenFrame.maxY - toolbarSize.height - screenEdgeInset
@@ -68,17 +68,8 @@ enum CaptureFloatingToolbarPlacement {
     let preferredY = belowSelectionY >= minY
       ? belowSelectionY
       : rect.minY + insideSelectionBottomInset
-    let safeY = clampedOrigin(preferredY, minimum: minY, maximum: maxY)
+    let safeY = CaptureFloatingScreenClamp.clampedOrigin(preferredY, minimum: minY, maximum: maxY)
 
     return CGPoint(x: safeX, y: safeY)
-  }
-
-  private static func clampedOrigin(_ origin: CGFloat, minimum: CGFloat, maximum: CGFloat) -> CGFloat {
-    guard maximum >= minimum else {
-      // The toolbar cannot fit on this display. Keep its leading edge visible rather than
-      // allowing a reversed clamp range to produce an unpredictable origin.
-      return minimum
-    }
-    return max(minimum, min(origin, maximum))
   }
 }
