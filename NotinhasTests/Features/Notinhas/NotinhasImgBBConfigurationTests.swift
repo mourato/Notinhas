@@ -27,6 +27,10 @@ final class NotinhasImgBBConfigurationTests: XCTestCase {
 
   func testReadPrefersKeychainValue() {
     keychain.storedValue = "keychain-secret"
+    // `isConfigured` is a cached snapshot resolved when the store observes the
+    // credential (init/save/clear/reload), so seed the Keychain before init to
+    // mirror a credential that already exists at launch.
+    store = NotinhasImgBBCredentialStore(defaults: defaults, keychain: keychain)
 
     XCTAssertEqual(store.apiKey, "keychain-secret")
     XCTAssertTrue(store.isConfigured)

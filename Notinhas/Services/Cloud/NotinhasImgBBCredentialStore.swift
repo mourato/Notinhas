@@ -48,6 +48,14 @@ final class NotinhasImgBBCredentialStore: ObservableObject {
 
   @Published private(set) var revision = UUID()
 
+  /// Cached credential-presence flag. Reading the Keychain is a synchronous
+  /// `securityd` XPC round-trip (tens of ms), so resolving it on every access
+  /// made SwiftUI bodies that read `isConfigured` — the annotate bottom bar and
+  /// Quick Access cards — hitch on every unrelated `@Published` update. The
+  /// Keychain is now consulted only when the credential can actually change
+  /// (init/save/clear/reload).
+  @Published private(set) var isConfigured: Bool = false
+
   private let defaults: UserDefaults
   private let keychain: ImgBBKeychainBacking
 
@@ -57,10 +65,7 @@ final class NotinhasImgBBCredentialStore: ObservableObject {
   ) {
     self.defaults = defaults
     self.keychain = keychain
-  }
-
-  var isConfigured: Bool {
-    apiKey != nil
+    refreshConfiguredState()
   }
 
   var apiKey: String? {
@@ -136,5 +141,12 @@ final class NotinhasImgBBCredentialStore: ObservableObject {
 
   private func publishChange() {
     revision = UUID()
+    refreshConfiguredState()
+  }
+
+  /// Refresh the cached `isConfigured` flag from the source of truth. Kept off
+  /// the hot read path: only invoked at init and after mutations.
+  private func refreshConfiguredState() {
+    isConfigured = apiKey != nil
   }
 }
