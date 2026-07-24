@@ -106,4 +106,39 @@ final class NotinhasPinSizeAnnotateStateTests: XCTestCase {
     XCTAssertTrue(state.quickPropertiesSupportsStrokeWidth)
     XCTAssertEqual(state.quickPropertiesTool, .notinhasNote)
   }
+
+  func testQuickStrokeColorUpdatesSelectedNoteColor() throws {
+    let state = AnnotateState(defaults: UserDefaultsFactory.make())
+    let note = NotinhasVisualNote(
+      text: "Pin",
+      target: .point(CGPoint(x: 20, y: 20)),
+      color: RGBAColor(red: 1, green: 0, blue: 0, alpha: 1),
+      creationOrder: 1
+    )
+    state.notinhasAddNote(note)
+    state.notinhasSelectNote(id: note.id)
+    state.activateTool(.notinhasNote)
+
+    state.quickStrokeColorBinding.wrappedValue = .blue
+
+    let updated = state.notinhasNotes.first(where: { $0.id == note.id })
+    let expected = RGBAColor(color: .blue)
+    XCTAssertNotNil(updated)
+    XCTAssertNotNil(expected)
+    XCTAssertEqual(try XCTUnwrap(updated?.color.red), try XCTUnwrap(expected?.red), accuracy: 0.02)
+    XCTAssertEqual(try XCTUnwrap(updated?.color.green), try XCTUnwrap(expected?.green), accuracy: 0.02)
+    XCTAssertEqual(try XCTUnwrap(updated?.color.blue), try XCTUnwrap(expected?.blue), accuracy: 0.02)
+  }
+
+  func testBeginDrawingUsesToolDefaultQuickStrokeColor() {
+    let state = AnnotateState(defaults: UserDefaultsFactory.make())
+    state.activateTool(.notinhasNote)
+    state.quickStrokeColorBinding.wrappedValue = .green
+
+    let color = RGBAColor(color: state.quickStrokeColorBinding.wrappedValue)
+      ?? RGBAColor(red: 0, green: 1, blue: 0, alpha: 1)
+    state.notinhasBeginDrawing(at: CGPoint(x: 12, y: 12), color: color)
+
+    XCTAssertEqual(state.notinhasDraftNote?.color, color)
+  }
 }

@@ -88,8 +88,8 @@ final class AnnotateShortcutManager: ObservableObject {
     cloudUploadShortcut = Self.defaultCloudUpload
     autoRedactSensitiveDataShortcut = Self.defaultAutoRedactSensitiveData
     loadShortcuts()
-    migrateCounterAbsorptionShortcutsIfNeeded()
     loadDisabledToolShortcuts()
+    migrateCounterAbsorptionShortcutsIfNeeded()
     loadActionShortcuts()
     loadDisabledActionShortcuts()
   }
