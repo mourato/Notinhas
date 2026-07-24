@@ -1455,7 +1455,11 @@ private struct QuickWatermarkTextControl: View {
         .foregroundColor(SidebarColors.labelPrimary)
         .lineLimit(1)
         .padding(.horizontal, 8)
-        .frame(minWidth: QuickWatermarkTextControlMetrics.fieldMinWidth, maxHeight: 24)
+        .frame(
+          minWidth: QuickWatermarkTextControlMetrics.fieldMinWidth,
+          maxWidth: QuickWatermarkTextControlMetrics.fieldMinWidth,
+          maxHeight: 24
+        )
         .background(
           RoundedRectangle(cornerRadius: 7)
             .fill(SidebarColors.itemDefault)
