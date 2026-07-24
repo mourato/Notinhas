@@ -39,8 +39,24 @@ Controles de ferramenta desenhados dentro do mesmo painel fullscreen do Capture 
 _Avoid_: barra flutuante de captura (HUD), CaptureFloatingHUDWindow
 
 **Chrome de seleção compartilhado**:
-Métricas, geometria dos handles em L, hit-tests e cursores de redimensionamento da área selecionada, reutilizados por All-in-One/Recording e Capture Markup.
+Métricas, geometria e desenho dos handles em L, hit-tests, cursores de redimensionamento e contraste visual da área selecionada, reutilizados por All-in-One/Recording e Capture Markup.
 _Avoid_: host de overlay unificado, aspect lock, snapping, ferramentas de anotar
+
+**Contrato de seleção compartilhado**:
+Comportamento comum de uma área já selecionada: criação/ajuste visual, redimensionamento, movimento, limites mínimos, resposta de cursor e ajuste magnético (snapping). Cada host preserva suas próprias regras de sessão, anotação, gravação e controles.
+_Avoid_: máquina de estados única, host de seleção unificado
+
+**Ajuste magnético compartilhado (snapping)**:
+Correção comum da área selecionada em direção a limites relevantes — visuais, semânticos ou de tela — com a mesma expectativa de sensibilidade e previsibilidade. A disponibilidade de cada tipo de limite pode variar por host; isso não muda o contrato do ajuste.
+_Avoid_: aspect lock, crop automático
+
+**Sensibilidade do ajuste magnético**:
+Resposta do snapping a transições de cor ou luminância na imagem. É distinta do contraste visual usado para manter handles, bordas e cursores legíveis.
+_Avoid_: contraste do chrome, cor do handle
+
+**Contrato da barra flutuante de captura**:
+Regra comum para barras de captura separadas do overlay: mesma prioridade de camada, hit-testing determinístico, cursor de seta sobre os controles e preservação do foco do aplicativo capturado.
+_Avoid_: chrome inline de captura, toolbar do editor Annotate
 
 **Host de seleção**:
 O painel/sessão que apresenta a seleção (ex.: `RecordingRegionOverlayWindow` ou `InlineAreaAnnotate*`), incluindo política de sessão além do chrome visual.
