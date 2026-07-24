@@ -14,6 +14,7 @@ struct AnnotateChromeCustomizationView: View {
     Section(L10n.PreferencesAnnotate.chromeToolbarSection) {
       chromeListSection(
         items: chromeStore.toolbarItemOrder,
+        showsFootnote: true,
         showsReset: false,
         onMove: { source, destination in
           chromeStore.moveToolbarItem(from: source, to: destination)
@@ -24,6 +25,7 @@ struct AnnotateChromeCustomizationView: View {
     Section(L10n.PreferencesAnnotate.chromeBottomSection) {
       chromeListSection(
         items: chromeStore.bottomActionOrder,
+        showsFootnote: false,
         showsReset: true,
         onMove: { source, destination in
           chromeStore.moveBottomAction(from: source, to: destination)
@@ -36,6 +38,7 @@ struct AnnotateChromeCustomizationView: View {
 private extension AnnotateChromeCustomizationView {
   func chromeListSection(
     items: [AnnotateChromeItem],
+    showsFootnote: Bool,
     showsReset: Bool,
     onMove: @escaping (IndexSet, Int) -> Void
   ) -> some View {
@@ -64,7 +67,7 @@ private extension AnnotateChromeCustomizationView {
         accessory: { _ in EmptyView() }
       )
 
-      if showsReset {
+      if showsFootnote {
         Text(L10n.PreferencesAnnotate.chromeAlwaysOnFootnote)
           .font(.caption)
           .foregroundColor(.secondary)

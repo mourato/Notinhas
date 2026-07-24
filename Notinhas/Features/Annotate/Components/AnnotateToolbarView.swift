@@ -312,10 +312,7 @@ struct AnnotateToolbarView: View {
   // MARK: - Actions
 
   private func ensureValidSelectedTool() {
-    guard let chromeItem = AnnotateChromeItem(annotationTool: state.selectedTool) else { return }
-    if !chromeStore.isEnabled(chromeItem) {
-      state.activateTool(.selection)
-    }
+    state.reconcileChromeToolAvailability(isEnabled: chromeStore.isEnabled)
   }
 
   private func accessibilityTitle(_ title: String, keys: [String]) -> String {

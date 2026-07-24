@@ -157,6 +157,19 @@ final class AnnotateCropTests: XCTestCase {
     XCTAssertEqual(state.selectedTool, .selection)
   }
 
+  @MainActor
+  func testReconcileChromeToolAvailabilityCancelsActiveCropWhenCropDisabled() throws {
+    let state = try makeLoadedState()
+    state.beginCropInteraction()
+    XCTAssertTrue(state.isCropActive)
+    XCTAssertEqual(state.selectedTool, .crop)
+
+    state.reconcileChromeToolAvailability(isEnabled: { $0 != .crop })
+
+    XCTAssertFalse(state.isCropActive)
+    XCTAssertNotEqual(state.selectedTool, .crop)
+  }
+
   // MARK: - Cancel / reset
 
   @MainActor

@@ -2795,6 +2795,19 @@ final class AnnotateState: ObservableObject {
     restoreContextAfterCropInteraction()
   }
 
+  /// Exit crop / fall back to Selection when chrome prefs disable the active tool.
+  func reconcileChromeToolAvailability(isEnabled: (AnnotateChromeItem) -> Bool) {
+    if isCropActive, !isEnabled(.crop) {
+      cancelCrop()
+      return
+    }
+
+    guard let chromeItem = AnnotateChromeItem(annotationTool: selectedTool) else { return }
+    if !isEnabled(chromeItem) {
+      activateTool(.selection)
+    }
+  }
+
   /// Reset crop to nil
   func resetCrop() {
     cropRect = nil

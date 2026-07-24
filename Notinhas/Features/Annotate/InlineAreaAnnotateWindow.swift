@@ -1376,10 +1376,7 @@ private struct InlineAreaControlDeck<MoveGesture: Gesture>: View {
   }
 
   private func ensureValidSelectedTool() {
-    guard let chromeItem = AnnotateChromeItem(annotationTool: session.state.selectedTool) else { return }
-    if !chromeStore.isEnabled(chromeItem) {
-      session.state.activateTool(.selection)
-    }
+    session.state.reconcileChromeToolAvailability(isEnabled: chromeStore.isEnabled)
   }
 }
 

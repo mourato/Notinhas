@@ -459,10 +459,7 @@ struct AnnotateBottomBarView: View {
   }
 
   private func ensureValidSelectedTool() {
-    guard let chromeItem = AnnotateChromeItem(annotationTool: state.selectedTool) else { return }
-    if !chromeStore.isEnabled(chromeItem) {
-      state.activateTool(.selection)
-    }
+    state.reconcileChromeToolAvailability(isEnabled: chromeStore.isEnabled)
   }
 
   // MARK: - Actions
