@@ -55,7 +55,7 @@ struct MockupToolbarView: View {
         } label: {
           Image(systemName: "sidebar.left")
         }
-        .help(L10n.AnnotateUI.toggleSidebar)
+        .help(L10n.AnnotateUI.toggleMockupSidebar)
 
         Divider()
           .frame(height: 16)

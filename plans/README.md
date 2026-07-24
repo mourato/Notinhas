@@ -649,7 +649,7 @@ decision to share Background/Notes chrome on an exclusive left dock.
 | Plan | Title | Priority | Effort | Depends on | Status |
 |---|---|---:|---:|---|---|
 | 067 | Fix quick-properties internal control overlap | P1 | M | 065 | DONE (`6c378046`, merge `18668d30`; thermo fix `d3f89c65`) |
-| 068 | Shared left dock for Background and Notes + Add background rename | P1 | L | — (after 067 by policy) | DONE |
+| 068 | Shared left dock for Background and Notes + Add background rename | P1 | L | — (after 067 by policy) | DONE (`4bc31d78`, merge `279e18aa`; thermo fix mockup L10n) |
 
 ### Dependency notes (067–068)
 
