@@ -85,7 +85,7 @@ All 19 `GlobalShortcutKind`s with shipping defaults (verified in `KeyboardShortc
   | Kind | Default | Key |
   | --- | --- | --- |
   | `copyAndClose` | ⌘⇧C | `annotate.action.copyAndClose` |
-  | `toggleSidebar` | ⌘B | `annotate.action.toggleSidebar` |
+  | `toggleSidebar` (Add background) | ⌘B | `annotate.action.toggleSidebar` |
   | `togglePin` | ⌃⌘P | `annotate.action.togglePin` |
   | `cloudUpload` | ⌘U | `annotate.action.cloudUpload` |
   | `autoRedactSensitiveData` | unbound | `annotate.action.autoRedactSensitiveData` |

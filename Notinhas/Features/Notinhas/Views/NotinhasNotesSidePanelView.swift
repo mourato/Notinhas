@@ -16,18 +16,13 @@ struct NotinhasNotesSidePanelView: View {
           .font(.system(size: 12))
           .foregroundStyle(.secondary)
       } else {
-        ScrollView {
-          LazyVStack(alignment: .leading, spacing: 8) {
-            ForEach(Array(notes.enumerated()), id: \.element.id) { index, note in
-              sidePanelRow(note: note, displayNumber: index + 1)
-            }
+        LazyVStack(alignment: .leading, spacing: 8) {
+          ForEach(Array(notes.enumerated()), id: \.element.id) { index, note in
+            sidePanelRow(note: note, displayNumber: index + 1)
           }
         }
       }
     }
-    .padding(12)
-    .frame(width: 240)
-    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
   }
 
   @ViewBuilder

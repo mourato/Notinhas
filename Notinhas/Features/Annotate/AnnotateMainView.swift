@@ -31,12 +31,24 @@ struct AnnotateMainView: View {
       }
 
       HStack(spacing: 0) {
-        // Hide sidebar in preview mode
-        if state.showSidebar, state.editorMode != .preview {
-          AnnotateSidebarView(state: state)
-            .equatable()
-            .frame(width: 240)
-            .transition(.move(edge: .leading))
+        if state.leftDock != .hidden, state.editorMode != .preview {
+          AnnotateEditorSideDock {
+            switch state.leftDock {
+            case .background:
+              AnnotateSidebarView(state: state)
+                .equatable()
+            case .notes:
+              NotinhasNotesSidePanelView(
+                notes: state.notinhasNotes,
+                selectedNoteID: state.notinhasSelectedNoteID,
+                onSelect: { state.notinhasSelectNote(id: $0) },
+                onDelete: { state.notinhasDeleteNote(id: $0) }
+              )
+            case .hidden:
+              EmptyView()
+            }
+          }
+          .transition(.move(edge: .leading))
 
           Divider()
             .background(Color.white.opacity(0.1))
@@ -56,20 +68,6 @@ struct AnnotateMainView: View {
           if state.showsNotinhasExportPreview {
             state.refreshNotinhasExportPreview()
           }
-        }
-
-        if !state.notinhasNotes.isEmpty, state.editorMode != .preview {
-          Divider()
-            .background(Color.white.opacity(0.1))
-
-          NotinhasNotesSidePanelView(
-            notes: state.notinhasNotes,
-            selectedNoteID: state.notinhasSelectedNoteID,
-            onSelect: { state.notinhasSelectNote(id: $0) },
-            onDelete: { state.notinhasDeleteNote(id: $0) }
-          )
-          .frame(width: 264)
-          .padding(12)
         }
       }
 

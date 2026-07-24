@@ -160,15 +160,15 @@ final class AnnotateCoreTests: XCTestCase {
     let state = makeAnnotateState()
 
     state.toggleSidebarVisibility()
-    XCTAssertTrue(state.showSidebar)
+    XCTAssertEqual(state.leftDock, .background)
 
     state.editorMode = .preview
     state.toggleSidebarVisibility()
-    XCTAssertTrue(state.showSidebar)
+    XCTAssertEqual(state.leftDock, .background)
 
     state.editorMode = .annotate
     state.toggleSidebarVisibility()
-    XCTAssertFalse(state.showSidebar)
+    XCTAssertEqual(state.leftDock, .hidden)
   }
 
   func testSensitiveDataDetectorFindsCommonSensitivePatterns() {

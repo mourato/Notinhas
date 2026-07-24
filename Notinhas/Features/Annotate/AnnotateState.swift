@@ -245,7 +245,7 @@ final class AnnotateState: ObservableObject {
 
   // MARK: - UI State
 
-  @Published var showSidebar: Bool = false
+  @Published var leftDock: AnnotateLeftDock = .hidden
   @Published var zoomLevel: CGFloat = 1.0
   @Published var isPinned: Bool = false
   @Published private(set) var dragToAppPreparationState: DragToAppPreparationState
@@ -313,7 +313,7 @@ final class AnnotateState: ObservableObject {
     guard hasImage else { return }
     if !isCombineMode {
       isCombineMode = true
-      showSidebar = true
+      leftDock = .background
       selectedTool = .selection
       captureCurrentFreeCombineBounds()
     }
@@ -393,7 +393,7 @@ final class AnnotateState: ObservableObject {
     isCombineMode = true
     // Surface the sidebar so the combine controls (mode/direction/gap) are visible on
     // reopen — matches interactive activation and lets the user keep adjusting the stitch.
-    showSidebar = true
+    leftDock = .background
     combineMode = snapshot.mode
     combineDirection = snapshot.direction
     combineGap = max(0, snapshot.gap)
@@ -411,7 +411,23 @@ final class AnnotateState: ObservableObject {
   func toggleSidebarVisibility() {
     guard editorMode != .preview else { return }
     withAnimation(.easeInOut(duration: 0.2)) {
-      showSidebar.toggle()
+      switch leftDock {
+      case .background:
+        leftDock = notinhasNotes.isEmpty ? .hidden : .notes
+      case .hidden, .notes:
+        leftDock = .background
+      }
+    }
+  }
+
+  func syncLeftDockForNotesChange() {
+    guard editorMode != .preview else { return }
+    if notinhasNotes.isEmpty {
+      if leftDock == .notes {
+        leftDock = .hidden
+      }
+    } else if leftDock != .background {
+      leftDock = .notes
     }
   }
 
@@ -1282,7 +1298,12 @@ final class AnnotateState: ObservableObject {
   // MARK: - Annotations
 
   @Published var annotations: [AnnotationItem] = []
-  @Published var notinhasNotes: [NotinhasVisualNote] = []
+  @Published var notinhasNotes: [NotinhasVisualNote] = [] {
+    didSet {
+      syncLeftDockForNotesChange()
+    }
+  }
+
   @Published var notinhasExportPreviewImage: NSImage?
   @Published var notinhasSelectedNoteID: UUID?
   @Published var notinhasEditingNoteID: UUID?
@@ -1346,8 +1367,8 @@ final class AnnotateState: ObservableObject {
   @Published var isCropResizing: Bool = false
   /// Whether Shift is held (for aspect ratio lock)
   @Published var isCropShiftLocked: Bool = false
-  /// Restore sidebar when leaving crop if it was auto-collapsed on crop entry.
-  private var shouldRestoreSidebarAfterCropInteraction: Bool = false
+  /// Restore left dock when leaving crop if it was auto-collapsed on crop entry.
+  private var dockToRestoreAfterCropInteraction: AnnotateLeftDock?
   /// True when current crop was auto-applied from the latest background cutout.
   private var didCutoutAutoApplyCrop: Bool = false
   /// Tracks the exact crop rect auto-applied by background cutout for safe revert behavior.
@@ -1625,8 +1646,7 @@ final class AnnotateState: ObservableObject {
       cropRect: cropRect,
       annotations: annotations,
       notinhasNotes: notinhasNotes,
-      notinhasPanelSide: NotinhasNotesPanelSide
-        .resolved(from: UserDefaults.standard.string(forKey: PreferencesKeys.notinhasNotesPanelSide)),
+      notinhasPanelSide: .left,
       embeddedImages: embeddedImageAssets,
       embeddedCGImages: embeddedImageCGImageCache,
       backgroundStyle: backgroundStyle,
@@ -2490,7 +2510,7 @@ final class AnnotateState: ObservableObject {
       isCropResizing = false
       isCropShiftLocked = false
       cropInteractionContext = nil
-      shouldRestoreSidebarAfterCropInteraction = false
+      dockToRestoreAfterCropInteraction = nil
       if selectedTool == .crop {
         selectedTool = .selection
       }
@@ -2660,23 +2680,23 @@ final class AnnotateState: ObservableObject {
 
   // MARK: - Crop Methods
 
-  /// Collapse sidebar when user starts interacting with crop UI.
+  /// Collapse left dock when user starts interacting with crop UI.
   func collapseSidebarForCropInteraction() {
-    guard showSidebar else { return }
-    shouldRestoreSidebarAfterCropInteraction = true
+    guard leftDock != .hidden else { return }
+    dockToRestoreAfterCropInteraction = leftDock
     withAnimation(.easeInOut(duration: 0.2)) {
-      showSidebar = false
+      leftDock = .hidden
     }
   }
 
-  /// Restore sidebar when crop interaction ends.
+  /// Restore left dock when crop interaction ends.
   func restoreSidebarAfterCropInteractionIfNeeded() {
-    guard shouldRestoreSidebarAfterCropInteraction else { return }
-    shouldRestoreSidebarAfterCropInteraction = false
+    guard let dock = dockToRestoreAfterCropInteraction else { return }
+    dockToRestoreAfterCropInteraction = nil
 
-    guard !showSidebar else { return }
+    guard leftDock == .hidden else { return }
     withAnimation(.easeInOut(duration: 0.2)) {
-      showSidebar = true
+      leftDock = dock
     }
   }
 

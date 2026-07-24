@@ -5051,8 +5051,8 @@ nonisolated enum L10n {
     )
     static let toggleSidebar = string(
       "annotate.toggle-sidebar",
-      defaultValue: "Toggle sidebar",
-      comment: "Tooltip for toggling the annotate sidebar"
+      defaultValue: "Add background",
+      comment: "Tooltip for opening background customization in the annotate editor left dock"
     )
     static let autoRedactSensitiveData = string(
       "annotate.auto-redact-sensitive-data",
