@@ -703,7 +703,7 @@ Execute with `.agents/skills/plan-execute-review/SKILL.md`. Prefer
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |---|---|---:|---:|---|---|
-| 070 | Remove Homebrew cask and release CI cask updates | P1 | S | — | TODO |
+| 070 | Remove Homebrew cask and release CI cask updates | P1 | S | — | DONE (`63e51d3d`, merge `cf01b615`; thermo APPROVE, no code fixes) |
 | 071 | Retire Discord release-notify workflow | P2 | S | — (serialize with 070 if both edit `docs/RELEASES.md`) | TODO |
 | 072 | Remove snapzy-named local object-storage Docker stack | P2 | S | — | TODO |
 | 073 | Remove ghost Updates/CrashReport/About docs | P1 | S | — | TODO |
