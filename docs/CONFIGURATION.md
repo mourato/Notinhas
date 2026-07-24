@@ -175,6 +175,9 @@ close_after_drag = true
 bring_forward_after_drag = false
 quick_properties_sync = true
 combine_save_as_edit = true
+chrome_toolbar_order = ["crop", "addBackground", "rotateLeft", "rotateRight", "rectangle", "filledRectangle", "oval", "arrow", "line", "text", "highlighter", "blur", "spotlight", "notinhasNote", "watermark", "pencil", "backgroundCutout", "saveAs"]
+chrome_bottom_order = ["newWindow", "share", "uploadToImgBB", "uploadToCloud", "pin", "copy", "delete"]
+chrome_enabled = ["addBackground", "arrow", "backgroundCutout", "blur", "copy", "crop", "delete", "filledRectangle", "highlighter", "line", "newWindow", "notinhasNote", "oval", "pencil", "pin", "rectangle", "rotateLeft", "rotateRight", "saveAs", "share", "spotlight", "text", "uploadToCloud", "uploadToImgBB", "watermark"]
 
 [shortcuts.global.fullscreen]
 key = "3"

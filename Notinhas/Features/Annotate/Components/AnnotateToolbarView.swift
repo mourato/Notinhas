@@ -16,6 +16,7 @@ private enum AnnotateToolbarActionRegistration: Equatable {
 struct AnnotateToolbarView: View {
   @ObservedObject var state: AnnotateState
   @ObservedObject private var annotateShortcutManager = AnnotateShortcutManager.shared
+  @ObservedObject private var chromeStore = AnnotateChromeConfigurationStore.shared
   @AppStorage(PreferencesKeys.backgroundCutoutAutoCropEnabled) private var backgroundCutoutAutoCropEnabled = true
 
   var body: some View {
@@ -55,6 +56,9 @@ struct AnnotateToolbarView: View {
     .windowTrafficLightsInset()
     .windowToolbarPadding()
     .animation(.easeInOut(duration: 0.16), value: activeActionRegistration)
+    .onAppear(perform: ensureValidSelectedTool)
+    .onChange(of: chromeStore.toolbarItemOrder) { _ in ensureValidSelectedTool() }
+    .onChange(of: chromeStore.enabledItems) { _ in ensureValidSelectedTool() }
     .alert(
       L10n.AnnotateUI.backgroundCutoutTitle,
       isPresented: Binding(
@@ -75,15 +79,23 @@ struct AnnotateToolbarView: View {
   // MARK: - Tool Groups
 
   private var captureToolsGroup: some View {
-    let cropTitle = L10n.AnnotateUI.crop
-    let cropKeys = AnnotateOverlayTooltipKeys.toolKeys(for: .crop, manager: annotateShortcutManager)
-    let sidebarTitle = L10n.AnnotateUI.toggleSidebar
-    let sidebarKeys = AnnotateOverlayTooltipKeys.actionKeys(
-      for: .toggleSidebar,
-      manager: annotateShortcutManager
-    )
-
+    let items = chromeStore.orderedToolbarItems(in: .captureChrome)
     return HStack(spacing: 4) {
+      ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+        if item == .rotateLeft, index > 0 {
+          ToolbarDivider()
+        }
+        captureChromeButton(for: item)
+      }
+    }
+  }
+
+  @ViewBuilder
+  private func captureChromeButton(for item: AnnotateChromeItem) -> some View {
+    switch item {
+    case .crop:
+      let cropTitle = L10n.AnnotateUI.crop
+      let cropKeys = AnnotateOverlayTooltipKeys.toolKeys(for: .crop, manager: annotateShortcutManager)
       ToolbarButton(
         icon: "crop",
         isSelected: state.selectedTool == .crop
@@ -93,6 +105,12 @@ struct AnnotateToolbarView: View {
       .overlayTooltip(cropTitle, keys: cropKeys, edge: .below)
       .accessibilityLabel(accessibilityTitle(cropTitle, keys: cropKeys))
 
+    case .addBackground:
+      let sidebarTitle = L10n.AnnotateUI.toggleSidebar
+      let sidebarKeys = AnnotateOverlayTooltipKeys.actionKeys(
+        for: .toggleSidebar,
+        manager: annotateShortcutManager
+      )
       ToolbarButton(
         icon: "rectangle.on.rectangle",
         isSelected: state.leftDock == .background,
@@ -103,14 +121,7 @@ struct AnnotateToolbarView: View {
       .overlayTooltip(sidebarTitle, keys: sidebarKeys, edge: .below)
       .accessibilityLabel(accessibilityTitle(sidebarTitle, keys: sidebarKeys))
 
-      ToolbarDivider()
-
-      rotateButtonsGroup
-    }
-  }
-
-  private var rotateButtonsGroup: some View {
-    HStack(spacing: 4) {
+    case .rotateLeft:
       ToolbarButton(icon: "rotate.left", isSelected: false) {
         state.rotateImage(clockwise: false)
       }
@@ -118,30 +129,33 @@ struct AnnotateToolbarView: View {
       .disabled(!state.canRotateImage)
       .opacity(state.canRotateImage ? 1 : 0.4)
 
+    case .rotateRight:
       ToolbarButton(icon: "rotate.right", isSelected: false) {
         state.rotateImage(clockwise: true)
       }
       .help(L10n.AnnotateUI.rotateRight)
       .disabled(!state.canRotateImage)
       .opacity(state.canRotateImage ? 1 : 0.4)
+
+    default:
+      EmptyView()
     }
   }
 
   private var annotationToolsGroup: some View {
-    HStack(spacing: 4) {
+    let items = chromeStore.orderedToolbarItems(in: .drawingOrCutout)
+    return HStack(spacing: 4) {
       annotationToolButton(for: .selection)
 
-      ForEach(drawingTools, id: \.self) { tool in
-        annotationToolButton(for: tool, help: toolHelp(for: tool))
+      ForEach(items, id: \.id) { item in
+        if let tool = item.annotationToolType {
+          annotationToolButton(for: tool, help: toolHelp(for: tool))
+        } else if item == .backgroundCutout {
+          backgroundCutoutButton
+            .padding(.leading, 2)
+        }
       }
-
-      backgroundCutoutButton
-        .padding(.leading, 2)
     }
-  }
-
-  private var drawingTools: [AnnotationToolType] {
-    AnnotationToolType.drawableTools
   }
 
   private func toolHelp(for tool: AnnotationToolType) -> String? {
@@ -247,12 +261,14 @@ struct AnnotateToolbarView: View {
     let doneKeys = ["⌘", "S"]
 
     return HStack(spacing: 8) {
-      Button(L10n.Common.saveAs) {
-        saveAs()
+      if chromeStore.isEnabled(.saveAs) {
+        Button(L10n.Common.saveAs) {
+          saveAs()
+        }
+        .buttonStyle(.bordered)
+        .overlayTooltip(L10n.Common.saveAs, keys: saveAsKeys, edge: .below)
+        .accessibilityLabel(accessibilityTitle(L10n.Common.saveAs, keys: saveAsKeys))
       }
-      .buttonStyle(.bordered)
-      .overlayTooltip(L10n.Common.saveAs, keys: saveAsKeys, edge: .below)
-      .accessibilityLabel(accessibilityTitle(L10n.Common.saveAs, keys: saveAsKeys))
 
       Button(L10n.Common.done) {
         done()
@@ -294,6 +310,13 @@ struct AnnotateToolbarView: View {
   }
 
   // MARK: - Actions
+
+  private func ensureValidSelectedTool() {
+    guard let chromeItem = AnnotateChromeItem(annotationTool: state.selectedTool) else { return }
+    if !chromeStore.isEnabled(chromeItem) {
+      state.activateTool(.selection)
+    }
+  }
 
   private func accessibilityTitle(_ title: String, keys: [String]) -> String {
     guard !keys.isEmpty else { return title }

@@ -12,9 +12,7 @@ struct QuickAccessActionCustomizationView: View {
   @ObservedObject var manager: QuickAccessManager
   @ObservedObject private var actionStore = QuickAccessActionConfigurationStore.shared
   @ObservedObject private var swipeActionStore = QuickAccessSwipeActionStore.shared
-  @State private var draggedAction: QuickAccessActionKind? = nil
-  @State private var activeDragID: UUID? = nil
-  @State private var mouseUpMonitor: Any?
+  @State private var isReorderingActions = false
 
   var body: some View {
     Section(L10n.PreferencesQuickAccess.previewSection) {
@@ -25,7 +23,7 @@ struct QuickAccessActionCustomizationView: View {
           cornerButtonScale: CGFloat(manager.cornerButtonScale),
           actionStore: actionStore,
           swipeActionStore: swipeActionStore,
-          isReordering: draggedAction != nil
+          isReordering: isReorderingActions
         )
         Spacer()
       }
@@ -39,160 +37,49 @@ struct QuickAccessActionCustomizationView: View {
           .foregroundColor(.secondary)
           .padding(.horizontal, 10)
 
-        VStack(spacing: 0) {
-          ForEach(Array(actionStore.actionOrder.enumerated()), id: \.element.id) { index, action in
-            QuickAccessActionConfigurationRow(
-              action: action,
-              assignedSlot: actionStore.assignedSlot(for: action),
-              index: index,
-              actionStore: actionStore,
-              isEnabled: Binding(
-                get: { actionStore.isEnabled(action) },
-                set: { actionStore.setEnabled(action, enabled: $0) }
-              ),
-              draggedAction: $draggedAction,
-              activeDragID: $activeDragID
+        PreferencesReorderToggleList(
+          items: actionStore.actionOrder,
+          title: { $0.settingsTitle },
+          systemImage: { $0.systemImage },
+          isEnabled: { action in
+            Binding(
+              get: { actionStore.isEnabled(action) },
+              set: { actionStore.setEnabled(action, enabled: $0) }
             )
-
-            if index < actionStore.actionOrder.count - 1 {
-              Divider()
-            }
-          }
-        }
-        .onAppear {
-          // Authoritative drag-end signal: leftMouseUp always fires on the main thread
-          // at the end of every drag, even when performDrop is skipped because SwiftUI
-          // replaced a List row's drop delegate mid-reorder.
-          mouseUpMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { event in
-            if draggedAction != nil {
-              draggedAction = nil
-            }
-            if activeDragID != nil {
-              activeDragID = nil
-            }
-            return event
-          }
-        }
-        .onDisappear {
-          if let monitor = mouseUpMonitor {
-            NSEvent.removeMonitor(monitor)
-            mouseUpMonitor = nil
-          }
-        }
-
-        HStack {
-          Spacer()
-          Button(L10n.PreferencesQuickAccess.resetActions) {
+          },
+          canReorder: { _ in true },
+          canToggle: { _ in true },
+          onMove: { source, destination in
+            actionStore.moveAction(from: source, to: destination)
+          },
+          resetTitle: L10n.PreferencesQuickAccess.resetActions,
+          onReset: {
             actionStore.resetToDefaults()
             swipeActionStore.resetToDefaults()
+          },
+          reorderUTType: .quickAccessReorder,
+          reorderPayload: { $0.rawValue },
+          accessory: { action in
+            Text(actionStore.assignedSlot(for: action)?.settingsTitle ?? L10n.PreferencesQuickAccess.notOnCard)
+              .font(.caption2.weight(.semibold))
+              .foregroundStyle(.secondary)
+              .padding(.horizontal, 7)
+              .padding(.vertical, 3)
+              .background(.quaternary, in: Capsule())
+          },
+          bodyDragProvider: { action in
+            QuickAccessActionDragPayload.itemProvider(action: action, source: .actionList)
+          },
+          onBodyDragBegan: {
+            isReorderingActions = false
+          },
+          onReorderStateChanged: { isReorderingActions = $0 },
+          bodyDragPreview: { action in
+            QuickAccessActionDragPreview(action: action)
           }
-        }
-      }
-      .padding(.vertical, 4)
-    }
-  }
-}
-
-private struct QuickAccessActionConfigurationRow: View {
-  let action: QuickAccessActionKind
-  let assignedSlot: QuickAccessActionSlot?
-  let index: Int
-  let actionStore: QuickAccessActionConfigurationStore
-  @Binding var isEnabled: Bool
-  @Binding var draggedAction: QuickAccessActionKind?
-  @Binding var activeDragID: UUID?
-  @State private var isHandleHovered = false
-
-  var body: some View {
-    HStack(spacing: 6) {
-      // Drag handle — reorder only
-      Image(systemName: "line.3.horizontal")
-        .font(.system(size: 11, weight: .medium))
-        .foregroundStyle(isHandleHovered ? .secondary : .quaternary)
-        .frame(width: 14)
-        .contentShape(Rectangle().inset(by: -4))
-        .onHover { isHandleHovered = $0 }
-        .onDrag {
-          let dragID = UUID()
-          activeDragID = dragID
-          draggedAction = action
-
-          let provider = DragTrackingItemProvider()
-          if let data = action.rawValue.data(using: .utf8) {
-            provider.registerDataRepresentation(
-              forTypeIdentifier: UTType.quickAccessReorder.identifier,
-              visibility: .all
-            ) { completion in
-              completion(data, nil)
-              return nil
-            }
-          }
-
-          provider.onDeinit = { [dragID] in
-            Task { @MainActor in
-              if activeDragID == dragID {
-                activeDragID = nil
-                draggedAction = nil
-              }
-            }
-          }
-          return provider
-        } preview: {
-          // No visual ghost — handle-drag is a reorder-only gesture.
-          // Returning an empty view keeps the system from spawning a default snapshot.
-          Color.clear.frame(width: 1, height: 1)
-        }
-
-      // Row body — slot assignment drag
-      HStack(spacing: 10) {
-        actionLabel
-
-        Spacer()
-
-        placementBadge
-
-        Toggle("", isOn: $isEnabled)
-          .labelsHidden()
-      }
-      .contentShape(Rectangle())
-      .onDrag {
-        draggedAction = nil
-        return QuickAccessActionDragPayload.itemProvider(action: action, source: .actionList)
-      } preview: {
-        QuickAccessActionDragPreview(action: action)
+        )
       }
     }
-    .padding(.horizontal, 10)
-    .padding(.vertical, 6)
-    .background(draggedAction == action ? Color(NSColor.selectedControlColor).opacity(0.15) : Color.clear)
-    .opacity(draggedAction == action ? 0.35 : 1.0)
-    .onDrop(of: [UTType.quickAccessReorder], delegate: ReorderDropDelegate(
-      targetAction: action,
-      targetIndex: index,
-      actionStore: actionStore,
-      draggedAction: $draggedAction
-    ))
-  }
-
-  private var actionLabel: some View {
-    HStack(spacing: 10) {
-      Image(systemName: action.systemImage)
-        .font(.system(size: 14, weight: .semibold))
-        .foregroundStyle(.secondary)
-        .frame(width: 18)
-
-      Text(action.settingsTitle)
-        .lineLimit(1)
-    }
-  }
-
-  private var placementBadge: some View {
-    Text(assignedSlot?.settingsTitle ?? L10n.PreferencesQuickAccess.notOnCard)
-      .font(.caption2.weight(.semibold))
-      .foregroundStyle(.secondary)
-      .padding(.horizontal, 7)
-      .padding(.vertical, 3)
-      .background(.quaternary, in: Capsule())
   }
 }
 
@@ -219,53 +106,5 @@ private struct QuickAccessActionDragPreview: View {
     )
     .shadow(color: Color.black.opacity(0.14), radius: 8, x: 0, y: 4)
     .fixedSize(horizontal: true, vertical: false)
-  }
-}
-
-private struct ReorderDropDelegate: DropDelegate {
-  private static let reorderMarker = "com.mourato.notinhas.quick-access-reorder"
-
-  let targetAction: QuickAccessActionKind
-  let targetIndex: Int
-  let actionStore: QuickAccessActionConfigurationStore
-  @Binding var draggedAction: QuickAccessActionKind?
-
-  func validateDrop(info _: DropInfo) -> Bool {
-    draggedAction != nil
-  }
-
-  func dropEntered(info _: DropInfo) {
-    guard let sourceAction = draggedAction,
-          sourceAction != targetAction else { return }
-
-    guard let sourceIndex = actionStore.actionOrder.firstIndex(of: sourceAction) else { return }
-
-    if sourceIndex != targetIndex {
-      withAnimation(.default) {
-        actionStore.moveAction(
-          from: IndexSet(integer: sourceIndex),
-          to: targetIndex > sourceIndex ? targetIndex + 1 : targetIndex
-        )
-      }
-    }
-  }
-
-  func performDrop(info _: DropInfo) -> Bool {
-    // Belt-and-suspenders: also reset here for cases where the monitor fires late.
-    Task { @MainActor in
-      draggedAction = nil
-    }
-    return true
-  }
-
-  func dropUpdated(info _: DropInfo) -> DropProposal? {
-    DropProposal(operation: .move)
-  }
-}
-
-private final class DragTrackingItemProvider: NSItemProvider {
-  var onDeinit: (() -> Void)?
-  deinit {
-    onDeinit?()
   }
 }

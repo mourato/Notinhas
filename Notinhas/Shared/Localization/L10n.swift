@@ -3160,6 +3160,36 @@ nonisolated enum L10n {
       defaultValue: "When the editor stays open, bring Notinhas to the front and focus Annotate after the drop completes",
       comment: "Annotate preferences setting description for activating Annotate after drag-to-app"
     )
+    static let chromeSection = string(
+      "preferences-annotate.section-chrome",
+      defaultValue: "Editor chrome",
+      comment: "Annotate preferences section title for toolbar and bottom-bar customization"
+    )
+    static let chromeToolbarSection = string(
+      "preferences-annotate.section-chrome-toolbar",
+      defaultValue: "Toolbar",
+      comment: "Annotate preferences section title for toolbar customization"
+    )
+    static let chromeBottomSection = string(
+      "preferences-annotate.section-chrome-bottom",
+      defaultValue: "Bottom bar",
+      comment: "Annotate preferences section title for bottom-bar customization"
+    )
+    static let chromeDescription = string(
+      "preferences-annotate.chrome-description",
+      defaultValue: "Reorder and show or hide Annotate tools and actions. Selection, Undo, Redo, and Done always stay visible.",
+      comment: "Annotate preferences description for chrome customization"
+    )
+    static let chromeAlwaysOnFootnote = string(
+      "preferences-annotate.chrome-always-on-footnote",
+      defaultValue: "Always visible: Selection, Undo, Redo, Done. Zoom, pan, mode tabs, and Drag to app cannot be customized.",
+      comment: "Annotate preferences footnote for non-customizable chrome"
+    )
+    static let resetChrome = string(
+      "preferences-annotate.reset-chrome",
+      defaultValue: "Reset chrome",
+      comment: "Annotate preferences button to reset toolbar and bottom-bar customization"
+    )
   }
 
   enum Notinhas {

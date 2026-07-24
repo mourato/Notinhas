@@ -47,6 +47,7 @@ struct AnnotateBottomBarView: View {
   @ObservedObject private var cloudManager = CloudManager.shared
   @ObservedObject private var preferencesManager = PreferencesManager.shared
   @ObservedObject private var annotateShortcutManager = AnnotateShortcutManager.shared
+  @ObservedObject private var chromeStore = AnnotateChromeConfigurationStore.shared
 
   @State private var isCloudUploading = false
   @State private var isImgBBUploading = false
@@ -79,6 +80,9 @@ struct AnnotateBottomBarView: View {
           measuredLeftWidth = widths[.left] ?? 0
           measuredRightWidth = widths[.right] ?? 0
         }
+        .onAppear(perform: ensureValidSelectedTool)
+        .onChange(of: chromeStore.bottomActionOrder) { _ in ensureValidSelectedTool() }
+        .onChange(of: chromeStore.enabledItems) { _ in ensureValidSelectedTool() }
 
       // Cloud upload progress bar (always present to avoid layout shift)
       ProgressView(value: cloudUploadProgress)
@@ -102,8 +106,6 @@ struct AnnotateBottomBarView: View {
     }
     .onReceive(NotificationCenter.default.publisher(for: .annotateCloudUpload)) { _ in
       // ⌘U shortcut: trigger cloud upload (with overwrite confirmation if needed)
-      let showCloudButton = cloudManager.isConfigured && QuickAccessActionConfigurationStore.shared
-        .isEnabled(.uploadToCloud)
       let needsReUpload = state.requiresRenderedOutputForSharing || state.isCloudStale
       let alreadyUploaded = state.cloudURL != nil && !needsReUpload
       guard showCloudButton, !isCloudUploading, !alreadyUploaded else { return }
@@ -364,13 +366,17 @@ struct AnnotateBottomBarView: View {
   }
 
   private var annotateActionButtons: some View {
-    let showCloudButton = cloudManager.isConfigured && QuickAccessActionConfigurationStore.shared
-      .isEnabled(.uploadToCloud)
-    let cloudKeys = AnnotateOverlayTooltipKeys.actionKeys(for: .cloudUpload, manager: annotateShortcutManager)
-    let pinKeys = AnnotateOverlayTooltipKeys.actionKeys(for: .togglePin, manager: annotateShortcutManager)
-    let copyKeys = AnnotateOverlayTooltipKeys.actionKeys(for: .copyAndClose, manager: annotateShortcutManager)
+    HStack(spacing: 12) {
+      ForEach(chromeStore.orderedBottomActions(), id: \.id) { item in
+        bottomActionButton(for: item)
+      }
+    }
+  }
 
-    return HStack(spacing: 12) {
+  @ViewBuilder
+  private func bottomActionButton(for item: AnnotateChromeItem) -> some View {
+    switch item {
+    case .newWindow:
       BottomBarButton(
         icon: "plus.rectangle.on.rectangle",
         tooltipTitle: L10n.AnnotateUI.newWindow
@@ -378,10 +384,12 @@ struct AnnotateBottomBarView: View {
         AnnotateManager.shared.openEmptyAnnotation()
       }
 
+    case .share:
       BottomBarButton(icon: "square.and.arrow.up", tooltipTitle: L10n.Common.share) {
         share()
       }
 
+    case .uploadToImgBB:
       BottomBarButton(
         icon: isImgBBUploading ? "hourglass" : "icloud.and.arrow.up",
         tooltipTitle: isImgBBConfigured ? NotinhasL10n.uploadToImgBB : NotinhasL10n.imgbbMissingAPIKey
@@ -391,11 +399,11 @@ struct AnnotateBottomBarView: View {
       .disabled(isImgBBUploading || !isImgBBConfigured)
       .opacity(isImgBBConfigured ? 1 : 0.5)
 
-      // Cloud upload button
+    case .uploadToCloud:
       if showCloudButton {
-        // needsReUpload: true when output changed in current session OR was changed since last upload
         let needsReUpload = state.requiresRenderedOutputForSharing || state.isCloudStale
         let alreadyUploaded = state.cloudURL != nil && !needsReUpload
+        let cloudKeys = AnnotateOverlayTooltipKeys.actionKeys(for: .cloudUpload, manager: annotateShortcutManager)
         BottomBarButton(
           icon: alreadyUploaded ? "checkmark.cloud" : "cloud",
           tooltipTitle: alreadyUploaded
@@ -413,6 +421,8 @@ struct AnnotateBottomBarView: View {
         .opacity(alreadyUploaded ? 0.6 : 1)
       }
 
+    case .pin:
+      let pinKeys = AnnotateOverlayTooltipKeys.actionKeys(for: .togglePin, manager: annotateShortcutManager)
       BottomBarButton(
         icon: state.isPinned ? "pin.fill" : "pin",
         tooltipTitle: state.isPinned ? L10n.AnnotateUI.unpinWindow : L10n.AnnotateUI.pinWindow,
@@ -421,6 +431,8 @@ struct AnnotateBottomBarView: View {
         pin()
       }
 
+    case .copy:
+      let copyKeys = AnnotateOverlayTooltipKeys.actionKeys(for: .copyAndClose, manager: annotateShortcutManager)
       BottomBarButton(
         icon: "doc.on.doc",
         tooltipTitle: L10n.AnnotateUI.copyToClipboard,
@@ -429,11 +441,27 @@ struct AnnotateBottomBarView: View {
         copyToClipboard()
       }
 
+    case .delete:
       BottomBarButton(icon: "trash", tooltipTitle: L10n.Common.deleteAction) {
         confirmAndDeleteImage()
       }
       .disabled(state.sourceURL == nil)
       .opacity(state.sourceURL == nil ? 0.5 : 1)
+
+    default:
+      EmptyView()
+    }
+  }
+
+  private var showCloudButton: Bool {
+    cloudManager.isConfigured && QuickAccessActionConfigurationStore.shared.isEnabled(.uploadToCloud)
+      && chromeStore.isEnabled(.uploadToCloud)
+  }
+
+  private func ensureValidSelectedTool() {
+    guard let chromeItem = AnnotateChromeItem(annotationTool: state.selectedTool) else { return }
+    if !chromeStore.isEnabled(chromeItem) {
+      state.activateTool(.selection)
     }
   }
 

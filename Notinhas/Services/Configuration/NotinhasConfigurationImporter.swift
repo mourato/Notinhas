@@ -592,6 +592,22 @@ enum NotinhasConfigurationImporter {
     collectBool(&reader, "annotate", "combine_save_as_edit", mutations: &mutations) {
       defaults.set($0, forKey: PreferencesKeys.annotateCombineSaveAsEdit)
     }
+
+    let toolbarOrder = reader.stringArray("annotate", "chrome_toolbar_order")?
+      .compactMap(AnnotateChromeItem.init(rawValue:))
+    let bottomOrder = reader.stringArray("annotate", "chrome_bottom_order")?
+      .compactMap(AnnotateChromeItem.init(rawValue:))
+    let enabledChrome = reader.stringArray("annotate", "chrome_enabled")?
+      .compactMap(AnnotateChromeItem.init(rawValue:))
+    if toolbarOrder != nil || bottomOrder != nil || enabledChrome != nil {
+      mutations.append {
+        AnnotateChromeConfigurationStore.shared.applyConfiguration(
+          toolbarOrder: toolbarOrder,
+          bottomOrder: bottomOrder,
+          enabledItems: enabledChrome.map(Set.init)
+        )
+      }
+    }
   }
 
   private static func collectAfterCapture(
