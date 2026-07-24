@@ -35,7 +35,7 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
   /// two surfaces stay in sync when tools are added.
   static let drawableTools: [AnnotationToolType] = [
     .rectangle, .filledRectangle, .oval, .arrow, .line, .text, .highlighter,
-    .blur, .spotlight, .counter, .watermark, .pencil,
+    .blur, .spotlight, .notinhasNote, .watermark, .pencil,
   ]
 
   static let inlineAnnotateTools: [AnnotationToolType] = [.selection] + drawableTools
@@ -85,8 +85,8 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
     case .highlighter: "h"
     case .blur: "b"
     case .spotlight: "s"
-    case .counter: "n"
-    case .notinhasNote: "i"
+    case .counter: "i"
+    case .notinhasNote: "n"
     case .watermark: "w"
     case .pencil: "p"
     case .mockup: "m"
@@ -126,7 +126,7 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
   }
 
   /// Drawable tools that should only commit a new blank-canvas item after a
-  /// drag intent. Counter stays click-to-place, text keeps its click-to-edit
+  /// drag intent. Notinha stays click/drag-to-place, text keeps its click-to-edit
   /// flow, and freehand tools keep their existing path-count behavior.
   var requiresDragToCreateAnnotation: Bool {
     switch self {
@@ -139,9 +139,10 @@ nonisolated enum AnnotationToolType: String, CaseIterable, Identifiable {
 
   var supportsQuickStrokeColor: Bool {
     switch self {
-    case .rectangle, .filledRectangle, .oval, .arrow, .line, .text, .highlighter, .counter, .watermark, .pencil:
+    case .rectangle, .filledRectangle, .oval, .arrow, .line, .text, .highlighter, .counter, .watermark, .pencil,
+         .notinhasNote:
       true
-    case .selection, .crop, .blur, .spotlight, .mockup, .notinhasNote:
+    case .selection, .crop, .blur, .spotlight, .mockup:
       false
     }
   }

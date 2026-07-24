@@ -132,10 +132,7 @@ struct AnnotateToolbarView: View {
       annotationToolButton(for: .selection)
 
       ForEach(drawingTools, id: \.self) { tool in
-        annotationToolButton(for: tool)
-        if tool == .counter {
-          notinhasNoteButton
-        }
+        annotationToolButton(for: tool, help: toolHelp(for: tool))
       }
 
       backgroundCutoutButton
@@ -147,37 +144,9 @@ struct AnnotateToolbarView: View {
     AnnotationToolType.drawableTools
   }
 
-  private var notinhasNoteButton: some View {
-    ToolbarButton(
-      icon: AnnotationToolType.notinhasNote.icon,
-      isSelected: state.selectedTool == .notinhasNote
-    ) {
-      state.activateTool(.notinhasNote)
-    }
-    .disabled(state.editorMode == .mockup)
-    .opacity(state.editorMode == .mockup ? 0.4 : 1)
-    .overlayTooltip(
-      NotinhasL10n.noteTool,
-      keys: notinhasNoteShortcutKeys,
-      secondary: NotinhasL10n.noteToolGestureHint,
-      edge: .below
-    )
-    .accessibilityLabel(notinhasNoteAccessibilityLabel)
-  }
-
-  /// Keycap symbol for the current note-tool shortcut, or empty when disabled/unset.
-  private var notinhasNoteShortcutKeys: [String] {
-    AnnotateOverlayTooltipKeys.toolKeys(for: .notinhasNote, manager: annotateShortcutManager)
-  }
-
-  /// Spoken label for VoiceOver — includes the shortcut and gesture in words.
-  private var notinhasNoteAccessibilityLabel: String {
-    let title: String = if let key = notinhasNoteShortcutKeys.first {
-      L10n.Common.withShortcut(NotinhasL10n.noteTool, key)
-    } else {
-      NotinhasL10n.noteTool
-    }
-    return NotinhasL10n.noteToolTooltip(title: title)
+  private func toolHelp(for tool: AnnotationToolType) -> String? {
+    guard tool == .notinhasNote else { return nil }
+    return NotinhasL10n.noteTool
   }
 
   private var backgroundCutoutButton: some View {
@@ -204,16 +173,30 @@ struct AnnotateToolbarView: View {
   private func annotationToolButton(for tool: AnnotationToolType, help: String? = nil) -> some View {
     let title = help ?? tool.displayName
     let keys = AnnotateOverlayTooltipKeys.toolKeys(for: tool, manager: annotateShortcutManager)
+    let accessibilityLabel = accessibilityLabel(for: tool, title: title, keys: keys)
     return ToolbarButton(
       icon: tool.icon,
       isSelected: state.selectedTool == tool
     ) {
       state.activateTool(tool)
     }
-    .overlayTooltip(title, keys: keys, edge: .below)
-    .accessibilityLabel(accessibilityTitle(title, keys: keys))
+    .overlayTooltip(
+      title,
+      keys: keys,
+      secondary: tool == .notinhasNote ? NotinhasL10n.noteToolGestureHint : nil,
+      edge: .below
+    )
+    .accessibilityLabel(accessibilityLabel)
     .disabled(state.editorMode == .mockup && tool != .selection)
     .opacity(state.editorMode == .mockup && tool != .selection ? 0.4 : 1)
+  }
+
+  private func accessibilityLabel(for tool: AnnotationToolType, title: String, keys: [String]) -> String {
+    guard tool == .notinhasNote else {
+      return accessibilityTitle(title, keys: keys)
+    }
+    let spokenTitle = keys.isEmpty ? title : L10n.Common.withShortcut(title, keys.joined())
+    return NotinhasL10n.noteToolTooltip(title: spokenTitle)
   }
 
   private var undoRedoGroup: some View {
