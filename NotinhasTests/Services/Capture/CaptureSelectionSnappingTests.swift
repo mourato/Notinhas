@@ -405,4 +405,29 @@ final class CaptureSelectionSnappingTests: XCTestCase {
 
     return AreaSelectionBackdrop(displayID: 1, image: image, scaleFactor: 1, isVisible: true)
   }
+
+  func testScreenBoundaryCandidates_alignDesktopEdges() {
+    let desktop = CGRect(x: 10, y: 20, width: 300, height: 200)
+    let candidates = CaptureSelectionSnapping.screenBoundaryCandidates(for: desktop)
+
+    XCTAssertEqual(candidates.count, 4)
+    XCTAssertTrue(candidates.contains { $0.edge == .minX && $0.coordinate == desktop.minX })
+    XCTAssertTrue(candidates.contains { $0.edge == .maxY && $0.coordinate == desktop.maxY })
+  }
+
+  func testTopLeftAdapter_matchesBottomLeftResizeForEquivalentRect() {
+    let container = CGSize(width: 400, height: 300)
+    let topLeftRect = CGRect(x: 100, y: 80, width: 120, height: 90)
+    let resizedTopLeft = CaptureSelectionResizeAdapter.resizedRect(
+      original: topLeftRect,
+      handle: .right,
+      translation: CGPoint(x: 20, y: 0),
+      coordinateSpace: .topLeftOrigin,
+      containerSize: container,
+      minSize: CaptureSelectionChromeMetrics.confirmedMinimumSize
+    )
+
+    XCTAssertEqual(resizedTopLeft.width, 140, accuracy: 0.001)
+    XCTAssertEqual(resizedTopLeft.minY, topLeftRect.minY, accuracy: 0.001)
+  }
 }

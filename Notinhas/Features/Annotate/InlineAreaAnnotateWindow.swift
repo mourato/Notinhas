@@ -263,6 +263,9 @@ private struct InlineAreaAnnotateRootView: View {
         selectionDimLayer(size: geometry.size, rect: viewportRect)
 
         if let desktopRect, let viewportRect {
+          if session.phase == .selecting {
+            InlineAreaSelectionPreviewOverlay(rect: viewportRect)
+          }
           if session.phase == .annotating {
             annotateSurface(rect: viewportRect, usesBackdropPreview: isSelectionPreviewing)
             if session.isMoveModifierActive {
@@ -483,7 +486,7 @@ private struct InlineAreaAnnotateRootView: View {
       .position(x: rect.midX, y: rect.midY)
       .allowsHitTesting(false)
 
-    ForEach(CaptureSelectionResizeHandle.allCases, id: \.self) { handle in
+    ForEach(Array(CaptureSelectionChromeLayout.layout(for: rect).availableHandles), id: \.self) { handle in
       let hitRect = CaptureSelectionHandleGeometry.hitRect(
         for: handle,
         in: rect,
@@ -550,27 +553,14 @@ private struct InlineAreaAnnotateRootView: View {
     translation: CGSize,
     containerSize: CGSize
   ) -> CGRect {
-    let rect = start.standardized
-    let minSize = InlineAreaLayout.minimumSelectionSize
-    var minX = rect.minX
-    var maxX = rect.maxX
-    var minY = rect.minY
-    var maxY = rect.maxY
-
-    if handle.adjustsLeft {
-      minX = clamped(rect.minX + translation.width, min: 0, max: maxX - minSize)
-    }
-    if handle.adjustsRight {
-      maxX = clamped(rect.maxX + translation.width, min: minX + minSize, max: containerSize.width)
-    }
-    if handle.adjustsTop {
-      minY = clamped(rect.minY + translation.height, min: 0, max: maxY - minSize)
-    }
-    if handle.adjustsBottom {
-      maxY = clamped(rect.maxY + translation.height, min: minY + minSize, max: containerSize.height)
-    }
-
-    return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY).standardized
+    CaptureSelectionResizeAdapter.resizedRect(
+      original: start.standardized,
+      handle: handle,
+      translation: CGPoint(x: translation.width, y: translation.height),
+      coordinateSpace: .topLeftOrigin,
+      containerSize: containerSize,
+      minSize: CaptureSelectionChromeMetrics.confirmedMinimumSize
+    )
   }
 
   private func controlPlacement(
@@ -807,46 +797,92 @@ private extension CaptureSelectionResizeHandle {
   }
 }
 
+private struct InlineAreaSelectionPreviewOverlay: View {
+  let rect: CGRect
+
+  var body: some View {
+    let colors = CaptureSelectionChromeAppearance.colors(
+      for: CaptureSelectionChromeAppearanceContext(backdropLuma: nil)
+    )
+    Rectangle()
+      .strokeBorder(
+        Color(
+          red: colors.strokeRed,
+          green: colors.strokeGreen,
+          blue: colors.strokeBlue,
+          opacity: colors.strokeAlpha
+        ),
+        lineWidth: colors.borderWidth
+      )
+      .frame(width: rect.width, height: rect.height)
+      .position(x: rect.midX, y: rect.midY)
+      .allowsHitTesting(false)
+  }
+}
+
 private struct InlineAreaResizeHandlesOverlay: View {
   var body: some View {
     Canvas { context, size in
       let rect = CGRect(origin: .zero, size: size)
+      let layout = CaptureSelectionChromeLayout.layout(for: rect)
+      let colors = CaptureSelectionChromeAppearance.colors(
+        for: CaptureSelectionChromeAppearanceContext(backdropLuma: nil)
+      )
 
       for (handle, anchor) in CaptureSelectionHandleGeometry.cornerAnchors(
         in: rect,
         coordinateSpace: .topLeftOrigin
       ) {
+        guard layout.availableHandles.contains(handle) else { continue }
         let bars = CaptureSelectionHandleGeometry.cornerHandleBars(
           for: handle,
           anchor: anchor,
-          coordinateSpace: .topLeftOrigin
+          coordinateSpace: .topLeftOrigin,
+          layout: layout
         )
-        drawHandleBar(bars.horizontal, context: &context)
-        drawHandleBar(bars.vertical, context: &context)
+        drawHandleBar(bars.horizontal, colors: colors, context: &context)
+        drawHandleBar(bars.vertical, colors: colors, context: &context)
       }
 
       for (handle, anchor) in CaptureSelectionHandleGeometry.edgeAnchors(
         in: rect,
         coordinateSpace: .topLeftOrigin
       ) {
+        guard layout.availableHandles.contains(handle) else { continue }
         drawHandleBar(
           CaptureSelectionHandleGeometry.edgeHandleBar(
             for: handle,
             anchor: anchor,
-            coordinateSpace: .topLeftOrigin
+            coordinateSpace: .topLeftOrigin,
+            layout: layout
           ),
+          colors: colors,
           context: &context
         )
       }
     }
   }
 
-  private func drawHandleBar(_ rect: CGRect, context: inout GraphicsContext) {
+  private func drawHandleBar(
+    _ rect: CGRect,
+    colors: CaptureSelectionChromeColors,
+    context: inout GraphicsContext
+  ) {
     context.fill(
       Path(rect.offsetBy(dx: 0, dy: 1)),
-      with: .color(.black.opacity(0.5))
+      with: .color(.black.opacity(colors.shadowOpacity))
     )
-    context.fill(Path(rect), with: .color(.white))
+    context.fill(
+      Path(rect),
+      with: .color(
+        Color(
+          red: colors.strokeRed,
+          green: colors.strokeGreen,
+          blue: colors.strokeBlue,
+          opacity: colors.strokeAlpha
+        )
+      )
+    )
   }
 }
 
@@ -901,7 +937,7 @@ enum InlineAreaLayout {
   static let selectionGap: CGFloat = 12
   static let screenPadding: CGFloat = 16
   static let controlPanelOuterHorizontalInset: CGFloat = 12
-  static let minimumSelectionSize: CGFloat = 24
+  static let minimumSelectionSize: CGFloat = CaptureSelectionChromeMetrics.confirmedMinimumSize
   static let actionRailWidth: CGFloat = InlineAreaToolbarMetrics.iconButtonSize + InlineAreaToolbarMetrics
     .actionRailPadding * 2
   static let actionRailHeight: CGFloat = InlineAreaToolbarMetrics.iconButtonSize * 4

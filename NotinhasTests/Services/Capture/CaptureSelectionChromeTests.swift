@@ -182,4 +182,55 @@ final class CaptureSelectionChromeTests: XCTestCase {
       CGRect(x: anchor.x - halfThickness, y: anchor.y - halfThickness, width: thickness, height: cornerLength)
     )
   }
+
+  // MARK: - Adaptive layout
+
+  func testLayout_largeRectangle_keepsAllHandlesAndDefaultMetrics() {
+    let rect = CGRect(x: 0, y: 0, width: 200, height: 120)
+    let layout = CaptureSelectionChromeLayout.layout(for: rect)
+
+    XCTAssertEqual(layout.cornerLength, cornerLength)
+    XCTAssertEqual(layout.edgeLength, edgeLength)
+    XCTAssertEqual(layout.availableHandles, Set(CaptureSelectionResizeHandle.allCases))
+  }
+
+  func testLayout_compactRectangle_suppressesEdgeHandles() {
+    let rect = CGRect(x: 0, y: 0, width: 50, height: 50)
+    let layout = CaptureSelectionChromeLayout.layout(for: rect)
+
+    XCTAssertTrue(layout.availableHandles.contains(.topLeft))
+    XCTAssertFalse(layout.availableHandles.contains(.top))
+    XCTAssertFalse(layout.availableHandles.contains(.left))
+  }
+
+  func testHitGeometry_cornerWinsOverEdgeAtSharedAnchor() {
+    let rect = CGRect(x: 0, y: 0, width: 50, height: 50)
+    let layout = CaptureSelectionChromeLayout.layout(for: rect)
+    let cornerPoint = CGPoint(x: rect.minX, y: rect.minY)
+
+    XCTAssertEqual(
+      CaptureSelectionHandleGeometry.handle(
+        at: cornerPoint,
+        in: rect,
+        hitSize: hitSize,
+        coordinateSpace: .topLeftOrigin,
+        layout: layout
+      ),
+      .topLeft
+    )
+  }
+
+  func testConfirmedResize_clampsAtSharedMinimum() {
+    let original = CGRect(x: 0, y: 0, width: 80, height: 80)
+    let resized = CaptureSelectionGeometry.resizedRect(
+      original: original,
+      handle: .right,
+      translation: CGPoint(x: -60, y: 0),
+      aspectLocked: false,
+      aspectRatio: nil,
+      minSize: CaptureSelectionChromeMetrics.confirmedMinimumSize
+    )
+
+    XCTAssertEqual(resized.width, CaptureSelectionChromeMetrics.confirmedMinimumSize, accuracy: 0.001)
+  }
 }

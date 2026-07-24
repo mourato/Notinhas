@@ -151,6 +151,13 @@ final class RecordingRegionOverlayWindow: NSPanel {
     overlayView.refreshCursor()
   }
 
+  func cursorKind(atScreenLocation location: CGPoint) -> CaptureSelectionCursorKind {
+    guard let contentView else { return .arrow }
+    let windowPoint = convertPoint(fromScreen: location)
+    let localPoint = contentView.convert(windowPoint, from: nil)
+    return overlayView.cursorKind(for: localPoint)
+  }
+
   /// Allow the All-In-One refinement controller to move key ownership to the
   /// overlay under the pointer without activating the application.
   func setReceivesKeyboardInput(_ receivesKeyboardInput: Bool) {
@@ -250,7 +257,7 @@ final class RecordingRegionOverlayView: NSView {
   private let borderColor = NSColor.white
   private let borderWidth = CaptureSelectionChromeMetrics.continuousBorderWidth
   private let handleHitSize = CaptureSelectionChromeMetrics.handleHitSize
-  private let minimumSelectionSize: CGFloat = 50.0
+  private let minimumSelectionSize = CaptureSelectionChromeMetrics.confirmedMinimumSize
 
   init(frame: CGRect, highlightRect: CGRect) {
     self.highlightRect = highlightRect
@@ -318,7 +325,8 @@ final class RecordingRegionOverlayView: NSView {
 
   private func registerResizeHandleCursorRects(for rect: CGRect) {
     let hitSize = handleHitSize
-    for handle in CaptureSelectionHandleGeometry.allHandles {
+    let layout = CaptureSelectionChromeLayout.layout(for: rect)
+    for handle in layout.availableHandles {
       let hitRect = CaptureSelectionHandleGeometry.hitRect(for: handle, in: rect, hitSize: hitSize)
       addCursorRect(hitRect, cursor: CaptureSelectionResizeCursor.cursor(for: handle))
     }
@@ -369,7 +377,25 @@ final class RecordingRegionOverlayView: NSView {
 
   private func handleAt(point: CGPoint) -> RecordingResizeHandle? {
     let rect = localHighlightRect()
-    return CaptureSelectionHandleGeometry.handle(at: point, in: rect, hitSize: handleHitSize)
+    let layout = CaptureSelectionChromeLayout.layout(for: rect)
+    return CaptureSelectionHandleGeometry.handle(
+      at: point,
+      in: rect,
+      hitSize: handleHitSize,
+      layout: layout
+    )
+  }
+
+  func cursorKind(for point: CGPoint) -> CaptureSelectionCursorKind {
+    guard isInteractionEnabled else { return .arrow }
+    if let handle = handleAt(point: point) {
+      return .resize(handle)
+    }
+    let localRect = localHighlightRect()
+    if localRect.contains(point) {
+      return .openHand
+    }
+    return .crosshair
   }
 }
 
@@ -377,53 +403,23 @@ final class RecordingRegionOverlayView: NSView {
 
 extension RecordingRegionOverlayView {
   private func calculateResizedRect(handle: RecordingResizeHandle, delta: CGPoint) -> CGRect {
-    var rect = resizeStartRect
-    let minSize = minimumSelectionSize
-
-    switch handle {
-    case .topLeft:
-      rect.origin.x += delta.x
-      rect.size.width -= delta.x
-      rect.size.height += delta.y
-    case .top:
-      rect.size.height += delta.y
-    case .topRight:
-      rect.size.width += delta.x
-      rect.size.height += delta.y
-    case .left:
-      rect.origin.x += delta.x
-      rect.size.width -= delta.x
-    case .right:
-      rect.size.width += delta.x
-    case .bottomLeft:
-      rect.origin.x += delta.x
-      rect.origin.y += delta.y
-      rect.size.width -= delta.x
-      rect.size.height -= delta.y
-    case .bottom:
-      rect.origin.y += delta.y
-      rect.size.height -= delta.y
-    case .bottomRight:
-      rect.origin.y += delta.y
-      rect.size.width += delta.x
-      rect.size.height -= delta.y
-    }
-
-    // Enforce minimum size with origin adjustment
-    if rect.width < minSize {
-      if handle == .left || handle == .topLeft || handle == .bottomLeft {
-        rect.origin.x = resizeStartRect.maxX - minSize
-      }
-      rect.size.width = minSize
-    }
-    if rect.height < minSize {
-      if handle == .bottom || handle == .bottomLeft || handle == .bottomRight {
-        rect.origin.y = resizeStartRect.maxY - minSize
-      }
-      rect.size.height = minSize
-    }
-
-    return rect
+    let resized = CaptureSelectionGeometry.resizedRect(
+      original: resizeStartRect,
+      handle: handle,
+      translation: delta,
+      aspectLocked: false,
+      aspectRatio: nil,
+      minSize: minimumSelectionSize
+    )
+    let candidates = CaptureSelectionSnapping.screenBoundaryCandidates(for: Self.unifiedDesktopFrame)
+    return CaptureSelectionSnapping.resolve(
+      proposedRect: resized,
+      handle: handle,
+      candidates: candidates,
+      configuration: CaptureSelectionSnappingConfiguration(),
+      desktopBounds: Self.unifiedDesktopFrame,
+      minSize: minimumSelectionSize
+    ).rect
   }
 
   // MARK: - Unified Desktop Frame
@@ -866,18 +862,31 @@ extension RecordingRegionOverlayView {
   }
 
   private func drawRecordingResizeHandles(for rect: CGRect) {
+    let layout = CaptureSelectionChromeLayout.layout(for: rect)
+    let colors = CaptureSelectionChromeAppearance
+      .colors(for: CaptureSelectionChromeAppearanceContext(backdropLuma: nil))
+
     for (handle, anchor) in CaptureSelectionHandleGeometry.cornerAnchors(in: rect, coordinateSpace: .bottomLeftOrigin) {
-      let bars = CaptureSelectionHandleGeometry.cornerHandleBars(for: handle, anchor: anchor)
-      drawHandleBar(bars.horizontal)
-      drawHandleBar(bars.vertical)
+      guard layout.availableHandles.contains(handle) else { continue }
+      let bars = CaptureSelectionHandleGeometry.cornerHandleBars(
+        for: handle,
+        anchor: anchor,
+        layout: layout
+      )
+      drawHandleBar(bars.horizontal, colors: colors)
+      drawHandleBar(bars.vertical, colors: colors)
     }
 
     for (handle, anchor) in CaptureSelectionHandleGeometry.edgeAnchors(in: rect, coordinateSpace: .bottomLeftOrigin) {
-      drawHandleBar(CaptureSelectionHandleGeometry.edgeHandleBar(for: handle, anchor: anchor))
+      guard layout.availableHandles.contains(handle) else { continue }
+      drawHandleBar(
+        CaptureSelectionHandleGeometry.edgeHandleBar(for: handle, anchor: anchor, layout: layout),
+        colors: colors
+      )
     }
   }
 
-  private func drawHandleBar(_ rect: CGRect) {
+  private func drawHandleBar(_ rect: CGRect, colors: CaptureSelectionChromeColors) {
     let radius = min(rect.width, rect.height) / 2
 
     // Draw shadow
@@ -886,12 +895,17 @@ extension RecordingRegionOverlayView {
       xRadius: radius,
       yRadius: radius
     )
-    NSColor.black.withAlphaComponent(0.5).setFill()
+    NSColor.black.withAlphaComponent(colors.shadowOpacity).setFill()
     shadowPath.fill()
 
-    // Draw white bar with rounded ends
+    // Draw bar with rounded ends
     let path = NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius)
-    NSColor.white.setFill()
+    NSColor(
+      red: colors.strokeRed,
+      green: colors.strokeGreen,
+      blue: colors.strokeBlue,
+      alpha: colors.strokeAlpha
+    ).setFill()
     path.fill()
   }
 

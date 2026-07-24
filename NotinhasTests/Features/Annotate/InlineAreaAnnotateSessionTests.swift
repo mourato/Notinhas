@@ -109,6 +109,17 @@ final class InlineAreaAnnotateSessionTests: XCTestCase {
     XCTAssertEqual(id, 99)
   }
 
+  func testConfirmedMinimumSize_matchesSharedContract() {
+    XCTAssertEqual(
+      InlineAreaLayout.minimumSelectionSize,
+      CaptureSelectionChromeMetrics.confirmedMinimumSize
+    )
+    XCTAssertEqual(
+      CaptureSelectionGeometry.confirmedMinimumSize,
+      CaptureSelectionChromeMetrics.confirmedMinimumSize
+    )
+  }
+
   // MARK: - Shortcut matching
 
   func testInlineShortcutMatchersRecognizeCommandSaveAndCopy() throws {

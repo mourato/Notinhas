@@ -141,7 +141,9 @@ final class InlineAreaAnnotateSession: ObservableObject {
     removeSelectionMonitor()
     selectionStartPoint = nil
 
-    guard let rect = selectionRect, rect.width > 5, rect.height > 5 else {
+    guard let rect = selectionRect,
+          rect.width > CaptureSelectionChromeMetrics.creationMinimumSize,
+          rect.height > CaptureSelectionChromeMetrics.creationMinimumSize else {
       selectionRect = nil
       return
     }
@@ -172,8 +174,8 @@ final class InlineAreaAnnotateSession: ObservableObject {
 
   func resizeSelection(to localRect: CGRect, previousRect: CGRect) {
     let clampedRect = clampedSelectionRect(localRect.standardized)
-    guard clampedRect.width > 5,
-          clampedRect.height > 5,
+    guard clampedRect.width > CaptureSelectionChromeMetrics.creationMinimumSize,
+          clampedRect.height > CaptureSelectionChromeMetrics.creationMinimumSize,
           let crop = cropImage(for: clampedRect) else { return }
 
     let standardizedPreviousRect = previousRect.standardized

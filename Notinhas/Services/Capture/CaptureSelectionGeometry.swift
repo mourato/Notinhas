@@ -20,6 +20,8 @@ enum CaptureSelectionResizeHandle: CaseIterable, Equatable {
 
 enum CaptureSelectionGeometry {
   static let defaultMinSize: CGFloat = 1
+  static let confirmedMinimumSize = CaptureSelectionChromeMetrics.confirmedMinimumSize
+  static let creationMinimumSize = CaptureSelectionChromeMetrics.creationMinimumSize
 
   // MARK: - Normalization
 
@@ -368,5 +370,123 @@ enum CaptureSelectionGeometry {
       width: clampedWidth,
       height: height
     )
+  }
+}
+
+// MARK: - Coordinate adapters
+
+enum CaptureSelectionResizeAdapter {
+  static func resizedRect(
+    original: CGRect,
+    handle: CaptureSelectionResizeHandle,
+    translation: CGPoint,
+    coordinateSpace: CaptureSelectionCoordinateSpace,
+    containerSize: CGSize? = nil,
+    aspectLocked: Bool = false,
+    aspectRatio: CGFloat? = nil,
+    minSize: CGFloat = CaptureSelectionChromeMetrics.confirmedMinimumSize
+  ) -> CGRect {
+    switch coordinateSpace {
+    case .bottomLeftOrigin:
+      var result = CaptureSelectionGeometry.resizedRect(
+        original: original,
+        handle: handle,
+        translation: translation,
+        aspectLocked: aspectLocked,
+        aspectRatio: aspectRatio,
+        minSize: minSize
+      )
+      if let containerSize {
+        result = clampBottomLeft(result, handle: handle, container: containerSize, minSize: minSize)
+      }
+      return result
+    case .topLeftOrigin:
+      let containerHeight = containerSize?.height ?? original.maxY
+      let bottomLeftOriginal = flipToBottomLeft(original, containerHeight: containerHeight)
+      let bottomLeftTranslation = CGPoint(x: translation.x, y: -translation.y)
+      var result = CaptureSelectionGeometry.resizedRect(
+        original: bottomLeftOriginal,
+        handle: handle,
+        translation: bottomLeftTranslation,
+        aspectLocked: aspectLocked,
+        aspectRatio: aspectRatio,
+        minSize: minSize
+      )
+      result = flipToTopLeft(result, containerHeight: containerHeight)
+      if let containerSize {
+        result = clampTopLeft(result, handle: handle, container: containerSize, minSize: minSize)
+      }
+      return result.standardized
+    }
+  }
+
+  private static func flipToBottomLeft(_ rect: CGRect, containerHeight: CGFloat) -> CGRect {
+    CGRect(
+      x: rect.minX,
+      y: containerHeight - rect.maxY,
+      width: rect.width,
+      height: rect.height
+    )
+  }
+
+  private static func flipToTopLeft(_ rect: CGRect, containerHeight: CGFloat) -> CGRect {
+    CGRect(
+      x: rect.minX,
+      y: containerHeight - rect.maxY,
+      width: rect.width,
+      height: rect.height
+    )
+  }
+
+  private static func clampBottomLeft(
+    _ rect: CGRect,
+    handle: CaptureSelectionResizeHandle,
+    container: CGSize,
+    minSize: CGFloat
+  ) -> CGRect {
+    var result = rect.standardized
+    switch handle {
+    case .topLeft, .left, .bottomLeft:
+      result.origin.x = max(0, result.minX)
+    case .topRight, .right, .bottomRight:
+      result.size.width = min(result.width, container.width - result.minX)
+    default:
+      break
+    }
+    switch handle {
+    case .bottomLeft, .bottom, .bottomRight:
+      result.origin.y = max(0, result.minY)
+    case .topLeft, .top, .topRight:
+      result.size.height = min(result.height, container.height - result.minY)
+    default:
+      break
+    }
+    return CaptureSelectionGeometry.normalized(result, minSize: minSize)
+  }
+
+  private static func clampTopLeft(
+    _ rect: CGRect,
+    handle: CaptureSelectionResizeHandle,
+    container: CGSize,
+    minSize: CGFloat
+  ) -> CGRect {
+    var result = rect.standardized
+    switch handle {
+    case .topLeft, .left, .bottomLeft:
+      result.origin.x = max(0, result.minX)
+    case .topRight, .right, .bottomRight:
+      result.size.width = min(result.width, container.width - result.minX)
+    default:
+      break
+    }
+    switch handle {
+    case .topLeft, .top, .topRight:
+      result.origin.y = max(0, result.minY)
+    case .bottomLeft, .bottom, .bottomRight:
+      result.size.height = min(result.height, container.height - result.minY)
+    default:
+      break
+    }
+    return CaptureSelectionGeometry.normalized(result, minSize: minSize)
   }
 }

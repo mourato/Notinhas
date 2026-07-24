@@ -105,7 +105,16 @@ struct CaptureSelectionSnappingCGImageSampler: CaptureSelectionSnappingPixelSamp
 // MARK: - Resolver
 
 enum CaptureSelectionSnapping {
-  static let refinementMinimumSize: CGFloat = 50
+  static let refinementMinimumSize: CGFloat = CaptureSelectionChromeMetrics.confirmedMinimumSize
+
+  static func screenBoundaryCandidates(for desktopBounds: CGRect) -> [CaptureSelectionSnappingCandidate] {
+    [
+      CaptureSelectionSnappingCandidate(edge: .minX, coordinate: desktopBounds.minX, source: .semantic),
+      CaptureSelectionSnappingCandidate(edge: .maxX, coordinate: desktopBounds.maxX, source: .semantic),
+      CaptureSelectionSnappingCandidate(edge: .minY, coordinate: desktopBounds.minY, source: .semantic),
+      CaptureSelectionSnappingCandidate(edge: .maxY, coordinate: desktopBounds.maxY, source: .semantic),
+    ]
+  }
 
   static func activeEdges(for handle: CaptureSelectionResizeHandle) -> Set<CaptureSelectionSnappingEdge> {
     switch handle {

@@ -15,6 +15,45 @@ enum CaptureSelectionCoordinateSpace {
 
 typealias RecordingResizeHandle = CaptureSelectionResizeHandle
 
+struct CaptureSelectionChromeLayout: Equatable {
+  let cornerLength: CGFloat
+  let edgeLength: CGFloat
+  let availableHandles: Set<CaptureSelectionResizeHandle>
+
+  static func layout(for rect: CGRect) -> CaptureSelectionChromeLayout {
+    let standardized = rect.standardized
+    let width = standardized.width
+    let height = standardized.height
+    let hitSize = CaptureSelectionChromeMetrics.handleHitSize
+
+    let maxCornerFromSpan = max(0, (min(width, height) - hitSize) / 2)
+    let cornerLength = min(
+      CaptureSelectionChromeMetrics.cornerHandleLength,
+      max(8, maxCornerFromSpan)
+    )
+    let edgeLength = CaptureSelectionChromeMetrics.edgeHandleLength
+
+    var availableHandles = Set(CaptureSelectionResizeHandle.allCases)
+    let horizontalSpanForEdge = cornerLength * 2 + edgeLength
+    let verticalSpanForEdge = cornerLength * 2 + edgeLength
+
+    if width < horizontalSpanForEdge {
+      availableHandles.remove(.top)
+      availableHandles.remove(.bottom)
+    }
+    if height < verticalSpanForEdge {
+      availableHandles.remove(.left)
+      availableHandles.remove(.right)
+    }
+
+    return CaptureSelectionChromeLayout(
+      cornerLength: cornerLength,
+      edgeLength: edgeLength,
+      availableHandles: availableHandles
+    )
+  }
+}
+
 enum CaptureSelectionHandleGeometry {
   static let allHandles: [CaptureSelectionResizeHandle] = CaptureSelectionResizeHandle.allCases
 
@@ -25,15 +64,20 @@ enum CaptureSelectionHandleGeometry {
     at point: CGPoint,
     in rect: CGRect,
     hitSize: CGFloat = CaptureSelectionChromeMetrics.handleHitSize,
-    coordinateSpace: CaptureSelectionCoordinateSpace = .bottomLeftOrigin
+    coordinateSpace: CaptureSelectionCoordinateSpace = .bottomLeftOrigin,
+    layout: CaptureSelectionChromeLayout? = nil
   ) -> CaptureSelectionResizeHandle? {
+    let resolvedLayout = layout ?? CaptureSelectionChromeLayout.layout(for: rect)
+
     for handle in [.topLeft, .topRight, .bottomLeft, .bottomRight] as [CaptureSelectionResizeHandle] {
+      guard resolvedLayout.availableHandles.contains(handle) else { continue }
       if hitRect(for: handle, in: rect, hitSize: hitSize, coordinateSpace: coordinateSpace).contains(point) {
         return handle
       }
     }
 
     for handle in [.top, .bottom, .left, .right] as [CaptureSelectionResizeHandle] {
+      guard resolvedLayout.availableHandles.contains(handle) else { continue }
       if hitRect(for: handle, in: rect, hitSize: hitSize, coordinateSpace: coordinateSpace).contains(point) {
         return handle
       }
@@ -156,14 +200,16 @@ enum CaptureSelectionHandleGeometry {
     metrics: (
       cornerLength: CGFloat,
       thickness: CGFloat
-    ) = (
-      cornerLength: CaptureSelectionChromeMetrics.cornerHandleLength,
-      thickness: CaptureSelectionChromeMetrics.handleThickness
-    ),
-    coordinateSpace: CaptureSelectionCoordinateSpace = .bottomLeftOrigin
+    )? = nil,
+    coordinateSpace: CaptureSelectionCoordinateSpace = .bottomLeftOrigin,
+    layout: CaptureSelectionChromeLayout? = nil
   ) -> (horizontal: CGRect, vertical: CGRect) {
-    let length = metrics.cornerLength
-    let thickness = metrics.thickness
+    let resolvedMetrics = metrics ?? (
+      cornerLength: layout?.cornerLength ?? CaptureSelectionChromeMetrics.cornerHandleLength,
+      thickness: CaptureSelectionChromeMetrics.handleThickness
+    )
+    let length = resolvedMetrics.cornerLength
+    let thickness = resolvedMetrics.thickness
     let halfThickness = thickness / 2
 
     switch (corner, coordinateSpace) {
@@ -224,14 +270,16 @@ enum CaptureSelectionHandleGeometry {
     metrics: (
       edgeLength: CGFloat,
       thickness: CGFloat
-    ) = (
-      edgeLength: CaptureSelectionChromeMetrics.edgeHandleLength,
-      thickness: CaptureSelectionChromeMetrics.handleThickness
-    ),
-    coordinateSpace: CaptureSelectionCoordinateSpace = .bottomLeftOrigin
+    )? = nil,
+    coordinateSpace: CaptureSelectionCoordinateSpace = .bottomLeftOrigin,
+    layout: CaptureSelectionChromeLayout? = nil
   ) -> CGRect {
-    let length = metrics.edgeLength
-    let thickness = metrics.thickness
+    let resolvedMetrics = metrics ?? (
+      edgeLength: layout?.edgeLength ?? CaptureSelectionChromeMetrics.edgeHandleLength,
+      thickness: CaptureSelectionChromeMetrics.handleThickness
+    )
+    let length = resolvedMetrics.edgeLength
+    let thickness = resolvedMetrics.thickness
     let halfLength = length / 2
     let halfThickness = thickness / 2
 
