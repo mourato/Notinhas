@@ -691,4 +691,62 @@ prefs for the Annotate editor (no card slots).
   adopt in Quick Access (slot badge as accessory) and Annotate (no accessory).
   Do not fork a second drag/toggle list implementation.
 
+## Snapzy dead-code / distribution cleanup (070–078)
+
+Generated 2026-07-24 against commit `a6128271` after an improve-skill audit of
+Snapzy-inherited dead channels and doc drift. Product policy: manual GitHub DMG
+releases; no Homebrew cask; no Sparkle/About/Report; no Discord notify bot.
+
+Execute with `.agents/skills/plan-execute-review/SKILL.md`. Prefer
+`implementer-fast` for 070–074, 076, 078; `implementer` + reviewer for **075**
+(standalone mockup) and **077** (changelog/CI extract).
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 070 | Remove Homebrew cask and release CI cask updates | P1 | S | — | TODO |
+| 071 | Retire Discord release-notify workflow | P2 | S | — (serialize with 070 if both edit `docs/RELEASES.md`) | TODO |
+| 072 | Remove snapzy-named local object-storage Docker stack | P2 | S | — | TODO |
+| 073 | Remove ghost Updates/CrashReport/About docs | P1 | S | — | TODO |
+| 074 | Prune empty About and crash-report localization scaffolding | P2 | S | — | TODO |
+| 075 | Delete orphaned standalone MockupManager window path | P1 | M | — | TODO |
+| 076 | Retarget Code of Conduct and uninstall branding leftovers | P2 | S | — | TODO |
+| 077 | Re-root CHANGELOG for Notinhas (archive upstream) | P2 | M | — | TODO |
+| 078 | ADR: retain inherited Snapzy surfaces (no feature deletion) | P3 | S | soft: after 070–077 | TODO |
+
+### Dependency notes (070–078)
+
+- **070–074, 076** are independent Low/Fast deletes/docs; parallelize in separate
+  worktrees, but serialize merges that touch the same file (`docs/RELEASES.md`
+  for 070/071).
+- **075** must not delete integrated `EditorMode.mockup` — reviewer required.
+- **077** must keep release-publish awk extract non-empty; reviewer required.
+- **078** records retain decisions for OCR/scrolling/BYO cloud/annotate extras
+  and keep `install.sh`; does **not** delete those features. Run after cleanup
+  so the ADR does not advertise removed channels.
+
+### Product decisions (070–078)
+
+- No Homebrew **cask** for Notinhas (dev `brew install` tools like create-dmg OK).
+- No Discord release-notify workflow.
+- Remove unused LocalStack/MinIO `snapzy-*` Docker harness.
+- Docs must not list removed Updates/CrashReport/About modules or `about` settings tab.
+- Standalone `MockupManager` window stack is dead; integrated Annotate mockup stays.
+- CoC + uninstall branding → Notinhas / `mourato/Notinhas`.
+- CHANGELOG re-rooted to Notinhas; full upstream history archived under `docs/`.
+- Inherited capture extras, BYO cloud, watermark/combine/integrated mockup:
+  **retain** (ADR in 078); not dead-code targets.
+- Keep `install.sh` / `uninstall.sh` as DMG convenience (not Homebrew).
+
+### Findings considered and rejected (070–078)
+
+- Deleting `install.sh` / `uninstall.sh`: rejected — still valid GitHub Releases helpers.
+- Treating `brew install create-dmg` / swiftformat as product Homebrew: rejected.
+- Wholesale Video module removal: rejected — compile/runtime gated on purpose.
+- Deleting Counter enum / migration: rejected — ADR 066.
+- Removing `snapzy://` rejection tests: rejected — compatibility fence.
+- Deleting ImgBB or live Cloud providers as “dead”: rejected — wired; scope is 078 retain.
+- Deleting OCR/scrolling/smart-element/cutout/combine/watermark/integrated mockup
+  in this round: rejected — direction retain via 078, not cleanup deletes.
+- Reintroducing Sparkle / About / Report / `snapzy://`: rejected — AGENTS.md.
+
 
