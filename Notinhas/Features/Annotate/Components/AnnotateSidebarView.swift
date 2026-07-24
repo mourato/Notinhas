@@ -74,53 +74,48 @@ struct AnnotateSidebarView: View, Equatable {
   }
 
   var body: some View {
-    ScrollView(.vertical, showsIndicators: true) {
-      VStack(alignment: .leading, spacing: Spacing.md) {
-        presetControlsSection
+    VStack(alignment: .leading, spacing: Spacing.md) {
+      presetControlsSection
 
-        // Compact gradient section
-        gradientSection
+      // Compact gradient section
+      gradientSection
 
-        // Wallpaper section
-        wallpaperSection
+      // Wallpaper section
+      wallpaperSection
 
-        // Blurred background section
-        blurredSection
+      // Blurred background section
+      blurredSection
 
-        // Compact color section
-        colorSection
+      // Compact color section
+      colorSection
 
-        Divider().background(Color(nsColor: .separatorColor))
+      Divider().background(Color(nsColor: .separatorColor))
 
-        // Sliders section
-        slidersSection
+      // Sliders section
+      slidersSection
 
-        // Ratio section
-        if !state.isCombineMode {
-          ratioSection
-        }
-
-        // Alignment section
-        if !state.isCombineMode {
-          alignmentSection
-        }
-
-        // Mockup section (shown when mockup mode is active)
-        if state.editorMode == .mockup {
-          Divider().background(Color(nsColor: .separatorColor))
-          MockupControlsSection(state: state)
-        }
-
-        if state.isCombineMode {
-          AnnotateCombineControlsView(state: state)
-        }
-
-        Spacer(minLength: Spacing.lg)
+      // Ratio section
+      if !state.isCombineMode {
+        ratioSection
       }
-      .padding(Spacing.md)
+
+      // Alignment section
+      if !state.isCombineMode {
+        alignmentSection
+      }
+
+      // Mockup section (shown when mockup mode is active)
+      if state.editorMode == .mockup {
+        Divider().background(Color(nsColor: .separatorColor))
+        MockupControlsSection(state: state)
+      }
+
+      if state.isCombineMode {
+        AnnotateCombineControlsView(state: state)
+      }
+
+      Spacer(minLength: Spacing.lg)
     }
-    .frame(maxHeight: .infinity)
-//    .background(Color(nsColor: .scrubberTexturedBackground))
   }
 
   // MARK: - Preset Controls

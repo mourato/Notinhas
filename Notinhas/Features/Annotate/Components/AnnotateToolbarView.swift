@@ -95,7 +95,7 @@ struct AnnotateToolbarView: View {
 
       ToolbarButton(
         icon: "rectangle.on.rectangle",
-        isSelected: state.showSidebar,
+        isSelected: state.leftDock == .background,
         highlightColor: .blue
       ) {
         state.toggleSidebarVisibility()

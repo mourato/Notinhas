@@ -246,48 +246,61 @@ final class AnnotateViewportUIStateTests: XCTestCase {
   // MARK: - Sidebar collapse/restore for crop
 
   @MainActor
-  func testCollapseSidebarForCropInteractionHidesVisibleSidebar() {
+  func testCollapseSidebarForCropInteractionHidesVisibleDock() {
     let state = makeAnnotateState()
-    state.showSidebar = true
+    state.leftDock = .background
 
     state.collapseSidebarForCropInteraction()
 
-    XCTAssertFalse(state.showSidebar)
+    XCTAssertEqual(state.leftDock, .hidden)
   }
 
   @MainActor
   func testCollapseSidebarForCropInteractionIsNoOpWhenAlreadyHidden() {
     let state = makeAnnotateState()
-    state.showSidebar = false
+    state.leftDock = .hidden
 
     state.collapseSidebarForCropInteraction()
-    // No restore flag was set, so a later restore attempt stays hidden.
+    // No restore dock was set, so a later restore attempt stays hidden.
     state.restoreSidebarAfterCropInteractionIfNeeded()
 
-    XCTAssertFalse(state.showSidebar)
+    XCTAssertEqual(state.leftDock, .hidden)
   }
 
   @MainActor
-  func testRestoreSidebarAfterCropInteractionReopensAutoCollapsedSidebar() {
+  func testRestoreSidebarAfterCropInteractionReopensAutoCollapsedDock() {
     let state = makeAnnotateState()
-    state.showSidebar = true
+    state.leftDock = .background
 
     state.collapseSidebarForCropInteraction()
-    XCTAssertFalse(state.showSidebar)
+    XCTAssertEqual(state.leftDock, .hidden)
 
     state.restoreSidebarAfterCropInteractionIfNeeded()
 
-    XCTAssertTrue(state.showSidebar)
+    XCTAssertEqual(state.leftDock, .background)
+  }
+
+  @MainActor
+  func testRestoreSidebarAfterCropInteractionReopensNotesDock() {
+    let state = makeAnnotateState()
+    state.leftDock = .notes
+
+    state.collapseSidebarForCropInteraction()
+    XCTAssertEqual(state.leftDock, .hidden)
+
+    state.restoreSidebarAfterCropInteractionIfNeeded()
+
+    XCTAssertEqual(state.leftDock, .notes)
   }
 
   @MainActor
   func testRestoreSidebarAfterCropInteractionIsNoOpWithoutAutoCollapse() {
     let state = makeAnnotateState()
-    state.showSidebar = false
+    state.leftDock = .hidden
 
     state.restoreSidebarAfterCropInteractionIfNeeded()
 
-    XCTAssertFalse(state.showSidebar)
+    XCTAssertEqual(state.leftDock, .hidden)
   }
 
   // MARK: - Drag-to-app preparation state (pure state transition, ALWAYS-RUN)
