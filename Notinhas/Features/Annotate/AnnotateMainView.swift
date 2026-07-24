@@ -24,7 +24,7 @@ struct AnnotateMainView: View {
           .background(Color(nsColor: .separatorColor))
 
         AnnotateQuickPropertiesBar(state: state)
-          .frame(height: quickPropertiesBarHeight)
+          .frame(minHeight: quickPropertiesBarHeight)
 
         Divider()
           .background(Color(nsColor: .separatorColor))

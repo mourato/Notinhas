@@ -159,8 +159,7 @@ struct AnnotateQuickPropertiesBar: View {
       barContent(density: .regular)
       barContent(density: .compact)
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-    .clipped()
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
   }
 
   @ViewBuilder
@@ -207,7 +206,10 @@ struct AnnotateQuickPropertiesBar: View {
     let hasBeforeCornerRadius = hasBeforeStrokeWidth || showStrokeWidth
     let hasBeforeArrowStyle = hasBeforeCornerRadius || showCornerRadius
 
-    return HStack(spacing: density.rowSpacing) {
+    return QuickPropertiesFlowLayout(
+      horizontalSpacing: density.rowSpacing,
+      verticalSpacing: density.rowSpacing
+    ) {
       contextChip(density: density)
         .frame(width: density.contextChipWidth, alignment: .leading)
 
@@ -458,7 +460,7 @@ struct AnnotateQuickPropertiesBar: View {
         )
       }
     }
-    .fixedSize(horizontal: true, vertical: false)
+    .frame(maxWidth: .infinity, alignment: .leading)
     .padding(.horizontal, density.horizontalPadding)
     .padding(.vertical, Spacing.sm)
   }
@@ -510,6 +512,7 @@ struct AnnotateQuickPropertiesBar: View {
     if isVisible {
       if showsLeadingDivider {
         QuickPropertiesDivider()
+          .quickPropertiesFlowRowLeadingDivider()
       }
       stableSlot(isEnabled: isEnabled, width: width) {
         content()
