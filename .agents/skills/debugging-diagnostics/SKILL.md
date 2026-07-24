@@ -22,6 +22,13 @@ Use for crashes, flaky capture/annotate, permission failures, wrong export outpu
 - **Geometry / hit-testing** — wrong pin order, move/delete not registering; check `NotinhasNoteGeometry` and `NotinhasAnnotateState`.
 - **ImgBB upload** — missing API key (`notinhas.imgbb.apiKey`), network/API errors; never log key values.
 - **Persistence** — corrupted annotation session JSON should fail soft; Notinhas payload on `PersistedAnnotationSession`.
+- **UI lag on tool switch / selection / drag / notes** — a synchronous Keychain/disk/XPC read reached from a SwiftUI `body` that rebuilds on every `@Published` (classic: `NotinhasImgBBCredentialStore.isConfigured` → `CloudKeychainStore` inside `AnnotateBottomBarView` / `QuickAccessCardView`). Cache the flag as `@Published`; never read `securityd` per render.
+
+## Performance / UI Hitch Method
+
+- If per-view `body`/draw timings all look cheap but interactions still hitch, stop guessing per-view. The cost is usually a hidden syscall, not view construction.
+- Capture real main-thread stacks: `sample <pid> <seconds> -file /tmp/out.txt` (or Instruments Time Profiler), then read the self-time leaf frames in Notinhas code. Align the sample window with active interaction (the main thread reads as idle in `mach_msg` otherwise).
+- Confirm the fix perceptually (the user feeling the hitch is the reliable signal) and revert temporary instrumentation before committing.
 
 ## Logging Hygiene
 
