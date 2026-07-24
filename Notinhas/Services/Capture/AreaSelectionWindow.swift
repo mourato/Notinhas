@@ -135,6 +135,10 @@ final class AreaSelectionController: NSObject {
   private var isMovingManualSelection = false
   private var manualSelectionLastPointerLocation: CGPoint?
 
+  /// Screen-space frames (e.g. All-In-One floating HUDs) that must keep the arrow cursor
+  /// instead of the selection crosshair while this controller is presenting.
+  var cursorExclusionFrames: () -> [CGRect] = { [] }
+
   /// Whether the overlay should be dismissed immediately after a selection is made.
   /// When `false`, the caller is responsible for calling `cancelSelection()` to dismiss.
   /// Prefer the `dismissesAfterSelection` start parameter over `setDismissesAfterSelection`:
@@ -1050,6 +1054,13 @@ final class AreaSelectionController: NSObject {
   /// display, so that overlay's cursor rects render the crosshair while the app stays inactive.
   private func handlePointerTrackingTick() {
     guard isPresenting else { return }
+
+    let location = NSEvent.mouseLocation
+    if CaptureFloatingCursorExclusion.contains(location, in: cursorExclusionFrames()) {
+      NSCursor.arrow.set()
+      return
+    }
+
     // A manual drag owns the cursor, but the drag monitors only re-assert it on pointer
     // movement — and the WindowServer can reset the crosshair to the arrow right after
     // mouseDown (the activation handoff the click itself triggered, a backdrop recapture
@@ -1061,7 +1072,6 @@ final class AreaSelectionController: NSObject {
       reassertManualSelectionCursor()
       return
     }
-    let location = NSEvent.mouseLocation
     guard let window = window(containing: location),
           let displayID = window.displayID else { return }
     // Already the key/keyboard owner — nothing to do (also the single-display fast path).
@@ -1138,6 +1148,7 @@ final class AreaSelectionController: NSObject {
     interactionMode = .manualRegion
     windowSelectionSnapshot = nil
     keyboardOwnerDisplayID = nil
+    cursorExclusionFrames = { [] }
   }
 
   private func beginManualSelection(at screenPoint: CGPoint, from window: AreaSelectionWindow) {
@@ -1188,6 +1199,10 @@ final class AreaSelectionController: NSObject {
   /// process-global, so asserting via the source window's overlay view covers cross-display drags.
   private func reassertManualSelectionCursor() {
     guard manualSelectionStartPoint != nil else { return }
+    if CaptureFloatingCursorExclusion.contains(NSEvent.mouseLocation, in: cursorExclusionFrames()) {
+      NSCursor.arrow.set()
+      return
+    }
     (manualSelectionSourceWindow ?? activeWindow)?.overlayView.reassertCursorDuringDrag()
   }
 

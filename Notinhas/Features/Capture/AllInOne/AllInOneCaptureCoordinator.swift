@@ -23,6 +23,10 @@ final class AllInOneCaptureCoordinator {
   private var isActive = false
   private var isAwaitingInitialSelection = false
   private var sessionGeneration = UUID()
+  /// Re-asserts arrow over HUD frames for the whole All-In-One session (initial
+  /// `AreaSelectionController` drag and refinement). Overlay timers otherwise
+  /// force crosshair for any pointer still inside their full-screen frames.
+  private var hudCursorExclusionTimer: Timer?
 
   private init() {}
 
@@ -97,6 +101,7 @@ final class AllInOneCaptureCoordinator {
     guard isActive else { return }
 
     installHUDs(using: sessionState!)
+    startHUDCursorExclusionIfNeeded()
 
     let screenFrames = NSScreen.screens.map(\.frame)
     if let lastRect = CaptureLastSelectionStore.load(userDefaults: .standard, screens: screenFrames) {
@@ -123,6 +128,10 @@ final class AllInOneCaptureCoordinator {
     isAwaitingInitialSelection = true
     viewModel?.setAllInOneSelectionBlocking(true)
 
+    AreaSelectionController.shared.cursorExclusionFrames = { [weak self] in
+      self?.visibleHUDFrames() ?? []
+    }
+
     let backdrops = frozenSession?.backdrops ?? [:]
     AreaSelectionController.shared.startSelection(
       mode: .screenshot,
@@ -131,6 +140,7 @@ final class AllInOneCaptureCoordinator {
         guard let self else { return }
         isAwaitingInitialSelection = false
         viewModel?.setAllInOneSelectionBlocking(false)
+        AreaSelectionController.shared.cursorExclusionFrames = { [] }
 
         guard isActive else { return }
 
@@ -185,17 +195,43 @@ final class AllInOneCaptureCoordinator {
     }
     refinementController = controller
     controller.cursorExclusionFrames = { [weak self] in
-      guard let self else { return [] }
-      var frames: [CGRect] = []
-      if let modeHUD, modeHUD.isVisible {
-        frames.append(modeHUD.frame)
-      }
-      if let actionHUD, actionHUD.isVisible {
-        frames.append(actionHUD.frame)
-      }
-      return frames
+      self?.visibleHUDFrames() ?? []
     }
     controller.present()
+  }
+
+  // MARK: - HUD cursor exclusion
+
+  private func visibleHUDFrames() -> [CGRect] {
+    [modeHUD, actionHUD].compactMap { window in
+      guard let window, window.isVisible else { return nil }
+      let frame = window.frame
+      guard frame.width > 1, frame.height > 1 else { return nil }
+      return frame
+    }
+  }
+
+  private func startHUDCursorExclusionIfNeeded() {
+    guard hudCursorExclusionTimer == nil else { return }
+    let timer = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
+      MainActor.assumeIsolated {
+        self?.assertArrowCursorOverHUDsIfNeeded()
+      }
+    }
+    RunLoop.main.add(timer, forMode: .common)
+    hudCursorExclusionTimer = timer
+  }
+
+  private func assertArrowCursorOverHUDsIfNeeded() {
+    guard isActive else { return }
+    if CaptureFloatingCursorExclusion.contains(NSEvent.mouseLocation, in: visibleHUDFrames()) {
+      NSCursor.arrow.set()
+    }
+  }
+
+  private func stopHUDCursorExclusion() {
+    hudCursorExclusionTimer?.invalidate()
+    hudCursorExclusionTimer = nil
   }
 
   private func showFrozenBackdropHostIfNeeded() {
@@ -358,7 +394,9 @@ final class AllInOneCaptureCoordinator {
     let ownsInitialSelection = isAwaitingInitialSelection
     isAwaitingInitialSelection = false
     timerScheduler.cancel()
+    stopHUDCursorExclusion()
     viewModel?.setAllInOneSelectionBlocking(false)
+    AreaSelectionController.shared.cursorExclusionFrames = { [] }
 
     refinementController?.onCancel = nil
     refinementController?.onRectChanged = nil

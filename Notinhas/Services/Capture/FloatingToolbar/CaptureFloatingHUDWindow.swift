@@ -40,6 +40,20 @@ final class CaptureFloatingHUDWindow: NSPanel {
     setContentSize(fittingSize)
     cachedContentSize = fittingSize
     invalidateShadow()
+    installPointerTrackingIfNeeded(on: hosting)
+  }
+
+  private func installPointerTrackingIfNeeded(on view: NSView) {
+    for area in view.trackingAreas {
+      view.removeTrackingArea(area)
+    }
+    let area = NSTrackingArea(
+      rect: view.bounds,
+      options: [.activeAlways, .mouseEnteredAndExited, .cursorUpdate, .inVisibleRect],
+      owner: self,
+      userInfo: nil
+    )
+    view.addTrackingArea(area)
   }
 
   func show(anchorRect: CGRect, screen: NSScreen? = nil) {
@@ -86,6 +100,17 @@ final class CaptureFloatingHUDWindow: NSPanel {
     false
   }
 
+  /// Floating HUDs stay non-key, so AppKit cursor rects rarely apply. Force the
+  /// standard arrow whenever the pointer enters this panel (All-In-One / capture chrome).
+  override func cursorUpdate(with _: NSEvent) {
+    NSCursor.arrow.set()
+  }
+
+  override func mouseEntered(with event: NSEvent) {
+    NSCursor.arrow.set()
+    super.mouseEntered(with: event)
+  }
+
   private func configureWindow() {
     isFloatingPanel = true
     isOpaque = false
@@ -97,6 +122,7 @@ final class CaptureFloatingHUDWindow: NSPanel {
     hidesOnDeactivate = false
     isReleasedWhenClosed = false
     appearance = ThemeManager.shared.nsAppearance
+    acceptsMouseMovedEvents = true
   }
 
   private func positionNearAnchor(screen: NSScreen?) {
