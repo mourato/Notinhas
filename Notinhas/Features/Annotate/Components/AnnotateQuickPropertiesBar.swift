@@ -57,52 +57,10 @@ private enum QuickPropertiesDensity {
     }
   }
 
-  var strokeControlWidth: CGFloat {
-    switch self {
-    case .regular: 184
-    case .compact: 146
-    }
-  }
-
-  var textSizeControlWidth: CGFloat {
-    switch self {
-    case .regular: 184
-    case .compact: 146
-    }
-  }
-
-  var watermarkTextControlWidth: CGFloat {
-    switch self {
-    case .regular: 210
-    case .compact: 158
-    }
-  }
-
   var watermarkStyleControlWidth: CGFloat {
     switch self {
     case .regular: 142
     case .compact: 124
-    }
-  }
-
-  var opacityControlWidth: CGFloat {
-    switch self {
-    case .regular: 220
-    case .compact: 184
-    }
-  }
-
-  var rotationControlWidth: CGFloat {
-    switch self {
-    case .regular: 232
-    case .compact: 196
-    }
-  }
-
-  var cornerControlWidth: CGFloat {
-    switch self {
-    case .regular: 190
-    case .compact: 154
     }
   }
 
@@ -127,7 +85,7 @@ private enum QuickPropertiesDensity {
   var sliderWidth: CGFloat {
     switch self {
     case .regular: 96
-    case .compact: 56
+    case .compact: 72
     }
   }
 
@@ -307,7 +265,7 @@ struct AnnotateQuickPropertiesBar: View {
         isVisible: showTextFontSize,
         isEnabled: state.quickPropertiesSupportsTextFontSize,
         showsLeadingDivider: hasBeforeTextFontSize,
-        width: density.textSizeControlWidth
+        width: nil
       ) {
         QuickTextFontSizeControl(
           value: state.quickTextFontSizeBinding,
@@ -320,7 +278,7 @@ struct AnnotateQuickPropertiesBar: View {
         isVisible: showWatermark,
         isEnabled: state.quickPropertiesSupportsWatermark,
         showsLeadingDivider: hasBeforeWatermarkText,
-        width: density.watermarkTextControlWidth
+        width: nil
       ) {
         QuickWatermarkTextControl(
           text: state.quickWatermarkTextBinding,
@@ -345,7 +303,7 @@ struct AnnotateQuickPropertiesBar: View {
         isVisible: showWatermark,
         isEnabled: state.quickPropertiesSupportsWatermark,
         showsLeadingDivider: hasBeforeWatermarkOpacity,
-        width: density.opacityControlWidth
+        width: nil
       ) {
         QuickWatermarkOpacityControl(
           value: state.quickWatermarkOpacityBinding,
@@ -358,7 +316,7 @@ struct AnnotateQuickPropertiesBar: View {
         isVisible: showWatermark,
         isEnabled: state.quickPropertiesSupportsWatermark,
         showsLeadingDivider: hasBeforeWatermarkRotation,
-        width: density.rotationControlWidth
+        width: nil
       ) {
         QuickWatermarkRotationControl(
           value: state.quickWatermarkRotationBinding,
@@ -398,7 +356,7 @@ struct AnnotateQuickPropertiesBar: View {
         isVisible: state.quickPropertiesSupportsSpotlightOpacity,
         isEnabled: state.quickPropertiesSupportsSpotlightOpacity,
         showsLeadingDivider: hasBeforeSpotlightOpacity,
-        width: density.opacityControlWidth
+        width: nil
       ) {
         QuickSpotlightOpacityControl(
           value: state.quickSpotlightOpacityBinding,
@@ -411,7 +369,7 @@ struct AnnotateQuickPropertiesBar: View {
         isVisible: showStrokeWidth,
         isEnabled: state.quickPropertiesSupportsStrokeWidth,
         showsLeadingDivider: hasBeforeStrokeWidth,
-        width: density.strokeControlWidth
+        width: nil
       ) {
         QuickStrokeWidthControl(
           title: state.quickStrokeWidthLabel,
@@ -430,7 +388,7 @@ struct AnnotateQuickPropertiesBar: View {
         isVisible: showCornerRadius,
         isEnabled: state.quickPropertiesSupportsCornerRadius,
         showsLeadingDivider: hasBeforeCornerRadius,
-        width: density.cornerControlWidth
+        width: nil
       ) {
         QuickCornerRadiusControl(
           value: state.quickCornerRadiusBinding,
@@ -493,10 +451,17 @@ struct AnnotateQuickPropertiesBar: View {
     width: CGFloat?,
     @ViewBuilder content: () -> some View
   ) -> some View {
-    content()
-      .frame(width: width, alignment: .leading)
-      .disabled(!isEnabled)
-      .opacity(isEnabled ? 1 : 0.26)
+    Group {
+      if let width {
+        content()
+          .frame(width: width, alignment: .leading)
+      } else {
+        content()
+          .fixedSize(horizontal: true, vertical: false)
+      }
+    }
+    .disabled(!isEnabled)
+    .opacity(isEnabled ? 1 : 0.26)
   }
 
   @ViewBuilder
@@ -1474,6 +1439,10 @@ private struct QuickTextPresentationControl: View {
   }
 }
 
+private enum QuickWatermarkTextControlMetrics {
+  static let fieldMinWidth: CGFloat = 120
+}
+
 private struct QuickWatermarkTextControl: View {
   @Binding var text: String
   let groupSpacing: CGFloat
@@ -1486,7 +1455,7 @@ private struct QuickWatermarkTextControl: View {
         .foregroundColor(SidebarColors.labelPrimary)
         .lineLimit(1)
         .padding(.horizontal, 8)
-        .frame(height: 24)
+        .frame(minWidth: QuickWatermarkTextControlMetrics.fieldMinWidth, maxHeight: 24)
         .background(
           RoundedRectangle(cornerRadius: 7)
             .fill(SidebarColors.itemDefault)
