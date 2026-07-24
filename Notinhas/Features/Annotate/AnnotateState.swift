@@ -217,8 +217,8 @@ final class AnnotateState: ObservableObject {
   /// Editor mode determines whether user is annotating or applying mockup transforms
   nonisolated enum EditorMode: String, CaseIterable {
     case annotate // Normal annotation editing (flat image)
-    case mockup // 3D perspective transforms with controls
     case preview // Preview combined result (hides all editing UI)
+    case mockup // 3D perspective transforms with controls
   }
 
   enum QuickPropertiesMode: Equatable {

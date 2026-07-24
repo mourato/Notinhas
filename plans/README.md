@@ -603,7 +603,7 @@ PRs/commits). Chrome first; Counter absorption last.
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |---|---|---:|---:|---|---|
-| 063 | Reorder mode tabs to Annotate / Preview / Mockup | P1 | S | — | TODO |
+| 063 | Reorder mode tabs to Annotate / Preview / Mockup | P1 | S | — | DONE |
 | 064 | Lead toolbar with Undo/Redo before Crop | P1 | S | — (after 063 by policy) | TODO |
 | 065 | Wrap quick properties instead of clipping/overlap | P1 | M | — (after 064 by policy) | TODO |
 | 066 | Absorb Counter into Notinha | P1 | L | — (after 065 by policy) | TODO |
