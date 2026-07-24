@@ -75,6 +75,9 @@ enum PreferencesKeys {
   static let annotateToolParameterDefaults = "annotate.toolParameterDefaults.v1"
   static let annotateQuickPropertiesSyncEnabled = "annotate.quickPropertiesSyncEnabled"
   static let annotateCombineSaveAsEdit = "annotate.combineSaveAsEdit"
+  static let annotateChromeToolbarOrder = "annotate.chrome.toolbarOrder.v1"
+  static let annotateChromeBottomOrder = "annotate.chrome.bottomOrder.v1"
+  static let annotateChromeEnabledItems = "annotate.chrome.enabled.v1"
   static let notinhasNotesPanelSide = "annotate.notinhasNotes.panelSide.v1"
   static let legacyNotinhasNotesPanelSide = "notinhas.notes.panelSide"
   /// Legacy ImgBB API key in UserDefaults. Retained for one-time migration only; new writes use Keychain.

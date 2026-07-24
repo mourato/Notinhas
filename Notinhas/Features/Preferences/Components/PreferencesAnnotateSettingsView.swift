@@ -20,6 +20,8 @@ struct AnnotateSettingsView: View {
 
   var body: some View {
     Form {
+      AnnotateChromeCustomizationView()
+
       Section(L10n.PreferencesAnnotate.behaviorSection) {
         SettingRow(
           icon: "slider.horizontal.3",
