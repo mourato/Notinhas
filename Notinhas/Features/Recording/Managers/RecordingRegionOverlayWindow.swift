@@ -33,15 +33,6 @@ struct RecordingRegionOverlayGuidance {
   let tone: RecordingRegionOverlayGuidanceTone
 }
 
-// MARK: - RecordingResizeHandle
-
-/// Resize handle positions for edge and corner resizing
-enum RecordingResizeHandle {
-  case topLeft, top, topRight
-  case left, right
-  case bottomLeft, bottom, bottomRight
-}
-
 // MARK: - RecordingRegionOverlayDelegate
 
 /// Delegate protocol for overlay interaction events
@@ -257,11 +248,8 @@ final class RecordingRegionOverlayView: NSView {
   // Constants
   private let dimColor = NSColor.black.withAlphaComponent(0.4)
   private let borderColor = NSColor.white
-  private let borderWidth: CGFloat = 1.5
-  private let handleHitSize: CGFloat = 10.0
-  private let cornerHandleLength: CGFloat = 20.0
-  private let edgeHandleLength: CGFloat = 24.0
-  private let handleThickness: CGFloat = 3.0
+  private let borderWidth = CaptureSelectionChromeMetrics.continuousBorderWidth
+  private let handleHitSize = CaptureSelectionChromeMetrics.handleHitSize
   private let minimumSelectionSize: CGFloat = 50.0
 
   init(frame: CGRect, highlightRect: CGRect) {
@@ -330,9 +318,9 @@ final class RecordingRegionOverlayView: NSView {
 
   private func registerResizeHandleCursorRects(for rect: CGRect) {
     let hitSize = handleHitSize
-    for handle in RecordingResizeHandleCursorGeometry.allHandles {
-      let hitRect = RecordingResizeHandleCursorGeometry.hitRect(for: handle, in: rect, hitSize: hitSize)
-      addCursorRect(hitRect, cursor: cursorFor(handle: handle))
+    for handle in CaptureSelectionHandleGeometry.allHandles {
+      let hitRect = CaptureSelectionHandleGeometry.hitRect(for: handle, in: rect, hitSize: hitSize)
+      addCursorRect(hitRect, cursor: CaptureSelectionResizeCursor.cursor(for: handle))
     }
   }
 
@@ -381,153 +369,7 @@ final class RecordingRegionOverlayView: NSView {
 
   private func handleAt(point: CGPoint) -> RecordingResizeHandle? {
     let rect = localHighlightRect()
-    return RecordingResizeHandleCursorGeometry.handle(at: point, in: rect, hitSize: handleHitSize)
-  }
-
-  private static let northwestSoutheastCursor: NSCursor = {
-    let image = RecordingRegionOverlayView.makeDiagonalResizeCursorImage(nwse: true)
-    return NSCursor(image: image, hotSpot: NSPoint(x: 8, y: 8))
-  }()
-
-  private static let northeastSouthwestCursor: NSCursor = {
-    let image = RecordingRegionOverlayView.makeDiagonalResizeCursorImage(nwse: false)
-    return NSCursor(image: image, hotSpot: NSPoint(x: 8, y: 8))
-  }()
-
-  private func cursorFor(handle: RecordingResizeHandle) -> NSCursor {
-    switch handle {
-    case .topLeft, .bottomRight:
-      Self.northwestSoutheastCursor
-    case .topRight, .bottomLeft:
-      Self.northeastSouthwestCursor
-    case .top, .bottom:
-      .resizeUpDown
-    case .left, .right:
-      .resizeLeftRight
-    }
-  }
-
-  private static func makeDiagonalResizeCursorImage(nwse: Bool) -> NSImage {
-    let size = NSSize(width: 16, height: 16)
-    let image = NSImage(size: size)
-    image.lockFocus()
-
-    let path = NSBezierPath()
-    path.lineWidth = 1.5
-    path.lineCapStyle = .round
-
-    if nwse {
-      // NW-SE diagonal (↖↘)
-      // Arrow pointing to top-left
-      path.move(to: NSPoint(x: 3, y: 13))
-      path.line(to: NSPoint(x: 3, y: 8))
-      path.move(to: NSPoint(x: 3, y: 13))
-      path.line(to: NSPoint(x: 8, y: 13))
-      // Main diagonal line
-      path.move(to: NSPoint(x: 3, y: 13))
-      path.line(to: NSPoint(x: 13, y: 3))
-      // Arrow pointing to bottom-right
-      path.move(to: NSPoint(x: 13, y: 3))
-      path.line(to: NSPoint(x: 13, y: 8))
-      path.move(to: NSPoint(x: 13, y: 3))
-      path.line(to: NSPoint(x: 8, y: 3))
-    } else {
-      // NE-SW diagonal (↗↙)
-      // Arrow pointing to top-right
-      path.move(to: NSPoint(x: 13, y: 13))
-      path.line(to: NSPoint(x: 13, y: 8))
-      path.move(to: NSPoint(x: 13, y: 13))
-      path.line(to: NSPoint(x: 8, y: 13))
-      // Main diagonal line
-      path.move(to: NSPoint(x: 13, y: 13))
-      path.line(to: NSPoint(x: 3, y: 3))
-      // Arrow pointing to bottom-left
-      path.move(to: NSPoint(x: 3, y: 3))
-      path.line(to: NSPoint(x: 3, y: 8))
-      path.move(to: NSPoint(x: 3, y: 3))
-      path.line(to: NSPoint(x: 8, y: 3))
-    }
-
-    // Draw white outline for visibility on dark backgrounds
-    NSColor.white.withAlphaComponent(0.5).setStroke()
-    path.lineWidth = 2.5
-    path.stroke()
-
-    // Draw black arrow
-    NSColor.black.setStroke()
-    path.lineWidth = 1.5
-    path.stroke()
-
-    image.unlockFocus()
-    return image
-  }
-}
-
-// MARK: - Handle Geometry (testable)
-
-enum RecordingResizeHandleCursorGeometry {
-  static let allHandles: [RecordingResizeHandle] = [
-    .topLeft, .top, .topRight, .left, .right, .bottomLeft, .bottom, .bottomRight,
-  ]
-
-  /// Hit-test order: corners first (diagonal resize), then full edge strips between corners.
-  static func handle(at point: CGPoint, in rect: CGRect, hitSize: CGFloat) -> RecordingResizeHandle? {
-    for handle in [.topLeft, .topRight, .bottomLeft, .bottomRight] as [RecordingResizeHandle] {
-      if hitRect(for: handle, in: rect, hitSize: hitSize).contains(point) {
-        return handle
-      }
-    }
-
-    for handle in [.top, .bottom, .left, .right] as [RecordingResizeHandle] {
-      if hitRect(for: handle, in: rect, hitSize: hitSize).contains(point) {
-        return handle
-      }
-    }
-
-    return nil
-  }
-
-  static func hitRect(for handle: RecordingResizeHandle, in rect: CGRect, hitSize: CGFloat) -> CGRect {
-    let hs = hitSize
-    switch handle {
-    case .topLeft:
-      return CGRect(x: rect.minX - hs, y: rect.maxY - hs, width: hs * 2, height: hs * 2)
-    case .topRight:
-      return CGRect(x: rect.maxX - hs, y: rect.maxY - hs, width: hs * 2, height: hs * 2)
-    case .bottomLeft:
-      return CGRect(x: rect.minX - hs, y: rect.minY - hs, width: hs * 2, height: hs * 2)
-    case .bottomRight:
-      return CGRect(x: rect.maxX - hs, y: rect.minY - hs, width: hs * 2, height: hs * 2)
-    case .top:
-      // Full top edge between corner hit squares.
-      return CGRect(
-        x: rect.minX + hs,
-        y: rect.maxY - hs,
-        width: max(0, rect.width - hs * 2),
-        height: hs * 2
-      )
-    case .bottom:
-      return CGRect(
-        x: rect.minX + hs,
-        y: rect.minY - hs,
-        width: max(0, rect.width - hs * 2),
-        height: hs * 2
-      )
-    case .left:
-      return CGRect(
-        x: rect.minX - hs,
-        y: rect.minY + hs,
-        width: hs * 2,
-        height: max(0, rect.height - hs * 2)
-      )
-    case .right:
-      return CGRect(
-        x: rect.maxX - hs,
-        y: rect.minY + hs,
-        width: hs * 2,
-        height: max(0, rect.height - hs * 2)
-      )
-    }
+    return CaptureSelectionHandleGeometry.handle(at: point, in: rect, hitSize: handleHitSize)
   }
 }
 
@@ -776,7 +618,7 @@ extension RecordingRegionOverlayView {
       activeHandle = handle
       resizeStartRect = highlightRect
       resizeStartPoint = point
-      cursorFor(handle: handle).set()
+      CaptureSelectionResizeCursor.cursor(for: handle).set()
       installCrossDisplayMonitorIfNeeded()
       return
     }
@@ -842,7 +684,7 @@ extension RecordingRegionOverlayView {
   private func updateCursorFor(point: CGPoint) {
     // Check for resize handle first
     if let handle = handleAt(point: point) {
-      cursorFor(handle: handle).set()
+      CaptureSelectionResizeCursor.cursor(for: handle).set()
       return
     }
 
@@ -1024,125 +866,15 @@ extension RecordingRegionOverlayView {
   }
 
   private func drawRecordingResizeHandles(for rect: CGRect) {
-    // Draw L-shaped corner handles (CleanShot X style)
-    drawCornerHandle(at: CGPoint(x: rect.minX, y: rect.maxY), corner: .topLeft)
-    drawCornerHandle(at: CGPoint(x: rect.maxX, y: rect.maxY), corner: .topRight)
-    drawCornerHandle(at: CGPoint(x: rect.minX, y: rect.minY), corner: .bottomLeft)
-    drawCornerHandle(at: CGPoint(x: rect.maxX, y: rect.minY), corner: .bottomRight)
-
-    // Draw edge handles (subtle lines)
-    drawEdgeHandle(at: CGPoint(x: rect.midX, y: rect.maxY), edge: .top)
-    drawEdgeHandle(at: CGPoint(x: rect.midX, y: rect.minY), edge: .bottom)
-    drawEdgeHandle(at: CGPoint(x: rect.minX, y: rect.midY), edge: .left)
-    drawEdgeHandle(at: CGPoint(x: rect.maxX, y: rect.midY), edge: .right)
-  }
-
-  private func drawCornerHandle(at point: CGPoint, corner: RecordingResizeHandle) {
-    let length = cornerHandleLength
-    let thickness = handleThickness
-    let halfThickness = thickness / 2
-
-    // Calculate offsets to center handles on the outline
-    // Horizontal bar: centered vertically on the horizontal edge
-    // Vertical bar: centered horizontally on the vertical edge
-    let hRect: CGRect
-    let vRect: CGRect
-
-    switch corner {
-    case .topLeft:
-      // Horizontal bar extends right from corner, centered on top edge
-      hRect = CGRect(
-        x: point.x - halfThickness,
-        y: point.y - halfThickness,
-        width: length,
-        height: thickness
-      )
-      // Vertical bar extends down from corner, centered on left edge
-      vRect = CGRect(
-        x: point.x - halfThickness,
-        y: point.y - length + halfThickness,
-        width: thickness,
-        height: length
-      )
-    case .topRight:
-      // Horizontal bar extends left from corner, centered on top edge
-      hRect = CGRect(
-        x: point.x - length + halfThickness,
-        y: point.y - halfThickness,
-        width: length,
-        height: thickness
-      )
-      // Vertical bar extends down from corner, centered on right edge
-      vRect = CGRect(
-        x: point.x - halfThickness,
-        y: point.y - length + halfThickness,
-        width: thickness,
-        height: length
-      )
-    case .bottomLeft:
-      // Horizontal bar extends right from corner, centered on bottom edge
-      hRect = CGRect(
-        x: point.x - halfThickness,
-        y: point.y - halfThickness,
-        width: length,
-        height: thickness
-      )
-      // Vertical bar extends up from corner, centered on left edge
-      vRect = CGRect(
-        x: point.x - halfThickness,
-        y: point.y - halfThickness,
-        width: thickness,
-        height: length
-      )
-    case .bottomRight:
-      // Horizontal bar extends left from corner, centered on bottom edge
-      hRect = CGRect(
-        x: point.x - length + halfThickness,
-        y: point.y - halfThickness,
-        width: length,
-        height: thickness
-      )
-      // Vertical bar extends up from corner, centered on right edge
-      vRect = CGRect(
-        x: point.x - halfThickness,
-        y: point.y - halfThickness,
-        width: thickness,
-        height: length
-      )
-    default:
-      return
+    for (handle, anchor) in CaptureSelectionHandleGeometry.cornerAnchors(in: rect, coordinateSpace: .bottomLeftOrigin) {
+      let bars = CaptureSelectionHandleGeometry.cornerHandleBars(for: handle, anchor: anchor)
+      drawHandleBar(bars.horizontal)
+      drawHandleBar(bars.vertical)
     }
 
-    drawHandleBar(hRect)
-    drawHandleBar(vRect)
-  }
-
-  private func drawEdgeHandle(at point: CGPoint, edge: RecordingResizeHandle) {
-    let length = edgeHandleLength
-    let thickness = handleThickness
-    let halfLength = length / 2
-    let halfThickness = thickness / 2
-
-    let handleRect: CGRect
-    switch edge {
-    case .top, .bottom:
-      handleRect = CGRect(
-        x: point.x - halfLength,
-        y: point.y - halfThickness,
-        width: length,
-        height: thickness
-      )
-    case .left, .right:
-      handleRect = CGRect(
-        x: point.x - halfThickness,
-        y: point.y - halfLength,
-        width: thickness,
-        height: length
-      )
-    default:
-      return
+    for (handle, anchor) in CaptureSelectionHandleGeometry.edgeAnchors(in: rect, coordinateSpace: .bottomLeftOrigin) {
+      drawHandleBar(CaptureSelectionHandleGeometry.edgeHandleBar(for: handle, anchor: anchor))
     }
-    drawHandleBar(handleRect)
   }
 
   private func drawHandleBar(_ rect: CGRect) {

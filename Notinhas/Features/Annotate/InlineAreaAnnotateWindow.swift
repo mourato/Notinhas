@@ -238,7 +238,7 @@ private struct InlineAreaAnnotateRootView: View {
   @State private var movingPreviewRect: CGRect?
   @State private var resizingStartRect: CGRect?
   @State private var resizePreviewRect: CGRect?
-  @State private var activeResizeHandle: InlineAreaResizeHandle?
+  @State private var activeResizeHandle: CaptureSelectionResizeHandle?
   @State private var cursorIndicatorPoint: CGPoint?
   @State private var propertiesContentWidth: CGFloat = 0
 
@@ -272,8 +272,6 @@ private struct InlineAreaAnnotateRootView: View {
             if session.controlDisplayID(for: desktopRect) == display.displayID {
               controls(rect: viewportRect, desktopRect: desktopRect, containerSize: geometry.size)
             }
-          } else {
-            selectionBorder(rect: viewportRect)
           }
         }
 
@@ -377,10 +375,6 @@ private struct InlineAreaAnnotateRootView: View {
       }
     }
     .frame(width: rect.width, height: rect.height)
-    .overlay(
-      selectionBorder(rect: CGRect(origin: .zero, size: rect.size))
-        .allowsHitTesting(false)
-    )
     .position(x: rect.midX, y: rect.midY)
   }
 
@@ -489,9 +483,15 @@ private struct InlineAreaAnnotateRootView: View {
       .position(x: rect.midX, y: rect.midY)
       .allowsHitTesting(false)
 
-    ForEach(InlineAreaResizeHandle.allCases) { handle in
+    ForEach(CaptureSelectionResizeHandle.allCases, id: \.self) { handle in
+      let hitRect = CaptureSelectionHandleGeometry.hitRect(
+        for: handle,
+        in: rect,
+        coordinateSpace: .topLeftOrigin
+      )
       InlineAreaResizeHandleHitTarget(handle: handle)
-        .position(handle.position(in: rect))
+        .frame(width: hitRect.width, height: hitRect.height)
+        .position(x: hitRect.midX, y: hitRect.midY)
         .gesture(resizeGesture(
           for: handle,
           desktopRect: desktopRect,
@@ -501,7 +501,7 @@ private struct InlineAreaAnnotateRootView: View {
   }
 
   private func resizeGesture(
-    for handle: InlineAreaResizeHandle,
+    for handle: CaptureSelectionResizeHandle,
     desktopRect: CGRect,
     containerSize: CGSize
   ) -> some Gesture {
@@ -546,7 +546,7 @@ private struct InlineAreaAnnotateRootView: View {
 
   private func resizedSelectionRect(
     from start: CGRect,
-    handle: InlineAreaResizeHandle,
+    handle: CaptureSelectionResizeHandle,
     translation: CGSize,
     containerSize: CGSize
   ) -> CGRect {
@@ -571,14 +571,6 @@ private struct InlineAreaAnnotateRootView: View {
     }
 
     return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY).standardized
-  }
-
-  private func selectionBorder(rect: CGRect) -> some View {
-    Rectangle()
-      .strokeBorder(Color.white, lineWidth: InlineAreaResizeHandleChrome.borderWidth)
-      .shadow(color: .black.opacity(0.45), radius: 2)
-      .frame(width: rect.width, height: rect.height)
-      .position(x: rect.midX, y: rect.midY)
   }
 
   private func controlPlacement(
@@ -775,20 +767,9 @@ enum InlineAreaVerticalSide {
   case below
 }
 
-private enum InlineAreaResizeHandle: CaseIterable, Identifiable {
-  case topLeft
-  case top
-  case topRight
-  case right
-  case bottomRight
-  case bottom
-  case bottomLeft
-  case left
+private typealias InlineAreaResizeHandle = CaptureSelectionResizeHandle
 
-  var id: Self {
-    self
-  }
-
+private extension CaptureSelectionResizeHandle {
   var adjustsLeft: Bool {
     switch self {
     case .topLeft, .bottomLeft, .left:
@@ -824,166 +805,39 @@ private enum InlineAreaResizeHandle: CaseIterable, Identifiable {
       false
     }
   }
-
-  var cursor: NSCursor {
-    switch self {
-    case .top, .bottom:
-      .resizeUpDown
-    case .left, .right:
-      .resizeLeftRight
-    case .topLeft, .bottomRight:
-      InlineAreaResizeCursor.diagonal(nwse: true)
-    case .topRight, .bottomLeft:
-      InlineAreaResizeCursor.diagonal(nwse: false)
-    }
-  }
-
-  func position(in rect: CGRect) -> CGPoint {
-    switch self {
-    case .topLeft:
-      CGPoint(x: rect.minX, y: rect.minY)
-    case .top:
-      CGPoint(x: rect.midX, y: rect.minY)
-    case .topRight:
-      CGPoint(x: rect.maxX, y: rect.minY)
-    case .right:
-      CGPoint(x: rect.maxX, y: rect.midY)
-    case .bottomRight:
-      CGPoint(x: rect.maxX, y: rect.maxY)
-    case .bottom:
-      CGPoint(x: rect.midX, y: rect.maxY)
-    case .bottomLeft:
-      CGPoint(x: rect.minX, y: rect.maxY)
-    case .left:
-      CGPoint(x: rect.minX, y: rect.midY)
-    }
-  }
-}
-
-private enum InlineAreaResizeHandleChrome {
-  static let borderWidth: CGFloat = 1.5
-  static let hitSize: CGFloat = 24
-  static let cornerLength: CGFloat = 20
-  static let edgeLength: CGFloat = 24
-  static let thickness: CGFloat = 3
 }
 
 private struct InlineAreaResizeHandlesOverlay: View {
   var body: some View {
     Canvas { context, size in
       let rect = CGRect(origin: .zero, size: size)
-      let shortestSide = min(rect.width, rect.height)
-      let cornerLength = min(
-        InlineAreaResizeHandleChrome.cornerLength,
-        max(10, shortestSide * 0.38)
-      )
 
-      drawCornerHandles(in: rect, length: cornerLength, context: &context)
-      drawEdgeHandles(in: rect, cornerLength: cornerLength, context: &context)
-    }
-  }
+      for (handle, anchor) in CaptureSelectionHandleGeometry.cornerAnchors(
+        in: rect,
+        coordinateSpace: .topLeftOrigin
+      ) {
+        let bars = CaptureSelectionHandleGeometry.cornerHandleBars(
+          for: handle,
+          anchor: anchor,
+          coordinateSpace: .topLeftOrigin
+        )
+        drawHandleBar(bars.horizontal, context: &context)
+        drawHandleBar(bars.vertical, context: &context)
+      }
 
-  private func drawCornerHandles(
-    in rect: CGRect,
-    length: CGFloat,
-    context: inout GraphicsContext
-  ) {
-    drawCorner(
-      at: CGPoint(x: rect.minX, y: rect.minY),
-      corner: .topLeft,
-      length: length,
-      context: &context
-    )
-    drawCorner(
-      at: CGPoint(x: rect.maxX, y: rect.minY),
-      corner: .topRight,
-      length: length,
-      context: &context
-    )
-    drawCorner(
-      at: CGPoint(x: rect.minX, y: rect.maxY),
-      corner: .bottomLeft,
-      length: length,
-      context: &context
-    )
-    drawCorner(
-      at: CGPoint(x: rect.maxX, y: rect.maxY),
-      corner: .bottomRight,
-      length: length,
-      context: &context
-    )
-  }
-
-  private func drawCorner(
-    at point: CGPoint,
-    corner: InlineAreaResizeHandle,
-    length: CGFloat,
-    context: inout GraphicsContext
-  ) {
-    let thickness = InlineAreaResizeHandleChrome.thickness
-
-    let horizontalRect: CGRect
-    let verticalRect: CGRect
-
-    switch corner {
-    case .topLeft:
-      horizontalRect = CGRect(x: point.x, y: point.y, width: length, height: thickness)
-      verticalRect = CGRect(x: point.x, y: point.y, width: thickness, height: length)
-    case .topRight:
-      horizontalRect = CGRect(x: point.x - length, y: point.y, width: length, height: thickness)
-      verticalRect = CGRect(x: point.x - thickness, y: point.y, width: thickness, height: length)
-    case .bottomLeft:
-      horizontalRect = CGRect(x: point.x, y: point.y - thickness, width: length, height: thickness)
-      verticalRect = CGRect(x: point.x, y: point.y - length, width: thickness, height: length)
-    case .bottomRight:
-      horizontalRect = CGRect(x: point.x - length, y: point.y - thickness, width: length, height: thickness)
-      verticalRect = CGRect(x: point.x - thickness, y: point.y - length, width: thickness, height: length)
-    default:
-      return
-    }
-
-    drawHandleBar(horizontalRect, context: &context)
-    drawHandleBar(verticalRect, context: &context)
-  }
-
-  private func drawEdgeHandles(
-    in rect: CGRect,
-    cornerLength: CGFloat,
-    context: inout GraphicsContext
-  ) {
-    let thickness = InlineAreaResizeHandleChrome.thickness
-    let minimumGap: CGFloat = 12
-
-    if rect.width >= cornerLength * 2 + minimumGap {
-      let length = min(
-        InlineAreaResizeHandleChrome.edgeLength,
-        max(10, rect.width - cornerLength * 2 - 8)
-      )
-      let halfLength = length / 2
-      drawHandleBar(
-        CGRect(x: rect.midX - halfLength, y: rect.minY, width: length, height: thickness),
-        context: &context
-      )
-      drawHandleBar(
-        CGRect(x: rect.midX - halfLength, y: rect.maxY - thickness, width: length, height: thickness),
-        context: &context
-      )
-    }
-
-    if rect.height >= cornerLength * 2 + minimumGap {
-      let length = min(
-        InlineAreaResizeHandleChrome.edgeLength,
-        max(10, rect.height - cornerLength * 2 - 8)
-      )
-      let halfLength = length / 2
-      drawHandleBar(
-        CGRect(x: rect.minX, y: rect.midY - halfLength, width: thickness, height: length),
-        context: &context
-      )
-      drawHandleBar(
-        CGRect(x: rect.maxX - thickness, y: rect.midY - halfLength, width: thickness, height: length),
-        context: &context
-      )
+      for (handle, anchor) in CaptureSelectionHandleGeometry.edgeAnchors(
+        in: rect,
+        coordinateSpace: .topLeftOrigin
+      ) {
+        drawHandleBar(
+          CaptureSelectionHandleGeometry.edgeHandleBar(
+            for: handle,
+            anchor: anchor,
+            coordinateSpace: .topLeftOrigin
+          ),
+          context: &context
+        )
+      }
     }
   }
 
@@ -997,15 +851,14 @@ private struct InlineAreaResizeHandlesOverlay: View {
 }
 
 private struct InlineAreaResizeHandleHitTarget: View {
-  let handle: InlineAreaResizeHandle
+  let handle: CaptureSelectionResizeHandle
 
   var body: some View {
     Color.clear
-      .frame(width: InlineAreaResizeHandleChrome.hitSize, height: InlineAreaResizeHandleChrome.hitSize)
       .contentShape(Rectangle())
       .onHover { hovering in
         if hovering {
-          handle.cursor.set()
+          CaptureSelectionResizeCursor.cursor(for: handle).set()
         } else {
           NSCursor.arrow.set()
         }
@@ -1439,46 +1292,6 @@ private struct InlineAreaHudMaterialBackground: NSViewRepresentable {
     // Explicitly set vibrancy appearance to match color scheme
     let isDark = ThemeManager.shared.systemAppearance == .dark
     view.appearance = NSAppearance(named: isDark ? .vibrantDark : .vibrantLight)
-  }
-}
-
-private enum InlineAreaResizeCursor {
-  static func diagonal(nwse: Bool) -> NSCursor {
-    let size = NSSize(width: 16, height: 16)
-    let image = NSImage(size: size)
-    image.lockFocus()
-
-    NSColor.clear.setFill()
-    NSRect(origin: .zero, size: size).fill()
-    NSColor.labelColor.setStroke()
-
-    let path = NSBezierPath()
-    path.lineWidth = 1.8
-    path.lineCapStyle = .round
-
-    if nwse {
-      path.move(to: NSPoint(x: 3, y: 13))
-      path.line(to: NSPoint(x: 13, y: 3))
-      path.move(to: NSPoint(x: 3, y: 9))
-      path.line(to: NSPoint(x: 3, y: 13))
-      path.line(to: NSPoint(x: 7, y: 13))
-      path.move(to: NSPoint(x: 9, y: 3))
-      path.line(to: NSPoint(x: 13, y: 3))
-      path.line(to: NSPoint(x: 13, y: 7))
-    } else {
-      path.move(to: NSPoint(x: 3, y: 3))
-      path.line(to: NSPoint(x: 13, y: 13))
-      path.move(to: NSPoint(x: 3, y: 7))
-      path.line(to: NSPoint(x: 3, y: 3))
-      path.line(to: NSPoint(x: 7, y: 3))
-      path.move(to: NSPoint(x: 9, y: 13))
-      path.line(to: NSPoint(x: 13, y: 13))
-      path.line(to: NSPoint(x: 13, y: 9))
-    }
-
-    path.stroke()
-    image.unlockFocus()
-    return NSCursor(image: image, hotSpot: NSPoint(x: 8, y: 8))
   }
 }
 
