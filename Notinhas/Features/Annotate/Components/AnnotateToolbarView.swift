@@ -23,6 +23,11 @@ struct AnnotateToolbarView: View {
       // Add spacer for traffic lights
       Spacer().frame(width: 0)
 
+      // Undo/Redo
+      undoRedoGroup
+
+      ToolbarDivider()
+
       // Left group: Capture tools
       captureToolsGroup
 
@@ -31,14 +36,9 @@ struct AnnotateToolbarView: View {
       // Center group: Annotation tools
       annotationToolsGroup
 
-      ToolbarDivider()
-
-      // Undo/Redo
-      undoRedoGroup
-
-      ToolbarDivider()
-
       if state.isCombineMode {
+        ToolbarDivider()
+
         ToolbarButton(icon: "photo.badge.plus", isSelected: false) {
           guard let window = NSApp.keyWindow else { return }
           NotificationCenter.default.post(name: .annotateAddImage, object: window)
