@@ -78,7 +78,7 @@ All 19 `GlobalShortcutKind`s with shipping defaults (verified in `KeyboardShortc
 
 `AnnotateShortcutManager` (`Notinhas/Features/Annotate/Services/AnnotateShortcutManager.swift`):
 
-- 14 tool single-key shortcuts (`AnnotationToolType.defaultShortcut`, remappable): crop, selection, rectangle, filledRectangle, oval, arrow, line, text, highlighter, blur, spotlight, counter, watermark, pencil. (`mockup` excluded — internal only.)
+- 14 tool single-key shortcuts (`AnnotationToolType.defaultShortcut`, remappable): crop, selection, rectangle, filledRectangle, oval, arrow, line, text, highlighter, blur, spotlight, note (Notinha), watermark, pencil. (`mockup` excluded — internal only; legacy `counter` retired.)
 - Tool keys stored per-tool under prefix `annotate.shortcut.`; per-tool disable set `shortcuts.disabledAnnotateToolShortcuts`.
 - Action shortcuts (`AnnotateActionShortcutKind`, modifier combos as `ShortcutConfig`):
 

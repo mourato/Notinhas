@@ -87,6 +87,7 @@ final class AnnotateWindowController: NSWindowController, NSWindowDelegate {
       if let notinhas = sessionData.notinhasNotes {
         state.notinhasRestoreNotes(notinhas.notes)
       }
+      state.migrateLegacyCountersToNotinhasIfNeeded()
     } else {
       // First open: load image from disk and capture raw file bytes (fast, no re-encoding)
       let image = Self.loadImageWithCorrectScale(from: item.url) ?? item.thumbnail
@@ -215,6 +216,7 @@ final class AnnotateWindowController: NSWindowController, NSWindowDelegate {
       if let notinhas = sessionData.notinhasNotes {
         state.notinhasRestoreNotes(notinhas.notes)
       }
+      state.migrateLegacyCountersToNotinhasIfNeeded()
     } else {
       let image = Self.loadImageWithCorrectScale(from: url)
         ?? NSImage(size: NSSize(width: 400, height: 300))

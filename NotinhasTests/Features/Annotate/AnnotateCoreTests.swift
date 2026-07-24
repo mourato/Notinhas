@@ -979,7 +979,7 @@ final class AnnotateCoreTests: XCTestCase {
       XCTAssertTrue(tool.requiresDragToCreateAnnotation, "\(tool) should not create a new item from an empty click.")
     }
 
-    for tool in [AnnotationToolType.selection, .crop, .text, .highlighter, .counter, .pencil, .mockup] {
+    for tool in [AnnotationToolType.selection, .crop, .text, .highlighter, .counter, .notinhasNote, .pencil, .mockup] {
       XCTAssertFalse(tool.requiresDragToCreateAnnotation, "\(tool) keeps its existing non-drag behavior.")
     }
   }
@@ -1643,7 +1643,7 @@ final class AnnotateCoreTests: XCTestCase {
   }
 
   func testAnnotationToolTypeDefaultShortcutsAreUniqueAndQuickPropertiesAreScoped() {
-    let shortcuts = AnnotationToolType.allCases.map(\.defaultShortcut)
+    let shortcuts = AnnotateShortcutManager.configurableTools.map(\.defaultShortcut)
     XCTAssertEqual(Set(shortcuts).count, shortcuts.count)
 
     XCTAssertFalse(AnnotationToolType.selection.supportsQuickPropertiesBar)
@@ -1652,6 +1652,9 @@ final class AnnotateCoreTests: XCTestCase {
     XCTAssertTrue(AnnotationToolType.rectangle.supportsQuickPropertiesBar)
     XCTAssertTrue(AnnotationToolType.notinhasNote.supportsQuickPropertiesBar)
     XCTAssertTrue(AnnotationToolType.notinhasNote.supportsQuickStrokeWidth)
+    XCTAssertTrue(AnnotationToolType.notinhasNote.supportsQuickStrokeColor)
+    XCTAssertFalse(AnnotationToolType.drawableTools.contains(.counter))
+    XCTAssertTrue(AnnotationToolType.drawableTools.contains(.notinhasNote))
     XCTAssertTrue(AnnotationToolType.watermark.supportsQuickPropertiesBar)
     XCTAssertTrue(AnnotationToolType.filledRectangle.supportsQuickStrokeColor)
     XCTAssertFalse(AnnotationToolType.filledRectangle.supportsQuickFillColor)

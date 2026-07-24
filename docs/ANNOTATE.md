@@ -49,7 +49,7 @@ The `.accessory` activation-policy revert is deferred to a later runloop turn (s
 | --- | --- | --- | --- | --- | --- |
 | selection | `v` | arrow | `a` | blur | `b` |
 | crop | `c` | line | `l` | spotlight | `s` |
-| rectangle | `r` | text | `t` | counter | `n` |
+| rectangle | `r` | text | `t` | note (Notinha) | `n` |
 | filledRectangle | `f` | highlighter | `h` | watermark | `w` |
 | oval | `o` | pencil | `p` | mockup | `m` |
 
@@ -77,7 +77,7 @@ The `.accessory` activation-policy revert is deferred to a later runloop turn (s
 
 ## Counter, Highlighter, Watermark, Crop
 
-- Counter: click-to-place, auto-increment per placement; diameter derived from stroke width.
+- Legacy Counter annotations migrate to empty Notinhas notes on session open (see `docs/adr/066-absorb-counter-into-notinhas.md`). The Note tool (`notinhasNote`) is the sole numbered marker; text is optional; numbering uses Notinha `creationOrder`.
 - Highlighter: freehand with auto-straighten for near-straight strokes.
 - Watermark: `WatermarkStyle` single / diagonal / tiled; editable text, opacity, size, rotation, color.
 - Crop: shrink AND expand canvas (drag handles outside source creates annotatable empty canvas, included in export). `CropAspectRatio` presets Free/1:1/4:3/3:2/16:9/21:9 + portrait toggle. Esc cancels, Return/⌘S commits; while cropping, `CropToolbarView` replaces the bottom-bar right side.

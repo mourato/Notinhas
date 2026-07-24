@@ -4838,11 +4838,31 @@ final class AnnotateState: ObservableObject {
     Binding(
       get: { [weak self] in
         guard let self else { return .red }
+        if selectedTool == .notinhasNote {
+          if let selectedID = notinhasSelectedNoteID,
+             let note = notinhasNotes.first(where: { $0.id == selectedID }) {
+            return note.color.color
+          }
+          return defaultAnnotationProperties(for: .notinhasNote).strokeColor
+        }
         return quickSelectionTargets(matching: { $0.supportsQuickStrokeColor }).first?.properties.strokeColor
           ?? defaultAnnotationProperties(for: quickPropertiesTool).strokeColor
       },
       set: { [weak self] newColor in
         guard let self else { return }
+        if selectedTool == .notinhasNote {
+          guard let rgba = RGBAColor(color: newColor) else { return }
+          if let selectedID = notinhasSelectedNoteID,
+             let index = notinhasNotes.firstIndex(where: { $0.id == selectedID }) {
+            var note = notinhasNotes[index]
+            guard note.color != rgba else { return }
+            note.color = rgba
+            notinhasUpdateNote(note)
+          } else {
+            rememberAnnotationPrimaryColor(newColor, for: .notinhasNote)
+          }
+          return
+        }
         let didUpdateSelection = updateQuickSelectionProperties(
           strokeColor: newColor,
           recordsUndo: true,

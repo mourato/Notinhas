@@ -46,11 +46,12 @@ final class AnnotateShortcutManager: ObservableObject {
   private let disabledToolShortcutsKey = PreferencesKeys.disabledAnnotateToolShortcuts
   private let disabledActionShortcutsKey = PreferencesKeys.disabledAnnotateActionShortcuts
   private let explicitEmptyActionShortcutData = Data("null".utf8)
+  private let counterAbsorptionMigrationKey = "annotate.shortcut.counterAbsorption.v1"
 
   /// Tools that support shortcuts (excludes mockup - internal only)
   static let configurableTools: [AnnotationToolType] = [
     .crop, .selection, .rectangle, .filledRectangle, .oval, .arrow,
-    .line, .text, .highlighter, .blur, .spotlight, .counter, .notinhasNote, .watermark, .pencil,
+    .line, .text, .highlighter, .blur, .spotlight, .notinhasNote, .watermark, .pencil,
   ]
 
   /// Default: ⌘⇧C
@@ -87,6 +88,7 @@ final class AnnotateShortcutManager: ObservableObject {
     cloudUploadShortcut = Self.defaultCloudUpload
     autoRedactSensitiveDataShortcut = Self.defaultAutoRedactSensitiveData
     loadShortcuts()
+    migrateCounterAbsorptionShortcutsIfNeeded()
     loadDisabledToolShortcuts()
     loadActionShortcuts()
     loadDisabledActionShortcuts()
@@ -269,6 +271,30 @@ final class AnnotateShortcutManager: ObservableObject {
         shortcuts[tool] = tool.defaultShortcut
       }
     }
+  }
+
+  func migrateCounterAbsorptionShortcutsIfNeeded() {
+    UserDefaults.standard.removeObject(forKey: keyPrefix + AnnotationToolType.counter.rawValue)
+
+    if disabledToolShortcuts.contains(.counter) {
+      disabledToolShortcuts.remove(.counter)
+      saveDisabledToolShortcuts()
+    }
+
+    guard !UserDefaults.standard.bool(forKey: counterAbsorptionMigrationKey) else { return }
+
+    let noteShortcutKey = keyPrefix + AnnotationToolType.notinhasNote.rawValue
+    let storedNoteShortcut = UserDefaults.standard.string(forKey: noteShortcutKey)?.first
+    let currentNoteShortcut = shortcuts[.notinhasNote]
+    let shouldMigrateNoteShortcut = storedNoteShortcut == "i" ||
+      (storedNoteShortcut == nil && currentNoteShortcut == "i")
+
+    if shouldMigrateNoteShortcut, conflictingTool(for: "n", excluding: .notinhasNote) == nil {
+      shortcuts[.notinhasNote] = "n"
+      saveShortcut(for: .notinhasNote)
+    }
+
+    UserDefaults.standard.set(true, forKey: counterAbsorptionMigrationKey)
   }
 
   private func loadDisabledToolShortcuts() {
