@@ -678,7 +678,7 @@ prefs for the Annotate editor (no card slots).
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |---|---|---:|---:|---|---|
-| 069 | Customize Annotate editor chrome order and visibility | P1 | L | — | DONE |
+| 069 | Customize Annotate editor chrome order and visibility | P1 | L | — | DONE (`98e880c7`/`0526fff2`/`408f7363`, merge `a43a482c`; thermo fix `9ff5fd63`) |
 
 ### Product decisions (069)
 
