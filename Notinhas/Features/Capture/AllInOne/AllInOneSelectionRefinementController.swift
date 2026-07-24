@@ -12,6 +12,9 @@ final class AllInOneSelectionRefinementController: NSObject {
   var onRectChanged: ((CGRect) -> Void)?
   var onCancel: (() -> Void)?
 
+  /// Screen-space frames of floating HUDs that must keep the arrow cursor.
+  var cursorExclusionFrames: () -> [CGRect] = { [] }
+
   private var currentRect: CGRect
   private var regionOverlayWindows: [ObjectIdentifier: RecordingRegionOverlayWindow] = [:]
   private var cursorTrackingTimer: Timer?
@@ -206,14 +209,18 @@ final class AllInOneSelectionRefinementController: NSObject {
   private func handleCursorTrackingTick() {
     guard !regionOverlayWindows.isEmpty else { return }
 
+    let location = NSEvent.mouseLocation
+    if CaptureFloatingCursorExclusion.contains(location, in: cursorExclusionFrames()) {
+      NSCursor.arrow.set()
+      return
+    }
+
     if let ownerID = keyboardOwnerOverlayID,
        let owner = regionOverlayWindows[ownerID],
        owner.isGestureInProgress {
       owner.refreshCursor()
       return
     }
-
-    let location = NSEvent.mouseLocation
     guard let overlay = regionOverlayWindows.values.first(where: { $0.frame.contains(location) }) else {
       NSCursor.arrow.set()
       return
