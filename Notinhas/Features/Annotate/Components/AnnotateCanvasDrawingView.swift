@@ -715,6 +715,12 @@ final class DrawingCanvasNSView: NSView {
   }
 
   private func beginAnnotationDrag(anchor annotation: AnnotationItem, at imagePoint: CGPoint) {
+    PerfSignpost.measure("beginAnnotationDrag") {
+      beginAnnotationDragBody(anchor: annotation, at: imagePoint)
+    }
+  }
+
+  private func beginAnnotationDragBody(anchor annotation: AnnotationItem, at imagePoint: CGPoint) {
     if state.isCombineMode, state.combineMode == .autoStitch,
        case .embeddedImage = annotation.type {
       state.setSelectedAnnotationIds([annotation.id])
@@ -1516,16 +1522,22 @@ final class DrawingCanvasNSView: NSView {
   // MARK: Layer draw bodies (invoked by CanvasLayerView, on that view's context)
 
   private func drawStaticBelow(dirtyRect: NSRect) {
-    drawAnnotationItems(partitionedDisplayItems().below, dirtyRect: dirtyRect)
+    PerfSignpost.measure("drawStaticBelow") {
+      drawAnnotationItems(partitionedDisplayItems().below, dirtyRect: dirtyRect)
+    }
   }
 
   private func drawDraggedItems(dirtyRect: NSRect) {
-    drawAnnotationItems(partitionedDisplayItems().dragged, dirtyRect: dirtyRect)
+    PerfSignpost.measure("drawDraggedItems") {
+      drawAnnotationItems(partitionedDisplayItems().dragged, dirtyRect: dirtyRect)
+    }
   }
 
   private func drawStaticAbove(dirtyRect: NSRect) {
-    drawAnnotationItems(partitionedDisplayItems().above, dirtyRect: dirtyRect)
-    drawNotinhasNotes(dirtyRect: dirtyRect)
+    PerfSignpost.measure("drawStaticAbove") {
+      drawAnnotationItems(partitionedDisplayItems().above, dirtyRect: dirtyRect)
+      drawNotinhasNotes(dirtyRect: dirtyRect)
+    }
   }
 
   /// Draws annotations with selection visuals. Skips items that cannot
@@ -1570,6 +1582,12 @@ final class DrawingCanvasNSView: NSView {
   /// Unified Spotlight overlay pass (below annotations, above base image).
   /// Opacity is sourced from each item's own properties so slider changes reflect immediately.
   private func drawSpotlightOverlay(dirtyRect _: NSRect) {
+    PerfSignpost.measure("drawSpotlightOverlay") {
+      drawSpotlightOverlayBody()
+    }
+  }
+
+  private func drawSpotlightOverlayBody() {
     guard let context = NSGraphicsContext.current?.cgContext else { return }
     context.saveGState()
     context.scaleBy(x: displayScale, y: displayScale)
@@ -1607,6 +1625,12 @@ final class DrawingCanvasNSView: NSView {
 
   /// Live gesture previews: in-progress stroke and area-selection rect.
   private func drawGesturePreview(dirtyRect _: NSRect) {
+    PerfSignpost.measure("drawGesturePreview") {
+      drawGesturePreviewBody()
+    }
+  }
+
+  private func drawGesturePreviewBody() {
     guard let context = NSGraphicsContext.current?.cgContext else { return }
     let (sourceImage, sourceCGImage) = prepareRenderInputs()
     context.saveGState()
