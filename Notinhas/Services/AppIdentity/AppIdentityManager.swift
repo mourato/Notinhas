@@ -82,12 +82,12 @@ final class AppIdentityManager: ObservableObject {
     }
 
     // Quarantine flag check: Only flag as an issue if the app is running from
-    // outside standard Applications folders. Homebrew Cask upgrades (`brew upgrade`)
-    // use command-line `mv`/`cp` which preserves the quarantine xattr even after
-    // the app is placed in /Applications. Since the app is Apple Notarized, macOS
-    // Gatekeeper handles the quarantine-to-clearance flow automatically on first
-    // launch. Flagging quarantine inside /Applications would be a false positive
-    // that blocks permissions after every Cask upgrade (see issue #337).
+    // outside standard Applications folders. Some install paths use command-line
+    // `mv`/`cp` which preserves the quarantine xattr even after the app is placed
+    // in /Applications. Since the app is Apple Notarized, macOS Gatekeeper handles
+    // the quarantine-to-clearance flow automatically on first launch. Flagging
+    // quarantine inside /Applications would be a false positive that blocks
+    // permissions after reinstalls or upgrades (see issue #337).
     if quarantined {
       let homePath = NSHomeDirectory()
       let isInsideApplications =

@@ -117,7 +117,7 @@ Notinhas does not ship Check for Updates, About, or Report a Problem UI. Diagnos
 
 - `unexpectedBundleIdentifier` — bundle ID ≠ expected (`com.mourato.notinhas` / `.debug`).
 - `invalidBundleSignature` — strict `SecStaticCode` validation (release builds only; debug skips since Xcode ad-hoc signing fails `kSecCSStrictValidate`).
-- `outsideApplications` + `quarantined` — only flagged together when the app has the quarantine xattr **and** runs outside `/Applications` and `~/Applications`. Quarantine inside Applications folders is intentionally ignored (Homebrew Cask upgrades preserve the xattr; Gatekeeper clears it on first launch — issue #337).
+- `outsideApplications` + `quarantined` — only flagged together when the app has the quarantine xattr **and** runs outside `/Applications` and `~/Applications`. Quarantine inside Applications folders is intentionally ignored (some install paths preserve the xattr; Gatekeeper clears it on first launch — issue #337).
 
 The Permissions tab reflects unhealthy identity as `grantedButUnavailableDueToAppIdentity`.
 
