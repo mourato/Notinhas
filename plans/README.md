@@ -639,3 +639,35 @@ PRs/commits). Chrome first; Counter absorption last.
   migrate to empty Notinhas.
 - Fixed primary/secondary quick-bar rows: rejected — automatic wrap only.
 - Pin drag-handle resize and Selection multi-edit of pins: deferred follow-ups.
+
+## Quick-properties internal fit + shared left dock (067–068)
+
+Generated 2026-07-24 against commit `d33a2883` after manual verification that
+Watermark Text/Rotation still overlap **inside** fixed-width slots, and a grilled
+decision to share Background/Notes chrome on an exclusive left dock.
+
+| Plan | Title | Priority | Effort | Depends on | Status |
+|---|---|---:|---:|---|---|
+| 067 | Fix quick-properties internal control overlap | P1 | M | 065 | TODO |
+| 068 | Shared left dock for Background and Notes + Add background rename | P1 | L | — (after 067 by policy) | TODO |
+
+### Dependency notes (067–068)
+
+- Execute **067 → 068**. Both touch annotate chrome; serialize merges.
+- 067 does not change sidebar layout; 068 must not re-open quick-bar width policy.
+
+### Product decisions (067–068)
+
+- Quick bar: fix **intra-slot** crush (intrinsic/min widths); keep 065 inter-slot wrap.
+- Notes + Background share one left dock **shell**; contents are **exclusive**.
+- Notes auto-appear when ≥1 note exists, unless Background is open; dismissing
+  Background restores Notes if any remain.
+- Rename user-facing “Toggle sidebar” → **Add background** (keep action UD keys).
+- Notes left/right preference picker goes away (Notes always left dock).
+
+### Findings considered and rejected (067–068)
+
+- Background|Notes tabs in one panel: rejected — exclusive mode B.
+- Keeping Notes on the right with shared chrome only: rejected — left dock B.
+- Notes only while Note tool active: rejected — auto when notes exist (A).
+
