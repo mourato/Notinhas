@@ -210,19 +210,13 @@ final class AllInOneSelectionRefinementController: NSObject {
     guard !regionOverlayWindows.isEmpty else { return }
 
     let location = NSEvent.mouseLocation
-    if CaptureFloatingCursorExclusion.contains(location, in: cursorExclusionFrames()) {
-      NSCursor.arrow.set()
-      return
-    }
 
     if let ownerID = keyboardOwnerOverlayID,
        let owner = regionOverlayWindows[ownerID],
        owner.isGestureInProgress {
-      owner.refreshCursor()
       return
     }
     guard let overlay = regionOverlayWindows.values.first(where: { $0.frame.contains(location) }) else {
-      NSCursor.arrow.set()
       return
     }
 
@@ -236,9 +230,19 @@ final class AllInOneSelectionRefinementController: NSObject {
       overlay.setReceivesKeyboardInput(true)
       overlay.orderFrontRegardless()
       overlay.activateKeyboardInputIfNeeded()
-    } else {
-      overlay.refreshCursor()
     }
+  }
+
+  func cursorKind(at location: CGPoint) -> CaptureSelectionCursorKind? {
+    if let ownerID = keyboardOwnerOverlayID,
+       let owner = regionOverlayWindows[ownerID],
+       owner.isGestureInProgress {
+      return owner.cursorKind(atScreenLocation: location)
+    }
+    guard let overlay = regionOverlayWindows.values.first(where: { $0.frame.contains(location) }) else {
+      return .arrow
+    }
+    return overlay.cursorKind(atScreenLocation: location)
   }
 
   private func stopCursorTracking() {

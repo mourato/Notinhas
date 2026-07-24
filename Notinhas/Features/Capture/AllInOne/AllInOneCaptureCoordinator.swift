@@ -23,10 +23,8 @@ final class AllInOneCaptureCoordinator {
   private var isActive = false
   private var isAwaitingInitialSelection = false
   private var sessionGeneration = UUID()
-  /// Re-asserts arrow over HUD frames for the whole All-In-One session (initial
-  /// `AreaSelectionController` drag and refinement). Overlay timers otherwise
-  /// force crosshair for any pointer still inside their full-screen frames.
-  private var hudCursorExclusionTimer: Timer?
+  private let cursorArbiter = AllInOneCaptureCursorArbiter()
+  private var cursorOwnershipTimer: Timer?
 
   private init() {}
 
@@ -101,7 +99,8 @@ final class AllInOneCaptureCoordinator {
     guard isActive else { return }
 
     installHUDs(using: sessionState!)
-    startHUDCursorExclusionIfNeeded()
+    syncHUDDisplayLevel()
+    startCursorOwnershipIfNeeded()
 
     let screenFrames = NSScreen.screens.map(\.frame)
     if let lastRect = CaptureLastSelectionStore.load(userDefaults: .standard, screens: screenFrames) {
@@ -158,11 +157,15 @@ final class AllInOneCaptureCoordinator {
     // controls above them so the user can change modes before completing the first drag.
     DispatchQueue.main.async { [weak self] in
       guard let self, isActive, isAwaitingInitialSelection else { return }
-      positionHUDs()
-      modeHUD?.showAboveCaptureOverlay()
-      // Keep action HUD ordered out until a selection rect exists; raising it here
-      // would re-show an empty material pill after positionHUDs() hides it.
+      syncHUDDisplayLevel()
     }
+  }
+
+  private func syncHUDDisplayLevel() {
+    let level: CaptureFloatingHUDDisplayLevel = isAwaitingInitialSelection ? .aboveCaptureOverlay : .standard
+    modeHUD?.setDisplayLevel(level)
+    actionHUD?.setDisplayLevel(level)
+    positionHUDs()
   }
 
   private func beginRefinement(with rect: CGRect) {
@@ -198,6 +201,7 @@ final class AllInOneCaptureCoordinator {
       self?.visibleHUDFrames() ?? []
     }
     controller.present()
+    syncHUDDisplayLevel()
   }
 
   // MARK: - HUD cursor exclusion
@@ -211,27 +215,33 @@ final class AllInOneCaptureCoordinator {
     }
   }
 
-  private func startHUDCursorExclusionIfNeeded() {
-    guard hudCursorExclusionTimer == nil else { return }
+  private func startCursorOwnershipIfNeeded() {
+    guard cursorOwnershipTimer == nil else { return }
+    cursorArbiter.hudExclusionFrames = { [weak self] in
+      self?.visibleHUDFrames() ?? []
+    }
+    cursorArbiter.overlayCandidate = { [weak self] location in
+      self?.refinementController?.cursorKind(at: location)
+    }
     let timer = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
       MainActor.assumeIsolated {
-        self?.assertArrowCursorOverHUDsIfNeeded()
+        self?.handleCursorOwnershipTick()
       }
     }
     RunLoop.main.add(timer, forMode: .common)
-    hudCursorExclusionTimer = timer
+    cursorOwnershipTimer = timer
   }
 
-  private func assertArrowCursorOverHUDsIfNeeded() {
+  private func handleCursorOwnershipTick() {
     guard isActive else { return }
-    if CaptureFloatingCursorExclusion.contains(NSEvent.mouseLocation, in: visibleHUDFrames()) {
-      NSCursor.arrow.set()
-    }
+    cursorArbiter.commit(at: NSEvent.mouseLocation)
   }
 
-  private func stopHUDCursorExclusion() {
-    hudCursorExclusionTimer?.invalidate()
-    hudCursorExclusionTimer = nil
+  private func stopCursorOwnership() {
+    cursorOwnershipTimer?.invalidate()
+    cursorOwnershipTimer = nil
+    cursorArbiter.overlayCandidate = nil
+    cursorArbiter.hudExclusionFrames = { [] }
   }
 
   private func showFrozenBackdropHostIfNeeded() {
@@ -394,7 +404,7 @@ final class AllInOneCaptureCoordinator {
     let ownsInitialSelection = isAwaitingInitialSelection
     isAwaitingInitialSelection = false
     timerScheduler.cancel()
-    stopHUDCursorExclusion()
+    stopCursorOwnership()
     viewModel?.setAllInOneSelectionBlocking(false)
     AreaSelectionController.shared.cursorExclusionFrames = { [] }
 
@@ -414,6 +424,8 @@ final class AllInOneCaptureCoordinator {
       AreaSelectionController.shared.cancelSelection()
     }
 
+    modeHUD?.restoreStandardDisplayLevel()
+    actionHUD?.restoreStandardDisplayLevel()
     modeHUD?.close()
     actionHUD?.close()
     modeHUD = nil

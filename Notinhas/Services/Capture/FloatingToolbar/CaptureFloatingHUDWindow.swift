@@ -8,11 +8,23 @@
 import AppKit
 import SwiftUI
 
+enum CaptureFloatingHUDDisplayLevel: Equatable {
+  case standard
+  case aboveCaptureOverlay
+}
+
+private final class CaptureFloatingHUDHostingView: NSHostingView<AnyView> {
+  override func acceptsFirstMouse(for _: NSEvent?) -> Bool {
+    true
+  }
+}
+
 @MainActor
 final class CaptureFloatingHUDWindow: NSPanel {
   private var anchorRect: CGRect = .zero
   private var cachedContentSize: CGSize?
-  private var hostingView: NSHostingView<AnyView>?
+  private var hostingView: CaptureFloatingHUDHostingView?
+  private(set) var displayLevel: CaptureFloatingHUDDisplayLevel = .standard
 
   init() {
     super.init(
@@ -26,7 +38,7 @@ final class CaptureFloatingHUDWindow: NSPanel {
 
   func setContent(_ view: AnyView) {
     let themedView = view.preferredColorScheme(ThemeManager.shared.systemAppearance)
-    let hosting = NSHostingView(rootView: AnyView(themedView))
+    let hosting = CaptureFloatingHUDHostingView(rootView: AnyView(themedView))
     hosting.translatesAutoresizingMaskIntoConstraints = false
     hosting.wantsLayer = true
     hosting.layer?.backgroundColor = .clear
@@ -56,6 +68,19 @@ final class CaptureFloatingHUDWindow: NSPanel {
     view.addTrackingArea(area)
   }
 
+  func setDisplayLevel(_ level: CaptureFloatingHUDDisplayLevel, orderFront: Bool = false) {
+    displayLevel = level
+    switch level {
+    case .standard:
+      self.level = .popUpMenu
+    case .aboveCaptureOverlay:
+      self.level = .screenSaver
+    }
+    if orderFront {
+      orderFrontRegardless()
+    }
+  }
+
   func show(anchorRect: CGRect, screen: NSScreen? = nil) {
     self.anchorRect = anchorRect
     positionNearAnchor(screen: screen)
@@ -68,8 +93,11 @@ final class CaptureFloatingHUDWindow: NSPanel {
   }
 
   func showAboveCaptureOverlay() {
-    level = .screenSaver
-    orderFrontRegardless()
+    setDisplayLevel(.aboveCaptureOverlay, orderFront: true)
+  }
+
+  func restoreStandardDisplayLevel() {
+    setDisplayLevel(.standard)
   }
 
   func updateAnchorRect(_ rect: CGRect) {
@@ -98,6 +126,10 @@ final class CaptureFloatingHUDWindow: NSPanel {
 
   override var canBecomeMain: Bool {
     false
+  }
+
+  func acceptsFirstMouse(for _: NSEvent?) -> Bool {
+    true
   }
 
   /// Floating HUDs stay non-key, so AppKit cursor rects rarely apply. Force the
