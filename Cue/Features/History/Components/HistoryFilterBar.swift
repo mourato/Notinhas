@@ -114,3 +114,18 @@ private struct FilterPill: View {
         colorScheme == .dark ? Color.white.opacity(0.12) : Color.white.opacity(0.84)
     }
 }
+
+#Preview("History filters") {
+    @Previewable @State var selectedFilter: CaptureHistoryType? = nil
+
+    HistoryFilterBar(
+        selectedFilter: $selectedFilter,
+        counts: [
+            nil: 12,
+            .screenshot: 8,
+            .video: 3,
+            .gif: 1,
+        ],
+    )
+    .padding()
+}

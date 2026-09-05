@@ -147,3 +147,18 @@ struct HistoryToolbar: View {
         colorScheme == .dark ? Color.white.opacity(0.16) : Color.white.opacity(0.7)
     }
 }
+
+#Preview("History toolbar") {
+    @Previewable @State var searchText = "design"
+
+    HistoryToolbar(
+        searchText: $searchText,
+        selectedCount: 2,
+        canSelectAll: true,
+        onSelectAll: {},
+        onClearSelection: {},
+        onDeleteSelection: {},
+    )
+    .frame(width: 620)
+    .padding()
+}

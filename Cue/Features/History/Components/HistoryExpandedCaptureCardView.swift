@@ -12,14 +12,29 @@ struct HistoryExpandedCaptureCardView: View, Equatable {
     let isSelected: Bool
     let backgroundStyle: HistoryBackgroundStyle
     let onTap: () -> Void
+    let thumbnailOverride: NSImage?
+
+    init(
+        record: CaptureHistoryRecord,
+        isSelected: Bool,
+        backgroundStyle: HistoryBackgroundStyle,
+        onTap: @escaping () -> Void,
+        thumbnailOverride: NSImage? = nil,
+    ) {
+        self.record = record
+        self.isSelected = isSelected
+        self.backgroundStyle = backgroundStyle
+        self.onTap = onTap
+        self.thumbnailOverride = thumbnailOverride
+    }
 
     static func == (lhs: HistoryExpandedCaptureCardView, rhs: HistoryExpandedCaptureCardView) -> Bool {
         lhs.record == rhs.record &&
             lhs.isSelected == rhs.isSelected &&
-            lhs.backgroundStyle == rhs.backgroundStyle
+            lhs.backgroundStyle == rhs.backgroundStyle &&
+            lhs.thumbnailOverride === rhs.thumbnailOverride
     }
 
-    @ObservedObject private var manager = HistoryFloatingManager.shared
     @Environment(\.colorScheme) private var colorScheme
     @State private var thumbnailImage: NSImage?
     @State private var isHovering = false
@@ -68,16 +83,19 @@ struct HistoryExpandedCaptureCardView: View, Equatable {
         )
         .onAppear {
             isVisible = true
-            checkFileExistence()
+            if thumbnailOverride == nil {
+                checkFileExistence()
+            }
         }
         .onDisappear {
             isVisible = false
         }
         .task(id: thumbnailTaskID, priority: .utility) {
-            guard isVisible else { return }
+            guard isVisible, thumbnailOverride == nil else { return }
             await loadThumbnail()
         }
         .onReceive(NotificationCenter.default.publisher(for: .captureHistoryFileDidChange)) { notification in
+            guard thumbnailOverride == nil else { return }
             guard matchesHistoryFileChange(notification) else { return }
             thumbnailImage = nil
             checkFileExistence()
@@ -91,7 +109,7 @@ struct HistoryExpandedCaptureCardView: View, Equatable {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(previewBackground)
 
-                if isVisible, let thumbnailImage {
+                if isVisible, let thumbnailImage = thumbnailImage ?? thumbnailOverride {
                     Image(nsImage: thumbnailImage)
                         .resizable()
                         .scaledToFill()
@@ -239,4 +257,31 @@ struct HistoryExpandedCaptureCardView: View, Equatable {
         guard fileExists else { return }
         HistoryWindowController.shared.openItem(record)
     }
+}
+
+#Preview("Screenshot card") {
+    HistoryExpandedCaptureCardView(
+        record: CaptureHistoryRecord(
+            id: UUID(),
+            filePath: "/tmp/CueHistoryPreview.png",
+            fileName: "design-handoff.png",
+            captureType: .screenshot,
+            fileSize: 1_572_864,
+            capturedAt: Date().addingTimeInterval(-3_600),
+            width: 1440,
+            height: 900,
+            duration: nil,
+            thumbnailPath: nil,
+            isDeleted: false,
+        ),
+        isSelected: true,
+        backgroundStyle: .hud,
+        onTap: {},
+        thumbnailOverride: NSImage(
+            systemSymbolName: "photo.fill",
+            accessibilityDescription: "Screenshot preview",
+        ),
+    )
+    .frame(width: 320)
+    .padding()
 }

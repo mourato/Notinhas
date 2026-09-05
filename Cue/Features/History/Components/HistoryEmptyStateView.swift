@@ -70,3 +70,15 @@ struct HistoryEmptyStateView: View {
         return "Take a screenshot or record your screen to see them here."
     }
 }
+
+#Preview("Empty history") {
+    HistoryEmptyStateView(filter: nil, hasSearch: false)
+        .frame(width: 420, height: 260)
+        .padding()
+}
+
+#Preview("No search matches") {
+    HistoryEmptyStateView(filter: nil, hasSearch: true)
+        .frame(width: 420, height: 260)
+        .padding()
+}
