@@ -279,49 +279,46 @@ struct HistoryBackdropView: View {
 }
 
 enum HistoryPreviewFixtures {
+    private static let samples: [(
+        fileName: String,
+        captureType: CaptureHistoryType,
+        fileSize: Int64,
+        age: TimeInterval,
+        width: Int,
+        height: Int,
+        duration: TimeInterval?,
+    )] = [
+        ("design-handoff.png", .screenshot, 1_572_864, 3_600, 1440, 900, nil),
+        ("product-demo.mov", .video, 24_117_248, 86_400, 1920, 1080, 42),
+        ("animation.gif", .gif, 4_718_592, 172_800, 1280, 720, 8),
+        ("nav-bar-states.png", .screenshot, 892_416, 259_200, 1512, 982, nil),
+        ("onboarding-flow.mov", .video, 31_457_280, 345_600, 1920, 1080, 67),
+        ("button-press.gif", .gif, 2_097_152, 432_000, 800, 600, 3),
+        ("settings-panel.png", .screenshot, 1_048_576, 518_400, 1280, 800, nil),
+        ("export-walkthrough.mov", .video, 18_874_368, 604_800, 1680, 1050, 28),
+        ("pin-placement.gif", .gif, 3_145_728, 691_200, 1100, 720, 5),
+        ("empty-history.png", .screenshot, 654_336, 777_600, 980, 640, nil),
+        ("toolbar-variants.png", .screenshot, 1_310_720, 864_000, 1440, 900, nil),
+        ("clipboard-ready.gif", .gif, 5_242_880, 950_400, 1280, 720, 12),
+    ]
+
     static func make() -> (records: [CaptureHistoryRecord], thumbnails: [UUID: NSImage]) {
         let now = Date()
-        let records = [
+        let records = samples.map { sample in
             CaptureHistoryRecord(
                 id: UUID(),
-                filePath: "/preview/design-handoff.png",
-                fileName: "design-handoff.png",
-                captureType: .screenshot,
-                fileSize: 1_572_864,
-                capturedAt: now.addingTimeInterval(-3_600),
-                width: 1440,
-                height: 900,
-                duration: nil,
+                filePath: "/preview/\(sample.fileName)",
+                fileName: sample.fileName,
+                captureType: sample.captureType,
+                fileSize: sample.fileSize,
+                capturedAt: now.addingTimeInterval(-sample.age),
+                width: sample.width,
+                height: sample.height,
+                duration: sample.duration,
                 thumbnailPath: nil,
                 isDeleted: false,
-            ),
-            CaptureHistoryRecord(
-                id: UUID(),
-                filePath: "/preview/product-demo.mov",
-                fileName: "product-demo.mov",
-                captureType: .video,
-                fileSize: 24_117_248,
-                capturedAt: now.addingTimeInterval(-86_400),
-                width: 1920,
-                height: 1080,
-                duration: 42,
-                thumbnailPath: nil,
-                isDeleted: false,
-            ),
-            CaptureHistoryRecord(
-                id: UUID(),
-                filePath: "/preview/animation.gif",
-                fileName: "animation.gif",
-                captureType: .gif,
-                fileSize: 4_718_592,
-                capturedAt: now.addingTimeInterval(-172_800),
-                width: 1280,
-                height: 720,
-                duration: 8,
-                thumbnailPath: nil,
-                isDeleted: false,
-            ),
-        ]
+            )
+        }
 
         let thumbnails = Dictionary(uniqueKeysWithValues: records.map { record in
             let symbolName = switch record.captureType {
