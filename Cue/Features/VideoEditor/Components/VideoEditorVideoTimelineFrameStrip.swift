@@ -46,4 +46,10 @@
             .clipped()
         }
     }
+
+    #Preview("Extracting frames") {
+        VideoTimelineFrameStrip(thumbnails: [], isLoading: true)
+            .frame(width: 420)
+            .padding()
+    }
 #endif

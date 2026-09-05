@@ -131,3 +131,25 @@ struct QuickAccessPreviewActionPopover: View {
         .shadow(color: Color.black.opacity(0.14), radius: 8, x: 0, y: 3)
     }
 }
+
+#Preview("Quick Access slots") {
+    HStack(spacing: 16) {
+        QuickAccessPreviewTextSlot(
+            slot: .centerTop,
+            action: .copy,
+            isEnabled: true,
+            isTargeted: false,
+            onHover: { _ in },
+        )
+        QuickAccessPreviewIconSlot(
+            slot: .topTrailing,
+            action: .delete,
+            isEnabled: true,
+            isTargeted: true,
+            onHover: { _ in },
+        )
+        QuickAccessPreviewActionPopover(action: .copy, slot: .centerTop, isEnabled: true)
+    }
+    .padding()
+    .background(Color.blue.gradient, in: RoundedRectangle(cornerRadius: 18))
+}

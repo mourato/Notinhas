@@ -42,4 +42,14 @@
             return .clear
         }
     }
+
+    #Preview("Annotation toolbar buttons") {
+        HStack(spacing: 4) {
+            AnnotationToolbarIconButton(systemName: "pencil", isSelected: true, action: {})
+            AnnotationToolbarIconButton(systemName: "rectangle", isSelected: false, action: {})
+            AnnotationToolbarIconButton(systemName: "xmark", isSelected: false, action: {})
+        }
+        .padding(8)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+    }
 #endif

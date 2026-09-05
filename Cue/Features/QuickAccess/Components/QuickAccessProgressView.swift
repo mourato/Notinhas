@@ -218,3 +218,15 @@ private struct AnimatedCheckmarkView: View {
             }
     }
 }
+
+#Preview("Processing states") {
+    HStack(spacing: 12) {
+        QuickAccessProgressView(state: .processing(progress: nil))
+        QuickAccessProgressView(state: .processing(progress: 0.65))
+        QuickAccessProgressView(state: .complete)
+        QuickAccessProgressView(state: .failed)
+    }
+    .frame(height: 64)
+    .padding()
+    .background(Color.blue.gradient, in: RoundedRectangle(cornerRadius: 16))
+}

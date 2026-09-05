@@ -143,3 +143,13 @@ struct QuickAccessCornerButtonMetrics {
         Self.basePadding * scale
     }
 }
+
+#Preview("Quick Access icon buttons") {
+    HStack(spacing: 12) {
+        QuickAccessIconButton(icon: "pencil", action: {}, helpText: "Edit")
+        QuickAccessIconButton(icon: "trash", action: {}, helpText: "Delete")
+            .disabled(true)
+    }
+    .padding()
+    .background(Color.blue.gradient, in: RoundedRectangle(cornerRadius: 16))
+}

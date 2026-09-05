@@ -51,3 +51,13 @@ struct QuickAccessTextButton: View {
         return isHovering ? Color.white.opacity(0.35) : Color.black.opacity(0.6)
     }
 }
+
+#Preview("Quick Access text button") {
+    VStack(spacing: 8) {
+        QuickAccessTextButton(label: "Edit", action: {})
+        QuickAccessTextButton(label: "Disabled", action: {})
+            .disabled(true)
+    }
+    .padding()
+    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+}

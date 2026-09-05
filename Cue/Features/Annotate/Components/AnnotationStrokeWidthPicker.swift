@@ -73,3 +73,11 @@ struct AnnotationStrokeWidthPicker: View {
         min(width.points + 2, 13)
     }
 }
+
+#Preview("Stroke widths") {
+    @Previewable @State var value = AnnotationStrokeWidth.regular.points
+
+    AnnotationStrokeWidthPicker(value: $value)
+        .frame(width: 220)
+        .padding()
+}

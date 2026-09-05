@@ -282,4 +282,20 @@
                 }
         }
     }
+
+    #Preview("Zoom timeline block") {
+        ZoomBlockView(
+            segment: ZoomSegment(startTime: 2, duration: 4, zoomLevel: 2.5),
+            isSelected: true,
+            timelineWidth: 360,
+            videoDuration: 12,
+            onSelect: {},
+            onStartDrag: { _ in },
+            onEndDrag: { _ in },
+            onPositionDrag: { _ in },
+        )
+        .frame(width: 400, height: 40, alignment: .leading)
+        .padding()
+        .background(.black)
+    }
 #endif

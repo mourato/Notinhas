@@ -75,3 +75,20 @@ private struct BackButton: View {
         }
     }
 }
+
+#Preview("Onboarding step") {
+    OnboardingStepContainer(onBack: {}) {
+        VStack(spacing: 12) {
+            Image(systemName: "sparkles")
+                .font(.largeTitle)
+                .foregroundStyle(.tint)
+            Text("Welcome to Cue")
+                .font(.title.bold())
+            Text("A centered onboarding step with a scroll-safe content area.")
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 40)
+    }
+    .frame(width: 640, height: 360)
+}

@@ -290,4 +290,9 @@
             showError = true
         }
     }
+
+    #Preview("Video editor empty state") {
+        VideoEditorEmptyStateView { _, _ in }
+            .frame(width: 640, height: 420)
+    }
 #endif

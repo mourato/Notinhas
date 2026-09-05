@@ -35,3 +35,14 @@ struct QuickAccessActionButton: View {
         .help(tooltip)
     }
 }
+
+#Preview("Quick Access actions") {
+    HStack(spacing: 12) {
+        QuickAccessActionButton(icon: "doc.on.doc", tooltip: "Copy", action: {})
+        QuickAccessTextButton(label: "Edit", action: {})
+        QuickAccessTextButton(label: "Disabled", action: {})
+            .disabled(true)
+    }
+    .padding()
+    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+}
