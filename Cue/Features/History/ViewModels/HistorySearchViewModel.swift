@@ -15,14 +15,16 @@ final class HistorySearchViewModel: ObservableObject {
     @Published var selectedTimeFilter: HistoryFloatingTimeFilter = .all
     @Published private(set) var filteredRecords: [CaptureHistoryRecord] = []
 
-    private let store = CaptureHistoryStore.shared
+    private let store: CaptureHistoryStore
     private var cancellables = Set<AnyCancellable>()
 
     init(
+        store: CaptureHistoryStore = .shared,
         searchTextPublisher: AnyPublisher<String, Never>? = nil,
         selectedFilterPublisher: AnyPublisher<CaptureHistoryType?, Never>? = nil,
         selectedTimeFilterPublisher: AnyPublisher<HistoryFloatingTimeFilter, Never>? = nil,
     ) {
+        self.store = store
         let textSource = searchTextPublisher ?? $searchText.eraseToAnyPublisher()
         let filterSource = selectedFilterPublisher ?? $selectedFilter.eraseToAnyPublisher()
         let timeSource = selectedTimeFilterPublisher ?? $selectedTimeFilter.eraseToAnyPublisher()

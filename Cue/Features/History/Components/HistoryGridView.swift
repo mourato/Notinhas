@@ -5,11 +5,13 @@
 //  Responsive grid of capture history items
 //
 
+import AppKit
 import SwiftUI
 
 struct HistoryGridView: View {
     let records: [CaptureHistoryRecord]
     @Binding var selectedIds: Set<UUID>
+    var thumbnailOverrides: [UUID: NSImage] = [:]
     @AppStorage(PreferencesKeys.historyBackgroundStyle) private var backgroundStyle: HistoryBackgroundStyle =
         .defaultStyle
     @State private var lastSelectedId: UUID?
@@ -29,6 +31,7 @@ struct HistoryGridView: View {
                         onTap: {
                             handleTap(record: record)
                         },
+                        thumbnailOverride: thumbnailOverrides[record.id],
                     )
                     .equatable()
                     .contextMenu {

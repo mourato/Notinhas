@@ -5,15 +5,26 @@
 //  Root SwiftUI view for the capture history browser
 //
 
+import AppKit
 import SwiftUI
 
 struct HistoryMainView: View {
     @ObservedObject private var themeManager = ThemeManager.shared
-    @ObservedObject private var store = CaptureHistoryStore.shared
+    @ObservedObject private var store: CaptureHistoryStore
     @AppStorage(PreferencesKeys.historyBackgroundStyle) private var backgroundStyle: HistoryBackgroundStyle =
         .defaultStyle
-    @StateObject private var viewModel = HistorySearchViewModel()
+    @StateObject private var viewModel: HistorySearchViewModel
     @State private var selectedIds: Set<UUID> = []
+    private let thumbnailOverrides: [UUID: NSImage]
+
+    init(
+        store: CaptureHistoryStore = .shared,
+        thumbnailOverrides: [UUID: NSImage] = [:],
+    ) {
+        self.store = store
+        self.thumbnailOverrides = thumbnailOverrides
+        _viewModel = StateObject(wrappedValue: HistorySearchViewModel(store: store))
+    }
 
     private var filteredRecords: [CaptureHistoryRecord] {
         viewModel.filteredRecords
@@ -52,6 +63,7 @@ struct HistoryMainView: View {
                     HistoryGridView(
                         records: filteredRecords,
                         selectedIds: $selectedIds,
+                        thumbnailOverrides: thumbnailOverrides,
                     )
                 }
             }
@@ -264,4 +276,76 @@ struct HistoryBackdropView: View {
             .blur(radius: compact ? 18 : 90)
             .offset(x: x, y: y)
     }
+}
+
+enum HistoryPreviewFixtures {
+    static func make() -> (records: [CaptureHistoryRecord], thumbnails: [UUID: NSImage]) {
+        let now = Date()
+        let records = [
+            CaptureHistoryRecord(
+                id: UUID(),
+                filePath: "/preview/design-handoff.png",
+                fileName: "design-handoff.png",
+                captureType: .screenshot,
+                fileSize: 1_572_864,
+                capturedAt: now.addingTimeInterval(-3_600),
+                width: 1440,
+                height: 900,
+                duration: nil,
+                thumbnailPath: nil,
+                isDeleted: false,
+            ),
+            CaptureHistoryRecord(
+                id: UUID(),
+                filePath: "/preview/product-demo.mov",
+                fileName: "product-demo.mov",
+                captureType: .video,
+                fileSize: 24_117_248,
+                capturedAt: now.addingTimeInterval(-86_400),
+                width: 1920,
+                height: 1080,
+                duration: 42,
+                thumbnailPath: nil,
+                isDeleted: false,
+            ),
+            CaptureHistoryRecord(
+                id: UUID(),
+                filePath: "/preview/animation.gif",
+                fileName: "animation.gif",
+                captureType: .gif,
+                fileSize: 4_718_592,
+                capturedAt: now.addingTimeInterval(-172_800),
+                width: 1280,
+                height: 720,
+                duration: 8,
+                thumbnailPath: nil,
+                isDeleted: false,
+            ),
+        ]
+
+        let thumbnails = Dictionary(uniqueKeysWithValues: records.map { record in
+            let symbolName = switch record.captureType {
+            case .screenshot: "photo.fill"
+            case .video: "film.fill"
+            case .gif: "photo.stack.fill"
+            }
+            let image = NSImage(
+                systemSymbolName: symbolName,
+                accessibilityDescription: record.fileName,
+            ) ?? NSImage(size: NSSize(width: 1, height: 1))
+            return (record.id, image)
+        })
+
+        return (records, thumbnails)
+    }
+}
+
+#Preview("History window") {
+    let fixtures = HistoryPreviewFixtures.make()
+
+    HistoryMainView(
+        store: .preview(records: fixtures.records),
+        thumbnailOverrides: fixtures.thumbnails,
+    )
+    .frame(width: 980, height: 640)
 }

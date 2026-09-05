@@ -33,6 +33,10 @@ final class CaptureHistoryStore: ObservableObject {
     private var dbPool: DatabasePool?
     private var cancellable: AnyDatabaseCancellable?
 
+    static func preview(records: [CaptureHistoryRecord]) -> CaptureHistoryStore {
+        CaptureHistoryStore(previewRecords: records)
+    }
+
     private init() {
         do {
             dbPool = try DatabaseManager.shared().dbPool
@@ -42,6 +46,12 @@ final class CaptureHistoryStore: ObservableObject {
             DiagnosticLogger.shared.logError(.history, error, "Capture history database unavailable")
         }
         startObservation()
+    }
+
+    private init(previewRecords: [CaptureHistoryRecord]) {
+        records = previewRecords
+        dbPool = nil
+        cancellable = nil
     }
 
     // MARK: - Reactive Observation

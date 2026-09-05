@@ -73,11 +73,13 @@ final class HistoryFloatingManager: ObservableObject {
 
     // MARK: - Init
 
-    private init() {
+    init(preview: Bool = false) {
         panelController.onPanelDidResignKey = { [weak self] in
             self?.handlePanelDidResignKey()
         }
-        loadSettings()
+        if !preview {
+            loadSettings()
+        }
     }
 
     private func loadSettings() {

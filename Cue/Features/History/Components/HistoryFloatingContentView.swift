@@ -26,10 +26,20 @@ struct HistoryFloatingContentView: View {
     @State private var isRowReady = false
     @State private var rowWarmupTask: Task<Void, Never>?
     @StateObject private var searchViewModel: HistorySearchViewModel
+    private let thumbnailOverrides: [UUID: NSImage]
+    private let panelSizeOverride: CGSize?
 
-    init(manager: HistoryFloatingManager) {
+    init(
+        manager: HistoryFloatingManager,
+        store: CaptureHistoryStore = .shared,
+        thumbnailOverrides: [UUID: NSImage] = [:],
+        panelSizeOverride: CGSize? = nil,
+    ) {
         self.manager = manager
+        self.thumbnailOverrides = thumbnailOverrides
+        self.panelSizeOverride = panelSizeOverride
         _searchViewModel = StateObject(wrappedValue: HistorySearchViewModel(
+            store: store,
             searchTextPublisher: manager.$searchText.eraseToAnyPublisher(),
             selectedFilterPublisher: manager.$expandedFilter.eraseToAnyPublisher(),
             selectedTimeFilterPublisher: manager.$expandedTimeFilter.eraseToAnyPublisher(),
@@ -49,7 +59,7 @@ struct HistoryFloatingContentView: View {
     }
 
     private var panelSize: CGSize {
-        HistoryFloatingLayout.panelSize(on: ScreenUtility.activeScreen())
+        panelSizeOverride ?? HistoryFloatingLayout.panelSize(on: ScreenUtility.activeScreen())
     }
 
     var body: some View {
@@ -291,6 +301,7 @@ struct HistoryFloatingContentView: View {
                         onTap: {
                             selectExpandedRecord(record)
                         },
+                        thumbnailOverride: thumbnailOverrides[record.id],
                     )
                     .equatable()
                     .frame(width: HistoryFloatingLayout.cardWidth)
@@ -715,7 +726,7 @@ struct HistoryFloatingContentView: View {
     }
 
     private func prefetchThumbnailsIfNeeded() {
-        guard !expandedRecords.isEmpty else { return }
+        guard thumbnailOverrides.isEmpty, !expandedRecords.isEmpty else { return }
         HistoryThumbnailGenerator.shared.preloadThumbnails(for: Array(expandedRecords.prefix(10)))
     }
 
@@ -738,6 +749,17 @@ struct HistoryFloatingContentView: View {
             }
         }
     }
+}
+
+#Preview("Floating history panel") {
+    let fixtures = HistoryPreviewFixtures.make()
+
+    HistoryFloatingContentView(
+        manager: HistoryFloatingManager(preview: true),
+        store: .preview(records: fixtures.records),
+        thumbnailOverrides: fixtures.thumbnails,
+        panelSizeOverride: CGSize(width: 1_100, height: 360),
+    )
 }
 
 private struct RowMetrics: Equatable {
