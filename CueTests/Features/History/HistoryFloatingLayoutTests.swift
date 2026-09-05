@@ -7,31 +7,56 @@
 
 import AppKit
 @testable import Cue
+import SwiftUI
 import XCTest
 
 @MainActor
 final class HistoryFloatingLayoutTests: XCTestCase {
     // MARK: - panel size
 
-    func testPanelSizeUsesNinetyPercentOfVisibleWidth() {
+    func testPanelWidthUsesNinetyPercentOfVisibleWidth() {
         guard let screen = NSScreen.main ?? NSScreen.screens.first else {
             XCTSkip("No NSScreen available in test environment")
             return
         }
 
-        let size = HistoryFloatingLayout.panelSize(on: screen)
+        let width = HistoryFloatingLayout.panelWidth(on: screen)
 
         XCTAssertEqual(
-            size.width,
+            width,
             screen.visibleFrame.width * HistoryFloatingLayout.panelWidthRatio,
             accuracy: 0.0001,
         )
+    }
+
+    func testPanelSizeUsesFittingHeightClampedToVisibleFrame() {
+        guard let screen = NSScreen.main ?? NSScreen.screens.first else {
+            XCTSkip("No NSScreen available in test environment")
+            return
+        }
+
+        let size = HistoryFloatingLayout.panelSize(fittingHeight: 240, on: screen)
         let safeFrame = screen.visibleFrame.insetBy(dx: 20, dy: 20)
+
         XCTAssertEqual(
             size.height,
-            min(HistoryFloatingLayout.panelHeight, safeFrame.height),
+            min(240, safeFrame.height),
             accuracy: 0.0001,
         )
+    }
+
+    func testFloatingContentUsesNaturalHeight() {
+        let fixtures = HistoryPreviewFixtures.make()
+        let view = HistoryFloatingContentView(
+            manager: HistoryFloatingManager(preview: true),
+            store: .preview(records: fixtures.records),
+            thumbnailOverrides: fixtures.thumbnails,
+            panelWidthOverride: 1_100,
+        )
+        let hostingView = NSHostingView(rootView: view)
+
+        XCTAssertGreaterThan(hostingView.fittingSize.height, 100)
+        XCTAssertLessThan(hostingView.fittingSize.height, 360)
     }
 
     // MARK: - baseCornerRadius

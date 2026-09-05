@@ -19,6 +19,7 @@ struct HistoryFloatingContentView: View {
     @State private var expandedSelectedIds: Set<UUID> = []
     @State private var expandedLastSelectedId: UUID?
     @State private var rowScrollOffset: CGFloat = 0
+    @State private var rowViewportWidth: CGFloat = 0
     @State private var selectionRevealTrigger = 0
     @State private var dragTranslation: CGFloat = 0
     @State private var isHoveringRow = false
@@ -27,17 +28,17 @@ struct HistoryFloatingContentView: View {
     @State private var rowWarmupTask: Task<Void, Never>?
     @StateObject private var searchViewModel: HistorySearchViewModel
     private let thumbnailOverrides: [UUID: NSImage]
-    private let panelSizeOverride: CGSize?
+    private let panelWidthOverride: CGFloat?
 
     init(
         manager: HistoryFloatingManager,
         store: CaptureHistoryStore = .shared,
         thumbnailOverrides: [UUID: NSImage] = [:],
-        panelSizeOverride: CGSize? = nil,
+        panelWidthOverride: CGFloat? = nil,
     ) {
         self.manager = manager
         self.thumbnailOverrides = thumbnailOverrides
-        self.panelSizeOverride = panelSizeOverride
+        self.panelWidthOverride = panelWidthOverride
         _searchViewModel = StateObject(wrappedValue: HistorySearchViewModel(
             store: store,
             searchTextPublisher: manager.$searchText.eraseToAnyPublisher(),
@@ -58,13 +59,13 @@ struct HistoryFloatingContentView: View {
         expandedRecords.filter { expandedSelectedIds.contains($0.id) }
     }
 
-    private var panelSize: CGSize {
-        panelSizeOverride ?? HistoryFloatingLayout.panelSize(on: ScreenUtility.activeScreen())
+    private var panelWidth: CGFloat {
+        panelWidthOverride ?? HistoryFloatingLayout.panelWidth(on: ScreenUtility.activeScreen())
     }
 
     var body: some View {
         expandedContent
-            .frame(width: panelSize.width, height: panelSize.height)
+            .frame(width: panelWidth)
             .background(HistoryBackdropView(style: backgroundStyle))
             .overlay(panelBorder)
             .preferredColorScheme(themeManager.systemAppearance)
@@ -77,6 +78,7 @@ struct HistoryFloatingContentView: View {
             .onChange(of: expandedRecordIDs) { _ in
                 pruneExpandedSelection()
                 prefetchThumbnailsIfNeeded()
+                manager.refreshPanel()
             }
             .onReceive(NotificationCenter.default.publisher(for: .historyCopySelection)) { notification in
                 guard notification.object is HistoryFloatingPanel else { return }
@@ -127,8 +129,6 @@ struct HistoryFloatingContentView: View {
                 } else {
                     historyRowPlaceholder
                 }
-
-                Spacer(minLength: 0)
             }
 
             if !expandedSelectedRecords.isEmpty {
@@ -284,72 +284,76 @@ struct HistoryFloatingContentView: View {
     // MARK: - Single horizontal row
 
     private var historyRow: some View {
-        GeometryReader { geometry in
-            let metrics = RowMetrics(
-                viewportWidth: geometry.size.width,
-                contentWidth: rowContentWidth,
-            )
-            let visibleOffset = clampedRowOffset(rowScrollOffset - dragTranslation, metrics: metrics)
-            let centeredOffset = max((metrics.viewportWidth - metrics.contentWidth) / 2, 0)
+        let metrics = RowMetrics(
+            viewportWidth: rowViewportWidth,
+            contentWidth: rowContentWidth,
+        )
+        let visibleOffset = clampedRowOffset(rowScrollOffset - dragTranslation, metrics: metrics)
+        let centeredOffset = max((metrics.viewportWidth - metrics.contentWidth) / 2, 0)
 
-            LazyHStack(spacing: HistoryFloatingLayout.cardSpacing) {
-                ForEach(expandedRecords) { record in
-                    HistoryExpandedCaptureCardView(
-                        record: record,
-                        isSelected: expandedSelectedIds.contains(record.id),
-                        backgroundStyle: backgroundStyle,
-                        onTap: {
-                            selectExpandedRecord(record)
-                        },
-                        thumbnailOverride: thumbnailOverrides[record.id],
-                    )
-                    .equatable()
-                    .frame(width: HistoryFloatingLayout.cardWidth)
-                    .contextMenu {
-                        HistoryContextMenu(record: record)
-                    }
+        return LazyHStack(spacing: HistoryFloatingLayout.cardSpacing) {
+            ForEach(expandedRecords) { record in
+                HistoryExpandedCaptureCardView(
+                    record: record,
+                    isSelected: expandedSelectedIds.contains(record.id),
+                    backgroundStyle: backgroundStyle,
+                    onTap: {
+                        selectExpandedRecord(record)
+                    },
+                    thumbnailOverride: thumbnailOverrides[record.id],
+                )
+                .equatable()
+                .frame(width: HistoryFloatingLayout.cardWidth)
+                .contextMenu {
+                    HistoryContextMenu(record: record)
                 }
             }
-            .padding(.horizontal, HistoryFloatingLayout.rowHorizontalPadding)
-            .padding(.vertical, 6)
-            .offset(x: metrics.isScrollable ? -visibleOffset : centeredOffset)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .contentShape(Rectangle())
-            .simultaneousGesture(rowDragGesture(metrics: metrics))
-            .background(
-                HistoryRowTrackpadScrollObserver(isEnabled: metrics.isScrollable) { delta in
-                    rowScrollOffset = clampedRowOffset(rowScrollOffset - delta, metrics: metrics)
-                },
-            )
-            .clipped()
-            .onAppear {
-                clampRowScrollOffsetIfNeeded(metrics: metrics)
-                updateRowCursor(for: metrics)
-            }
-            .onDisappear {
-                isDraggingRow = false
-                isHoveringRow = false
-                dragTranslation = 0
-                NSCursor.arrow.set()
-            }
-            .onHover { hovering in
-                isHoveringRow = hovering
-                updateRowCursor(for: metrics)
-            }
-            .onChange(of: metrics.viewportWidth) { _ in
-                clampRowScrollOffsetIfNeeded(metrics: metrics)
-                updateRowCursor(for: metrics)
-            }
-            .onChange(of: metrics.contentWidth) { _ in
-                clampRowScrollOffsetIfNeeded(metrics: metrics)
-                updateRowCursor(for: metrics)
-            }
-            .onChange(of: expandedRecordIDs) { _ in
-                clampRowScrollOffsetIfNeeded(metrics: metrics)
-            }
-            .onChange(of: selectionRevealTrigger) { _ in
-                revealSelectedRecordIfNeeded(metrics: metrics)
-            }
+        }
+        .padding(.horizontal, HistoryFloatingLayout.rowHorizontalPadding)
+        .padding(.vertical, 6)
+        .offset(x: metrics.isScrollable ? -visibleOffset : centeredOffset)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .contentShape(Rectangle())
+        .simultaneousGesture(rowDragGesture(metrics: metrics))
+        .background(
+            HistoryRowTrackpadScrollObserver(isEnabled: metrics.isScrollable) { delta in
+                rowScrollOffset = clampedRowOffset(rowScrollOffset - delta, metrics: metrics)
+            },
+        )
+        .clipped()
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.size.width
+        } action: { width in
+            guard abs(width - rowViewportWidth) > 0.5 else { return }
+            rowViewportWidth = width
+        }
+        .onAppear {
+            clampRowScrollOffsetIfNeeded(metrics: metrics)
+            updateRowCursor(for: metrics)
+        }
+        .onDisappear {
+            isDraggingRow = false
+            isHoveringRow = false
+            dragTranslation = 0
+            NSCursor.arrow.set()
+        }
+        .onHover { hovering in
+            isHoveringRow = hovering
+            updateRowCursor(for: metrics)
+        }
+        .onChange(of: metrics.viewportWidth) { _ in
+            clampRowScrollOffsetIfNeeded(metrics: metrics)
+            updateRowCursor(for: metrics)
+        }
+        .onChange(of: metrics.contentWidth) { _ in
+            clampRowScrollOffsetIfNeeded(metrics: metrics)
+            updateRowCursor(for: metrics)
+        }
+        .onChange(of: expandedRecordIDs) { _ in
+            clampRowScrollOffsetIfNeeded(metrics: metrics)
+        }
+        .onChange(of: selectionRevealTrigger) { _ in
+            revealSelectedRecordIfNeeded(metrics: metrics)
         }
     }
 
@@ -758,7 +762,7 @@ struct HistoryFloatingContentView: View {
         manager: HistoryFloatingManager(preview: true),
         store: .preview(records: fixtures.records),
         thumbnailOverrides: fixtures.thumbnails,
-        panelSizeOverride: CGSize(width: 1_100, height: 360),
+        panelWidthOverride: 1_100,
     )
 }
 

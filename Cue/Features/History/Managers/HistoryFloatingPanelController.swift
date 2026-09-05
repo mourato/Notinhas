@@ -110,15 +110,17 @@ final class HistoryFloatingPanelController {
 
     private func performShow(_ presentation: Presentation) {
         position = presentation.position
-        let targetFrame = frame(for: presentation.size, position: presentation.position)
+        let hostingView: NSHostingView<AnyView> = NSHostingView(rootView: presentation.content)
+        let size = naturalPanelSize(for: hostingView, width: presentation.size.width)
+        let targetFrame = frame(for: size, position: presentation.position)
         let panel = HistoryFloatingPanel(contentRect: targetFrame)
         panel.onDidResignKey = { [weak self] in
             self?.handlePanelDidResignKey()
         }
         installContent(
-            presentation.content,
+            hostingView,
             on: panel,
-            size: presentation.size,
+            size: size,
             cornerRadius: presentation.cornerRadius,
         )
 
@@ -211,7 +213,8 @@ final class HistoryFloatingPanelController {
         position = presentation.position
         updatePanelChrome(on: panel, cornerRadius: presentation.cornerRadius)
 
-        let targetFrame = frame(for: presentation.size, position: presentation.position)
+        let size = naturalPanelSize(for: presentation.content, width: presentation.size.width)
+        let targetFrame = frame(for: size, position: presentation.position)
         if animated {
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = 0.18
@@ -226,12 +229,11 @@ final class HistoryFloatingPanelController {
     }
 
     private func installContent(
-        _ content: AnyView,
+        _ hostingView: NSHostingView<AnyView>,
         on panel: HistoryFloatingPanel,
         size: CGSize,
         cornerRadius: CGFloat,
     ) {
-        let hostingView = NSHostingView(rootView: content)
         hostingView.translatesAutoresizingMaskIntoConstraints = false
         hostingView.wantsLayer = true
         hostingView.layer?.backgroundColor = NSColor.clear.cgColor
@@ -252,6 +254,25 @@ final class HistoryFloatingPanelController {
         panel.contentView = containerView
         self.containerView = containerView
         updatePanelChrome(on: panel, cornerRadius: cornerRadius)
+    }
+
+    private func naturalPanelSize(
+        for content: AnyView,
+        width: CGFloat,
+    ) -> CGSize {
+        let hostingView: NSHostingView<AnyView> = NSHostingView(rootView: content)
+        return naturalPanelSize(for: hostingView, width: width)
+    }
+
+    private func naturalPanelSize(
+        for hostingView: NSHostingView<AnyView>,
+        width: CGFloat,
+    ) -> CGSize {
+        hostingView.frame = NSRect(x: 0, y: 0, width: width, height: 0)
+        return HistoryFloatingLayout.panelSize(
+            fittingHeight: hostingView.fittingSize.height,
+            on: ScreenUtility.activeScreen(),
+        )
     }
 
     private func updatePanelChrome(on panel: HistoryFloatingPanel, cornerRadius: CGFloat) {

@@ -192,7 +192,7 @@ final class HistoryFloatingManager: ObservableObject {
     }
 
     private var preferredPanelSize: CGSize {
-        HistoryFloatingLayout.panelSize(on: ScreenUtility.activeScreen())
+        HistoryFloatingLayout.initialPanelSize(on: ScreenUtility.activeScreen())
     }
 
     private var preferredPosition: HistoryPanelPosition {
@@ -271,7 +271,6 @@ final class HistoryFloatingManager: ObservableObject {
 
 enum HistoryFloatingLayout {
     static let panelWidthRatio: CGFloat = 0.9
-    static let panelHeight: CGFloat = 360
     static let topPanelPadding: CGFloat = 8
     static let bottomPanelPadding: CGFloat = 20
     static let baseCornerRadius: CGFloat = 32
@@ -280,12 +279,23 @@ enum HistoryFloatingLayout {
     static let contentHorizontalPadding: CGFloat = 20
     static let rowHorizontalPadding: CGFloat = 6
 
-    /// Responsive panel width with a fixed height, clamped to fit small displays.
-    static func panelSize(on screen: NSScreen = ScreenUtility.activeScreen()) -> CGSize {
+    static func panelWidth(on screen: NSScreen = ScreenUtility.activeScreen()) -> CGFloat {
+        screen.visibleFrame.width * panelWidthRatio
+    }
+
+    /// Supplies the width before AppKit measures the SwiftUI content height.
+    static func initialPanelSize(on screen: NSScreen = ScreenUtility.activeScreen()) -> CGSize {
+        CGSize(width: panelWidth(on: screen), height: 0)
+    }
+
+    static func panelSize(
+        fittingHeight: CGFloat,
+        on screen: NSScreen = ScreenUtility.activeScreen(),
+    ) -> CGSize {
         let safeFrame = screen.visibleFrame.insetBy(dx: 20, dy: 20)
         return CGSize(
-            width: screen.visibleFrame.width * panelWidthRatio,
-            height: min(panelHeight, safeFrame.height),
+            width: panelWidth(on: screen),
+            height: min(max(fittingHeight, 1), safeFrame.height),
         )
     }
 }
