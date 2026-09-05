@@ -30,6 +30,7 @@ final class HistoryFloatingPanelController {
 
     private var panel: HistoryFloatingPanel?
     private weak var containerView: HistoryFloatingContainerView?
+    private weak var hostingView: NSHostingView<AnyView>?
     private var position: HistoryPanelPosition = .topCenter
     private var state: VisibilityState = .hidden
     private var pendingPresentation: Presentation?
@@ -196,6 +197,7 @@ final class HistoryFloatingPanelController {
             panel.close()
             MainActor.assumeIsolated {
                 self?.panel = nil
+                self?.hostingView = nil
                 self?.state = .hidden
                 self?.resumePendingPresentationIfNeeded()
             }
@@ -213,18 +215,23 @@ final class HistoryFloatingPanelController {
         position = presentation.position
         updatePanelChrome(on: panel, cornerRadius: presentation.cornerRadius)
 
-        let size = naturalPanelSize(for: presentation.content, width: presentation.size.width)
-        let targetFrame = frame(for: size, position: presentation.position)
-        if animated {
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.18
-                context.timingFunction = CAMediaTimingFunction(
-                    controlPoints: 0.2, 0.9, 0.3, 1.0,
-                )
-                panel.animator().setFrame(targetFrame, display: true)
+        DispatchQueue.main.async { [weak self, panel] in
+            guard let self, self.panel === panel, let hostingView else { return }
+
+            hostingView.superview?.layoutSubtreeIfNeeded()
+            let size = naturalPanelSize(for: hostingView, width: presentation.size.width)
+            let targetFrame = frame(for: size, position: presentation.position)
+            if animated {
+                NSAnimationContext.runAnimationGroup { context in
+                    context.duration = 0.18
+                    context.timingFunction = CAMediaTimingFunction(
+                        controlPoints: 0.2, 0.9, 0.3, 1.0,
+                    )
+                    panel.animator().setFrame(targetFrame, display: true)
+                }
+            } else {
+                panel.setFrame(targetFrame, display: true)
             }
-        } else {
-            panel.setFrame(targetFrame, display: true)
         }
     }
 
@@ -253,22 +260,17 @@ final class HistoryFloatingPanelController {
 
         panel.contentView = containerView
         self.containerView = containerView
+        self.hostingView = hostingView
         updatePanelChrome(on: panel, cornerRadius: cornerRadius)
-    }
-
-    private func naturalPanelSize(
-        for content: AnyView,
-        width: CGFloat,
-    ) -> CGSize {
-        let hostingView: NSHostingView<AnyView> = NSHostingView(rootView: content)
-        return naturalPanelSize(for: hostingView, width: width)
     }
 
     private func naturalPanelSize(
         for hostingView: NSHostingView<AnyView>,
         width: CGFloat,
     ) -> CGSize {
-        hostingView.frame = NSRect(x: 0, y: 0, width: width, height: 0)
+        if hostingView.superview == nil {
+            hostingView.frame = NSRect(x: 0, y: 0, width: width, height: 0)
+        }
         return HistoryFloatingLayout.panelSize(
             fittingHeight: hostingView.fittingSize.height,
             on: ScreenUtility.activeScreen(),
