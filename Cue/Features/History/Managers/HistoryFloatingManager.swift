@@ -215,7 +215,11 @@ final class HistoryFloatingManager: ObservableObject {
             .debug,
             .history,
             "Floating history presented",
-            context: ["position": preferredPosition.rawValue],
+            context: [
+                "position": preferredPosition.rawValue,
+                "width": String(format: "%.1f", preferredPanelSize.width),
+                "height": String(format: "%.1f", preferredPanelSize.height),
+            ],
         )
     }
 
@@ -286,13 +290,19 @@ enum HistoryFloatingLayout {
     static let contentTopPadding: CGFloat = 18
     static let contentBottomPadding: CGFloat = 20
     static let sectionSpacing: CGFloat = 18
-    static let headerHeight: CGFloat = 34
+    /// Close button is 34; search chrome is taller — keep header tall enough for both.
+    static let headerHeight: CGFloat = 40
     static let rowHorizontalPadding: CGFloat = 6
     static let rowVerticalPadding: CGFloat = 6
 
+    /// Content width inside an expanded card (after chrome padding).
+    static var cardContentWidth: CGFloat {
+        cardWidth - (cardChromePadding * 2)
+    }
+
     /// Preview image height inside an expanded history card.
     static var cardPreviewHeight: CGFloat {
-        cardWidth / cardPreviewAspectRatio
+        cardContentWidth / cardPreviewAspectRatio
     }
 
     /// Full expanded card height (preview + title/meta + chrome padding).

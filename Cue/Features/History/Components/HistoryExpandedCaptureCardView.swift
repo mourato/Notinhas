@@ -106,58 +106,60 @@ struct HistoryExpandedCaptureCardView: View, Equatable {
     }
 
     private var preview: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .bottomTrailing) {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(previewBackground)
+        ZStack(alignment: .bottomTrailing) {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(previewBackground)
 
-                if isVisible, let thumbnailImage = thumbnailImage ?? thumbnailOverride {
-                    Image(nsImage: thumbnailImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: geometry.size.width, height: geometry.size.height)
-                } else {
-                    Image(systemName: record.captureType.systemIconName)
-                        .font(.system(size: 30, weight: .medium))
-                        .foregroundColor(.secondary.opacity(0.55))
-                }
-
-                if !fileExists {
-                    Rectangle()
-                        .fill(Color.black.opacity(0.44))
-
-                    VStack(spacing: 6) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 16))
-                        Text("File missing")
-                            .font(.caption2.weight(.semibold))
-                    }
-                    .foregroundColor(.white)
-                }
-
-                if let duration = record.formattedDuration, record.captureType != .screenshot {
-                    Text(duration)
-                        .font(.caption2.weight(.semibold))
-                        .padding(.horizontal, 7)
-                        .padding(.vertical, 4)
-                        .background(Color.black.opacity(0.7), in: Capsule())
-                        .foregroundColor(.white)
-                        .padding(8)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                }
-
-                HStack(spacing: 8) {
-                    typeBadge
-                }
-                .padding(8)
+            if isVisible, let thumbnailImage = thumbnailImage ?? thumbnailOverride {
+                Image(nsImage: thumbnailImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: .infinity,
+                    )
+            } else {
+                Image(systemName: record.captureType.systemIconName)
+                    .font(.system(size: 30, weight: .medium))
+                    .foregroundColor(.secondary.opacity(0.55))
             }
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(previewBorderColor, lineWidth: 1),
-            )
+
+            if !fileExists {
+                Rectangle()
+                    .fill(Color.black.opacity(0.44))
+
+                VStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 16))
+                    Text("File missing")
+                        .font(.caption2.weight(.semibold))
+                }
+                .foregroundColor(.white)
+            }
+
+            if let duration = record.formattedDuration, record.captureType != .screenshot {
+                Text(duration)
+                    .font(.caption2.weight(.semibold))
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 4)
+                    .background(Color.black.opacity(0.7), in: Capsule())
+                    .foregroundColor(.white)
+                    .padding(8)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            }
+
+            HStack(spacing: 8) {
+                typeBadge
+            }
+            .padding(8)
         }
-        .aspectRatio(HistoryFloatingLayout.cardPreviewAspectRatio, contentMode: .fit)
+        .frame(maxWidth: .infinity)
+        .frame(height: HistoryFloatingLayout.cardPreviewHeight)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(previewBorderColor, lineWidth: 1),
+        )
     }
 
     private var cardBackground: AnyShapeStyle {

@@ -232,7 +232,13 @@ final class HistoryFloatingPanelController {
         cornerRadius: CGFloat,
     ) {
         let hostingView = NSHostingView(rootView: content)
-        hostingView.translatesAutoresizingMaskIntoConstraints = false
+        // Frame-based hosting: AppKit panel size is authoritative. Avoid intrinsic
+        // content-size options and top+bottom Auto Layout pins that can shrink the
+        // panel toward the card row when SwiftUI reports a shorter ideal height.
+        hostingView.translatesAutoresizingMaskIntoConstraints = true
+        hostingView.sizingOptions = []
+        hostingView.frame = NSRect(origin: .zero, size: size)
+        hostingView.autoresizingMask = [.width, .height]
         hostingView.wantsLayer = true
         hostingView.layer?.backgroundColor = NSColor.clear.cgColor
 
@@ -241,13 +247,6 @@ final class HistoryFloatingPanelController {
         containerView.autoresizingMask = [.width, .height]
         containerView.cornerRadius = cornerRadius
         containerView.addSubview(hostingView)
-
-        NSLayoutConstraint.activate([
-            hostingView.topAnchor.constraint(equalTo: containerView.topAnchor),
-            hostingView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-            hostingView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            hostingView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-        ])
 
         panel.contentView = containerView
         self.containerView = containerView

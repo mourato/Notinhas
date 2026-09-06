@@ -62,7 +62,7 @@ final class HistoryFloatingLayoutTests: XCTestCase {
     }
 
     func testCardAndRowHeightsDeriveFromSharedMetrics() {
-        let expectedPreview = HistoryFloatingLayout.cardWidth / HistoryFloatingLayout.cardPreviewAspectRatio
+        let expectedPreview = HistoryFloatingLayout.cardContentWidth / HistoryFloatingLayout.cardPreviewAspectRatio
         XCTAssertEqual(HistoryFloatingLayout.cardPreviewHeight, expectedPreview, accuracy: 0.0001)
 
         let expectedCard =
