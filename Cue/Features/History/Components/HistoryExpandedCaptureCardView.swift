@@ -111,13 +111,16 @@ struct HistoryExpandedCaptureCardView: View, Equatable {
                 .fill(previewBackground)
 
             if isVisible, let thumbnailImage = thumbnailImage ?? thumbnailOverride {
+                // Fixed frame first so wide screenshots cannot expand the card layout;
+                // scaledToFill only paints inside that box.
                 Image(nsImage: thumbnailImage)
                     .resizable()
                     .scaledToFill()
                     .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity,
+                        width: HistoryFloatingLayout.cardContentWidth,
+                        height: HistoryFloatingLayout.cardPreviewHeight,
                     )
+                    .clipped()
             } else {
                 Image(systemName: record.captureType.systemIconName)
                     .font(.system(size: 30, weight: .medium))
@@ -153,8 +156,10 @@ struct HistoryExpandedCaptureCardView: View, Equatable {
             }
             .padding(8)
         }
-        .frame(maxWidth: .infinity)
-        .frame(height: HistoryFloatingLayout.cardPreviewHeight)
+        .frame(
+            width: HistoryFloatingLayout.cardContentWidth,
+            height: HistoryFloatingLayout.cardPreviewHeight,
+        )
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)

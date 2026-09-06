@@ -314,6 +314,7 @@ struct HistoryFloatingContentView: View {
                     .equatable()
                     .frame(width: HistoryFloatingLayout.cardWidth)
                     .frame(height: HistoryFloatingLayout.cardHeight, alignment: .top)
+                    .clipped()
                     .contextMenu {
                         HistoryContextMenu(record: record)
                     }
