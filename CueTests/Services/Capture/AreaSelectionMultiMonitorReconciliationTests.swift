@@ -112,6 +112,65 @@ final class AreaSelectionMultiMonitorReconciliationTests: AreaSelectionOverlayTe
         )
     }
 
+    /// Regression: an in-progress drag started while backdrops were empty must stay enabled when the
+    /// first backdrop lands on a *different* display. Without live-fallback preservation, reconcile
+    /// flips the source overlay to disabled and hides the rubber-band mid-gesture.
+    func testApplyBackdrop_preservesSelectionEnabledForActiveManualDragSource() throws {
+        let controller = AreaSelectionController.shared
+        if controller.isPresenting {
+            controller.cancelSelection()
+        }
+        controller.prepareWindowPool()
+        defer { controller.cancelSelection() }
+
+        let mirror = Mirror(reflecting: controller)
+        guard let windowPool = mirror.children.first(where: { $0.label == "windowPool" })?.value
+            as? [CGDirectDisplayID: AreaSelectionWindow],
+            let realDisplayID = windowPool.keys.first,
+            let realWindow = windowPool[realDisplayID] else {
+            XCTFail("Expected at least one pooled window for the current display")
+            return
+        }
+
+        realWindow.overlayView.setSelectionEnabled(true)
+        realWindow.overlayView.setInteractionMode(.manualRegion, resetSelection: false)
+        realWindow.overlayView.resetSelection()
+
+        let mouseDown = try XCTUnwrap(
+            NSEvent.mouseEvent(
+                with: .leftMouseDown,
+                location: CGPoint(x: 120, y: 120),
+                modifierFlags: [],
+                timestamp: ProcessInfo.processInfo.systemUptime,
+                windowNumber: realWindow.windowNumber,
+                context: nil,
+                eventNumber: 1,
+                clickCount: 1,
+                pressure: 1,
+            ),
+        )
+        realWindow.overlayView.mouseDown(with: mouseDown)
+        XCTAssertTrue(realWindow.overlayView.isManualSelectionInProgress)
+
+        var otherDisplayID = CGDirectDisplayID.max
+        while windowPool.keys.contains(otherDisplayID) {
+            otherDisplayID &-= 1
+        }
+        let image = createSolidColorImage(color: .white, size: CGSize(width: 800, height: 600))
+        let backdrop = AreaSelectionBackdrop(displayID: otherDisplayID, image: image, scaleFactor: 1.0)
+        controller.applyBackdrop(backdrop, for: otherDisplayID)
+
+        XCTAssertTrue(
+            selectionEnabledFlag(of: realWindow.overlayView),
+            "Source display of an active manual drag must stay selection-enabled when another "
+                + "display's freeze backdrop arrives first",
+        )
+        XCTAssertTrue(
+            realWindow.overlayView.isManualSelectionInProgress,
+            "Rubber-band drag must survive the first foreign-display applyBackdrop",
+        )
+    }
+
     /// Reads the private `selectionEnabled` cached bool off an `AreaSelectionOverlayView` via
     /// reflection. There is no `#if DEBUG` test accessor for it (unlike `testSnapshotLayer` etc.),
     /// and adding one is out of scope for this regression test per the fix's "no production

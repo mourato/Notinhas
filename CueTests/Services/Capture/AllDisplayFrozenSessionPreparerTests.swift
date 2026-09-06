@@ -38,6 +38,33 @@ final class AllDisplayFrozenSessionPreparerTests: XCTestCase {
         ))
     }
 
+    func testPrioritizedCaptureOrder_putsPriorityDisplayFirst() {
+        let order = AllDisplayFrozenSessionPreparer.prioritizedCaptureOrder(
+            displayIDs: [10, 20, 30],
+            priorityDisplayID: 20,
+        )
+        XCTAssertEqual(order.priority, 20)
+        XCTAssertEqual(order.remaining, [10, 30])
+    }
+
+    func testPrioritizedCaptureOrder_fallsBackWhenPriorityMissing() {
+        let order = AllDisplayFrozenSessionPreparer.prioritizedCaptureOrder(
+            displayIDs: [40, 10],
+            priorityDisplayID: 99,
+        )
+        XCTAssertEqual(order.priority, 10)
+        XCTAssertEqual(order.remaining, [40])
+    }
+
+    func testPrioritizedCaptureOrder_emptySet() {
+        let order = AllDisplayFrozenSessionPreparer.prioritizedCaptureOrder(
+            displayIDs: [],
+            priorityDisplayID: 1,
+        )
+        XCTAssertNil(order.priority)
+        XCTAssertTrue(order.remaining.isEmpty)
+    }
+
     func testAreaSelectionResult_usesIntersectingDisplayIDs() {
         let rect = CGRect(x: 0, y: 0, width: 100, height: 100)
         let selection = ScreenCaptureViewModel.areaSelectionResult(for: rect)

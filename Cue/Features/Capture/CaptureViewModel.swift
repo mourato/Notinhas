@@ -876,19 +876,28 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
             defer { parallelFrozenPrepareTask = nil }
             do {
                 let snapshotStartedAt = Date()
+                let priorityDisplayID = ScreenUtility.activeDisplayID()
+                guard let accumulatingSession = activeParallelFrozenSession else { return }
                 let preparedSession = try await AllDisplayFrozenSessionPreparer.prepare(
                     showCursor: showCursor,
                     excludeDesktopIcons: excludeDesktopIcons,
                     excludeDesktopWidgets: excludeDesktopWidgets,
                     excludeOwnApplication: excludeOwnApplication,
                     prefetchedContentTask: prefetchedContentTask,
+                    priorityDisplayID: priorityDisplayID,
+                    session: accumulatingSession,
+                    onSnapshot: { [weak self] snapshot in
+                        guard let self else { return }
+                        guard activeAreaSelectionSessionID == sessionID else { return }
+                        if let backdrop = accumulatingSession.backdrop(for: snapshot.displayID) {
+                            AreaSelectionController.shared.applyBackdrop(backdrop, for: snapshot.displayID)
+                        }
+                    },
                 )
                 guard activeAreaSelectionSessionID == sessionID else {
                     preparedSession.session.invalidate()
                     return
                 }
-                activeParallelFrozenSession?.invalidate()
-                activeParallelFrozenSession = preparedSession.session
                 let snapshotDurationMs = Int(Date().timeIntervalSince(snapshotStartedAt) * 1_000)
                 DiagnosticLogger.shared.log(
                     .info,
@@ -896,13 +905,11 @@ final class ScreenCaptureViewModel: ObservableObject, KeyboardShortcutDelegate {
                     "Parallel frozen area snapshot prepared",
                     context: [
                         "displayCount": "\(preparedSession.session.displayIDs.count)",
+                        "priorityDisplayID": "\(priorityDisplayID)",
                         "duration_ms": "\(snapshotDurationMs)",
                         "mode": preparedSession.mode,
                     ],
                 )
-                for (displayID, backdrop) in preparedSession.session.backdrops {
-                    AreaSelectionController.shared.applyBackdrop(backdrop, for: displayID)
-                }
             } catch let error as CaptureError {
                 guard activeAreaSelectionSessionID == sessionID else { return }
                 isAreaSelectionActive = false

@@ -812,9 +812,23 @@ final class AreaSelectionController: NSObject {
     /// per mouse event — so it does not affect the manual-drag latency/frame-rate budget. Windows
     /// mid-drag stay enabled because `selectionEnabled(for:)` honors `liveFallbackDisplayIDs`.
     private func reconcileSelectionEnabledAcrossPooledWindows() {
+        // If a drag already started under the "empty backdrops" gate, the first backdrop on
+        // *another* display would otherwise flip this display to disabled and hide the rubber
+        // band mid-gesture. Keep the source display in live-fallback until its own snapshot lands.
+        preserveLiveFallbackForActiveManualSelectionSource()
         for (displayID, window) in windowPool {
             window.overlayView.setSelectionEnabled(selectionEnabled(for: displayID))
         }
+    }
+
+    private func preserveLiveFallbackForActiveManualSelectionSource() {
+        guard manualSelectionStartPoint != nil else { return }
+        let sourceWindow = manualSelectionSourceWindow ?? activeWindow
+        guard let displayID = sourceWindow?.displayID,
+              selectionBackdrops[displayID] == nil else {
+            return
+        }
+        liveFallbackDisplayIDs.insert(displayID)
     }
 
     func withDisplayOverlayHidden<T>(
@@ -1241,7 +1255,14 @@ final class AreaSelectionController: NSObject {
         from window: AreaSelectionWindow,
     ) {
         guard interactionMode == .manualRegion else { return }
-        guard let displayID = window.displayID, selectionEnabled(for: displayID) else {
+        guard let displayID = window.displayID else { return }
+        // Freeze snapshots can leave this display gated off (or with a stale cached
+        // enabled flag). Prefer live fallback so the user's first gesture is never
+        // silently dropped while the backdrop is still preparing.
+        if !selectionEnabled(for: displayID) {
+            enableLiveFallbackSelection(for: displayID)
+        }
+        guard selectionEnabled(for: displayID) else {
             requestDisplayActivationIfNeeded(for: window)
             return
         }
@@ -3244,6 +3265,7 @@ final class AreaSelectionOverlayView: NSView {
                 // releases before the snapshot arrives. The lazy snapshot continues in the background
                 // and will replace the live view via applyBackdrop() once ready.
                 delegate?.overlayViewDidRequestImmediateManualSelection(self)
+                activatePendingSelectionIfNeeded()
             }
             return
         }
@@ -3261,11 +3283,12 @@ final class AreaSelectionOverlayView: NSView {
         let point = convert(event.locationInWindow, from: nil)
         currentMousePosition = point
         delegate?.overlayViewDidRequestDisplayActivation(self)
-        guard selectionEnabled else {
-            if pendingSelectionStartPoint != nil {
-                currentMousePosition = point
-            }
-            return
+        if !selectionEnabled {
+            guard interactionMode == .manualRegion, pendingSelectionStartPoint != nil else { return }
+            // Promote a still-pending freeze-gated click into a live drag as soon as possible.
+            delegate?.overlayViewDidRequestImmediateManualSelection(self)
+            activatePendingSelectionIfNeeded()
+            guard selectionEnabled, isSelecting else { return }
         }
         activeCursor.set()
         switch interactionMode {
@@ -3282,9 +3305,17 @@ final class AreaSelectionOverlayView: NSView {
         let point = convert(event.locationInWindow, from: nil)
         currentMousePosition = point
         delegate?.overlayViewDidRequestDisplayActivation(self)
-        guard selectionEnabled else {
-            pendingSelectionStartPoint = nil
-            return
+        if !selectionEnabled {
+            if interactionMode == .manualRegion, pendingSelectionStartPoint != nil {
+                // Last chance before the gesture ends: enable live fallback and honor the pending
+                // start so a fast click-drag during freeze startup is not discarded.
+                delegate?.overlayViewDidRequestImmediateManualSelection(self)
+                activatePendingSelectionIfNeeded()
+            }
+            guard selectionEnabled else {
+                pendingSelectionStartPoint = nil
+                return
+            }
         }
 
         switch interactionMode {
