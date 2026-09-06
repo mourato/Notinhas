@@ -29,71 +29,29 @@ final class HistoryFloatingLayoutTests: XCTestCase {
         )
     }
 
-    func testPanelSizeUsesFittingHeightClampedToVisibleFrame() {
+    func testPanelSizeUsesFixedHeightClampedToVisibleFrame() {
         guard let screen = NSScreen.main ?? NSScreen.screens.first else {
             XCTSkip("No NSScreen available in test environment")
             return
         }
 
-        let size = HistoryFloatingLayout.panelSize(fittingHeight: 240, on: screen)
+        let size = HistoryFloatingLayout.panelSize(on: screen)
         let safeFrame = screen.visibleFrame.insetBy(dx: 20, dy: 20)
 
         XCTAssertEqual(
+            size.width,
+            screen.visibleFrame.width * HistoryFloatingLayout.panelWidthRatio,
+            accuracy: 0.0001,
+        )
+        XCTAssertEqual(
             size.height,
-            min(240, safeFrame.height),
+            min(HistoryFloatingLayout.panelHeight, safeFrame.height),
             accuracy: 0.0001,
         )
     }
 
-    func testFloatingContentUsesNaturalHeight() {
-        let fixtures = HistoryPreviewFixtures.make()
-        let view = HistoryFloatingContentView(
-            manager: HistoryFloatingManager(preview: true),
-            store: .preview(records: fixtures.records),
-            thumbnailOverrides: fixtures.thumbnails,
-            panelWidthOverride: 1_100,
-        )
-        let hostingView = NSHostingView(rootView: view)
-
-        XCTAssertGreaterThan(hostingView.fittingSize.height, 100)
-        XCTAssertLessThan(hostingView.fittingSize.height, 360)
-    }
-
-    func testFloatingContentIdealHeightIgnoresShortHostFrame() {
-        let fixtures = HistoryPreviewFixtures.make()
-        let view = HistoryFloatingContentView(
-            manager: HistoryFloatingManager(preview: true),
-            store: .preview(records: fixtures.records),
-            thumbnailOverrides: fixtures.thumbnails,
-            panelWidthOverride: 1_100,
-        )
-        let hostingView = NSHostingView(rootView: view)
-        hostingView.sizingOptions = .intrinsicContentSize
-        let width: CGFloat = 1_100
-        hostingView.frame = NSRect(x: 0, y: 0, width: width, height: 0)
-        let idealHeight = hostingView.fittingSize.height
-
-        hostingView.frame = NSRect(x: 0, y: 0, width: width, height: 80)
-        hostingView.layoutSubtreeIfNeeded()
-
-        hostingView.autoresizingMask = []
-        hostingView.frame = NSRect(x: 0, y: 0, width: width, height: 0)
-        hostingView.layoutSubtreeIfNeeded()
-        let remasured = hostingView.fittingSize.height
-
-        XCTAssertGreaterThan(idealHeight, 100)
-        XCTAssertEqual(remasured, idealHeight, accuracy: 1)
-        XCTAssertGreaterThan(remasured, 80)
-    }
-
-    func testEmptyStateHasFiniteIntrinsicHeight() {
-        let view = HistoryEmptyStateView(filter: nil, hasSearch: false)
-        let hostingView = NSHostingView(rootView: view)
-        hostingView.frame = NSRect(x: 0, y: 0, width: 900, height: 0)
-
-        let height = hostingView.fittingSize.height
-        XCTAssertGreaterThan(height, 80)
-        XCTAssertLessThan(height, 400)
+    func testPanelHeightIsThreeHundredPoints() {
+        XCTAssertEqual(HistoryFloatingLayout.panelHeight, 300)
     }
 
     // MARK: - baseCornerRadius

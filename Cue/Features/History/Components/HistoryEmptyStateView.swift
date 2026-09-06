@@ -36,7 +36,7 @@ struct HistoryEmptyStateView: View {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .stroke(colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.05), lineWidth: 1),
         )
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var iconName: String {

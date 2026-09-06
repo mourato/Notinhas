@@ -59,13 +59,17 @@ struct HistoryFloatingContentView: View {
         expandedRecords.filter { expandedSelectedIds.contains($0.id) }
     }
 
-    private var panelWidth: CGFloat {
-        panelWidthOverride ?? HistoryFloatingLayout.panelWidth(on: ScreenUtility.activeScreen())
+    private var panelSize: CGSize {
+        var size = HistoryFloatingLayout.panelSize(on: ScreenUtility.activeScreen())
+        if let panelWidthOverride {
+            size.width = panelWidthOverride
+        }
+        return size
     }
 
     var body: some View {
         expandedContent
-            .frame(width: panelWidth)
+            .frame(width: panelSize.width, height: panelSize.height)
             .background(HistoryBackdropView(style: backgroundStyle))
             .overlay(panelBorder)
             .preferredColorScheme(themeManager.systemAppearance)
@@ -78,7 +82,6 @@ struct HistoryFloatingContentView: View {
             .onChange(of: expandedRecordIDs) { _ in
                 pruneExpandedSelection()
                 prefetchThumbnailsIfNeeded()
-                manager.refreshPanel()
             }
             .onReceive(NotificationCenter.default.publisher(for: .historyCopySelection)) { notification in
                 guard notification.object is HistoryFloatingPanel else { return }
@@ -130,6 +133,7 @@ struct HistoryFloatingContentView: View {
                     historyRowPlaceholder
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
             if !expandedSelectedRecords.isEmpty {
                 expandedSelectionBar
