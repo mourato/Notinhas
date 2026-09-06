@@ -29,7 +29,7 @@ final class HistoryFloatingLayoutTests: XCTestCase {
         )
     }
 
-    func testPanelSizeUsesFixedHeightClampedToVisibleFrame() {
+    func testPanelSizeUsesContentDerivedHeightClampedToVisibleFrame() {
         guard let screen = NSScreen.main ?? NSScreen.screens.first else {
             XCTSkip("No NSScreen available in test environment")
             return
@@ -50,8 +50,32 @@ final class HistoryFloatingLayoutTests: XCTestCase {
         )
     }
 
-    func testPanelHeightIsThreeHundredPoints() {
-        XCTAssertEqual(HistoryFloatingLayout.panelHeight, 300)
+    func testPanelHeightMatchesHeaderRowAndContentPadding() {
+        let expected =
+            HistoryFloatingLayout.contentTopPadding
+                + HistoryFloatingLayout.headerHeight
+                + HistoryFloatingLayout.sectionSpacing
+                + HistoryFloatingLayout.rowHeight
+                + HistoryFloatingLayout.contentBottomPadding
+
+        XCTAssertEqual(HistoryFloatingLayout.panelHeight, expected, accuracy: 0.0001)
+    }
+
+    func testCardAndRowHeightsDeriveFromSharedMetrics() {
+        let expectedPreview = HistoryFloatingLayout.cardWidth / HistoryFloatingLayout.cardPreviewAspectRatio
+        XCTAssertEqual(HistoryFloatingLayout.cardPreviewHeight, expectedPreview, accuracy: 0.0001)
+
+        let expectedCard =
+            (HistoryFloatingLayout.cardChromePadding * 2)
+                + expectedPreview
+                + HistoryFloatingLayout.cardInnerSpacing
+                + HistoryFloatingLayout.cardTitleLineHeight
+                + HistoryFloatingLayout.cardTitleMetaSpacing
+                + HistoryFloatingLayout.cardMetaLineHeight
+        XCTAssertEqual(HistoryFloatingLayout.cardHeight, expectedCard, accuracy: 0.0001)
+
+        let expectedRow = expectedCard + (HistoryFloatingLayout.rowVerticalPadding * 2)
+        XCTAssertEqual(HistoryFloatingLayout.rowHeight, expectedRow, accuracy: 0.0001)
     }
 
     // MARK: - baseCornerRadius

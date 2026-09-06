@@ -122,26 +122,30 @@ struct HistoryFloatingContentView: View {
 
     private var expandedContent: some View {
         ZStack(alignment: .bottom) {
-            VStack(spacing: 18) {
+            VStack(spacing: HistoryFloatingLayout.sectionSpacing) {
                 expandedHeader
+                    .frame(height: HistoryFloatingLayout.headerHeight, alignment: .center)
 
                 if expandedRecords.isEmpty {
                     expandedEmptyState
+                        .frame(height: HistoryFloatingLayout.rowHeight, alignment: .center)
                 } else if isRowReady {
                     historyRow
+                        .frame(height: HistoryFloatingLayout.rowHeight, alignment: .top)
                 } else {
                     historyRowPlaceholder
+                        .frame(height: HistoryFloatingLayout.rowHeight, alignment: .top)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .frame(maxWidth: .infinity, alignment: .top)
 
             if !expandedSelectedRecords.isEmpty {
                 expandedSelectionBar
             }
         }
         .padding(.horizontal, HistoryFloatingLayout.contentHorizontalPadding)
-        .padding(.top, 18)
-        .padding(.bottom, 20)
+        .padding(.top, HistoryFloatingLayout.contentTopPadding)
+        .padding(.bottom, HistoryFloatingLayout.contentBottomPadding)
     }
 
     private var expandedHeader: some View {
@@ -314,9 +318,9 @@ struct HistoryFloatingContentView: View {
             }
         }
         .padding(.horizontal, HistoryFloatingLayout.rowHorizontalPadding)
-        .padding(.vertical, 6)
+        .padding(.vertical, HistoryFloatingLayout.rowVerticalPadding)
         .offset(x: metrics.isScrollable ? -visibleOffset : centeredOffset)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .contentShape(Rectangle())
         .simultaneousGesture(rowDragGesture(metrics: metrics))
         .background(
@@ -364,24 +368,24 @@ struct HistoryFloatingContentView: View {
     private var historyRowPlaceholder: some View {
         HStack(spacing: HistoryFloatingLayout.cardSpacing) {
             ForEach(0 ..< 6, id: \.self) { _ in
-                VStack(spacing: 8) {
+                VStack(spacing: HistoryFloatingLayout.cardInnerSpacing) {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .fill(placeholderFill)
-                        .aspectRatio(16 / 10, contentMode: .fit)
+                        .aspectRatio(HistoryFloatingLayout.cardPreviewAspectRatio, contentMode: .fit)
 
-                    VStack(alignment: .leading, spacing: 7) {
+                    VStack(alignment: .leading, spacing: HistoryFloatingLayout.cardTitleMetaSpacing) {
                         RoundedRectangle(cornerRadius: 5, style: .continuous)
                             .fill(placeholderFill)
-                            .frame(height: 12)
+                            .frame(height: HistoryFloatingLayout.cardTitleLineHeight)
 
                         HStack(spacing: 8) {
                             RoundedRectangle(cornerRadius: 4, style: .continuous)
                                 .fill(placeholderFill)
-                                .frame(width: 96, height: 10)
+                                .frame(width: 96, height: HistoryFloatingLayout.cardMetaLineHeight)
                         }
                     }
                 }
-                .padding(10)
+                .padding(HistoryFloatingLayout.cardChromePadding)
                 .background(placeholderCardFill, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -392,7 +396,8 @@ struct HistoryFloatingContentView: View {
             }
         }
         .padding(.horizontal, HistoryFloatingLayout.rowHorizontalPadding)
-        .padding(.vertical, 6)
+        .padding(.vertical, HistoryFloatingLayout.rowVerticalPadding)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     private var expandedEmptyState: some View {
@@ -401,7 +406,6 @@ struct HistoryFloatingContentView: View {
             hasSearch: !manager.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
         )
         .padding(.horizontal, 160)
-        .padding(.bottom, 6)
     }
 
     // MARK: - Row scrolling

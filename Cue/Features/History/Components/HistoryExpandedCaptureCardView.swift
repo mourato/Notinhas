@@ -43,23 +43,25 @@ struct HistoryExpandedCaptureCardView: View, Equatable {
     @State private var thumbnailReloadToken = 0
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: HistoryFloatingLayout.cardInnerSpacing) {
             preview
 
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: HistoryFloatingLayout.cardTitleMetaSpacing) {
                 Text(displayTitle)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(.primary)
                     .lineLimit(1)
                     .truncationMode(.middle)
+                    .frame(height: HistoryFloatingLayout.cardTitleLineHeight, alignment: .leading)
 
                 Text(relativeTimeString(from: record.capturedAt))
                     .font(.system(size: 9.5, weight: .medium))
                     .foregroundColor(.secondary)
+                    .frame(height: HistoryFloatingLayout.cardMetaLineHeight, alignment: .leading)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(10)
+        .padding(HistoryFloatingLayout.cardChromePadding)
         .background(cardBackground, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -155,7 +157,7 @@ struct HistoryExpandedCaptureCardView: View, Equatable {
                     .stroke(previewBorderColor, lineWidth: 1),
             )
         }
-        .aspectRatio(16 / 10, contentMode: .fit)
+        .aspectRatio(HistoryFloatingLayout.cardPreviewAspectRatio, contentMode: .fit)
     }
 
     private var cardBackground: AnyShapeStyle {

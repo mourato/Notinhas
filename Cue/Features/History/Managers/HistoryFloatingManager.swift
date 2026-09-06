@@ -271,20 +271,59 @@ final class HistoryFloatingManager: ObservableObject {
 
 enum HistoryFloatingLayout {
     static let panelWidthRatio: CGFloat = 0.9
-    static let panelHeight: CGFloat = 300
     static let topPanelPadding: CGFloat = 8
     static let bottomPanelPadding: CGFloat = 20
     static let baseCornerRadius: CGFloat = 32
     static let cardWidth: CGFloat = 232
     static let cardSpacing: CGFloat = 12
+    static let cardPreviewAspectRatio: CGFloat = 16.0 / 10.0
+    static let cardChromePadding: CGFloat = 10
+    static let cardInnerSpacing: CGFloat = 8
+    static let cardTitleLineHeight: CGFloat = 14
+    static let cardMetaLineHeight: CGFloat = 12
+    static let cardTitleMetaSpacing: CGFloat = 6
     static let contentHorizontalPadding: CGFloat = 20
+    static let contentTopPadding: CGFloat = 18
+    static let contentBottomPadding: CGFloat = 20
+    static let sectionSpacing: CGFloat = 18
+    static let headerHeight: CGFloat = 34
     static let rowHorizontalPadding: CGFloat = 6
+    static let rowVerticalPadding: CGFloat = 6
+
+    /// Preview image height inside an expanded history card.
+    static var cardPreviewHeight: CGFloat {
+        cardWidth / cardPreviewAspectRatio
+    }
+
+    /// Full expanded card height (preview + title/meta + chrome padding).
+    static var cardHeight: CGFloat {
+        (cardChromePadding * 2)
+            + cardPreviewHeight
+            + cardInnerSpacing
+            + cardTitleLineHeight
+            + cardTitleMetaSpacing
+            + cardMetaLineHeight
+    }
+
+    /// Horizontal card row height including vertical padding.
+    static var rowHeight: CGFloat {
+        cardHeight + (rowVerticalPadding * 2)
+    }
+
+    /// Panel height derived from header + row + content paddings (no fittingSize).
+    static var panelHeight: CGFloat {
+        contentTopPadding
+            + headerHeight
+            + sectionSpacing
+            + rowHeight
+            + contentBottomPadding
+    }
 
     static func panelWidth(on screen: NSScreen = ScreenUtility.activeScreen()) -> CGFloat {
         screen.visibleFrame.width * panelWidthRatio
     }
 
-    /// Responsive panel width with a fixed height, clamped to fit small displays.
+    /// Responsive panel width with content-derived height, clamped to fit small displays.
     static func panelSize(on screen: NSScreen = ScreenUtility.activeScreen()) -> CGSize {
         let safeFrame = screen.visibleFrame.insetBy(dx: 20, dy: 20)
         return CGSize(
