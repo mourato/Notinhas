@@ -218,8 +218,9 @@ final class HistoryFloatingPanelController {
         DispatchQueue.main.async { [weak self, panel] in
             guard let self, self.panel === panel, let hostingView else { return }
 
-            hostingView.superview?.layoutSubtreeIfNeeded()
+            hostingView.layoutSubtreeIfNeeded()
             let size = naturalPanelSize(for: hostingView, width: presentation.size.width)
+            syncHostFrames(to: size)
             let targetFrame = frame(for: size, position: presentation.position)
             if animated {
                 NSAnimationContext.runAnimationGroup { context in
@@ -241,9 +242,14 @@ final class HistoryFloatingPanelController {
         size: CGSize,
         cornerRadius: CGFloat,
     ) {
-        hostingView.translatesAutoresizingMaskIntoConstraints = false
+        // Frame-based hosting (HUD pattern): avoid top+bottom Auto Layout pins that
+        // make later fittingSize / refresh reads report the already-constrained height.
+        hostingView.translatesAutoresizingMaskIntoConstraints = true
+        hostingView.sizingOptions = .intrinsicContentSize
         hostingView.wantsLayer = true
         hostingView.layer?.backgroundColor = NSColor.clear.cgColor
+        hostingView.frame = NSRect(origin: .zero, size: size)
+        hostingView.autoresizingMask = [.width, .height]
 
         let containerView = HistoryFloatingContainerView()
         containerView.frame = NSRect(origin: .zero, size: size)
@@ -251,30 +257,52 @@ final class HistoryFloatingPanelController {
         containerView.cornerRadius = cornerRadius
         containerView.addSubview(hostingView)
 
-        NSLayoutConstraint.activate([
-            hostingView.topAnchor.constraint(equalTo: containerView.topAnchor),
-            hostingView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
-            hostingView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            hostingView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-        ])
-
         panel.contentView = containerView
         self.containerView = containerView
         self.hostingView = hostingView
         updatePanelChrome(on: panel, cornerRadius: cornerRadius)
     }
 
+    private func syncHostFrames(to size: CGSize) {
+        let bounds = NSRect(origin: .zero, size: size)
+        containerView?.frame = bounds
+        hostingView?.frame = bounds
+    }
+
     private func naturalPanelSize(
         for hostingView: NSHostingView<AnyView>,
         width: CGFloat,
     ) -> CGSize {
-        if hostingView.superview == nil {
-            hostingView.frame = NSRect(x: 0, y: 0, width: width, height: 0)
-        }
+        let fittingHeight = idealContentHeight(for: hostingView, width: width)
         return HistoryFloatingLayout.panelSize(
-            fittingHeight: hostingView.fittingSize.height,
+            fittingHeight: fittingHeight,
             on: ScreenUtility.activeScreen(),
         )
+    }
+
+    /// Ideal SwiftUI height at a fixed width, ignoring the host's current frame height.
+    private func idealContentHeight(
+        for hostingView: NSHostingView<AnyView>,
+        width: CGFloat,
+    ) -> CGFloat {
+        hostingView.sizingOptions = .intrinsicContentSize
+
+        if hostingView.superview == nil {
+            hostingView.frame = NSRect(x: 0, y: 0, width: width, height: 0)
+            return max(hostingView.fittingSize.height, 1)
+        }
+
+        // Temporarily release the short panel frame so fittingSize can report the
+        // intrinsic SwiftUI height instead of the already-applied window height.
+        let previousFrame = hostingView.frame
+        let previousMask = hostingView.autoresizingMask
+        hostingView.autoresizingMask = []
+        hostingView.frame = NSRect(x: 0, y: 0, width: width, height: 0)
+        hostingView.layoutSubtreeIfNeeded()
+        let height = max(hostingView.fittingSize.height, 1)
+        hostingView.frame = previousFrame
+        hostingView.autoresizingMask = previousMask
+        return height
     }
 
     private func updatePanelChrome(on panel: HistoryFloatingPanel, cornerRadius: CGFloat) {

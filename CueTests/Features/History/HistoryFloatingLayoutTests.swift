@@ -59,6 +59,43 @@ final class HistoryFloatingLayoutTests: XCTestCase {
         XCTAssertLessThan(hostingView.fittingSize.height, 360)
     }
 
+    func testFloatingContentIdealHeightIgnoresShortHostFrame() {
+        let fixtures = HistoryPreviewFixtures.make()
+        let view = HistoryFloatingContentView(
+            manager: HistoryFloatingManager(preview: true),
+            store: .preview(records: fixtures.records),
+            thumbnailOverrides: fixtures.thumbnails,
+            panelWidthOverride: 1_100,
+        )
+        let hostingView = NSHostingView(rootView: view)
+        hostingView.sizingOptions = .intrinsicContentSize
+        let width: CGFloat = 1_100
+        hostingView.frame = NSRect(x: 0, y: 0, width: width, height: 0)
+        let idealHeight = hostingView.fittingSize.height
+
+        hostingView.frame = NSRect(x: 0, y: 0, width: width, height: 80)
+        hostingView.layoutSubtreeIfNeeded()
+
+        hostingView.autoresizingMask = []
+        hostingView.frame = NSRect(x: 0, y: 0, width: width, height: 0)
+        hostingView.layoutSubtreeIfNeeded()
+        let remasured = hostingView.fittingSize.height
+
+        XCTAssertGreaterThan(idealHeight, 100)
+        XCTAssertEqual(remasured, idealHeight, accuracy: 1)
+        XCTAssertGreaterThan(remasured, 80)
+    }
+
+    func testEmptyStateHasFiniteIntrinsicHeight() {
+        let view = HistoryEmptyStateView(filter: nil, hasSearch: false)
+        let hostingView = NSHostingView(rootView: view)
+        hostingView.frame = NSRect(x: 0, y: 0, width: 900, height: 0)
+
+        let height = hostingView.fittingSize.height
+        XCTAssertGreaterThan(height, 80)
+        XCTAssertLessThan(height, 400)
+    }
+
     // MARK: - baseCornerRadius
 
     func testBaseCornerRadius() {
